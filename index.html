@@ -154,6 +154,8 @@ input,select{
 .contestantText span{font-size:12px;color:#7781a3;font-weight:700;text-transform:uppercase}
 svg.avatarSvg{width:110px;height:146px;display:block;margin:0 auto}
 svg.avatarSmall{width:74px;height:100px;display:block}
+.finalImage{font-size:92px;line-height:1;margin:10px 0}
+.finalMessage{font-size:24px;font-weight:900;color:#20307c;text-transform:uppercase;line-height:1.2}
 </style>
 </head>
 <body>
@@ -256,12 +258,10 @@ svg.avatarSmall{width:74px;height:100px;display:block}
     <div class="note">
       40 preguntas por partida.<br>
       15 segundos por pregunta.<br>
-      3 respuestas por pregunta.<br>
-      Las 3 primeras son fáciles y cada 3 preguntas sube la dificultad.<br>
-      Acierto: +2 puntos.<br>
-      Fallo o tiempo agotado: -1 punto.<br>
-      Primero habla el cura y luego responde el concursante.<br>
-      Puedes guardar, cargar, nueva partida y salir.
+      Solo preguntas sobre Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto.<br>
+      También sobre jugadores, exjugadores, entrenadores, ascensos, descensos e hitos históricos.<br>
+      Si aciertas las 40, recibes el trofeo de AGUA BENDITA.<br>
+      Si no, aparece el BURRO.
     </div>
     <button class="actionBtn grey" id="backRulesBtn">Volver</button>
   </div>
@@ -286,7 +286,7 @@ svg.avatarSmall{width:74px;height:100px;display:block}
       <div class="scoreValue yellowTxt" id="pointsValue">0</div>
     </div>
     <div class="scoreBox">
-      <div class="scoreLabel redTxt">Acabas de cometer un pecado</div>
+      <div class="scoreLabel redTxt">Pecados</div>
       <div class="scoreValue redTxt" id="failsValue">0</div>
     </div>
   </div>
@@ -330,11 +330,9 @@ svg.avatarSmall{width:74px;height:100px;display:block}
   <div class="card">
     <h2 class="cardTitle">Final de partida</h2>
     <div class="resultBig" id="finalPoints">0</div>
+    <div id="finalVisual" class="finalImage">🐴</div>
+    <div id="finalVisualText" class="finalMessage">ERES UN BURRO</div>
     <div class="note" id="finalSummary"></div>
-    <div id="holyPrize" class="hidden" style="margin:16px 0 4px;">
-      <div style="font-size:64px;">🍼</div>
-      <div class="note">Premio celestial: botella grande de agua bendita entregada por el cura.</div>
-    </div>
     <button class="actionBtn yellow" id="resultNewBtn">Nueva partida</button>
     <button class="actionBtn grey" id="resultHomeBtn">Volver al inicio</button>
   </div>
@@ -372,10 +370,10 @@ svg.avatarSmall{width:74px;height:100px;display:block}
 
 <script>
 const OWNER_PIN = "1010";
-const SAVE_KEY = "catedral_partida_guardada_final";
-const CUSTOM_KEY = "catedral_custom_contestants_final";
-const RANK_DAY_KEY = "catedral_rank_day_final_";
-const RANK_TOTAL_KEY = "catedral_rank_total_final";
+const SAVE_KEY = "catedral_partida_guardada_restringida";
+const CUSTOM_KEY = "catedral_custom_contestants_restringida";
+const RANK_DAY_KEY = "catedral_rank_day_restringida_";
+const RANK_TOTAL_KEY = "catedral_rank_total_restringida";
 const QUESTIONS_PER_GAME = 40;
 const TIME_PER_QUESTION = 15;
 
@@ -393,100 +391,76 @@ const baseContestants = [
   {id:"mamen",name:"Mamen",subtitle:"La Presidenta",style:"mamen",gender:"female",rate:.99,pitch:1.10,voiceIndex:10}
 ];
 
-const clubs = [
-  {club:"Real Madrid", city:"Madrid"},
-  {club:"FC Barcelona", city:"Barcelona"},
-  {club:"Joventut", city:"Badalona"},
-  {club:"Baskonia", city:"Vitoria-Gasteiz"},
-  {club:"Unicaja", city:"Málaga"},
-  {club:"Valencia Basket", city:"Valencia"},
-  {club:"Gran Canaria", city:"Las Palmas de Gran Canaria"},
-  {club:"La Laguna Tenerife", city:"San Cristóbal de La Laguna"},
-  {club:"Breogán", city:"Lugo"},
-  {club:"Bilbao Basket", city:"Bilbao"},
-  {club:"Bàsquet Manresa", city:"Manresa"},
-  {club:"Casademont Zaragoza", city:"Zaragoza"},
-  {club:"UCAM Murcia", city:"Murcia"},
-  {club:"Estudiantes", city:"Madrid"},
-  {club:"Monbus Obradoiro", city:"Santiago de Compostela"},
-  {club:"Bàsquet Girona", city:"Girona"},
-  {club:"Fuenlabrada", city:"Fuenlabrada"},
-  {club:"Cultural Leonesa de Baloncesto", city:"León"},
-  {club:"Baloncesto León", city:"León"},
-  {club:"Elosúa León", city:"León"}
-];
+const onlyTeamQuestions = [
+  ["¿En qué ciudad jugaron Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto?","León","Burgos","Valladolid",1],
+  ["¿Qué palabra comparten Elosúa León y Baloncesto León?","León","Copa","FEB",1],
+  ["¿Qué palabra comparten Baloncesto León y Cultural Leonesa de Baloncesto?","Leonesa/León","Andorra","Murcia",1],
+  ["¿Qué equipo leonés actual aparece en este juego?","Cultural Leonesa de Baloncesto","Joventut","Bilbao Basket",1],
+  ["¿Qué nombre histórico leonés aparece en este juego?","Baloncesto León","Caja San Fernando","Pamesa Valencia",1],
+  ["¿Qué otra denominación histórica leonesa aparece en este juego?","Elosúa León","TAU Cerámica","Bàsquet Girona",1],
 
-const players = [
-  ["¿Qué pívot español ganó anillos NBA con Los Angeles Lakers?","Pau Gasol","Felipe Reyes","Fernando Romay",3],
-  ["¿Qué escolta español fue emblema del FC Barcelona y Memphis Grizzlies?","Juan Carlos Navarro","Rafa Jofresa","Carlos Jiménez",3],
-  ["¿Qué base canario brilló en Joventut y luego en la NBA?","Ricky Rubio","Sergio Llull","Pablo Laso",3],
-  ["¿Qué base español jugó en Toronto Raptors y fue internacional?","José Manuel Calderón","Sergi Vidal","Tomás Jofresa",4],
-  ["¿Qué internacional español fue capitán histórico del Real Madrid y España?","Felipe Reyes","Sergio Llull","Alberto Herreros",4],
-  ["¿Qué escolta mallorquín es símbolo del Real Madrid y la selección?","Sergio Llull","Rafa Martínez","Carlos Suárez",4],
-  ["¿Qué exjugador español fue pionero histórico en la NBA en los 80 y 90?","Fernando Martín","Pau Gasol","Rudy Fernández",4],
-  ["¿Qué base español fue emblema de Estudiantes en los 90?","Nacho Azofra","Pablo Prigioni","Sergio Rodríguez",4],
-  ["¿Qué pívot catalán fue campeón NBA también con Toronto Raptors?","Marc Gasol","Felipe Reyes","Fran Vázquez",4],
-  ["¿Qué anotador estadounidense fue legendario en el Real Madrid de los 90?","Joe Arlauckas","Louis Bullock","Jaycee Carroll",5],
-  ["¿Qué tirador estadounidense fue uno de los grandes especialistas del Real Madrid moderno?","Jaycee Carroll","Joe Arlauckas","Dejan Bodiroga",5],
-  ["¿Qué estrella serbia dejó una huella enorme en Real Madrid y Barcelona?","Dejan Bodiroga","Peja Stojakovic","Vlade Divac",5],
-  ["¿Qué jugador argentino fue muy querido por su intensidad en Baskonia y Real Madrid?","Andrés Nocioni","Luis Scola","Pablo Prigioni",5]
-];
+  ["¿Qué club leonés alcanzó la Liga ACB en la temporada 1990-91?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León actual",2],
+  ["¿Qué club leonés fue 6.º en ACB en 1991-92?","Baloncesto León","Valencia Basket","Unicaja",2],
+  ["¿Qué club leonés fue 6.º en ACB también en 1992-93?","Baloncesto León","Gran Canaria","Baskonia",2],
+  ["¿Qué club leonés jugó la Copa Korać en los 90?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León",2],
+  ["¿Qué club leonés descendió de ACB en la temporada 1999-00?","Baloncesto León","Real Madrid","Joventut",2],
+  ["¿Qué club leonés ganó la Copa Príncipe en 2007?","Baloncesto León","Elosúa León","Cultural Leonesa de Baloncesto",2],
+  ["¿Qué club leonés ganó la Copa Castilla y León en 2004?","Baloncesto León","UCAM Murcia","Breogán",2],
 
-const coaches = [
-  ["¿Qué entrenador se asocia a varias etapas históricas en Baskonia?","Dusko Ivanovic","Moncho Fernández","Pedro Martínez",4],
-  ["¿Qué técnico madrileño lideró una gran etapa moderna del Real Madrid?","Pablo Laso","Chus Mateo","Aíto García Reneses",4],
-  ["¿Qué técnico español dirigió a la selección campeona del Mundial 2006?","Pepu Hernández","Sergio Scariolo","Pablo Laso",4],
-  ["¿Qué entrenador italiano ha sido muy importante para España en la selección?","Sergio Scariolo","Ettore Messina","Luca Banchi",4],
-  ["¿Qué entrenador se asocia a la frase de correr, correr y correr en el basket español?","Aíto García Reneses","Lolo Sainz","Joan Plaza",5],
-  ["¿Qué entrenador español está muy ligado a Manresa y Girona en etapas recientes?","Pedro Martínez","Aíto García Reneses","Pablo Laso",5]
-];
+  ["¿Qué técnico tuvo una larga vinculación histórica con Baloncesto León?","Gustavo Aranzana","Aíto García Reneses","Pedro Martínez",3],
+  ["¿Qué entrenador aparece ligado a Baloncesto León en dos etapas distintas?","Gustavo Aranzana","Joan Plaza","Pablo Laso",3],
+  ["¿Qué entrenador figura en la etapa 2008-2012 de Baloncesto León?","Javier de Grado","Dusko Ivanovic","Pepu Hernández",3],
+  ["¿Qué entrenador figura en la etapa 1997-1999 de Baloncesto León?","Eduard Torres","Moncho Fernández","Chus Mateo",3],
+  ["¿Qué entrenador figura en la etapa 2003-2005 de Baloncesto León?","Ángel Jareño","Sergio Scariolo","Pablo Laso",3],
+  ["¿Qué entrenador figura en la etapa 2002-2003 de Baloncesto León?","Quino Salvo","Pedro Martínez","Moncho Fernández",3],
 
-const refsAndComps = [
-  ["¿Qué árbitro español es uno de los más conocidos de la era ACB moderna?","Antonio Conde","Mateu Lahoz","Undiano Mallenco",4],
-  ["¿Qué nombre comercial recibe hoy la ACB?","Liga Endesa","1ª FEB","2ª FEB",1],
-  ["¿Qué nombre recibe actualmente la antigua LEB Oro?","1ª FEB","2ª FEB","Liga Plata ACB",2],
-  ["¿Qué nombre recibe actualmente la antigua LEB Plata?","2ª FEB","1ª FEB","Liga EBA Oro",2],
-  ["¿Qué competición es una de las más históricas del baloncesto español?","Copa del Rey","Copa de Provincias ACB","Superliga Municipal",2],
-  ["¿Cuántas respuestas tiene cada pregunta en este juego?","3","4","2",1],
-  ["¿Cuántos puntos suma una respuesta correcta?","2","3","1",1],
-  ["¿Cuántos puntos resta una respuesta fallada o el tiempo agotado?","1","2","0",1],
-  ["¿Cuántos segundos hay para responder cada pregunta?","15","10","20",1],
-  ["¿Cuántas preguntas tiene cada partida?","40","25","60",1],
-  ["¿Qué club malagueño fue campeón de la Liga ACB en 2006?","Unicaja","Gran Canaria","Estudiantes",4],
-  ["¿Qué histórico club de Badalona ganó la Copa de Europa en 1994?","Joventut","FC Barcelona","Real Madrid",4],
-  ["¿Qué club valenciano ganó la Liga ACB en 2017?","Valencia Basket","Lucentum Alicante","CB Murcia",4],
-  ["¿Qué nombre comercial tuvo Baskonia en los 2000?","TAU Cerámica","Caja Álava Basket","Saski Power",4],
-  ["¿Qué club sevillano tuvo larga presencia ACB con varias denominaciones?","Caja San Fernando / Cajasol","CB Huelva ACB","Sevilla Triple Basket",5],
-  ["¿Qué equipo madrileño fue campeón de liga en 1991-92?","Real Madrid","Estudiantes","Joventut",5],
-  ["¿Qué club ganó la Euroliga 2023 representando al basket español?","Real Madrid","FC Barcelona","Baskonia",5]
-];
+  ["¿Qué jugador aparece como notable en Baloncesto León?","Xavi Fernández","Juan Carlos Navarro","Rudy Fernández",3],
+  ["¿Qué jugador aparece como notable en Baloncesto León?","Essie Hollis","Pau Gasol","Felipe Reyes",3],
+  ["¿Qué jugador aparece como notable en Baloncesto León?","Corny Thompson","Sergio Llull","Marc Gasol",3],
+  ["¿Qué jugador aparece como notable en Baloncesto León?","Óscar Yebra","Carlos Jiménez","Ricky Rubio",3],
+  ["¿Qué jugador aparece como notable en Baloncesto León?","Paolo Quinteros","Dejan Bodiroga","Louis Bullock",3],
+  ["¿Qué jugador aparece como notable en Baloncesto León?","Amal McCaskill","Jaycee Carroll","Joe Arlauckas",3],
+  ["¿Qué jugador aparece como notable en Baloncesto León?","J.R. Reid","Pablo Prigioni","Sergi Vidal",3],
+  ["¿Qué jugador aparece como notable en Baloncesto León?","Byron Houston","Nacho Azofra","Carlos Suárez",3],
 
-const leonSpecific = [
-  ["¿Qué ciudad comparten Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto?","León","Valladolid","Zamora",1],
-  ["¿Qué palabra comparten Baloncesto León y Elosúa León?","León","Madrid","ACB",1],
-  ["¿Qué club leonés actual aparece en este juego?","Cultural Leonesa de Baloncesto","UCAM Murcia","Baskonia",2],
-  ["¿Qué nombre histórico leonés aparece también en este juego?","Baloncesto León","Valencia Basket","Bilbao Basket",2],
-  ["¿Qué denominación histórica leonesa aparece en el banco de preguntas?","Elosúa León","Pamesa Valencia","TAU Cerámica",2],
-  ["¿Qué peña leonesa incluida en este juego contiene la palabra Universitaria?","Peña Universitaria","Peña del Sur Blanco","Peña Verdinegra Madrid",2],
-  ["¿Qué peña leonesa incluida en este juego contiene la palabra Cultu?","Peña CultuBasket","Peña Azulona","NBA Club León",2],
-  ["¿Qué peña leonesa incluida en este juego contiene la palabra Tambor?","Peña El Tambor","Peña Fondo Sur","Peña Aro Rojo",2],
-  ["¿Qué peña leonesa incluida en este juego contiene la palabra Roja?","Peña Marea Roja","Peña Verde Norte","Peña Blanca Basket",2],
-  ["¿En qué ciudad se ubica la afición de las peñas leonesas mencionadas en este juego?","León","Bilbao","Granada",2],
-  ["¿Qué nombre une la palabra Cultural con el baloncesto leonés actual?","Cultural Leonesa de Baloncesto","Cultural Andaluza Basket","Cultural del Este ACB",2],
-  ["¿Qué palabra aparece en el nombre Peña CultuBasket?","Cultu","Verdi","Unicajista",2],
-  ["¿Qué palabra aparece en el nombre Peña El Tambor?","Tambor","Silbato","Corneta",2],
-  ["¿Qué palabra aparece en el nombre Peña Marea Roja?","Roja","Azul","Dorada",2],
-  ["¿Qué palabra aparece en el nombre Peña Universitaria?","Universitaria","Portuaria","Industrial",2],
-  ["¿Qué ciudad representa Cultural Leonesa de Baloncesto?","León","Salamanca","Segovia",2],
-  ["¿Qué ciudad representó Baloncesto León?","León","Soria","Ávila",2],
-  ["¿Qué ciudad representó Elosúa León?","León","Burgos","Palencia",2],
-  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña CultuBasket","Unicaja","Baskonia",3],
-  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña El Tambor","Real Madrid","Breogán",3],
-  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña Marea Roja","Gran Canaria","Valencia Basket",3],
-  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña Universitaria","Joventut","UCAM Murcia",3],
-  ["¿Qué ciudad aparece una y otra vez en las preguntas específicas de este bloque leonés?","León","Málaga","Badalona",3],
-  ["¿Cuál de estos nombres pertenece a una peña leonesa incluida en el juego?","Peña CultuBasket","Peña Taronja ACB","Peña Costa Triple",3],
-  ["¿Cuál de estos nombres pertenece a una peña leonesa incluida en el juego?","Peña Marea Roja","Peña Azul de la Costa","Peña Basket del Norte",3]
+  ["¿Qué equipo leonés fue 2.º en Primera División B en 1989-90 y ascendió?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León juvenil",3],
+  ["¿Qué equipo leonés fue 1.º en Segunda División en 1985-86 y ascendió?","Baloncesto León","Baskonia","Breogán",3],
+  ["¿Qué equipo leonés fue 1.º en Tercera División en 1981-82 y ascendió?","Baloncesto León","Estudiantes","Valencia Basket",3],
+  ["¿Qué equipo leonés terminó 20.º en ACB en 1990-91?","Baloncesto León","Real Madrid","Joventut",3],
+  ["¿Qué equipo leonés terminó 13.º en ACB en 1993-94?","Baloncesto León","Unicaja","Bilbao Basket",3],
+  ["¿Qué equipo leonés terminó 9.º en ACB en 1994-95?","Baloncesto León","Barcelona","Murcia",3],
+  ["¿Qué equipo leonés terminó 12.º en ACB en 1995-96?","Baloncesto León","Gran Canaria","Manresa",3],
+  ["¿Qué equipo leonés terminó 6.º en ACB en 1996-97 y volvió a Europa?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León",4],
+
+  ["¿Qué denominación actual del club leonés aparece en Wikipedia como equipo de baloncesto de la Cultural?","Cultural y Deportiva Leonesa (baloncesto)","Cultural Basket Endesa","León Basket Club",2],
+  ["¿Qué ciudad representa la Cultural y Deportiva Leonesa (baloncesto)?","León","Madrid","Lugo",2],
+  ["¿Qué color histórico se asocia a la Cultural Leonesa también en baloncesto?","Blanco","Verde","Morado",2],
+
+  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña CultuBasket","Peña Azul Turquesa","Peña Costa Triple",2],
+  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña Universitaria","Peña Oro Norte","Peña Basket Sierra",2],
+  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña El Tambor","Peña Fondo Playa","Peña Triple Murcia",2],
+  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña Marea Roja","Peña Verde Basket","Peña ACB Centro",2],
+
+  ["¿Qué palabra aparece en el nombre Peña Marea Roja?","Roja","Azul","Negra",2],
+  ["¿Qué palabra aparece en el nombre Peña El Tambor?","Tambor","Silbato","Pito",2],
+  ["¿Qué palabra aparece en el nombre Peña Universitaria?","Universitaria","Industrial","Atlética",2],
+  ["¿Qué palabra aparece en el nombre Peña CultuBasket?","Cultu","Taronja","Verdi",2],
+
+  ["¿Qué ciudad comparten las peñas leonesas citadas en este juego?","León","Málaga","Murcia",2],
+  ["¿Qué nombre de los citados corresponde a club y no a peña?","Baloncesto León","Peña El Tambor","Peña Marea Roja",2],
+  ["¿Qué nombre de los citados corresponde a club y no a peña?","Cultural Leonesa de Baloncesto","Peña Universitaria","Peña CultuBasket",2],
+  ["¿Qué nombre de los citados corresponde a club y no a peña?","Elosúa León","Peña Marea Roja","Peña El Tambor",2],
+
+  ["¿Qué torneo nacional aparece ligado a Baloncesto León en su palmarés?","Copa Príncipe","Copa del Mundo FIBA","EuroCup",4],
+  ["¿Qué torneo autonómico aparece ligado a Baloncesto León en su palmarés?","Copa Castilla y León","Copa Galicia","Copa Andalucía",4],
+  ["¿Qué competición europea aparece asociada a Baloncesto León en los 90?","Copa Korać","Euroliga femenina","EuroChallenge 2008",4],
+
+  ["¿Qué jugador del ejemplo dado por el usuario aparece como opción relacionada con Elosúa León en Andorra 89/90?","Essie Hollis","Xavi Fernández","Roberto Herreras",5],
+  ["¿Qué jugador del ejemplo dado por el usuario aparece como opción de campeón NBA que jugó en León?","Lamont Barnes","Federico Copes","Reginald Johnson",5],
+
+  ["¿Qué base de preguntas usa este juego tras tu modificación total?","Solo Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto","Toda la ACB y la NBA","Baloncesto mundial y fútbol",1],
+  ["¿Qué resultado visual aparece si aciertas las 40?","Agua bendita","Burro","Balón dorado",1],
+  ["¿Qué resultado visual aparece si no aciertas las 40?","Burro","Agua bendita","Trofeo de copa",1]
 ];
 
 let contestants = [];
@@ -504,58 +478,53 @@ let soundOn = true;
 let bellInterval = null;
 
 const hostGood = [
-  "¡Aleluya! Eso ha entrado más limpio que el dinero del cepillo.",
-  "¡Milagro baloncestístico! Hoy vienes tocado por la gracia.",
-  "¡Canasta celestial! Ni el monaguillo la habría clavado mejor.",
-  "¡Eso merece campanas, incienso y repetición a cámara lenta!",
-  "¡Hijo mío, eso ha sido más fino que una homilía con triple!",
-  "¡Qué maravilla, criatura, eso ha sido bendición pura!",
-  "¡Se han alineado el aro, la tabla y la providencia!",
-  "¡Eso ha sido evangelio del bueno!",
-  "¡Con respuestas así da gusto hasta perdonar pecados!",
-  "¡Se ha puesto contento hasta el sacristán!"
+  "¡Aleluya! Esa ha entrado limpia.",
+  "¡Canasta celestial!",
+  "¡Muy bien, hijo mío!",
+  "¡Milagro baloncestístico!",
+  "¡Eso ha sido bendición pura!",
+  "¡Qué buena respuesta!",
+  "¡Perfecta, criatura!",
+  "¡Así se responde en esta catedral!"
 ];
 const hostBad = [
-  "¡Eso ha sido un pecado con repetición instantánea!",
-  "¡Madre del amor hermoso, esa respuesta ha dolido hasta en el campanario!",
-  "¡Reza tres tiros libres y vuelve a intentarlo, criatura!",
-  "¡Eso no lo arregla ni con agua bendita y prórroga!",
-  "¡Se ha santiguado hasta el marcador del susto!",
-  "¡Eso ha salido más torcido que un tiro con vendaval!",
-  "¡Ha llorado hasta el monaguillo de la mesa de anotación!",
-  "¡Esa respuesta se fue al limbo antes de tocar tablero!",
-  "¡Eso ha sido herejía de perímetro!",
-  "¡Ni con procesión completa entraba esa!"
+  "¡Eso ha sido un pecado baloncestístico!",
+  "¡No era esa!",
+  "¡Se ha torcido la respuesta!",
+  "¡Madre del amor hermoso!",
+  "¡Esa se fue al limbo!",
+  "¡Has fallado, hijo mío!",
+  "¡Ni con agua bendita entraba!",
+  "¡Eso ha dolido en el campanario!"
 ];
 const contestantGood = {
-  generic:["Ya lo sabía yo, si es que hoy vengo sembrado.","No me aplauda tanto, que luego me vengo arriba.","Hoy estoy más fino que un triple sin tocar aro.","Esto estaba cantado desde el salto inicial.","Voy embalado como si jugara en casa.","Así sí da gusto jugar en esta parroquia."],
-  nazario:["Ya lo sabía, pero me distrae la belleza del graderío.","Hoy vengo tan fino que hasta la boina me aplaude.","Si sigo así, me fichan y me echan flores a la vez.","A este ritmo me van a mirar más que al videomarcador.","Estoy lanzado y con el sombrero bien puesto."],
-  praxedes:["Eso lo sabía yo antes de que pusieran las opciones.","Normal que acierte, si aquí la que manda soy yo.","A esta parroquia le falta escucharme más y fallar menos.","Yo no vengo a probar suerte, vengo a poner orden.","Otra para la libreta de las que mandan."],
-  tijeras:["La sabía perfectamente... y eso que hoy vengo con niebla.","Apunte ahí otro acierto del barril del talento.","Estoy que lo clavo aunque vaya dando curvas.","Hoy la inspiración me vino con tapa y aceituna.","Ni el vaso me distrae cuando me da por acertar."],
-  nachon:["Yo esto ya lo comenté con un cliente entre semáforo y semáforo.","Hoy voy tan lanzado que ni el GPS me sigue.","Esto lo llevo más controlado que la parada del aeropuerto.","A este paso no me pilla ni la hora punta.","Me conozco esta ruta mejor que el centro de la ciudad."],
-  chonona:["Ya estaba tardando en demostrar quién manda aquí.","A mí no me pilla una fácil, una media ni una difícil.","Que aplaudan, que para eso he venido.","Aquí se viene llorado y acertado.","Otra más para mi colección de zascas."],
-  antonino:["Yo callo mucho, pero cuando acierto se nota.","Esto lo traía mascado desde el calentamiento.","Suave, elegante y para dentro.","Sin hacer ruido, pero acertando.","Paso corto, mirada seria y respuesta dentro."],
-  alvarino:["Hoy vengo más fresco que una caja de fruta en enero.","Esto entra solo, como los plátanos buenos.","Estoy repartiendo aciertos por kilos.","Qué bien madura una respuesta cuando sale redonda.","Estoy para vender aciertos a granel."],
-  arricio:["Con el calor que hace y aun así estoy acertando.","Si sigo así, me tienen que abanicar por talento.","Esto lo meto aunque se me derrita la camiseta.","Estoy sudando, sí, pero también acertando.","Calor tengo, pero puntería también."],
-  felixon:["Correcto. Gestión impecable de la respuesta.","Todo bajo control. Como debe ser.","Cuando hay método, hay acierto.","Esto estaba perfectamente auditado.","La ejecución ha sido excelente."],
-  mamen:["Tranquilos, lo tenía planificado desde antes de sentarme.","Orden, cabeza y canasta. Así sí.","La presidenta no falla las importantes.","Esto entra dentro de la hoja de ruta.","Si se hace con criterio, sale bien."]
+  generic:["Hoy vengo sembrado.","Eso estaba cantado.","Voy muy fino.","Seguimos acertando.","Así sí.","Otra para dentro."],
+  nazario:["Ya lo sabía.","Estoy lanzado.","Hoy no perdono una.","Eso lo llevaba yo puesto.","Voy con el sombrero enchufado."],
+  praxedes:["Eso lo sabía yo antes.","Aquí mando yo.","Normal que acierte.","Otra más para la jefa.","Esto estaba clarísimo."],
+  tijeras:["La sabía perfectamente.","Hoy vengo inspirado.","Otra dentro.","No me distrae nada.","Voy recto al acierto."],
+  nachon:["Esto lo llevaba en ruta.","Otra bien metida.","Voy tan lanzado que ni el GPS me sigue.","Me conozco esta parada.","Seguimos bien encaminados."],
+  chonona:["Ya está.","Otra para mí.","Que aplaudan.","Aquí se viene acertado.","Voy mandando."],
+  antonino:["Sin hacer ruido, pero acertando.","Suave y dentro.","Eso estaba preparado.","Vamos bien.","Otra elegante."],
+  alvarino:["Esto entra solo.","Estoy repartiendo aciertos.","Otra madura.","Voy fresco.","Qué bien sale cuando sale."],
+  arricio:["Con calor o sin calor, dentro.","Otra acertada.","Estoy fino.","Eso va para dentro.","Seguimos vivos."],
+  felixon:["Correcto.","Todo bajo control.","Gestión impecable.","Seguimos en línea.","Eso estaba auditado."],
+  mamen:["Lo tenía previsto.","Orden y acierto.","Otra correcta.","Esto entra en el plan.","Se sigue mandando."]
 };
 const contestantBad = {
-  generic:["Yo la sabía, pero quise darle emoción a la parroquia.","Se me cruzó la respuesta con otra del bar.","Esto es estrategia, luego remonto.","La tenía en la punta de la lengua y se me cayó.","Hoy he salido respondón, pero no afinado.","Bueno, una mala la tiene cualquiera."],
-  nazario:["Me distraje pensando en una moza del fondo.","La sabía, pero me guiñó un ojo la respuesta falsa.","Esto me pasa por venir tan elegante.","Estaba yo en otros asuntos del corazón.","No se puede estar a todo y a todas."],
-  praxedes:["Esa estaba mal puesta, lo digo yo y punto.","No he fallado, ha fallado la pregunta.","Que no se acostumbren, que esto ha sido un despiste mínimo.","Esto se revisa y se repite, porque no me ha gustado.","Una mala no cambia quién manda aquí."],
-  tijeras:["La tenía en la punta de la lengua... y del vaso.","Esto es culpa del reflejo de las luces.","Hoy voy recto, pero la respuesta iba haciendo eses.","Se me evaporó la buena y agarré la mala.","Esto con una siesta entra mejor."],
-  nachon:["Me pilló en hora punta mental.","Iba bien encaminado y me salté la salida buena.","Esto con dos rotondas más lo saco.","Me metí por la calle equivocada de la memoria.","A esta respuesta le faltaba una vuelta más."],
-  chonona:["No me ha gustado esa pregunta ni un pelo.","Una mala la tiene cualquiera... los demás más.","Que nadie se confíe, que ahora arranco de verdad.","Esto ha sido un tropezón, no una caída.","La próxima la contesto antes de que respire el aro."],
-  antonino:["He querido ser discreto hasta para fallar.","La correcta la dejé salir por educación.","Se me fue, pero sin hacer ruido.","Hoy he estado elegante hasta en el error.","No pasa nada, se vuelve con más calma."],
-  alvarino:["Esa venía verde y yo la cogí demasiado pronto.","Se me mezclaron las cajas.","Hoy esta fruta salió rana.","No estaba madura la respuesta.","La buena se quedó en el puesto de al lado."],
-  arricio:["Con este calor también se derriten las respuestas.","Me ha subido la temperatura táctica.","Necesito sombra y revancha.","La buena se me quedó pegada del calor.","Estoy fundido, pero sigo en pie."],
-  felixon:["Esto ha sido un fallo de ejecución, no de concepto.","Anoto la incidencia y seguimos.","Hay margen de mejora, pero no cunda el pánico.","Se corrige el desvío y se avanza.","Lo catalogo como error puntual."],
-  mamen:["Vale, una mal. No pasa nada, lo reconduzco.","Esto entra en el plan B de recuperación.","Se acepta el error, pero se remonta.","Ajustamos y seguimos.","No me preocupa, todavía mando yo."]
+  generic:["Se me fue.","Bueno, una mala la tiene cualquiera.","La buena era la otra.","Se me cruzó.","Luego remonto.","No pasa nada."],
+  nazario:["Me distraje.","La buena era la otra.","Esto me pasa por elegante.","No se puede estar a todo.","Se me fue la mirada."],
+  praxedes:["Esa estaba mal puesta.","No he fallado yo, falló la pregunta.","No pasa nada.","Ahora remonto.","Que nadie se crezca."],
+  tijeras:["Se me escapó.","La tenía ahí.","Esto con otra vuelta entra.","La buena se evaporó.","No pasa nada."],
+  nachon:["Tomé la salida mala.","Iba bien y me desvié.","Esto con otra rotonda sale.","Me pilló en hora punta.","Ajustamos ruta."],
+  chonona:["No me ha gustado esa.","Bueno, una mala.","Ahora arranco.","No pasa nada.","La próxima entra."],
+  antonino:["Se me fue en silencio.","No pasa nada.","La correcta se escapó.","Volvemos con calma.","Ajusto y sigo."],
+  alvarino:["La cogí verde.","Se me mezclaron las cajas.","No estaba madura.","La buena quedó al lado.","Luego entra."],
+  arricio:["Con este calor se derriten.","Necesito sombra.","La buena se me pegó.","No pasa nada.","Sigo en pie."],
+  felixon:["Fallo de ejecución.","Anotado.","Se corrige.","No cunda el pánico.","Seguimos."],
+  mamen:["Lo reconduzco.","No pasa nada.","Se ajusta y listo.","Plan B.","Ahora sí."]
 };
 
 function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function deepClone(x){ return JSON.parse(JSON.stringify(x)); }
 function todayKey(){
   const d = new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -747,45 +716,27 @@ function shuffle(arr){
   }
   return a;
 }
-function pickWrong(correct, pool){
-  const options = pool.filter(x=>x!==correct);
-  const out = [];
-  while(out.length < 2 && options.length){
-    const idx = Math.floor(Math.random()*options.length);
-    out.push(options.splice(idx,1)[0]);
-  }
-  return out;
-}
-function buildBank(){
-  const bank = [];
-  refsAndComps.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
-  players.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
-  coaches.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
-  leonSpecific.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
-  const allCities = clubs.map(x=>x.city);
-  clubs.forEach(c=>{
-    const wrong = pickWrong(c.city, allCities);
-    bank.push({q:`¿Qué ciudad corresponde al club ${c.club}?`, a:[c.city, wrong[0], wrong[1]], c:0, d:2});
+function selectQuestions(){
+  const bank = onlyTeamQuestions.map(item=>{
+    const correct = item[1];
+    const answers = shuffle([item[1],item[2],item[3]]);
+    return { q:item[0], a:answers, c:answers.indexOf(correct), d:item[4] };
   });
-  const allClubs = clubs.map(x=>x.club);
-  clubs.forEach(c=>{
-    const wrong = pickWrong(c.club, allClubs);
-    bank.push({q:`¿Qué club representa la ciudad de ${c.city}?`, a:[c.club, wrong[0], wrong[1]], c:0, d:3});
-  });
-  [
-    ["¿Qué categoría sustituyó a la antigua LEB Oro?","1ª FEB","2ª FEB","Liga ACB",2],
-    ["¿Qué categoría sustituyó a la antigua LEB Plata?","2ª FEB","1ª FEB","Liga ACB",2],
-    ["¿Qué torneo reúne a los mejores equipos ACB a mitad de temporada?","Copa del Rey","Superliga Municipal","Copa Provincial",2],
-    ["¿Qué club leonés actual aparece en este juego?","Cultural Leonesa de Baloncesto","UCAM Murcia","Baskonia",2],
-    ["¿Qué entidades leonesas históricas aparecen en este juego?","Baloncesto León y Elosúa León","Baskonia y Obradoiro","Gran Canaria y Girona",3],
-    ["¿Qué peñas de León aparecen en el juego?","Universitaria, CultuBasket, El Tambor y Marea Roja","Verdes del Norte y Peña ACB","Solo una peña",3]
-  ].forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
 
-  return bank.map(item=>{
-    const correct = item.a[item.c];
-    const shuffled = shuffle(item.a);
-    return {q:item.q, a:shuffled, c:shuffled.indexOf(correct), d:item.d};
-  });
+  const used = new Set();
+  const result = [];
+
+  for(let i=0;i<QUESTIONS_PER_GAME;i++){
+    let difficulty = i < 3 ? 1 : Math.min(5, 1 + Math.floor(i/3));
+    let pool = bank.map((q,idx)=>({q,idx})).filter(x => x.q.d === difficulty && !used.has(x.idx));
+    if(!pool.length){
+      pool = bank.map((q,idx)=>({q,idx})).filter(x => !used.has(x.idx));
+    }
+    const chosen = rand(pool);
+    used.add(chosen.idx);
+    result.push(chosen.q);
+  }
+  return result;
 }
 function getGoodLines(){
   if(currentContestant.style==="custom") return contestantGood.generic;
@@ -800,28 +751,6 @@ function resetAnswerButtons(){
     b.disabled = false;
     b.classList.remove("correct","wrong");
   });
-}
-function selectQuestions(){
-  const bank = buildBank();
-  const usedIndexes = new Set();
-  const result = [];
-  for(let i=0;i<QUESTIONS_PER_GAME;i++){
-    let difficulty = i < 3 ? 1 : Math.min(5, 1 + Math.floor(i/3));
-    let pool = bank
-      .map((q,idx)=>({q,idx}))
-      .filter(x => x.q.d === difficulty && !usedIndexes.has(x.idx));
-
-    if(!pool.length){
-      pool = bank
-        .map((q,idx)=>({q,idx}))
-        .filter(x => !usedIndexes.has(x.idx));
-    }
-
-    const chosen = rand(pool);
-    usedIndexes.add(chosen.idx);
-    result.push(chosen.q);
-  }
-  return result;
 }
 function renderQuestion(){
   answering = false;
@@ -873,12 +802,9 @@ function processAnswer(index){
   if(answering) return;
   answering = true;
   clearInterval(timerInterval);
+
   const q = gameQuestions[currentQuestionIndex];
-  const buttons = [
-    document.getElementById("answer0"),
-    document.getElementById("answer1"),
-    document.getElementById("answer2")
-  ];
+  const buttons = [document.getElementById("answer0"),document.getElementById("answer1"),document.getElementById("answer2")];
   buttons.forEach(b=>b.disabled=true);
   buttons[q.c].classList.add("correct");
 
@@ -916,9 +842,7 @@ function processAnswer(index){
   }, 450);
 }
 function saveGame(){
-  const payload = {
-    currentUser,currentContestant,gameQuestions,currentQuestionIndex,points,hits,fails,timer
-  };
+  const payload = { currentUser,currentContestant,gameQuestions,currentQuestionIndex,points,hits,fails,timer };
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
   alert("Partida guardada");
 }
@@ -957,10 +881,18 @@ function endGame(){
   clearInterval(timerInterval);
   rankAdd(currentUser || "INVITADO", currentContestant.name, points);
   refreshRankings();
+
   document.getElementById("finalPoints").textContent = points;
   document.getElementById("finalSummary").innerHTML = `<strong>${currentUser || "INVITADO"}</strong> con <strong>${currentContestant.name}</strong><br>Aciertos: ${hits}<br>Fallos/Pecados: ${fails}`;
-  if(hits === QUESTIONS_PER_GAME) document.getElementById("holyPrize").classList.remove("hidden");
-  else document.getElementById("holyPrize").classList.add("hidden");
+
+  if(hits === QUESTIONS_PER_GAME){
+    document.getElementById("finalVisual").textContent = "🍼";
+    document.getElementById("finalVisualText").textContent = "TROFEO POR GANAR LAS 40 PREGUNTAS";
+  }else{
+    document.getElementById("finalVisual").textContent = "🐴";
+    document.getElementById("finalVisualText").textContent = "ERES UN BURRO";
+  }
+
   showScreen("resultScreen");
 }
 
@@ -990,7 +922,7 @@ document.getElementById("saveCustomBtn").onclick = ()=>{
   const gender = document.getElementById("customGender").value;
   const trait = document.getElementById("customTrait").value;
   if(!name){ alert("Escribe un nombre"); return; }
-  const customs = getCustoms();
+  const customs = JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]");
   customs.push({
     id:"custom_"+Date.now(),
     name,
@@ -1001,7 +933,7 @@ document.getElementById("saveCustomBtn").onclick = ()=>{
     pitch: gender==="female" ? 1.08 : .94,
     voiceIndex: 11 + customs.length
   });
-  saveCustoms(customs);
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(customs));
   loadContestants();
   document.getElementById("customName").value = "";
   alert("Concursante guardado");
