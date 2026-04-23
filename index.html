@@ -1,16 +1,454 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Catedral Baloncesto</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>La Catedral del Baloncesto Español</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:linear-gradient(180deg,#081633 0%,#0a1d49 45%,#061127 100%);
+    color:#fff;
+  }
+  .app{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    margin:0 auto;
+    padding:18px 14px 28px;
+    position:relative;
+  }
+  .hidden{display:none!important}
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .iconBtn{
+    width:52px;height:52px;border:none;cursor:pointer;
+    border-radius:50%;
+    background:#f0bc16;
+    color:#1f2f7e;
+    font-size:26px;
+    font-weight:bold;
+    box-shadow:0 7px 0 #9b6a00;
+  }
+  .titleBox{
+    background:#2947ac;
+    border:5px solid #e9b60e;
+    border-radius:34px;
+    padding:22px 18px;
+    text-align:center;
+    box-shadow:0 10px 0 rgba(0,0,0,.28);
+    margin-bottom:20px;
+  }
+  .titleBox h1{
+    margin:0;
+    font-size:22px;
+    line-height:1.25;
+    font-style:italic;
+    font-weight:900;
+    color:#f0bc16;
+    text-transform:uppercase;
+  }
+  .stage{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin-bottom:18px;
+    min-height:158px;
+  }
+  .avatarWrap{
+    text-align:center;
+  }
+  .avatar{
+    width:118px;height:118px;
+    margin:0 auto 8px;
+    border-radius:50%;
+    background:#efc69a;
+    border:6px solid #000;
+    position:relative;
+  }
+  .avatar:before,.avatar:after{
+    content:"";
+    position:absolute;
+    width:16px;height:16px;
+    background:#000;border-radius:50%;
+    top:44px;
+  }
+  .avatar:before{left:28px}
+  .avatar:after{right:28px}
+  .mouth{
+    position:absolute;
+    left:50%;
+    bottom:24px;
+    transform:translateX(-50%);
+    width:24px;height:10px;
+    border-bottom:4px solid #000;
+    border-radius:0 0 18px 18px;
+  }
+  .body{
+    width:96px;height:52px;
+    margin:0 auto;
+    background:#111;
+    border-radius:28px 28px 18px 18px;
+  }
+  .mainBtn{
+    width:100%;
+    border:none;
+    cursor:pointer;
+    border-radius:34px;
+    background:#efbc10;
+    color:#1e2d7a;
+    font-size:34px;
+    font-style:italic;
+    font-weight:900;
+    padding:18px 12px;
+    box-shadow:0 12px 0 #a86f00;
+    margin-bottom:16px;
+  }
+  .grid3{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .smallBtn{
+    border:none;
+    cursor:pointer;
+    border-radius:26px;
+    min-height:92px;
+    font-weight:900;
+    font-size:17px;
+    text-transform:uppercase;
+    box-shadow:0 9px 0 rgba(0,0,0,.28);
+    padding:10px;
+  }
+  .b1{background:#49b8ef;color:#091538}
+  .b2{background:#d8dbe4;color:#091538}
+  .b3{background:#9e82f0;color:#fff}
+  .b4{background:#d2d5dc;color:#091538}
+  .fullRow{grid-column:1 / -1}
+  .card{
+    background:#ececf0;
+    color:#12224f;
+    border-radius:32px;
+    padding:22px 16px;
+    box-shadow:0 10px 0 rgba(0,0,0,.28);
+  }
+  .cardTitle{
+    margin:0 0 16px;
+    text-align:center;
+    color:#2947ac;
+    font-size:22px;
+    font-style:italic;
+    font-weight:900;
+    text-transform:uppercase;
+  }
+  input[type="text"], input[type="password"]{
+    width:100%;
+    height:60px;
+    border:4px solid #000;
+    border-radius:18px;
+    padding:0 14px;
+    font-size:22px;
+    text-align:center;
+    margin-bottom:16px;
+  }
+  .actionBtn{
+    width:100%;
+    border:none;
+    border-radius:18px;
+    padding:16px 12px;
+    font-size:18px;
+    font-weight:900;
+    text-transform:uppercase;
+    cursor:pointer;
+    margin-bottom:12px;
+  }
+  .yellow{background:#efbc10;color:#1e2d7a}
+  .blue{background:#2f64eb;color:#fff}
+  .green{background:#19ad47;color:#fff}
+  .red{background:#db232c;color:#fff}
+  .grey{background:#d6d8de;color:#12224f}
+  .backLink{
+    display:block;
+    text-align:center;
+    margin-top:8px;
+    color:#c8cdd9;
+    font-weight:800;
+    text-transform:uppercase;
+  }
+  .contestants{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top:10px;
+  }
+  .contestant{
+    background:#ececf0;
+    color:#12224f;
+    border-radius:24px;
+    padding:12px;
+    display:flex;
+    gap:14px;
+    align-items:center;
+    box-shadow:0 8px 0 rgba(0,0,0,.28);
+    cursor:pointer;
+  }
+  .miniHead{
+    width:66px;height:66px;border-radius:50%;
+    background:#efc69a;border:4px solid #000;
+    position:relative;flex:0 0 auto;
+  }
+  .miniHead:before,.miniHead:after{
+    content:"";position:absolute;width:10px;height:10px;background:#000;border-radius:50%;top:24px;
+  }
+  .miniHead:before{left:15px}
+  .miniHead:after{right:15px}
+  .miniBody{
+    width:56px;height:26px;background:#384d73;border-radius:20px;margin:4px auto 0;
+  }
+  .contestantText strong{
+    display:block;
+    font-size:16px;
+    text-transform:uppercase;
+  }
+  .contestantText span{
+    font-size:12px;
+    color:#7781a3;
+    font-weight:700;
+    text-transform:uppercase;
+  }
+  .modalBg{
+    position:fixed;inset:0;background:rgba(0,0,0,.62);
+    display:flex;align-items:center;justify-content:center;
+    padding:18px;
+  }
+  .note{
+    background:rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:12px;
+    font-weight:700;
+    line-height:1.35;
+  }
+</style>
 </head>
+<body>
+<div class="app">
 
-<body style="background:black; color:white; text-align:center; font-family:Arial;">
+  <section id="homeScreen">
+    <div class="topbar">
+      <button class="iconBtn" id="soundBtn">🔔</button>
+      <button class="iconBtn" id="lockBtn">🔒</button>
+    </div>
 
-<h1>Catedral Baloncesto 🏀</h1>
-<p>Ya funciona tu web 🔥</p>
+    <div class="titleBox">
+      <h1>La Catedral del<br>Baloncesto Español</h1>
+    </div>
 
-<button onclick="alert('Funciona perfecto')">Probar</button>
+    <div class="stage">
+      <div class="avatarWrap">
+        <div class="avatar">
+          <div class="mouth"></div>
+        </div>
+        <div class="body"></div>
+      </div>
+    </div>
 
+    <button class="mainBtn" id="enterBtn">¡ENTRAR!</button>
+
+    <div class="grid3">
+      <button class="smallBtn b1" id="dailyBtn">Clasificación diaria</button>
+      <button class="smallBtn b2" id="totalBtn">Clasificación total</button>
+      <button class="smallBtn b3" id="rulesBtn">Instrucciones</button>
+      <button class="smallBtn b4" id="settingsBtn">Ajustes</button>
+    </div>
+  </section>
+
+  <section id="userScreen" class="hidden">
+    <div class="card">
+      <h2 class="cardTitle">Crear usuario</h2>
+      <input id="userName" type="text" placeholder="Tu nombre">
+      <button class="actionBtn yellow" id="continueUserBtn">Continuar</button>
+    </div>
+    <a class="backLink" href="#" data-back="homeScreen">Volver</a>
+  </section>
+
+  <section id="chooseScreen" class="hidden">
+    <div class="titleBox" style="padding:18px 16px;">
+      <h1 id="helloName">Hola</h1>
+    </div>
+    <button class="actionBtn grey" id="chooseContestantBtn">Elegir concursante</button>
+    <button class="actionBtn grey" id="createContestantBtn">Crear concursante</button>
+    <a class="backLink" href="#" data-back="userScreen">Atrás</a>
+  </section>
+
+  <section id="listScreen" class="hidden">
+    <div class="titleBox" style="padding:18px 16px;">
+      <h1>¿Quién confiesa hoy?</h1>
+    </div>
+
+    <div class="contestants">
+      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>El Nazario</strong><span>Paisano con boina</span></div></div>
+      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>Tía Praxedes</strong><span>Señora mayor con pañoleta</span></div></div>
+      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>Tijeras</strong><span>Hombre de pueblo</span></div></div>
+      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>Nachón el Taxis</strong><span>Taxista con mil historias</span></div></div>
+    </div>
+
+    <button class="actionBtn red" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
+  </section>
+
+  <section id="createContestantScreen" class="hidden">
+    <div class="card">
+      <h2 class="cardTitle">Creador de concursante</h2>
+      <div class="note">
+        Aquí irá el creador completo con caras, pelo, barba, ropa, gafas y voz.<br>
+        En este paso lo dejamos preparado como pantalla base.
+      </div>
+      <button class="actionBtn yellow" style="margin-top:16px;" id="backFromCreatorBtn">Volver</button>
+    </div>
+  </section>
+
+  <section id="dailyScreen" class="hidden">
+    <div class="card">
+      <h2 class="cardTitle">Clasificación diaria</h2>
+      <div class="note">Aquí irá el ranking diario real.</div>
+      <button class="actionBtn grey" id="backDailyBtn">Volver</button>
+    </div>
+  </section>
+
+  <section id="totalScreen" class="hidden">
+    <div class="card">
+      <h2 class="cardTitle">Clasificación total</h2>
+      <div class="note">Aquí irá el ranking total real.</div>
+      <button class="actionBtn grey" id="backTotalBtn">Volver</button>
+    </div>
+  </section>
+
+  <section id="rulesScreen" class="hidden">
+    <div class="card">
+      <h2 class="cardTitle">Instrucciones del juego</h2>
+      <div class="note">
+        40 preguntas por partida.<br>
+        15 segundos por pregunta.<br>
+        Acierto: +2 puntos.<br>
+        Fallo: -1 punto.<br>
+        Más adelante aquí meteremos todas las reglas completas.
+      </div>
+      <button class="actionBtn grey" id="backRulesBtn">Volver</button>
+    </div>
+  </section>
+
+  <section id="settingsScreen" class="hidden">
+    <div class="card">
+      <h2 class="cardTitle">Ajustes</h2>
+      <button class="actionBtn yellow" id="toggleSoundBtn">Sonido de campanas: ON</button>
+      <button class="actionBtn grey" id="backSettingsBtn">Volver</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="modalBg hidden" id="pinModal">
+  <div class="card" style="width:100%;max-width:360px;">
+    <h2 class="cardTitle">Clave dueño</h2>
+    <input id="ownerPin" type="password" placeholder="1010">
+    <button class="actionBtn yellow" id="openOwnerBtn">Abrir</button>
+    <button class="actionBtn red" id="closeOwnerBtn">Cerrar</button>
+  </div>
+</div>
+
+<div class="modalBg hidden" id="ownerPanel">
+  <div class="card" style="width:100%;max-width:360px;">
+    <h2 class="cardTitle">Sacristía</h2>
+    <button class="actionBtn blue">Editor y actualizador</button>
+    <button class="actionBtn green">Compartir WhatsApp</button>
+    <button class="actionBtn grey" id="closeOwnerPanelBtn">Volver</button>
+  </div>
+</div>
+
+<script>
+  let soundOn = true;
+
+  const screens = [
+    "homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen",
+    "dailyScreen","totalScreen","rulesScreen","settingsScreen"
+  ];
+
+  function showScreen(id){
+    screens.forEach(s => document.getElementById(s).classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+    window.scrollTo(0,0);
+  }
+
+  document.getElementById("enterBtn").onclick = () => showScreen("userScreen");
+  document.getElementById("dailyBtn").onclick = () => showScreen("dailyScreen");
+  document.getElementById("totalBtn").onclick = () => showScreen("totalScreen");
+  document.getElementById("rulesBtn").onclick = () => showScreen("rulesScreen");
+  document.getElementById("settingsBtn").onclick = () => showScreen("settingsScreen");
+
+  document.getElementById("continueUserBtn").onclick = () => {
+    const name = document.getElementById("userName").value.trim() || "Pacho";
+    document.getElementById("helloName").textContent = "Hola " + name;
+    showScreen("chooseScreen");
+  };
+
+  document.getElementById("chooseContestantBtn").onclick = () => showScreen("listScreen");
+  document.getElementById("createContestantBtn").onclick = () => showScreen("createContestantScreen");
+  document.getElementById("backChooseBtn").onclick = () => showScreen("chooseScreen");
+  document.getElementById("backFromCreatorBtn").onclick = () => showScreen("chooseScreen");
+  document.getElementById("backDailyBtn").onclick = () => showScreen("homeScreen");
+  document.getElementById("backTotalBtn").onclick = () => showScreen("homeScreen");
+  document.getElementById("backRulesBtn").onclick = () => showScreen("homeScreen");
+  document.getElementById("backSettingsBtn").onclick = () => showScreen("homeScreen");
+
+  document.querySelectorAll("[data-back]").forEach(a=>{
+    a.onclick = (e)=>{
+      e.preventDefault();
+      showScreen(a.dataset.back);
+    };
+  });
+
+  document.getElementById("lockBtn").onclick = () => {
+    document.getElementById("pinModal").classList.remove("hidden");
+  };
+  document.getElementById("closeOwnerBtn").onclick = () => {
+    document.getElementById("pinModal").classList.add("hidden");
+  };
+  document.getElementById("openOwnerBtn").onclick = () => {
+    const pin = document.getElementById("ownerPin").value.trim();
+    if(pin === "1010"){
+      document.getElementById("pinModal").classList.add("hidden");
+      document.getElementById("ownerPanel").classList.remove("hidden");
+    } else {
+      alert("Clave incorrecta");
+    }
+  };
+  document.getElementById("closeOwnerPanelBtn").onclick = () => {
+    document.getElementById("ownerPanel").classList.add("hidden");
+  };
+
+  function refreshSoundText(){
+    const txt = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
+    document.getElementById("toggleSoundBtn").textContent = txt;
+    document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
+  }
+
+  document.getElementById("toggleSoundBtn").onclick = () => {
+    soundOn = !soundOn;
+    refreshSoundText();
+  };
+
+  document.getElementById("soundBtn").onclick = () => {
+    soundOn = !soundOn;
+    refreshSoundText();
+  };
+
+  refreshSoundText();
+  showScreen("homeScreen");
+</script>
 </body>
 </html>
