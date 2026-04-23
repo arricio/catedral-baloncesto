@@ -9,83 +9,65 @@
 :root{
   --bg1:#081633; --bg2:#0a1d49; --bg3:#061127;
   --gold:#f0bc16; --goldD:#a86f00;
-  --blue:#2947ac; --blueD:#1c2f74;
-  --card:#ececf0; --ink:#12224f;
-  --green:#36c166; --red:#d94545; --muted:#7f8bb0;
+  --blue:#2947ac; --card:#ececf0; --ink:#12224f;
+  --green:#36c166; --red:#d94545; --shadow:0 10px 0 rgba(0,0,0,.28);
 }
 body{
-  margin:0;font-family:Arial,Helvetica,sans-serif;color:#fff;
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  color:#fff;
   background:
-    radial-gradient(circle at top, rgba(255,255,255,.06), transparent 24%),
+    radial-gradient(circle at top, rgba(255,255,255,.06), transparent 22%),
     linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 46%,var(--bg3) 100%);
 }
 .hidden{display:none!important}
-.app{max-width:430px;min-height:100vh;margin:0 auto;padding:14px 12px 24px;position:relative;overflow:hidden}
+.app{width:100%;max-width:430px;min-height:100vh;margin:0 auto;padding:14px 12px 24px;position:relative;overflow:hidden}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .iconBtn{
   width:52px;height:52px;border:none;border-radius:50%;cursor:pointer;
-  background:var(--gold);color:#21348a;font-size:24px;font-weight:900;
-  box-shadow:0 7px 0 var(--goldD)
+  background:var(--gold);color:#21348a;font-size:24px;font-weight:900;box-shadow:0 7px 0 var(--goldD)
 }
 .titleBox{
   background:var(--blue);border:5px solid var(--gold);border-radius:34px;
-  padding:18px 14px;text-align:center;box-shadow:0 10px 0 rgba(0,0,0,.28);margin-bottom:14px
+  padding:18px 14px;text-align:center;box-shadow:var(--shadow);margin-bottom:14px
 }
 .titleBox h1{
-  margin:0;color:var(--gold);font-size:23px;line-height:1.18;
+  margin:0;color:var(--gold);font-size:23px;line-height:1.16;
   font-style:italic;font-weight:900;text-transform:uppercase
 }
 .mainBtn{
-  width:100%;border:none;border-radius:34px;cursor:pointer;
+  width:100%;border:none;cursor:pointer;border-radius:34px;
   background:var(--gold);color:#1e2d7a;font-size:34px;font-style:italic;font-weight:900;
-  padding:18px 12px;box-shadow:0 12px 0 var(--goldD);margin:0 0 14px
+  padding:18px 12px;box-shadow:0 12px 0 var(--goldD);margin-bottom:14px
 }
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .smallBtn{
   border:none;cursor:pointer;border-radius:26px;min-height:92px;padding:10px;
-  font-size:16px;font-weight:900;text-transform:uppercase;line-height:1.12;
-  box-shadow:0 9px 0 rgba(0,0,0,.28)
+  font-size:16px;font-weight:900;text-transform:uppercase;line-height:1.12;box-shadow:0 9px 0 rgba(0,0,0,.28)
 }
-.b1{background:#49b8ef;color:#091538}
-.b2{background:#d8dbe4;color:#091538}
-.b3{background:#9e82f0;color:#fff}
-.b4{background:#d2d5dc;color:#091538}
-.card{
-  background:var(--card);color:var(--ink);border-radius:30px;padding:18px 14px;
-  box-shadow:0 10px 0 rgba(0,0,0,.28)
-}
-.cardTitle{
-  margin:0 0 14px;text-align:center;color:#2947ac;font-size:22px;font-weight:900;
-  font-style:italic;text-transform:uppercase
-}
+.b1{background:#49b8ef;color:#091538}.b2{background:#d8dbe4;color:#091538}.b3{background:#9e82f0;color:#fff}.b4{background:#d2d5dc;color:#091538}
+.card{background:var(--card);color:var(--ink);border-radius:30px;padding:18px 14px;box-shadow:var(--shadow)}
+.cardTitle{margin:0 0 14px;text-align:center;color:#2947ac;font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase}
 .actionBtn{
-  width:100%;border:none;border-radius:18px;padding:15px 12px;font-size:17px;
-  font-weight:900;text-transform:uppercase;cursor:pointer;margin-bottom:12px
+  width:100%;border:none;border-radius:18px;padding:15px 12px;font-size:17px;font-weight:900;
+  text-transform:uppercase;cursor:pointer;margin-bottom:12px
 }
-.yellow{background:var(--gold);color:#1e2d7a}
-.blue{background:#2f64eb;color:#fff}
-.greenBtn{background:#19ad47;color:#fff}
-.redBtn{background:#db232c;color:#fff}
-.grey{background:#d6d8de;color:#12224f}
+.yellow{background:var(--gold);color:#1e2d7a}.blue{background:#2f64eb;color:#fff}.greenBtn{background:#19ad47;color:#fff}.redBtn{background:#db232c;color:#fff}.grey{background:#d6d8de;color:#12224f}
 input,select{
   width:100%;min-height:58px;border:4px solid #000;border-radius:16px;padding:0 12px;
   font-size:20px;text-align:center;margin-bottom:12px;background:#fff
 }
 .backLink{
-  display:block;text-align:center;margin-top:8px;color:#c8cdd9;font-weight:800;
-  text-transform:uppercase;text-decoration:none
+  display:block;text-align:center;margin-top:8px;color:#c8cdd9;font-weight:800;text-transform:uppercase;text-decoration:none
 }
-.note{
-  background:rgba(0,0,0,.06);border-radius:16px;padding:12px;font-size:14px;
-  font-weight:700;line-height:1.35
-}
+.note{background:rgba(0,0,0,.06);border-radius:16px;padding:12px;font-size:14px;font-weight:700;line-height:1.35}
 .stage{
-  position:relative;min-height:215px;border-radius:28px;padding:10px 10px 16px;margin-bottom:14px;
-  overflow:hidden;background:
+  position:relative;min-height:220px;border-radius:28px;padding:10px 10px 16px;margin-bottom:14px;overflow:hidden;
+  background:
     linear-gradient(180deg, rgba(255,220,160,.12), rgba(0,0,0,.14)),
-    radial-gradient(circle at 50% 10%, rgba(255,255,255,.11), transparent 30%),
+    radial-gradient(circle at 50% 10%, rgba(255,255,255,.10), transparent 30%),
     linear-gradient(180deg,#5b3b20 0%,#412614 100%);
-  box-shadow:0 10px 0 rgba(0,0,0,.28)
+  box-shadow:var(--shadow)
 }
 .arch{
   position:absolute;top:12px;width:96px;height:160px;background:linear-gradient(180deg,#0c245c,#173f91);
@@ -104,8 +86,7 @@ input,select{
 .pew{position:absolute;height:16px;background:#6e4528;border-radius:10px;box-shadow:0 3px 0 rgba(0,0,0,.3)}
 .pew1{left:18px;right:18px;bottom:60px}.pew2{left:38px;right:38px;bottom:36px}.pew3{left:58px;right:58px;bottom:12px}
 .audience{
-  position:absolute;left:8px;right:8px;bottom:82px;display:flex;justify-content:space-evenly;align-items:flex-end;
-  pointer-events:none
+  position:absolute;left:8px;right:8px;bottom:82px;display:flex;justify-content:space-evenly;align-items:flex-end;pointer-events:none
 }
 .person{width:18px;height:38px;position:relative;transform-origin:bottom center;animation:sway 3.4s ease-in-out infinite}
 .person:nth-child(odd){animation-duration:2.8s}.person:nth-child(3n){animation-duration:3.8s}
@@ -123,10 +104,8 @@ input,select{
 
 .duelBox{
   position:relative;overflow:hidden;border:5px solid #d5d9e5;border-radius:28px;padding:12px 10px 16px;
-  box-shadow:0 10px 0 rgba(0,0,0,.28);margin-bottom:12px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.08)),
-    linear-gradient(180deg,#7c5535,#5f3b20)
+  box-shadow:var(--shadow);margin-bottom:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.08)),linear-gradient(180deg,#7c5535,#5f3b20)
 }
 .duelBg{
   position:absolute;inset:0;opacity:.28;pointer-events:none;
@@ -136,19 +115,14 @@ input,select{
     linear-gradient(180deg, transparent 0 68%, rgba(0,0,0,.25) 68%)
 }
 .duelAudience{position:absolute;left:10px;right:10px;bottom:18px;display:flex;justify-content:space-around;opacity:.8}
-.duelAudience .person{width:14px;height:32px}
-.duelAudience .person .head{width:10px;height:10px}
-.duelAudience .person .torso{width:14px;height:16px}
+.duelAudience .person{width:14px;height:32px}.duelAudience .person .head{width:10px;height:10px}.duelAudience .person .torso{width:14px;height:16px}
 .duelRow{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .duelName{text-align:center;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px}
 
-.questionCard{
-  background:var(--card);color:var(--ink);border-radius:28px;padding:14px 12px;
-  box-shadow:0 10px 0 rgba(0,0,0,.28)
-}
+.questionCard{background:var(--card);color:var(--ink);border-radius:28px;padding:14px 12px;box-shadow:var(--shadow)}
 .timerPill{
-  width:150px;margin:0 auto 10px;text-align:center;background:var(--gold);
-  color:#20307c;font-weight:900;border-radius:30px;padding:10px 12px;font-size:22px
+  width:150px;margin:0 auto 10px;text-align:center;background:var(--gold);color:#20307c;
+  font-weight:900;border-radius:30px;padding:10px 12px;font-size:22px
 }
 .roundTxt{text-align:center;font-size:12px;font-weight:900;color:#8d93a6;text-transform:uppercase;margin-bottom:8px}
 .questionTxt{
@@ -164,15 +138,10 @@ input,select{
 .answerBtn:disabled{opacity:1}
 .correct{background:var(--green)!important;color:#fff!important}
 .wrong{background:var(--red)!important;color:#fff!important}
-
-.infoBox{
-  margin-top:12px;background:rgba(255,255,255,.10);border-radius:18px;padding:12px;
-  font-size:14px;font-weight:700;line-height:1.35
-}
+.infoBox{margin-top:12px;background:rgba(255,255,255,.10);border-radius:18px;padding:12px;font-size:14px;font-weight:700;line-height:1.35}
 .menuRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .pauseLayer,.modalBg{
-  position:fixed;inset:0;background:rgba(0,0,0,.62);
-  display:flex;align-items:center;justify-content:center;padding:18px;z-index:90
+  position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:18px;z-index:90
 }
 .resultBig{font-size:56px;font-weight:900;color:var(--gold);margin:6px 0 10px}
 .creatorGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -183,7 +152,6 @@ input,select{
 }
 .contestantText strong{display:block;font-size:16px;text-transform:uppercase}
 .contestantText span{font-size:12px;color:#7781a3;font-weight:700;text-transform:uppercase}
-
 svg.avatarSvg{width:110px;height:146px;display:block;margin:0 auto}
 svg.avatarSmall{width:74px;height:100px;display:block}
 </style>
@@ -191,192 +159,187 @@ svg.avatarSmall{width:74px;height:100px;display:block}
 <body>
 <div class="app">
 
-  <section id="homeScreen">
-    <div class="topbar">
-      <button class="iconBtn" id="soundBtn">🔔</button>
-      <button class="iconBtn" id="lockBtn">🔒</button>
+<section id="homeScreen">
+  <div class="topbar">
+    <button class="iconBtn" id="soundBtn">🔔</button>
+    <button class="iconBtn" id="lockBtn">🔒</button>
+  </div>
+
+  <div class="titleBox">
+    <h1>La Catedral del Baloncesto Español</h1>
+  </div>
+
+  <div class="stage">
+    <div class="arch arch1"></div><div class="arch arch2"></div><div class="arch arch3"></div>
+    <div class="pew pew1"></div><div class="pew pew2"></div><div class="pew pew3"></div>
+    <div class="audience" id="homeAudience"></div>
+    <div style="position:relative;z-index:2;display:flex;justify-content:center;align-items:flex-end;height:100%;padding-top:34px" id="hostHomeAvatar"></div>
+  </div>
+
+  <button class="mainBtn" id="enterBtn">¡ENTRAR!</button>
+
+  <div class="grid2">
+    <button class="smallBtn b1" id="dailyBtn">Clasificación diaria</button>
+    <button class="smallBtn b2" id="totalBtn">Clasificación total</button>
+    <button class="smallBtn b3" id="rulesBtn">Instrucciones</button>
+    <button class="smallBtn b4" id="settingsBtn">Ajustes</button>
+  </div>
+</section>
+
+<section id="userScreen" class="hidden">
+  <div class="card">
+    <h2 class="cardTitle">Crear usuario</h2>
+    <input id="userName" type="text" placeholder="Tu nombre">
+    <button class="actionBtn yellow" id="continueUserBtn">Continuar</button>
+  </div>
+  <a class="backLink" href="#" data-back="homeScreen">Volver</a>
+</section>
+
+<section id="chooseScreen" class="hidden">
+  <div class="titleBox" style="padding:18px 16px;">
+    <h1 id="helloName">Hola</h1>
+  </div>
+  <button class="actionBtn grey" id="chooseContestantBtn">Elegir concursante</button>
+  <button class="actionBtn grey" id="createContestantBtn">Creador de concursante</button>
+  <a class="backLink" href="#" data-back="userScreen">Atrás</a>
+</section>
+
+<section id="listScreen" class="hidden">
+  <div class="titleBox" style="padding:18px 16px;">
+    <h1>¿Quién confiesa hoy?</h1>
+  </div>
+  <div class="list" id="contestantList"></div>
+  <button class="actionBtn redBtn" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
+</section>
+
+<section id="createContestantScreen" class="hidden">
+  <div class="card">
+    <h2 class="cardTitle">Creador de concursante</h2>
+    <input id="customName" type="text" placeholder="Nombre del concursante">
+    <div class="creatorGrid">
+      <select id="customGender">
+        <option value="male">Hombre</option>
+        <option value="female">Mujer</option>
+      </select>
+      <select id="customTrait">
+        <option value="vacilon">Vacilón</option>
+        <option value="mandona">Mandona</option>
+        <option value="borrachin">Borrachín</option>
+        <option value="hablador">Hablador</option>
+      </select>
     </div>
+    <div class="note" style="margin:12px 0;">Aquí puedes crear un concursante caricaturesco sin foto. Se guardará en este móvil.</div>
+    <button class="actionBtn yellow" id="saveCustomBtn">Guardar concursante</button>
+    <button class="actionBtn grey" id="backFromCreatorBtn">Volver</button>
+  </div>
+</section>
 
-    <div class="titleBox">
-      <h1>La Catedral del<br>Baloncesto Español</h1>
+<section id="dailyScreen" class="hidden">
+  <div class="card">
+    <h2 class="cardTitle">Clasificación diaria</h2>
+    <div id="dailyRankingBox" class="note">Aún no hay puntuaciones.</div>
+    <button class="actionBtn grey" id="backDailyBtn">Volver</button>
+  </div>
+</section>
+
+<section id="totalScreen" class="hidden">
+  <div class="card">
+    <h2 class="cardTitle">Clasificación total</h2>
+    <div id="totalRankingBox" class="note">Aún no hay puntuaciones.</div>
+    <button class="actionBtn grey" id="backTotalBtn">Volver</button>
+  </div>
+</section>
+
+<section id="rulesScreen" class="hidden">
+  <div class="card">
+    <h2 class="cardTitle">Instrucciones del juego</h2>
+    <div class="note">
+      40 preguntas por partida.<br>
+      15 segundos por pregunta.<br>
+      3 respuestas por pregunta.<br>
+      Las 3 primeras son fáciles y cada 3 preguntas sube la dificultad.<br>
+      Acierto: +2 puntos.<br>
+      Fallo o tiempo agotado: -1 punto.<br>
+      Primero habla el cura y luego responde el concursante.<br>
+      Puedes guardar, cargar, nueva partida y salir.
     </div>
+    <button class="actionBtn grey" id="backRulesBtn">Volver</button>
+  </div>
+</section>
 
-    <div class="stage">
-      <div class="arch arch1"></div>
-      <div class="arch arch2"></div>
-      <div class="arch arch3"></div>
-      <div class="pew pew1"></div>
-      <div class="pew pew2"></div>
-      <div class="pew pew3"></div>
-      <div class="audience" id="homeAudience"></div>
-      <div style="position:relative;z-index:2;display:flex;justify-content:center;align-items:flex-end;height:100%;padding-top:34px" id="hostHomeAvatar"></div>
+<section id="settingsScreen" class="hidden">
+  <div class="card">
+    <h2 class="cardTitle">Ajustes</h2>
+    <button class="actionBtn yellow" id="toggleSoundBtn">Sonido de campanas: ON</button>
+    <button class="actionBtn grey" id="backSettingsBtn">Volver</button>
+  </div>
+</section>
+
+<section id="gameScreen" class="hidden">
+  <div class="scoreGrid">
+    <div class="scoreBox">
+      <div class="scoreLabel greenTxt">Canasta en el cepillo</div>
+      <div class="scoreValue greenTxt" id="hitsValue">0</div>
     </div>
-
-    <button class="mainBtn" id="enterBtn">¡ENTRAR!</button>
-
-    <div class="grid2">
-      <button class="smallBtn b1" id="dailyBtn">Clasificación diaria</button>
-      <button class="smallBtn b2" id="totalBtn">Clasificación total</button>
-      <button class="smallBtn b3" id="rulesBtn">Instrucciones</button>
-      <button class="smallBtn b4" id="settingsBtn">Ajustes</button>
+    <div class="scoreBox">
+      <div class="scoreLabel yellowTxt">Puntos</div>
+      <div class="scoreValue yellowTxt" id="pointsValue">0</div>
     </div>
-  </section>
-
-  <section id="userScreen" class="hidden">
-    <div class="card">
-      <h2 class="cardTitle">Crear usuario</h2>
-      <input id="userName" type="text" placeholder="Tu nombre">
-      <button class="actionBtn yellow" id="continueUserBtn">Continuar</button>
+    <div class="scoreBox">
+      <div class="scoreLabel redTxt">Acabas de cometer un pecado</div>
+      <div class="scoreValue redTxt" id="failsValue">0</div>
     </div>
-    <a class="backLink" href="#" data-back="homeScreen">Volver</a>
-  </section>
+  </div>
 
-  <section id="chooseScreen" class="hidden">
-    <div class="titleBox" style="padding:18px 16px;">
-      <h1 id="helloName">Hola</h1>
-    </div>
-    <button class="actionBtn grey" id="chooseContestantBtn">Elegir concursante</button>
-    <button class="actionBtn grey" id="createContestantBtn">Creador de concursante</button>
-    <a class="backLink" href="#" data-back="userScreen">Atrás</a>
-  </section>
-
-  <section id="listScreen" class="hidden">
-    <div class="titleBox" style="padding:18px 16px;">
-      <h1>¿Quién confiesa hoy?</h1>
-    </div>
-    <div class="list" id="contestantList"></div>
-    <button class="actionBtn redBtn" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
-  </section>
-
-  <section id="createContestantScreen" class="hidden">
-    <div class="card">
-      <h2 class="cardTitle">Creador de concursante</h2>
-      <input id="customName" type="text" placeholder="Nombre del concursante">
-      <div class="creatorGrid">
-        <select id="customGender">
-          <option value="male">Hombre</option>
-          <option value="female">Mujer</option>
-        </select>
-        <select id="customTrait">
-          <option value="vacilon">Vacilón</option>
-          <option value="mandona">Mandona</option>
-          <option value="borrachin">Borrachín</option>
-          <option value="hablador">Hablador</option>
-        </select>
+  <div class="duelBox">
+    <div class="duelBg"></div>
+    <div class="duelAudience" id="duelAudience"></div>
+    <div class="duelRow">
+      <div>
+        <div class="duelName">Padre Jeremías</div>
+        <div id="hostGameAvatar"></div>
       </div>
-      <div class="note" style="margin:12px 0;">
-        Aquí puedes crear un concursante caricaturesco sin foto. Se guardará en este móvil.
-      </div>
-      <button class="actionBtn yellow" id="saveCustomBtn">Guardar concursante</button>
-      <button class="actionBtn grey" id="backFromCreatorBtn">Volver</button>
-    </div>
-  </section>
-
-  <section id="dailyScreen" class="hidden">
-    <div class="card">
-      <h2 class="cardTitle">Clasificación diaria</h2>
-      <div id="dailyRankingBox" class="note">Aún no hay puntuaciones.</div>
-      <button class="actionBtn grey" id="backDailyBtn">Volver</button>
-    </div>
-  </section>
-
-  <section id="totalScreen" class="hidden">
-    <div class="card">
-      <h2 class="cardTitle">Clasificación total</h2>
-      <div id="totalRankingBox" class="note">Aún no hay puntuaciones.</div>
-      <button class="actionBtn grey" id="backTotalBtn">Volver</button>
-    </div>
-  </section>
-
-  <section id="rulesScreen" class="hidden">
-    <div class="card">
-      <h2 class="cardTitle">Instrucciones del juego</h2>
-      <div class="note">
-        40 preguntas por partida.<br>
-        15 segundos por pregunta.<br>
-        3 respuestas por pregunta.<br>
-        Acierto: +2 puntos.<br>
-        Fallo o tiempo agotado: -1 punto.<br>
-        Padre Jeremías habla y luego responde el concursante.<br>
-        Puedes guardar, cargar, nueva partida y salir.
-      </div>
-      <button class="actionBtn grey" id="backRulesBtn">Volver</button>
-    </div>
-  </section>
-
-  <section id="settingsScreen" class="hidden">
-    <div class="card">
-      <h2 class="cardTitle">Ajustes</h2>
-      <button class="actionBtn yellow" id="toggleSoundBtn">Sonido de campanas: ON</button>
-      <button class="actionBtn grey" id="backSettingsBtn">Volver</button>
-    </div>
-  </section>
-
-  <section id="gameScreen" class="hidden">
-    <div class="scoreGrid">
-      <div class="scoreBox">
-        <div class="scoreLabel greenTxt">Canasta en el cepillo</div>
-        <div class="scoreValue greenTxt" id="hitsValue">0</div>
-      </div>
-      <div class="scoreBox">
-        <div class="scoreLabel yellowTxt">Puntos</div>
-        <div class="scoreValue yellowTxt" id="pointsValue">0</div>
-      </div>
-      <div class="scoreBox">
-        <div class="scoreLabel redTxt">Acabas de cometer un pecado</div>
-        <div class="scoreValue redTxt" id="failsValue">0</div>
-      </div>
-    </div>
-
-    <div class="duelBox">
-      <div class="duelBg"></div>
-      <div class="duelAudience" id="duelAudience"></div>
-      <div class="duelRow">
-        <div>
-          <div class="duelName">Padre Jeremías</div>
-          <div id="hostGameAvatar"></div>
-        </div>
-        <div>
-          <div class="duelName" id="contestantNameGame">Concursante</div>
-          <div id="playerGameAvatar"></div>
-        </div>
+      <div>
+        <div class="duelName" id="contestantNameGame">Concursante</div>
+        <div id="playerGameAvatar"></div>
       </div>
     </div>
+  </div>
 
-    <div class="questionCard">
-      <div class="timerPill" id="timerValue">15s</div>
-      <div class="roundTxt" id="roundValue">Ronda 1/40</div>
-      <div class="questionTxt" id="questionText">Pregunta</div>
+  <div class="questionCard">
+    <div class="timerPill" id="timerValue">15s</div>
+    <div class="roundTxt" id="roundValue">Ronda 1/40</div>
+    <div class="questionTxt" id="questionText">Pregunta</div>
+    <button class="answerBtn" id="answer0"></button>
+    <button class="answerBtn" id="answer1"></button>
+    <button class="answerBtn" id="answer2"></button>
+  </div>
 
-      <button class="answerBtn" id="answer0"></button>
-      <button class="answerBtn" id="answer1"></button>
-      <button class="answerBtn" id="answer2"></button>
+  <div class="infoBox">
+    <div id="hostLine">Bienvenido, hijo mío.</div>
+    <div style="margin-top:8px" id="playerLine">Hoy vengo bendecido.</div>
+  </div>
+
+  <div class="menuRow">
+    <button class="actionBtn grey" id="pauseBtn" style="margin:0;">Pausa</button>
+    <button class="actionBtn yellow" id="saveBtn" style="margin:0;">Guardar</button>
+  </div>
+</section>
+
+<section id="resultScreen" class="hidden">
+  <div class="card">
+    <h2 class="cardTitle">Final de partida</h2>
+    <div class="resultBig" id="finalPoints">0</div>
+    <div class="note" id="finalSummary"></div>
+    <div id="holyPrize" class="hidden" style="margin:16px 0 4px;">
+      <div style="font-size:64px;">🍼</div>
+      <div class="note">Premio celestial: botella grande de agua bendita entregada por el cura.</div>
     </div>
+    <button class="actionBtn yellow" id="resultNewBtn">Nueva partida</button>
+    <button class="actionBtn grey" id="resultHomeBtn">Volver al inicio</button>
+  </div>
+</section>
 
-    <div class="infoBox">
-      <div id="hostLine">Padre Jeremías: Bienvenido, hijo mío.</div>
-      <div style="margin-top:8px" id="playerLine">Concursante: Hoy vengo bendecido.</div>
-    </div>
-
-    <div class="menuRow">
-      <button class="actionBtn grey" id="pauseBtn" style="margin:0;">Pausa</button>
-      <button class="actionBtn yellow" id="saveBtn" style="margin:0;">Guardar</button>
-    </div>
-  </section>
-
-  <section id="resultScreen" class="hidden">
-    <div class="card">
-      <h2 class="cardTitle">Final de partida</h2>
-      <div class="resultBig" id="finalPoints">0</div>
-      <div class="note" id="finalSummary"></div>
-      <div id="holyPrize" class="hidden" style="margin:16px 0 4px;">
-        <div style="font-size:64px;">🍼</div>
-        <div class="note">Premio celestial: botella grande de AGUA BENDITA entregada por Padre Jeremías.</div>
-      </div>
-      <button class="actionBtn yellow" id="resultNewBtn">Nueva partida</button>
-      <button class="actionBtn grey" id="resultHomeBtn">Volver al inicio</button>
-    </div>
-  </section>
 </div>
 
 <div class="modalBg hidden" id="pinModal">
@@ -409,25 +372,25 @@ svg.avatarSmall{width:74px;height:100px;display:block}
 
 <script>
 const OWNER_PIN = "1010";
-const SAVE_KEY = "catedral_partida_guardada_v4";
-const CUSTOM_KEY = "catedral_custom_contestants_v4";
-const RANK_DAY_KEY = "catedral_rank_day_v4_";
-const RANK_TOTAL_KEY = "catedral_rank_total_v4";
+const SAVE_KEY = "catedral_partida_guardada_final";
+const CUSTOM_KEY = "catedral_custom_contestants_final";
+const RANK_DAY_KEY = "catedral_rank_day_final_";
+const RANK_TOTAL_KEY = "catedral_rank_total_final";
 const QUESTIONS_PER_GAME = 40;
 const TIME_PER_QUESTION = 15;
 
-const host = {id:"jeremias",name:"Padre Jeremías",style:"jeremias",gender:"male",rate:.84,pitch:.86};
+const host = {id:"jeremias",name:"Padre Jeremías",style:"jeremias",gender:"male",rate:.82,pitch:.82,voiceIndex:0};
 const baseContestants = [
-  {id:"nazario",name:"El Nazario",subtitle:"El Mujeriego",style:"nazario",gender:"male",rate:.95,pitch:.95},
-  {id:"praxedes",name:"Tía Praxedes",subtitle:"La Gana Carreras",style:"praxedes",gender:"female",rate:.86,pitch:1.02},
-  {id:"tijeras",name:"Tijeras",subtitle:"El Borrachín",style:"tijeras",gender:"male",rate:.82,pitch:.9},
-  {id:"nachon",name:"Nachón el Taxis",subtitle:"El Taxis",style:"nachon",gender:"male",rate:1.02,pitch:.98},
-  {id:"chonona",name:"Chonona",subtitle:"La Mata Pollos",style:"chonona",gender:"female",rate:.94,pitch:1.04},
-  {id:"antonino",name:"Antonino",subtitle:"El Gominolo",style:"antonino",gender:"male",rate:.92,pitch:.98},
-  {id:"alvarino",name:"Alvariño",subtitle:"El Frutas",style:"alvarino",gender:"male",rate:1.04,pitch:1.02},
-  {id:"arricio",name:"Arricio",subtitle:"El Calores",style:"arricio",gender:"male",rate:.96,pitch:.94},
-  {id:"felixon",name:"Félixon",subtitle:"El Ejecutivo",style:"felixon",gender:"male",rate:.88,pitch:.9},
-  {id:"mamen",name:"Mamen",subtitle:"La Presidenta",style:"mamen",gender:"female",rate:.98,pitch:1.08}
+  {id:"nazario",name:"El Nazario",subtitle:"El Mujeriego",style:"nazario",gender:"male",rate:.96,pitch:.94,voiceIndex:1},
+  {id:"praxedes",name:"Tía Praxedes",subtitle:"La Gana Carreras",style:"praxedes",gender:"female",rate:.85,pitch:1.08,voiceIndex:2},
+  {id:"tijeras",name:"Tijeras",subtitle:"El Borrachín",style:"tijeras",gender:"male",rate:.80,pitch:.88,voiceIndex:3},
+  {id:"nachon",name:"Nachón el Taxis",subtitle:"El Taxis",style:"nachon",gender:"male",rate:1.03,pitch:.98,voiceIndex:4},
+  {id:"chonona",name:"Chonona",subtitle:"La Mata Pollos",style:"chonona",gender:"female",rate:.95,pitch:1.05,voiceIndex:5},
+  {id:"antonino",name:"Antonino",subtitle:"El Gominolo",style:"antonino",gender:"male",rate:.91,pitch:.96,voiceIndex:6},
+  {id:"alvarino",name:"Alvariño",subtitle:"El Frutas",style:"alvarino",gender:"male",rate:1.04,pitch:1.02,voiceIndex:7},
+  {id:"arricio",name:"Arricio",subtitle:"El Calores",style:"arricio",gender:"male",rate:.97,pitch:.92,voiceIndex:8},
+  {id:"felixon",name:"Félixon",subtitle:"El Ejecutivo",style:"felixon",gender:"male",rate:.88,pitch:.90,voiceIndex:9},
+  {id:"mamen",name:"Mamen",subtitle:"La Presidenta",style:"mamen",gender:"female",rate:.99,pitch:1.10,voiceIndex:10}
 ];
 
 const clubs = [
@@ -448,68 +411,85 @@ const clubs = [
   {club:"Monbus Obradoiro", city:"Santiago de Compostela"},
   {club:"Bàsquet Girona", city:"Girona"},
   {club:"Fuenlabrada", city:"Fuenlabrada"},
-  {club:"Cultural Leonesa", city:"León"}
+  {club:"Cultural Leonesa de Baloncesto", city:"León"},
+  {club:"Baloncesto León", city:"León"},
+  {club:"Elosúa León", city:"León"}
 ];
 
-const categoryFacts = [
-  ["¿Qué nombre comercial recibe hoy la ACB?","Liga Endesa","1ª FEB","2ª FEB"],
-  ["¿Qué nombre recibe actualmente la antigua LEB Oro?","1ª FEB","2ª FEB","Liga Plata ACB"],
-  ["¿Qué nombre recibe actualmente la antigua LEB Plata?","2ª FEB","1ª FEB","Liga EBA Oro"],
-  ["¿Cuántas respuestas tiene cada pregunta en este juego?","3","4","2"],
-  ["¿Cuántos puntos suma una respuesta correcta?","2","3","1"],
-  ["¿Cuántos puntos resta una respuesta fallada o el tiempo agotado?","1","2","0"],
-  ["¿Cuántos segundos hay para responder cada pregunta?","15","10","20"],
-  ["¿Cuántas preguntas tiene cada partida?","40","25","60"],
-  ["¿Qué competición es una de las más históricas del baloncesto español?","Copa del Rey","Copa de Provincias ACB","Superliga Municipal"],
-  ["¿Qué liga fue durante años la gran liga profesional del baloncesto español?","Liga ACB","LEB Plata","Copa España"]
+const players = [
+  ["¿Qué pívot español ganó anillos NBA con Los Angeles Lakers?","Pau Gasol","Felipe Reyes","Fernando Romay",3],
+  ["¿Qué escolta español fue emblema del FC Barcelona y Memphis Grizzlies?","Juan Carlos Navarro","Rafa Jofresa","Carlos Jiménez",3],
+  ["¿Qué base canario brilló en Joventut y luego en la NBA?","Ricky Rubio","Sergio Llull","Pablo Laso",3],
+  ["¿Qué base español jugó en Toronto Raptors y fue internacional?","José Manuel Calderón","Sergi Vidal","Tomás Jofresa",4],
+  ["¿Qué internacional español fue capitán histórico del Real Madrid y España?","Felipe Reyes","Sergio Llull","Alberto Herreros",4],
+  ["¿Qué escolta mallorquín es símbolo del Real Madrid y la selección?","Sergio Llull","Rafa Martínez","Carlos Suárez",4],
+  ["¿Qué exjugador español fue pionero histórico en la NBA en los 80 y 90?","Fernando Martín","Pau Gasol","Rudy Fernández",4],
+  ["¿Qué base español fue emblema de Estudiantes en los 90?","Nacho Azofra","Pablo Prigioni","Sergio Rodríguez",4],
+  ["¿Qué pívot catalán fue campeón NBA también con Toronto Raptors?","Marc Gasol","Felipe Reyes","Fran Vázquez",4],
+  ["¿Qué anotador estadounidense fue legendario en el Real Madrid de los 90?","Joe Arlauckas","Louis Bullock","Jaycee Carroll",5],
+  ["¿Qué tirador estadounidense fue uno de los grandes especialistas del Real Madrid moderno?","Jaycee Carroll","Joe Arlauckas","Dejan Bodiroga",5],
+  ["¿Qué estrella serbia dejó una huella enorme en Real Madrid y Barcelona?","Dejan Bodiroga","Peja Stojakovic","Vlade Divac",5],
+  ["¿Qué jugador argentino fue muy querido por su intensidad en Baskonia y Real Madrid?","Andrés Nocioni","Luis Scola","Pablo Prigioni",5]
 ];
 
-const factBank = [
-  ["¿Qué club malagueño fue campeón de la Liga ACB en 2006?","Unicaja","Gran Canaria","Estudiantes"],
-  ["¿Qué histórico club de Badalona ganó la Copa de Europa en 1994?","Joventut","FC Barcelona","Real Madrid"],
-  ["¿Qué club valenciano ganó la Liga ACB en 2017?","Valencia Basket","Lucentum Alicante","CB Murcia"],
-  ["¿Qué pívot español ganó anillos NBA con Los Angeles Lakers?","Pau Gasol","Felipe Reyes","Fernando Romay"],
-  ["¿Qué escolta español fue emblema del FC Barcelona y Memphis Grizzlies?","Juan Carlos Navarro","Rafa Jofresa","Carlos Jiménez"],
-  ["¿Qué base canario brilló en Joventut y luego en la NBA?","Ricky Rubio","Sergio Llull","Pablo Laso"],
-  ["¿Qué entrenador se asocia a varias etapas históricas en Baskonia?","Dusko Ivanovic","Moncho Fernández","Pedro Martínez"],
-  ["¿Qué técnico madrileño lideró una gran etapa moderna del Real Madrid?","Pablo Laso","Chus Mateo","Aíto García Reneses"],
-  ["¿Qué árbitro español es uno de los más conocidos de la era ACB moderna?","Antonio Conde","Mateu Lahoz","Undiano Mallenco"],
-  ["¿Qué club leonés compite hoy como Cultural y Deportiva Leonesa Baloncesto?","Cultural Leonesa","Baloncesto Fuenlabrada","CB Tizona"],
-  ["¿Qué club gallego ascendió a ACB en 2024?","Leyma Coruña","Ourense","Lugo Basket"],
-  ["¿Qué nombre comercial tuvo Baskonia en los 2000?","TAU Cerámica","Caja Álava Basket","Saski Power"],
-  ["¿Qué club sevillano tuvo larga presencia ACB con varias denominaciones?","Caja San Fernando / Cajasol","CB Huelva ACB","Sevilla Triple Basket"],
-  ["¿Qué equipo madrileño fue campeón de liga en 1991-92?","Real Madrid","Estudiantes","Joventut"],
-  ["¿Qué entrenador se asocia a la frase de correr, correr y correr en el basket español?","Aíto García Reneses","Lolo Sainz","Joan Plaza"],
-  ["¿Qué club ganó la Euroliga 2023 representando al basket español?","Real Madrid","FC Barcelona","Baskonia"],
-  ["¿Qué base español jugó en Toronto Raptors y fue internacional?","José Manuel Calderón","Sergi Vidal","Tomás Jofresa"],
-  ["¿Qué internacional español fue capitán histórico del Real Madrid y España?","Felipe Reyes","Sergio Llull","Alberto Herreros"],
-  ["¿Qué escolta mallorquín es símbolo del Real Madrid y la selección?","Sergio Llull","Rafa Martínez","Carlos Suárez"],
-  ["¿Qué exjugador español fue pionero histórico en la NBA en los 80 y 90?","Fernando Martín","Pau Gasol","Rudy Fernández"],
-  ["¿Qué técnico español dirigió a la selección campeona del Mundial 2006?","Pepu Hernández","Sergio Scariolo","Pablo Laso"],
-  ["¿Qué entrenador italiano ha sido muy importante para España en la selección?","Sergio Scariolo","Ettore Messina","Luca Banchi"],
-  ["¿Qué base español fue emblema de Estudiantes en los 90?","Nacho Azofra","Pablo Prigioni","Sergio Rodríguez"],
-  ["¿Qué pívot catalán fue campeón NBA también con Toronto Raptors?","Marc Gasol","Felipe Reyes","Fran Vázquez"],
-  ["¿Qué equipo tiene como ciudad Badalona y color histórico verdinegro?","Joventut","Unicaja","Murcia"],
-  ["¿Qué club murciano juega en la ciudad de Murcia?","UCAM Murcia","CB Cartagena ACB","Estudiantes"],
-  ["¿Qué equipo juega en Bilbao?","Bilbao Basket","Baskonia","Palencia Basket"],
-  ["¿Qué entrenador español está muy ligado a Manresa y Girona en etapas recientes?","Pedro Martínez","Aíto García Reneses","Pablo Laso"],
-  ["¿Qué torneo español enfrenta a los mejores equipos ACB a mitad de temporada?","Copa del Rey","Supercopa de verano","Copa 1ª FEB"],
-  ["¿Qué acción vale 3 puntos desde fuera del arco?","Triple","Mate","Tiro libre"],
-  ["¿Qué acción vale 1 punto?","Tiro libre","Bandeja","Triple"],
-  ["¿Qué palabra describe subir de categoría?","Ascenso","Cesión","Rotación"],
-  ["¿Qué palabra describe bajar de categoría?","Descenso","Draft","Traspaso"],
-  ["¿Qué pívot español del Barça fue dominante en la pintura en los 2000?","Roberto Dueñas","Felipe Reyes","Joe Arlauckas"],
-  ["¿Qué anotador estadounidense fue legendario en el Real Madrid de los 90?","Joe Arlauckas","Louis Bullock","Jaycee Carroll"],
-  ["¿Qué tirador estadounidense fue uno de los grandes especialistas del Real Madrid moderno?","Jaycee Carroll","Joe Arlauckas","Dejan Bodiroga"],
-  ["¿Qué estrella serbia dejó una huella enorme en Real Madrid y Barcelona?","Dejan Bodiroga","Peja Stojakovic","Vlade Divac"],
-  ["¿Qué jugador argentino fue muy querido por su intensidad en Baskonia y Real Madrid?","Andrés Nocioni","Luis Scola","Pablo Prigioni"],
-  ["¿Qué club de Zaragoza tuvo denominaciones como CAI Zaragoza y hoy Casademont Zaragoza?","Zaragoza","Murcia","Manresa"],
-  ["¿Qué club compostelano fue conocido como Obradoiro?","Monbus Obradoiro","Breogán","Ourense"],
-  ["¿Qué ciudad representa Obradoiro?","Santiago de Compostela","Vigo","A Coruña"]
+const coaches = [
+  ["¿Qué entrenador se asocia a varias etapas históricas en Baskonia?","Dusko Ivanovic","Moncho Fernández","Pedro Martínez",4],
+  ["¿Qué técnico madrileño lideró una gran etapa moderna del Real Madrid?","Pablo Laso","Chus Mateo","Aíto García Reneses",4],
+  ["¿Qué técnico español dirigió a la selección campeona del Mundial 2006?","Pepu Hernández","Sergio Scariolo","Pablo Laso",4],
+  ["¿Qué entrenador italiano ha sido muy importante para España en la selección?","Sergio Scariolo","Ettore Messina","Luca Banchi",4],
+  ["¿Qué entrenador se asocia a la frase de correr, correr y correr en el basket español?","Aíto García Reneses","Lolo Sainz","Joan Plaza",5],
+  ["¿Qué entrenador español está muy ligado a Manresa y Girona en etapas recientes?","Pedro Martínez","Aíto García Reneses","Pablo Laso",5]
+];
+
+const refsAndComps = [
+  ["¿Qué árbitro español es uno de los más conocidos de la era ACB moderna?","Antonio Conde","Mateu Lahoz","Undiano Mallenco",4],
+  ["¿Qué nombre comercial recibe hoy la ACB?","Liga Endesa","1ª FEB","2ª FEB",1],
+  ["¿Qué nombre recibe actualmente la antigua LEB Oro?","1ª FEB","2ª FEB","Liga Plata ACB",2],
+  ["¿Qué nombre recibe actualmente la antigua LEB Plata?","2ª FEB","1ª FEB","Liga EBA Oro",2],
+  ["¿Qué competición es una de las más históricas del baloncesto español?","Copa del Rey","Copa de Provincias ACB","Superliga Municipal",2],
+  ["¿Cuántas respuestas tiene cada pregunta en este juego?","3","4","2",1],
+  ["¿Cuántos puntos suma una respuesta correcta?","2","3","1",1],
+  ["¿Cuántos puntos resta una respuesta fallada o el tiempo agotado?","1","2","0",1],
+  ["¿Cuántos segundos hay para responder cada pregunta?","15","10","20",1],
+  ["¿Cuántas preguntas tiene cada partida?","40","25","60",1],
+  ["¿Qué club malagueño fue campeón de la Liga ACB en 2006?","Unicaja","Gran Canaria","Estudiantes",4],
+  ["¿Qué histórico club de Badalona ganó la Copa de Europa en 1994?","Joventut","FC Barcelona","Real Madrid",4],
+  ["¿Qué club valenciano ganó la Liga ACB en 2017?","Valencia Basket","Lucentum Alicante","CB Murcia",4],
+  ["¿Qué nombre comercial tuvo Baskonia en los 2000?","TAU Cerámica","Caja Álava Basket","Saski Power",4],
+  ["¿Qué club sevillano tuvo larga presencia ACB con varias denominaciones?","Caja San Fernando / Cajasol","CB Huelva ACB","Sevilla Triple Basket",5],
+  ["¿Qué equipo madrileño fue campeón de liga en 1991-92?","Real Madrid","Estudiantes","Joventut",5],
+  ["¿Qué club ganó la Euroliga 2023 representando al basket español?","Real Madrid","FC Barcelona","Baskonia",5]
+];
+
+const leonSpecific = [
+  ["¿Qué ciudad comparten Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto?","León","Valladolid","Zamora",1],
+  ["¿Qué palabra comparten Baloncesto León y Elosúa León?","León","Madrid","ACB",1],
+  ["¿Qué club leonés actual aparece en este juego?","Cultural Leonesa de Baloncesto","UCAM Murcia","Baskonia",2],
+  ["¿Qué nombre histórico leonés aparece también en este juego?","Baloncesto León","Valencia Basket","Bilbao Basket",2],
+  ["¿Qué denominación histórica leonesa aparece en el banco de preguntas?","Elosúa León","Pamesa Valencia","TAU Cerámica",2],
+  ["¿Qué peña leonesa incluida en este juego contiene la palabra Universitaria?","Peña Universitaria","Peña del Sur Blanco","Peña Verdinegra Madrid",2],
+  ["¿Qué peña leonesa incluida en este juego contiene la palabra Cultu?","Peña CultuBasket","Peña Azulona","NBA Club León",2],
+  ["¿Qué peña leonesa incluida en este juego contiene la palabra Tambor?","Peña El Tambor","Peña Fondo Sur","Peña Aro Rojo",2],
+  ["¿Qué peña leonesa incluida en este juego contiene la palabra Roja?","Peña Marea Roja","Peña Verde Norte","Peña Blanca Basket",2],
+  ["¿En qué ciudad se ubica la afición de las peñas leonesas mencionadas en este juego?","León","Bilbao","Granada",2],
+  ["¿Qué nombre une la palabra Cultural con el baloncesto leonés actual?","Cultural Leonesa de Baloncesto","Cultural Andaluza Basket","Cultural del Este ACB",2],
+  ["¿Qué palabra aparece en el nombre Peña CultuBasket?","Cultu","Verdi","Unicajista",2],
+  ["¿Qué palabra aparece en el nombre Peña El Tambor?","Tambor","Silbato","Corneta",2],
+  ["¿Qué palabra aparece en el nombre Peña Marea Roja?","Roja","Azul","Dorada",2],
+  ["¿Qué palabra aparece en el nombre Peña Universitaria?","Universitaria","Portuaria","Industrial",2],
+  ["¿Qué ciudad representa Cultural Leonesa de Baloncesto?","León","Salamanca","Segovia",2],
+  ["¿Qué ciudad representó Baloncesto León?","León","Soria","Ávila",2],
+  ["¿Qué ciudad representó Elosúa León?","León","Burgos","Palencia",2],
+  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña CultuBasket","Unicaja","Baskonia",3],
+  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña El Tambor","Real Madrid","Breogán",3],
+  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña Marea Roja","Gran Canaria","Valencia Basket",3],
+  ["¿Qué grupo incluido en el juego corresponde a una peña y no a un club profesional?","Peña Universitaria","Joventut","UCAM Murcia",3],
+  ["¿Qué ciudad aparece una y otra vez en las preguntas específicas de este bloque leonés?","León","Málaga","Badalona",3],
+  ["¿Cuál de estos nombres pertenece a una peña leonesa incluida en el juego?","Peña CultuBasket","Peña Taronja ACB","Peña Costa Triple",3],
+  ["¿Cuál de estos nombres pertenece a una peña leonesa incluida en el juego?","Peña Marea Roja","Peña Azul de la Costa","Peña Basket del Norte",3]
 ];
 
 let contestants = [];
-let soundOn = true;
 let currentUser = "";
 let currentContestant = null;
 let gameQuestions = [];
@@ -520,200 +500,113 @@ let fails = 0;
 let timer = TIME_PER_QUESTION;
 let timerInterval = null;
 let answering = false;
+let soundOn = true;
 let bellInterval = null;
 
 const hostGood = [
-  "Padre Jeremías: ¡Aleluya! Eso ha entrado más limpio que el dinero del cepillo.",
-  "Padre Jeremías: ¡Milagro baloncestístico! Hoy vienes tocado por la gracia.",
-  "Padre Jeremías: ¡Canasta celestial! Ni el monaguillo la habría clavado mejor.",
-  "Padre Jeremías: ¡Eso merece campanas, incienso y repetición a cámara lenta!",
-  "Padre Jeremías: ¡Hijo mío, eso ha sido más fino que una homilía con triple!"
+  "¡Aleluya! Eso ha entrado más limpio que el dinero del cepillo.",
+  "¡Milagro baloncestístico! Hoy vienes tocado por la gracia.",
+  "¡Canasta celestial! Ni el monaguillo la habría clavado mejor.",
+  "¡Eso merece campanas, incienso y repetición a cámara lenta!",
+  "¡Hijo mío, eso ha sido más fino que una homilía con triple!",
+  "¡Qué maravilla, criatura, eso ha sido bendición pura!",
+  "¡Se han alineado el aro, la tabla y la providencia!",
+  "¡Eso ha sido evangelio del bueno!",
+  "¡Con respuestas así da gusto hasta perdonar pecados!",
+  "¡Se ha puesto contento hasta el sacristán!"
 ];
 const hostBad = [
-  "Padre Jeremías: ¡Eso ha sido un pecado con repetición instantánea!",
-  "Padre Jeremías: ¡Madre del amor hermoso, esa respuesta ha dolido hasta en el campanario!",
-  "Padre Jeremías: ¡Reza tres tiros libres y vuelve a intentarlo, criatura!",
-  "Padre Jeremías: ¡Eso no lo arregla ni con agua bendita y prórroga!",
-  "Padre Jeremías: ¡Se ha santiguado hasta el marcador del susto!"
+  "¡Eso ha sido un pecado con repetición instantánea!",
+  "¡Madre del amor hermoso, esa respuesta ha dolido hasta en el campanario!",
+  "¡Reza tres tiros libres y vuelve a intentarlo, criatura!",
+  "¡Eso no lo arregla ni con agua bendita y prórroga!",
+  "¡Se ha santiguado hasta el marcador del susto!",
+  "¡Eso ha salido más torcido que un tiro con vendaval!",
+  "¡Ha llorado hasta el monaguillo de la mesa de anotación!",
+  "¡Esa respuesta se fue al limbo antes de tocar tablero!",
+  "¡Eso ha sido herejía de perímetro!",
+  "¡Ni con procesión completa entraba esa!"
 ];
 const contestantGood = {
-  generic:[
-    "Concursante: Ya lo sabía yo, Padre, si es que hoy vengo sembrado.",
-    "Concursante: No me aplauda tanto, que luego me vengo arriba.",
-    "Concursante: Hoy estoy más fino que un triple sin tocar aro."
-  ],
-  nazario:[
-    "El Nazario: Ya lo sabía, Padre, pero me distrae la belleza del graderío.",
-    "El Nazario: Hoy vengo tan fino que hasta la boina me aplaude.",
-    "El Nazario: Si sigo así, me fichan y me echan flores a la vez."
-  ],
-  praxedes:[
-    "Tía Praxedes: Eso lo sabía yo antes de que pusieran las opciones.",
-    "Tía Praxedes: Normal que acierte, si aquí la que manda soy yo.",
-    "Tía Praxedes: A esta parroquia le falta escucharme más y fallar menos."
-  ],
-  tijeras:[
-    "Tijeras: La sabía perfectamente... y eso que hoy vengo con niebla.",
-    "Tijeras: Padre, apunte ahí otro acierto del barril del talento.",
-    "Tijeras: Estoy que lo clavo aunque vaya dando curvas."
-  ],
-  nachon:[
-    "Nachón el Taxis: Yo esto ya lo comenté con un cliente entre semáforo y semáforo.",
-    "Nachón el Taxis: Hoy voy tan lanzado que ni el GPS me sigue.",
-    "Nachón el Taxis: Esto lo llevo más controlado que la parada del aeropuerto."
-  ],
-  chonona:[
-    "Chonona: Ya estaba tardando en demostrar quién manda aquí.",
-    "Chonona: A mí no me pilla una fácil, una media ni una difícil.",
-    "Chonona: Que aplaudan, que para eso he venido."
-  ],
-  antonino:[
-    "Antonino: Yo callo mucho, pero cuando acierto se nota.",
-    "Antonino: Esto lo traía mascado desde el calentamiento.",
-    "Antonino: Suave, elegante y para dentro."
-  ],
-  alvarino:[
-    "Alvariño: Hoy vengo más fresco que una caja de fruta en enero.",
-    "Alvariño: Esto entra solo, como los plátanos buenos.",
-    "Alvariño: Estoy repartiendo aciertos por kilos."
-  ],
-  arricio:[
-    "Arricio: Con el calor que hace y aun así estoy acertando.",
-    "Arricio: Si sigo así, me tienen que abanicar por talento.",
-    "Arricio: Esto lo meto aunque se me derrita la camiseta."
-  ],
-  felixon:[
-    "Félixon: Correcto. Gestión impecable de la respuesta.",
-    "Félixon: Todo bajo control. Como debe ser.",
-    "Félixon: Cuando hay método, hay acierto."
-  ],
-  mamen:[
-    "Mamen: Tranquilos, lo tenía planificado desde antes de sentarme.",
-    "Mamen: Orden, cabeza y canasta. Así sí.",
-    "Mamen: La presidenta no falla las importantes."
-  ]
+  generic:["Ya lo sabía yo, si es que hoy vengo sembrado.","No me aplauda tanto, que luego me vengo arriba.","Hoy estoy más fino que un triple sin tocar aro.","Esto estaba cantado desde el salto inicial.","Voy embalado como si jugara en casa.","Así sí da gusto jugar en esta parroquia."],
+  nazario:["Ya lo sabía, pero me distrae la belleza del graderío.","Hoy vengo tan fino que hasta la boina me aplaude.","Si sigo así, me fichan y me echan flores a la vez.","A este ritmo me van a mirar más que al videomarcador.","Estoy lanzado y con el sombrero bien puesto."],
+  praxedes:["Eso lo sabía yo antes de que pusieran las opciones.","Normal que acierte, si aquí la que manda soy yo.","A esta parroquia le falta escucharme más y fallar menos.","Yo no vengo a probar suerte, vengo a poner orden.","Otra para la libreta de las que mandan."],
+  tijeras:["La sabía perfectamente... y eso que hoy vengo con niebla.","Apunte ahí otro acierto del barril del talento.","Estoy que lo clavo aunque vaya dando curvas.","Hoy la inspiración me vino con tapa y aceituna.","Ni el vaso me distrae cuando me da por acertar."],
+  nachon:["Yo esto ya lo comenté con un cliente entre semáforo y semáforo.","Hoy voy tan lanzado que ni el GPS me sigue.","Esto lo llevo más controlado que la parada del aeropuerto.","A este paso no me pilla ni la hora punta.","Me conozco esta ruta mejor que el centro de la ciudad."],
+  chonona:["Ya estaba tardando en demostrar quién manda aquí.","A mí no me pilla una fácil, una media ni una difícil.","Que aplaudan, que para eso he venido.","Aquí se viene llorado y acertado.","Otra más para mi colección de zascas."],
+  antonino:["Yo callo mucho, pero cuando acierto se nota.","Esto lo traía mascado desde el calentamiento.","Suave, elegante y para dentro.","Sin hacer ruido, pero acertando.","Paso corto, mirada seria y respuesta dentro."],
+  alvarino:["Hoy vengo más fresco que una caja de fruta en enero.","Esto entra solo, como los plátanos buenos.","Estoy repartiendo aciertos por kilos.","Qué bien madura una respuesta cuando sale redonda.","Estoy para vender aciertos a granel."],
+  arricio:["Con el calor que hace y aun así estoy acertando.","Si sigo así, me tienen que abanicar por talento.","Esto lo meto aunque se me derrita la camiseta.","Estoy sudando, sí, pero también acertando.","Calor tengo, pero puntería también."],
+  felixon:["Correcto. Gestión impecable de la respuesta.","Todo bajo control. Como debe ser.","Cuando hay método, hay acierto.","Esto estaba perfectamente auditado.","La ejecución ha sido excelente."],
+  mamen:["Tranquilos, lo tenía planificado desde antes de sentarme.","Orden, cabeza y canasta. Así sí.","La presidenta no falla las importantes.","Esto entra dentro de la hoja de ruta.","Si se hace con criterio, sale bien."]
 };
 const contestantBad = {
-  generic:[
-    "Concursante: Yo la sabía, pero quise darle emoción a la parroquia.",
-    "Concursante: Padre, se me cruzó la respuesta con otra del bar.",
-    "Concursante: Esto es estrategia, luego remonto."
-  ],
-  nazario:[
-    "El Nazario: Padre, me distraje pensando en una moza del fondo.",
-    "El Nazario: La sabía, pero me guiñó un ojo la respuesta falsa.",
-    "El Nazario: Esto me pasa por venir tan elegante."
-  ],
-  praxedes:[
-    "Tía Praxedes: Esa estaba mal puesta, lo digo yo y punto.",
-    "Tía Praxedes: No he fallado, ha fallado la pregunta.",
-    "Tía Praxedes: Que no se acostumbren, que esto ha sido un despiste mínimo."
-  ],
-  tijeras:[
-    "Tijeras: La tenía en la punta de la lengua... y del vaso.",
-    "Tijeras: Padre, esto es culpa del reflejo de las luces.",
-    "Tijeras: Hoy voy recto, pero la respuesta iba haciendo eses."
-  ],
-  nachon:[
-    "Nachón el Taxis: Me pilló en hora punta mental, Padre.",
-    "Nachón el Taxis: Iba bien encaminado y me salté la salida buena.",
-    "Nachón el Taxis: Esto con dos rotondas más lo saco."
-  ],
-  chonona:[
-    "Chonona: No me ha gustado esa pregunta ni un pelo.",
-    "Chonona: Bueno, pues una mala la tiene cualquiera... los demás más.",
-    "Chonona: Que nadie se confíe, que ahora arranco de verdad."
-  ],
-  antonino:[
-    "Antonino: He querido ser discreto hasta para fallar.",
-    "Antonino: La correcta la dejé salir por educación.",
-    "Antonino: Se me fue, pero sin hacer ruido."
-  ],
-  alvarino:[
-    "Alvariño: Esa venía verde y yo la cogí demasiado pronto.",
-    "Alvariño: Se me mezclaron las cajas, Padre.",
-    "Alvariño: Hoy esta fruta salió rana."
-  ],
-  arricio:[
-    "Arricio: Con este calor también se derriten las respuestas.",
-    "Arricio: Padre, me ha subido la temperatura táctica.",
-    "Arricio: Necesito sombra y revancha."
-  ],
-  felixon:[
-    "Félixon: Esto ha sido un fallo de ejecución, no de concepto.",
-    "Félixon: Anoto la incidencia y seguimos.",
-    "Félixon: Hay margen de mejora, pero no cunda el pánico."
-  ],
-  mamen:[
-    "Mamen: Vale, una mal. No pasa nada, lo reconduzco.",
-    "Mamen: Esto entra en el plan B de recuperación.",
-    "Mamen: Se acepta el error, pero se remonta."
-  ]
+  generic:["Yo la sabía, pero quise darle emoción a la parroquia.","Se me cruzó la respuesta con otra del bar.","Esto es estrategia, luego remonto.","La tenía en la punta de la lengua y se me cayó.","Hoy he salido respondón, pero no afinado.","Bueno, una mala la tiene cualquiera."],
+  nazario:["Me distraje pensando en una moza del fondo.","La sabía, pero me guiñó un ojo la respuesta falsa.","Esto me pasa por venir tan elegante.","Estaba yo en otros asuntos del corazón.","No se puede estar a todo y a todas."],
+  praxedes:["Esa estaba mal puesta, lo digo yo y punto.","No he fallado, ha fallado la pregunta.","Que no se acostumbren, que esto ha sido un despiste mínimo.","Esto se revisa y se repite, porque no me ha gustado.","Una mala no cambia quién manda aquí."],
+  tijeras:["La tenía en la punta de la lengua... y del vaso.","Esto es culpa del reflejo de las luces.","Hoy voy recto, pero la respuesta iba haciendo eses.","Se me evaporó la buena y agarré la mala.","Esto con una siesta entra mejor."],
+  nachon:["Me pilló en hora punta mental.","Iba bien encaminado y me salté la salida buena.","Esto con dos rotondas más lo saco.","Me metí por la calle equivocada de la memoria.","A esta respuesta le faltaba una vuelta más."],
+  chonona:["No me ha gustado esa pregunta ni un pelo.","Una mala la tiene cualquiera... los demás más.","Que nadie se confíe, que ahora arranco de verdad.","Esto ha sido un tropezón, no una caída.","La próxima la contesto antes de que respire el aro."],
+  antonino:["He querido ser discreto hasta para fallar.","La correcta la dejé salir por educación.","Se me fue, pero sin hacer ruido.","Hoy he estado elegante hasta en el error.","No pasa nada, se vuelve con más calma."],
+  alvarino:["Esa venía verde y yo la cogí demasiado pronto.","Se me mezclaron las cajas.","Hoy esta fruta salió rana.","No estaba madura la respuesta.","La buena se quedó en el puesto de al lado."],
+  arricio:["Con este calor también se derriten las respuestas.","Me ha subido la temperatura táctica.","Necesito sombra y revancha.","La buena se me quedó pegada del calor.","Estoy fundido, pero sigo en pie."],
+  felixon:["Esto ha sido un fallo de ejecución, no de concepto.","Anoto la incidencia y seguimos.","Hay margen de mejora, pero no cunda el pánico.","Se corrige el desvío y se avanza.","Lo catalogo como error puntual."],
+  mamen:["Vale, una mal. No pasa nada, lo reconduzco.","Esto entra en el plan B de recuperación.","Se acepta el error, pero se remonta.","Ajustamos y seguimos.","No me preocupa, todavía mando yo."]
 };
 
 function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function deepClone(x){ return JSON.parse(JSON.stringify(x)); }
 function todayKey(){
   const d = new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
-function deepClone(x){ return JSON.parse(JSON.stringify(x)); }
-
+function fillAudience(id, n){
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  for(let i=0;i<n;i++){
+    const p = document.createElement("div");
+    p.className = "person";
+    p.innerHTML = '<div class="head"></div><div class="torso"></div>';
+    el.appendChild(p);
+  }
+}
+function applause(id){
+  const el = document.getElementById(id);
+  el.classList.add("applause");
+  setTimeout(()=>el.classList.remove("applause"),2200);
+}
 function svgAvatar(style, small=false){
-  const W = small ? 74 : 110, H = small ? 100 : 146, skin = "#efc69a";
+  const W = small ? 74 : 110;
+  const H = small ? 100 : 146;
+  const skin = "#efc69a";
   let hair="#222", body="#394f76", extra="", glasses="", beard="", scarf="", tie="";
   switch(style){
     case "jeremias":
-      hair="#111"; body="#111";
-      extra += `<path d="M19,20 q18,-15 36,0 v10 h-36z" fill="#111"/>`;
-      tie = `<rect x="48" y="${small?72:104}" width="14" height="${small?16:20}" rx="2" fill="#fff" stroke="#000" stroke-width="2"/>`;
-      break;
+      hair="#111"; body="#111"; extra += `<path d="M19,20 q18,-15 36,0 v10 h-36z" fill="#111"/>`; tie = `<rect x="48" y="${small?72:104}" width="14" height="${small?16:20}" rx="2" fill="#fff" stroke="#000" stroke-width="2"/>`; break;
     case "nazario":
-      body="#4c5c7e";
-      extra += `<ellipse cx="55" cy="${small?18:22}" rx="${small?29:40}" ry="${small?10:14}" fill="#111"/><rect x="${small?20:21}" y="${small?18:22}" width="${small?58:68}" height="${small?10:14}" rx="5" fill="#111"/>`;
-      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`;
-      break;
+      body="#4c5c7e"; extra += `<ellipse cx="55" cy="${small?18:22}" rx="${small?29:40}" ry="${small?10:14}" fill="#111"/><rect x="${small?20:21}" y="${small?18:22}" width="${small?58:68}" height="${small?10:14}" rx="5" fill="#111"/>`; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`; break;
     case "praxedes":
-      body="#2d2d2d";
-      scarf = `<path d="M17,${small?18:24} q38,-18 76,0 v${small?24:32} h-76z" fill="#111"/><path d="M23,${small?54:78} q32,18 64,0" fill="none" stroke="#111" stroke-width="10"/>`;
-      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/>`;
-      break;
+      body="#2d2d2d"; scarf = `<path d="M17,${small?18:24} q38,-18 76,0 v${small?24:32} h-76z" fill="#111"/><path d="M23,${small?54:78} q32,18 64,0" fill="none" stroke="#111" stroke-width="10"/>`; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/>`; break;
     case "tijeras":
-      hair="#777"; body="#3f5579";
-      beard = `<path d="M37,${small?54:78} q18,20 36,0 v${small?12:16} q-18,14 -36,0z" fill="#7a7a7a"/>`;
-      break;
+      hair="#777"; body="#3f5579"; beard = `<path d="M37,${small?54:78} q18,20 36,0 v${small?12:16} q-18,14 -36,0z" fill="#7a7a7a"/>`; break;
     case "nachon":
-      hair="#666"; body="#4d4d4d";
-      extra += `<rect x="38" y="${small?17:23}" width="34" height="7" rx="3" fill="#cfcfcf"/>`;
-      break;
+      hair="#666"; body="#4d4d4d"; extra += `<rect x="38" y="${small?17:23}" width="34" height="7" rx="3" fill="#cfcfcf"/>`; break;
     case "chonona":
-      hair="#efefef"; body="#a11625";
-      break;
+      hair="#efefef"; body="#a11625"; break;
     case "antonino":
-      hair="#d0d0d0"; body="#35507f";
-      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`;
-      break;
+      hair="#d0d0d0"; body="#35507f"; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`; break;
     case "alvarino":
-      hair="#2e2016"; body="#145089";
-      beard = `<path d="M39,${small?52:76} q16,15 32,0 v${small?8:12} q-16,10 -32,0z" fill="#2e2016"/>`;
-      break;
+      hair="#2e2016"; body="#145089"; beard = `<path d="M39,${small?52:76} q16,15 32,0 v${small?8:12} q-16,10 -32,0z" fill="#2e2016"/>`; break;
     case "arricio":
-      hair="#555"; body="#1f1f1f";
-      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#222"/>`;
-      break;
+      hair="#555"; body="#1f1f1f"; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#222"/>`; break;
     case "felixon":
-      hair="#cfcfcf"; body="#8c2323";
-      beard = `<path d="M43,${small?52:76} q12,12 24,0 v${small?8:12} q-12,10 -24,0z" fill="#444"/>`;
-      break;
+      hair="#cfcfcf"; body="#8c2323"; beard = `<path d="M43,${small?52:76} q12,12 24,0 v${small?8:12} q-12,10 -24,0z" fill="#444"/>`; break;
     case "mamen":
-      hair="#5d3920"; body="#9c1839";
-      extra += `<path d="M20,${small?20:26} q35,-14 70,0 v${small?18:26} q-11,-8 -48,0z" fill="#5d3920"/>`;
-      break;
+      hair="#5d3920"; body="#9c1839"; extra += `<path d="M20,${small?20:26} q35,-14 70,0 v${small?18:26} q-11,-8 -48,0z" fill="#5d3920"/>`; break;
     case "custom_male":
-      hair="#222"; body="#31517a";
-      break;
+      hair="#222"; body="#31517a"; break;
     case "custom_female":
-      hair="#6a2744"; body="#7b2044";
-      break;
+      hair="#6a2744"; body="#7b2044"; break;
   }
   const cls = small ? "avatarSmall" : "avatarSvg";
   return `<svg class="${cls}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
@@ -732,53 +625,26 @@ function svgAvatar(style, small=false){
     ${tie}
   </svg>`;
 }
-
-function fillAudience(id, n){
-  const el = document.getElementById(id);
-  el.innerHTML = "";
-  for(let i=0;i<n;i++){
-    const p = document.createElement("div");
-    p.className = "person";
-    p.innerHTML = `<div class="head"></div><div class="torso"></div>`;
-    el.appendChild(p);
+function getVoices(){
+  const es = speechSynthesis.getVoices().filter(v => (v.lang||"").toLowerCase().includes("es"));
+  return es.length ? es : speechSynthesis.getVoices();
+}
+function speak(text, actor, callback){
+  if(!("speechSynthesis" in window)){
+    if(callback) callback();
+    return;
   }
+  const voices = getVoices();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "es-ES";
+  u.rate = actor.rate;
+  u.pitch = actor.pitch;
+  if(voices.length) u.voice = voices[actor.voiceIndex % voices.length];
+  u.onend = ()=>callback && callback();
+  u.onerror = ()=>callback && callback();
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
 }
-function applause(id){
-  const el = document.getElementById(id);
-  el.classList.add("applause");
-  setTimeout(()=>el.classList.remove("applause"),2200);
-}
-
-function getCustoms(){ return JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]"); }
-function saveCustoms(v){ localStorage.setItem(CUSTOM_KEY, JSON.stringify(v)); }
-function loadContestants(){
-  contestants = [...baseContestants, ...getCustoms()];
-  const box = document.getElementById("contestantList");
-  box.innerHTML = "";
-  contestants.forEach(c=>{
-    const d = document.createElement("div");
-    d.className = "contestant";
-    const style = c.style==="custom" ? (c.gender==="female" ? "custom_female" : "custom_male") : c.style;
-    d.innerHTML = `
-      <div>${svgAvatar(style, true)}</div>
-      <div class="contestantText"><strong>${c.name}</strong><span>${c.subtitle||"Concursante"}</span></div>
-    `;
-    d.onclick = ()=>{ currentContestant = c; startGame(); };
-    box.appendChild(d);
-  });
-}
-function renderFixedAvatars(){
-  document.getElementById("hostHomeAvatar").innerHTML = svgAvatar("jeremias", false);
-  document.getElementById("hostGameAvatar").innerHTML = svgAvatar("jeremias", false);
-}
-function renderPlayerAvatar(){
-  const style = currentContestant.style==="custom"
-    ? (currentContestant.gender==="female" ? "custom_female" : "custom_male")
-    : currentContestant.style;
-  document.getElementById("playerGameAvatar").innerHTML = svgAvatar(style, false);
-  document.getElementById("contestantNameGame").textContent = currentContestant.name;
-}
-
 function bellTone(){
   if(!soundOn) return;
   try{
@@ -797,39 +663,43 @@ function bellTone(){
     });
   }catch(e){}
 }
-function startBellLoop(){
-  stopBellLoop();
-  bellInterval = setInterval(bellTone, 18000);
-}
-function stopBellLoop(){
-  if(bellInterval){ clearInterval(bellInterval); bellInterval = null; }
-}
+function startBellLoop(){ stopBellLoop(); bellInterval = setInterval(bellTone, 18000); }
+function stopBellLoop(){ if(bellInterval){ clearInterval(bellInterval); bellInterval = null; } }
 function updateBellContext(){
   const pre = ["homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen","dailyScreen","totalScreen","rulesScreen","settingsScreen"]
     .some(id => !document.getElementById(id).classList.contains("hidden"));
   if(pre && soundOn) startBellLoop(); else stopBellLoop();
 }
-function speak(text, rate, pitch, callback){
-  if(!("speechSynthesis" in window)){
-    if(callback) callback();
-    return;
-  }
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "es-ES";
-  u.rate = rate;
-  u.pitch = pitch;
-  u.onend = ()=>callback && callback();
-  u.onerror = ()=>callback && callback();
-  window.speechSynthesis.speak(u);
-}
-
 function showScreen(id){
   ["homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen","dailyScreen","totalScreen","rulesScreen","settingsScreen","gameScreen","resultScreen"]
     .forEach(s=>document.getElementById(s).classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
   updateBellContext();
   window.scrollTo(0,0);
+}
+function getCustoms(){ return JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]"); }
+function saveCustoms(v){ localStorage.setItem(CUSTOM_KEY, JSON.stringify(v)); }
+function loadContestants(){
+  contestants = [...baseContestants, ...getCustoms()];
+  const box = document.getElementById("contestantList");
+  box.innerHTML = "";
+  contestants.forEach(c=>{
+    const d = document.createElement("div");
+    d.className = "contestant";
+    const style = c.style==="custom" ? (c.gender==="female" ? "custom_female" : "custom_male") : c.style;
+    d.innerHTML = `<div>${svgAvatar(style,true)}</div><div class="contestantText"><strong>${c.name}</strong><span>${c.subtitle||"Concursante"}</span></div>`;
+    d.onclick = ()=>{ currentContestant = c; startGame(); };
+    box.appendChild(d);
+  });
+}
+function renderFixedAvatars(){
+  document.getElementById("hostHomeAvatar").innerHTML = svgAvatar("jeremias", false);
+  document.getElementById("hostGameAvatar").innerHTML = svgAvatar("jeremias", false);
+}
+function renderPlayerAvatar(){
+  const style = currentContestant.style==="custom" ? (currentContestant.gender==="female" ? "custom_female" : "custom_male") : currentContestant.style;
+  document.getElementById("playerGameAvatar").innerHTML = svgAvatar(style, false);
+  document.getElementById("contestantNameGame").textContent = currentContestant.name;
 }
 function refreshSoundUI(){
   document.getElementById("toggleSoundBtn").textContent = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
@@ -841,15 +711,33 @@ function updateScore(){
   document.getElementById("failsValue").textContent = fails;
 }
 function updateTimer(){ document.getElementById("timerValue").textContent = timer + "s"; }
-
-function pickWrongOptions(correct, pool){
-  const options = pool.filter(x=>x!==correct);
-  const out = [];
-  while(out.length < 2 && options.length){
-    const idx = Math.floor(Math.random()*options.length);
-    out.push(options.splice(idx,1)[0]);
+function rankAdd(username, contestantName, score){
+  const dayKey = RANK_DAY_KEY + todayKey();
+  const day = JSON.parse(localStorage.getItem(dayKey)||"[]");
+  const total = JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]");
+  function merge(list){
+    const idx = list.findIndex(x=>x.username===username);
+    if(idx>=0){ list[idx].score += score; list[idx].contestantName = contestantName; }
+    else list.push({username, contestantName, score});
+    list.sort((a,b)=>b.score-a.score);
+    return list.slice(0,20);
   }
-  return out;
+  localStorage.setItem(dayKey, JSON.stringify(merge(day)));
+  localStorage.setItem(RANK_TOTAL_KEY, JSON.stringify(merge(total)));
+}
+function renderRanking(boxId, data){
+  const box = document.getElementById(boxId);
+  if(!data.length){ box.innerHTML = "Aún no hay puntuaciones."; return; }
+  box.innerHTML = data.map((x,i)=>
+    `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.08)">
+      <div><strong>#${i+1} ${x.username}</strong><br><span style="font-size:12px;color:#62709b">${x.contestantName}</span></div>
+      <div style="font-size:22px;font-weight:900;color:#2947ac">${x.score}</div>
+    </div>`
+  ).join("");
+}
+function refreshRankings(){
+  renderRanking("dailyRankingBox", JSON.parse(localStorage.getItem(RANK_DAY_KEY + todayKey())||"[]"));
+  renderRanking("totalRankingBox", JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]"));
 }
 function shuffle(arr){
   const a = [...arr];
@@ -859,65 +747,85 @@ function shuffle(arr){
   }
   return a;
 }
-function buildQuestions(){
-  const qs = [];
-
-  categoryFacts.forEach(f=>{
-    qs.push({q:f[0], a:[f[1],f[2],f[3]], c:0});
-  });
-
-  factBank.forEach(f=>{
-    qs.push({q:f[0], a:[f[1],f[2],f[3]], c:0});
-  });
-
-  const cities = clubs.map(x=>x.city);
-  clubs.forEach(c=>{
-    const wrong = pickWrongOptions(c.city, cities);
-    qs.push({q:`¿Qué ciudad corresponde al club ${c.club}?`, a:[c.city, wrong[0], wrong[1]], c:0});
-  });
-
-  const competitions = ["Liga ACB / Liga Endesa","1ª FEB","2ª FEB","Copa del Rey","Supercopa"];
-  [
-    ["¿Qué competición fue durante muchos años la gran referencia profesional del baloncesto español?","Liga ACB / Liga Endesa"],
-    ["¿Qué categoría sustituyó en nombre a la antigua LEB Oro?","1ª FEB"],
-    ["¿Qué categoría sustituyó en nombre a la antigua LEB Plata?","2ª FEB"],
-    ["¿Qué torneo reúne a los mejores equipos ACB a mitad de temporada?","Copa del Rey"],
-    ["¿Qué torneo abre muchas temporadas entre campeones o aspirantes destacados?","Supercopa"]
-  ].forEach(item=>{
-    const wrong = pickWrongOptions(item[1], competitions);
-    qs.push({q:item[0], a:[item[1], wrong[0], wrong[1]], c:0});
-  });
-
-  const manual = shuffle(qs);
+function pickWrong(correct, pool){
+  const options = pool.filter(x=>x!==correct);
   const out = [];
-  while(out.length < QUESTIONS_PER_GAME){
-    out.push(...shuffle(manual));
+  while(out.length < 2 && options.length){
+    const idx = Math.floor(Math.random()*options.length);
+    out.push(options.splice(idx,1)[0]);
   }
-  return out.slice(0, QUESTIONS_PER_GAME).map(q=>{
-    const originalCorrect = q.a[q.c];
-    const shuffled = shuffle(q.a);
-    return {q:q.q, a:shuffled, c:shuffled.indexOf(originalCorrect)};
+  return out;
+}
+function buildBank(){
+  const bank = [];
+  refsAndComps.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
+  players.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
+  coaches.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
+  leonSpecific.forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
+  const allCities = clubs.map(x=>x.city);
+  clubs.forEach(c=>{
+    const wrong = pickWrong(c.city, allCities);
+    bank.push({q:`¿Qué ciudad corresponde al club ${c.club}?`, a:[c.city, wrong[0], wrong[1]], c:0, d:2});
+  });
+  const allClubs = clubs.map(x=>x.club);
+  clubs.forEach(c=>{
+    const wrong = pickWrong(c.club, allClubs);
+    bank.push({q:`¿Qué club representa la ciudad de ${c.city}?`, a:[c.club, wrong[0], wrong[1]], c:0, d:3});
+  });
+  [
+    ["¿Qué categoría sustituyó a la antigua LEB Oro?","1ª FEB","2ª FEB","Liga ACB",2],
+    ["¿Qué categoría sustituyó a la antigua LEB Plata?","2ª FEB","1ª FEB","Liga ACB",2],
+    ["¿Qué torneo reúne a los mejores equipos ACB a mitad de temporada?","Copa del Rey","Superliga Municipal","Copa Provincial",2],
+    ["¿Qué club leonés actual aparece en este juego?","Cultural Leonesa de Baloncesto","UCAM Murcia","Baskonia",2],
+    ["¿Qué entidades leonesas históricas aparecen en este juego?","Baloncesto León y Elosúa León","Baskonia y Obradoiro","Gran Canaria y Girona",3],
+    ["¿Qué peñas de León aparecen en el juego?","Universitaria, CultuBasket, El Tambor y Marea Roja","Verdes del Norte y Peña ACB","Solo una peña",3]
+  ].forEach(x=>bank.push({q:x[0], a:[x[1],x[2],x[3]], c:0, d:x[4]}));
+
+  return bank.map(item=>{
+    const correct = item.a[item.c];
+    const shuffled = shuffle(item.a);
+    return {q:item.q, a:shuffled, c:shuffled.indexOf(correct), d:item.d};
   });
 }
-
-function getContestantGood(){
+function getGoodLines(){
   if(currentContestant.style==="custom") return contestantGood.generic;
   return contestantGood[currentContestant.id] || contestantGood.generic;
 }
-function getContestantBad(){
+function getBadLines(){
   if(currentContestant.style==="custom") return contestantBad.generic;
   return contestantBad[currentContestant.id] || contestantBad.generic;
 }
-
-function resetAnswers(){
+function resetAnswerButtons(){
   document.querySelectorAll(".answerBtn").forEach(b=>{
     b.disabled = false;
     b.classList.remove("correct","wrong");
   });
 }
+function selectQuestions(){
+  const bank = buildBank();
+  const usedIndexes = new Set();
+  const result = [];
+  for(let i=0;i<QUESTIONS_PER_GAME;i++){
+    let difficulty = i < 3 ? 1 : Math.min(5, 1 + Math.floor(i/3));
+    let pool = bank
+      .map((q,idx)=>({q,idx}))
+      .filter(x => x.q.d === difficulty && !usedIndexes.has(x.idx));
+
+    if(!pool.length){
+      pool = bank
+        .map((q,idx)=>({q,idx}))
+        .filter(x => !usedIndexes.has(x.idx));
+    }
+
+    const chosen = rand(pool);
+    usedIndexes.add(chosen.idx);
+    result.push(chosen.q);
+  }
+  return result;
+}
 function renderQuestion(){
   answering = false;
-  resetAnswers();
+  resetAnswerButtons();
   const q = gameQuestions[currentQuestionIndex];
   document.getElementById("roundValue").textContent = "Ronda " + (currentQuestionIndex+1) + "/" + QUESTIONS_PER_GAME;
   document.getElementById("questionText").textContent = q.q;
@@ -939,7 +847,7 @@ function startTimer(){
   },1000);
 }
 function startGame(){
-  gameQuestions = buildQuestions();
+  gameQuestions = selectQuestions();
   currentQuestionIndex = 0;
   points = 0;
   hits = 0;
@@ -947,8 +855,8 @@ function startGame(){
   updateScore();
   renderPlayerAvatar();
   renderQuestion();
-  document.getElementById("hostLine").textContent = "Padre Jeremías: Bienvenido, hijo mío.";
-  document.getElementById("playerLine").textContent = `${currentContestant.name}: Hoy vengo bendecido.`;
+  document.getElementById("hostLine").textContent = "Bienvenido, hijo mío.";
+  document.getElementById("playerLine").textContent = "Hoy vengo bendecido.";
   showScreen("gameScreen");
   startTimer();
 }
@@ -965,15 +873,14 @@ function processAnswer(index){
   if(answering) return;
   answering = true;
   clearInterval(timerInterval);
-
   const q = gameQuestions[currentQuestionIndex];
-  const btns = [
+  const buttons = [
     document.getElementById("answer0"),
     document.getElementById("answer1"),
     document.getElementById("answer2")
   ];
-  btns.forEach(b=>b.disabled = true);
-  btns[q.c].classList.add("correct");
+  buttons.forEach(b=>b.disabled=true);
+  buttons[q.c].classList.add("correct");
 
   let hostText = "";
   let playerText = "";
@@ -981,17 +888,17 @@ function processAnswer(index){
   if(index === q.c){
     points += 2;
     hits += 1;
-    if(index >= 0) btns[index].classList.add("correct");
+    if(index >= 0) buttons[index].classList.add("correct");
     hostText = rand(hostGood);
-    playerText = rand(getContestantGood()).replace("Concursante", currentContestant.name);
+    playerText = rand(getGoodLines());
     applause("duelAudience");
     applause("homeAudience");
   }else{
     points -= 1;
     fails += 1;
-    if(index >= 0) btns[index].classList.add("wrong");
+    if(index >= 0) buttons[index].classList.add("wrong");
     hostText = rand(hostBad);
-    playerText = rand(getContestantBad()).replace("Concursante", currentContestant.name);
+    playerText = rand(getBadLines());
   }
 
   updateScore();
@@ -999,54 +906,15 @@ function processAnswer(index){
   document.getElementById("playerLine").textContent = playerText;
 
   setTimeout(()=>{
-    speak(hostText, host.rate, host.pitch, ()=>{
+    speak(hostText, host, ()=>{
       setTimeout(()=>{
-        speak(playerText, currentContestant.rate, currentContestant.pitch, ()=>{
+        speak(playerText, currentContestant, ()=>{
           setTimeout(nextQuestion, 1700);
         });
       }, 500);
     });
   }, 450);
 }
-
-function rankAdd(username, contestantName, score){
-  const dayKey = RANK_DAY_KEY + todayKey();
-  const day = JSON.parse(localStorage.getItem(dayKey)||"[]");
-  const total = JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]");
-
-  function merge(list){
-    const idx = list.findIndex(x=>x.username===username);
-    if(idx >= 0){
-      list[idx].score += score;
-      list[idx].contestantName = contestantName;
-    }else{
-      list.push({username, contestantName, score});
-    }
-    list.sort((a,b)=>b.score-a.score);
-    return list.slice(0,20);
-  }
-
-  localStorage.setItem(dayKey, JSON.stringify(merge(day)));
-  localStorage.setItem(RANK_TOTAL_KEY, JSON.stringify(merge(total)));
-}
-function renderRanking(boxId, data){
-  const box = document.getElementById(boxId);
-  if(!data.length){
-    box.innerHTML = "Aún no hay puntuaciones.";
-    return;
-  }
-  box.innerHTML = data.map((x,i)=>
-    `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.08)">
-      <div><strong>#${i+1} ${x.username}</strong><br><span style="font-size:12px;color:#62709b">${x.contestantName}</span></div>
-      <div style="font-size:22px;font-weight:900;color:#2947ac">${x.score}</div>
-    </div>`
-  ).join("");
-}
-function refreshRankings(){
-  renderRanking("dailyRankingBox", JSON.parse(localStorage.getItem(RANK_DAY_KEY + todayKey())||"[]"));
-  renderRanking("totalRankingBox", JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]"));
-}
-
 function saveGame(){
   const payload = {
     currentUser,currentContestant,gameQuestions,currentQuestionIndex,points,hits,fails,timer
@@ -1060,7 +928,7 @@ function loadGame(){
   const d = JSON.parse(raw);
   currentUser = d.currentUser || "";
   currentContestant = d.currentContestant || contestants[0];
-  gameQuestions = d.gameQuestions || buildQuestions();
+  gameQuestions = d.gameQuestions || selectQuestions();
   currentQuestionIndex = d.currentQuestionIndex || 0;
   points = d.points || 0;
   hits = d.hits || 0;
@@ -1071,8 +939,8 @@ function loadGame(){
   renderQuestion();
   timer = d.timer || TIME_PER_QUESTION;
   updateTimer();
-  document.getElementById("hostLine").textContent = "Padre Jeremías: Partida cargada, hijo mío.";
-  document.getElementById("playerLine").textContent = `${currentContestant.name}: Seguimos donde lo dejamos.`;
+  document.getElementById("hostLine").textContent = "Partida cargada, hijo mío.";
+  document.getElementById("playerLine").textContent = "Seguimos donde lo dejamos.";
   showScreen("gameScreen");
   document.getElementById("pauseLayer").classList.add("hidden");
   clearInterval(timerInterval);
@@ -1090,8 +958,7 @@ function endGame(){
   rankAdd(currentUser || "INVITADO", currentContestant.name, points);
   refreshRankings();
   document.getElementById("finalPoints").textContent = points;
-  document.getElementById("finalSummary").innerHTML =
-    `<strong>${currentUser || "INVITADO"}</strong> con <strong>${currentContestant.name}</strong><br>Aciertos: ${hits}<br>Fallos/Pecados: ${fails}`;
+  document.getElementById("finalSummary").innerHTML = `<strong>${currentUser || "INVITADO"}</strong> con <strong>${currentContestant.name}</strong><br>Aciertos: ${hits}<br>Fallos/Pecados: ${fails}`;
   if(hits === QUESTIONS_PER_GAME) document.getElementById("holyPrize").classList.remove("hidden");
   else document.getElementById("holyPrize").classList.add("hidden");
   showScreen("resultScreen");
@@ -1102,14 +969,12 @@ document.getElementById("dailyBtn").onclick = ()=>{ refreshRankings(); bellTone(
 document.getElementById("totalBtn").onclick = ()=>{ refreshRankings(); bellTone(); showScreen("totalScreen"); };
 document.getElementById("rulesBtn").onclick = ()=>{ bellTone(); showScreen("rulesScreen"); };
 document.getElementById("settingsBtn").onclick = ()=>{ bellTone(); showScreen("settingsScreen"); };
-
 document.getElementById("continueUserBtn").onclick = ()=>{
   currentUser = document.getElementById("userName").value.trim() || "Pacho";
   document.getElementById("helloName").textContent = "Hola " + currentUser;
   bellTone();
   showScreen("chooseScreen");
 };
-
 document.getElementById("chooseContestantBtn").onclick = ()=>showScreen("listScreen");
 document.getElementById("createContestantBtn").onclick = ()=>showScreen("createContestantScreen");
 document.getElementById("backChooseBtn").onclick = ()=>showScreen("chooseScreen");
@@ -1133,7 +998,8 @@ document.getElementById("saveCustomBtn").onclick = ()=>{
     style:"custom",
     gender,
     rate: gender==="female" ? 1.0 : .93,
-    pitch: gender==="female" ? 1.08 : .94
+    pitch: gender==="female" ? 1.08 : .94,
+    voiceIndex: 11 + customs.length
   });
   saveCustoms(customs);
   loadContestants();
@@ -1149,10 +1015,12 @@ document.getElementById("openOwnerBtn").onclick = ()=>{
   if(pin === OWNER_PIN){
     document.getElementById("pinModal").classList.add("hidden");
     document.getElementById("ownerPanel").classList.remove("hidden");
-  }else alert("Clave incorrecta");
+  }else{
+    alert("Clave incorrecta");
+  }
 };
 document.getElementById("closeOwnerPanelBtn").onclick = ()=>document.getElementById("ownerPanel").classList.add("hidden");
-document.getElementById("editorBtn").onclick = ()=>alert("Pantalla preparada para futuras actualizaciones del juego.");
+document.getElementById("editorBtn").onclick = ()=>alert("Panel preparado para futuras actualizaciones.");
 document.getElementById("shareBtn").onclick = async ()=>{
   const url = location.href;
   const text = "Te envío La Catedral del Baloncesto Español.";
