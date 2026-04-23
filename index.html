@@ -130,7 +130,6 @@
   .b2{background:#d8dbe4;color:#091538}
   .b3{background:#9e82f0;color:#fff}
   .b4{background:#d2d5dc;color:#091538}
-  .fullRow{grid-column:1 / -1}
   .card{
     background:#ececf0;
     color:#12224f;
@@ -180,6 +179,7 @@
     color:#c8cdd9;
     font-weight:800;
     text-transform:uppercase;
+    text-decoration:none;
   }
   .contestants{
     display:flex;
@@ -226,6 +226,7 @@
     position:fixed;inset:0;background:rgba(0,0,0,.62);
     display:flex;align-items:center;justify-content:center;
     padding:18px;
+    z-index:50;
   }
   .note{
     background:rgba(255,255,255,.08);
@@ -233,6 +234,116 @@
     padding:12px;
     font-weight:700;
     line-height:1.35;
+  }
+  .scoreGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:4px;
+    margin-bottom:12px;
+    background:#000;
+    padding:4px;
+    border-radius:16px;
+  }
+  .scoreBox{
+    background:#111;
+    border-radius:12px;
+    text-align:center;
+    padding:10px 6px;
+  }
+  .scoreLabel{
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .scoreValue{
+    font-size:32px;
+    font-weight:900;
+  }
+  .greenTxt{color:#53e58d}
+  .yellowTxt{color:#f0bc16}
+  .redTxt{color:#ff5a64}
+  .duelBox{
+    background:#2947ac;
+    border:5px solid #d5d9e5;
+    border-radius:28px;
+    padding:16px 12px;
+    margin-bottom:12px;
+    box-shadow:0 10px 0 rgba(0,0,0,.28);
+  }
+  .duelRow{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .duelName{
+    text-align:center;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    color:#fff;
+    margin-bottom:8px;
+  }
+  .questionCard{
+    background:#ececf0;
+    color:#12224f;
+    border-radius:28px;
+    padding:16px 14px;
+    box-shadow:0 10px 0 rgba(0,0,0,.28);
+  }
+  .timerPill{
+    width:150px;
+    margin:0 auto 12px;
+    text-align:center;
+    background:#efbc10;
+    color:#20307c;
+    font-weight:900;
+    border-radius:30px;
+    padding:10px 12px;
+    font-size:22px;
+  }
+  .roundTxt{
+    text-align:center;
+    font-size:13px;
+    font-weight:900;
+    color:#8d93a6;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .questionTxt{
+    font-size:22px;
+    font-weight:900;
+    text-align:center;
+    line-height:1.25;
+    margin-bottom:16px;
+    color:#20307c;
+  }
+  .answerBtn{
+    width:100%;
+    border:4px solid #000;
+    border-radius:14px;
+    padding:16px 12px;
+    text-align:left;
+    font-size:18px;
+    font-weight:900;
+    color:#20307c;
+    background:#fff;
+    margin-bottom:12px;
+    cursor:pointer;
+  }
+  .infoBox{
+    margin-top:12px;
+    background:rgba(255,255,255,.1);
+    border-radius:18px;
+    padding:12px;
+    font-size:14px;
+    font-weight:700;
+    line-height:1.35;
+  }
+  .pauseLayer{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:flex; align-items:center; justify-content:center;
+    padding:18px; z-index:60;
   }
 </style>
 </head>
@@ -251,9 +362,7 @@
 
     <div class="stage">
       <div class="avatarWrap">
-        <div class="avatar">
-          <div class="mouth"></div>
-        </div>
+        <div class="avatar"><div class="mouth"></div></div>
         <div class="body"></div>
       </div>
     </div>
@@ -292,10 +401,25 @@
     </div>
 
     <div class="contestants">
-      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>El Nazario</strong><span>Paisano con boina</span></div></div>
-      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>Tía Praxedes</strong><span>Señora mayor con pañoleta</span></div></div>
-      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>Tijeras</strong><span>Hombre de pueblo</span></div></div>
-      <div class="contestant"><div><div class="miniHead"></div><div class="miniBody"></div></div><div class="contestantText"><strong>Nachón el Taxis</strong><span>Taxista con mil historias</span></div></div>
+      <div class="contestant" data-contestant="El Nazario">
+        <div><div class="miniHead"></div><div class="miniBody"></div></div>
+        <div class="contestantText"><strong>El Nazario</strong><span>Paisano con boina</span></div>
+      </div>
+
+      <div class="contestant" data-contestant="Tía Praxedes">
+        <div><div class="miniHead"></div><div class="miniBody"></div></div>
+        <div class="contestantText"><strong>Tía Praxedes</strong><span>Señora mayor con pañoleta</span></div>
+      </div>
+
+      <div class="contestant" data-contestant="Tijeras">
+        <div><div class="miniHead"></div><div class="miniBody"></div></div>
+        <div class="contestantText"><strong>Tijeras</strong><span>Hombre de pueblo</span></div>
+      </div>
+
+      <div class="contestant" data-contestant="Nachón el Taxis">
+        <div><div class="miniHead"></div><div class="miniBody"></div></div>
+        <div class="contestantText"><strong>Nachón el Taxis</strong><span>Taxista con mil historias</span></div>
+      </div>
     </div>
 
     <button class="actionBtn red" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
@@ -305,8 +429,7 @@
     <div class="card">
       <h2 class="cardTitle">Creador de concursante</h2>
       <div class="note">
-        Aquí irá el creador completo con caras, pelo, barba, ropa, gafas y voz.<br>
-        En este paso lo dejamos preparado como pantalla base.
+        Aquí irá el creador completo con caras, pelo, barba, ropa, gafas y voz.
       </div>
       <button class="actionBtn yellow" style="margin-top:16px;" id="backFromCreatorBtn">Volver</button>
     </div>
@@ -336,7 +459,7 @@
         15 segundos por pregunta.<br>
         Acierto: +2 puntos.<br>
         Fallo: -1 punto.<br>
-        Más adelante aquí meteremos todas las reglas completas.
+        3 respuestas por pregunta.
       </div>
       <button class="actionBtn grey" id="backRulesBtn">Volver</button>
     </div>
@@ -347,6 +470,62 @@
       <h2 class="cardTitle">Ajustes</h2>
       <button class="actionBtn yellow" id="toggleSoundBtn">Sonido de campanas: ON</button>
       <button class="actionBtn grey" id="backSettingsBtn">Volver</button>
+    </div>
+  </section>
+
+  <section id="gameScreen" class="hidden">
+    <div class="scoreGrid">
+      <div class="scoreBox">
+        <div class="scoreLabel greenTxt">Canasta en el cepillo</div>
+        <div class="scoreValue greenTxt" id="hitsValue">0</div>
+      </div>
+      <div class="scoreBox">
+        <div class="scoreLabel yellowTxt">Puntos</div>
+        <div class="scoreValue yellowTxt" id="pointsValue">0</div>
+      </div>
+      <div class="scoreBox">
+        <div class="scoreLabel redTxt">Acabas de cometer un pecado</div>
+        <div class="scoreValue redTxt" id="failsValue">0</div>
+      </div>
+    </div>
+
+    <div class="duelBox">
+      <div class="duelRow">
+        <div>
+          <div class="duelName">Padre Jeremías</div>
+          <div class="avatarWrap">
+            <div class="avatar" style="width:92px;height:92px;"><div class="mouth"></div></div>
+            <div class="body" style="width:74px;height:40px;"></div>
+          </div>
+        </div>
+        <div>
+          <div class="duelName" id="contestantNameGame">Concursante</div>
+          <div class="avatarWrap">
+            <div class="avatar" style="width:92px;height:92px;"><div class="mouth"></div></div>
+            <div class="body" style="width:74px;height:40px;background:#384d73;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="questionCard">
+      <div class="timerPill" id="timerValue">15s</div>
+      <div class="roundTxt" id="roundValue">Ronda 1/40</div>
+      <div class="questionTxt" id="questionText">Pregunta</div>
+
+      <button class="answerBtn" id="answer0"></button>
+      <button class="answerBtn" id="answer1"></button>
+      <button class="answerBtn" id="answer2"></button>
+    </div>
+
+    <div class="infoBox">
+      <div id="hostLine">Padre Jeremías: Bienvenido, hijo mío.</div>
+      <div style="margin-top:6px;" id="playerLine">Concursante: Hoy vengo bendecido.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+      <button class="actionBtn grey" id="pauseBtn" style="margin:0;">Pausa</button>
+      <button class="actionBtn yellow" id="saveBtn" style="margin:0;">Guardar</button>
     </div>
   </section>
 
@@ -370,18 +549,218 @@
   </div>
 </div>
 
+<div class="pauseLayer hidden" id="pauseLayer">
+  <div class="card" style="width:100%;max-width:360px;">
+    <h2 class="cardTitle">Menú de partida</h2>
+    <button class="actionBtn yellow" id="resumeBtn">Seguir jugando</button>
+    <button class="actionBtn blue" id="loadBtn">Cargar partida</button>
+    <button class="actionBtn green" id="newGameBtn">Nueva partida</button>
+    <button class="actionBtn red" id="exitGameBtn">Salir del juego</button>
+  </div>
+</div>
+
 <script>
   let soundOn = true;
+  let currentContestant = "";
+  let currentUser = "";
+  let currentQuestionIndex = 0;
+  let points = 0;
+  let hits = 0;
+  let fails = 0;
+  let timer = 15;
+  let timerInterval = null;
+  const SAVE_KEY = "catedral_partida_guardada";
+
+  const hostGood = [
+    "Padre Jeremías: ¡Aleluya, eso ha entrado más limpio que el dinero del cepillo!",
+    "Padre Jeremías: ¡Milagro baloncestístico! Hoy vienes tocado por la gracia.",
+    "Padre Jeremías: ¡Eso merece campanas y hasta incienso!"
+  ];
+
+  const hostBad = [
+    "Padre Jeremías: ¡Eso ha sido un pecado con repetición instantánea!",
+    "Padre Jeremías: ¡Madre mía, esa respuesta ha dolido hasta en el campanario!",
+    "Padre Jeremías: ¡Reza tres tiros libres y vuelve a intentarlo!"
+  ];
+
+  const playerLines = [
+    "Concursante: Yo la sabía, pero quise darle emoción a la parroquia.",
+    "Concursante: Padre, hoy vengo con la muñeca un poco torcida.",
+    "Concursante: Ahora remonto y quedo como un santo del triple."
+  ];
+
+  const questions = [
+    {
+      q:"¿Qué competición sustituyó con el tiempo a la antigua 1ª División como máxima referencia del baloncesto español?",
+      a:["Liga ACB","LEB Plata","Copa España"],
+      c:0
+    },
+    {
+      q:"¿Cuántas respuestas tiene cada pregunta en este juego?",
+      a:["3","4","2"],
+      c:0
+    },
+    {
+      q:"¿Cuántos puntos suma una respuesta acertada?",
+      a:["2","3","1"],
+      c:0
+    },
+    {
+      q:"¿Cuántos segundos hay para responder cada pregunta?",
+      a:["15","10","20"],
+      c:0
+    },
+    {
+      q:"¿Qué nombre recibe actualmente la ACB por patrocinio?",
+      a:["Liga Endesa","Liga FEB Oro","Superliga España"],
+      c:0
+    },
+    {
+      q:"¿Qué nombre recibe actualmente la antigua LEB Oro?",
+      a:["1ª FEB","2ª FEB","Liga Plata Endesa"],
+      c:0
+    },
+    {
+      q:"¿Qué nombre recibe actualmente la antigua LEB Plata?",
+      a:["2ª FEB","1ª FEB","Liga EBA Oro"],
+      c:0
+    },
+    {
+      q:"¿Qué competición es una de las más históricas del baloncesto español?",
+      a:["Copa del Rey","Mundial de Clubes ACB","Eurocopa FEB de Ciudades"],
+      c:0
+    }
+  ];
 
   const screens = [
     "homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen",
-    "dailyScreen","totalScreen","rulesScreen","settingsScreen"
+    "dailyScreen","totalScreen","rulesScreen","settingsScreen","gameScreen"
   ];
 
   function showScreen(id){
     screens.forEach(s => document.getElementById(s).classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
     window.scrollTo(0,0);
+  }
+
+  function randomItem(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  function refreshSoundText(){
+    const txt = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
+    document.getElementById("toggleSoundBtn").textContent = txt;
+    document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
+  }
+
+  function updateScore(){
+    document.getElementById("hitsValue").textContent = hits;
+    document.getElementById("pointsValue").textContent = points;
+    document.getElementById("failsValue").textContent = fails;
+  }
+
+  function renderQuestion(){
+    const q = questions[currentQuestionIndex % questions.length];
+    document.getElementById("roundValue").textContent = "Ronda " + (currentQuestionIndex + 1) + "/40";
+    document.getElementById("questionText").textContent = q.q;
+    document.getElementById("answer0").textContent = "A) " + q.a[0];
+    document.getElementById("answer1").textContent = "B) " + q.a[1];
+    document.getElementById("answer2").textContent = "C) " + q.a[2];
+    document.getElementById("contestantNameGame").textContent = currentContestant || "Concursante";
+    timer = 15;
+    document.getElementById("timerValue").textContent = timer + "s";
+  }
+
+  function startTimer(){
+    clearInterval(timerInterval);
+    timerInterval = setInterval(()=>{
+      timer--;
+      document.getElementById("timerValue").textContent = timer + "s";
+      if(timer <= 0){
+        clearInterval(timerInterval);
+        processAnswer(-1);
+      }
+    },1000);
+  }
+
+  function startGame(){
+    currentQuestionIndex = 0;
+    points = 0;
+    hits = 0;
+    fails = 0;
+    updateScore();
+    document.getElementById("hostLine").textContent = "Padre Jeremías: Bienvenido, hijo mío.";
+    document.getElementById("playerLine").textContent = currentContestant + ": Hoy vengo bendecido.";
+    renderQuestion();
+    showScreen("gameScreen");
+    startTimer();
+  }
+
+  function nextQuestion(){
+    currentQuestionIndex++;
+    if(currentQuestionIndex >= 40){
+      clearInterval(timerInterval);
+      alert("Fin de la partida. Puntos: " + points);
+      showScreen("homeScreen");
+      return;
+    }
+    renderQuestion();
+    startTimer();
+  }
+
+  function processAnswer(index){
+    clearInterval(timerInterval);
+    const q = questions[currentQuestionIndex % questions.length];
+    if(index === q.c){
+      points += 2;
+      hits += 1;
+      document.getElementById("hostLine").textContent = randomItem(hostGood);
+    }else{
+      points -= 1;
+      fails += 1;
+      document.getElementById("hostLine").textContent = randomItem(hostBad);
+    }
+    document.getElementById("playerLine").textContent = randomItem(playerLines).replace("Concursante", currentContestant || "Concursante");
+    updateScore();
+    setTimeout(nextQuestion, 1800);
+  }
+
+  function saveGame(){
+    const data = {
+      currentContestant,currentUser,currentQuestionIndex,points,hits,fails,timer
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    alert("Partida guardada");
+  }
+
+  function loadGame(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw){
+      alert("No hay partida guardada");
+      return;
+    }
+    const data = JSON.parse(raw);
+    currentContestant = data.currentContestant || "";
+    currentUser = data.currentUser || "";
+    currentQuestionIndex = data.currentQuestionIndex || 0;
+    points = data.points || 0;
+    hits = data.hits || 0;
+    fails = data.fails || 0;
+    timer = data.timer || 15;
+    updateScore();
+    renderQuestion();
+    document.getElementById("timerValue").textContent = timer + "s";
+    showScreen("gameScreen");
+    clearInterval(timerInterval);
+    timerInterval = setInterval(()=>{
+      timer--;
+      document.getElementById("timerValue").textContent = timer + "s";
+      if(timer <= 0){
+        clearInterval(timerInterval);
+        processAnswer(-1);
+      }
+    },1000);
+    document.getElementById("pauseLayer").classList.add("hidden");
   }
 
   document.getElementById("enterBtn").onclick = () => showScreen("userScreen");
@@ -391,8 +770,8 @@
   document.getElementById("settingsBtn").onclick = () => showScreen("settingsScreen");
 
   document.getElementById("continueUserBtn").onclick = () => {
-    const name = document.getElementById("userName").value.trim() || "Pacho";
-    document.getElementById("helloName").textContent = "Hola " + name;
+    currentUser = document.getElementById("userName").value.trim() || "Pacho";
+    document.getElementById("helloName").textContent = "Hola " + currentUser;
     showScreen("chooseScreen");
   };
 
@@ -411,6 +790,41 @@
       showScreen(a.dataset.back);
     };
   });
+
+  document.querySelectorAll(".contestant").forEach(item=>{
+    item.onclick = ()=>{
+      currentContestant = item.dataset.contestant;
+      startGame();
+    };
+  });
+
+  document.getElementById("answer0").onclick = ()=>processAnswer(0);
+  document.getElementById("answer1").onclick = ()=>processAnswer(1);
+  document.getElementById("answer2").onclick = ()=>processAnswer(2);
+
+  document.getElementById("pauseBtn").onclick = ()=>{
+    clearInterval(timerInterval);
+    document.getElementById("pauseLayer").classList.remove("hidden");
+  };
+
+  document.getElementById("resumeBtn").onclick = ()=>{
+    document.getElementById("pauseLayer").classList.add("hidden");
+    startTimer();
+  };
+
+  document.getElementById("saveBtn").onclick = saveGame;
+  document.getElementById("loadBtn").onclick = loadGame;
+
+  document.getElementById("newGameBtn").onclick = ()=>{
+    document.getElementById("pauseLayer").classList.add("hidden");
+    startGame();
+  };
+
+  document.getElementById("exitGameBtn").onclick = ()=>{
+    clearInterval(timerInterval);
+    document.getElementById("pauseLayer").classList.add("hidden");
+    showScreen("homeScreen");
+  };
 
   document.getElementById("lockBtn").onclick = () => {
     document.getElementById("pinModal").classList.remove("hidden");
@@ -431,12 +845,6 @@
     document.getElementById("ownerPanel").classList.add("hidden");
   };
 
-  function refreshSoundText(){
-    const txt = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
-    document.getElementById("toggleSoundBtn").textContent = txt;
-    document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
-  }
-
   document.getElementById("toggleSoundBtn").onclick = () => {
     soundOn = !soundOn;
     refreshSoundText();
@@ -448,6 +856,7 @@
   };
 
   refreshSoundText();
+  updateScore();
   showScreen("homeScreen");
 </script>
 </body>
