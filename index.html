@@ -7,38 +7,37 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg1:#081633; --bg2:#0a1d49; --bg3:#061127;
-  --gold:#f0bc16; --goldD:#a86f00;
-  --blue:#2947ac; --card:#ececf0; --ink:#12224f;
-  --green:#36c166; --red:#d94545; --shadow:0 10px 0 rgba(0,0,0,.28);
+  --bg1:#081633;--bg2:#0a1d49;--bg3:#061127;
+  --gold:#f0bc16;--goldD:#a86f00;
+  --blue:#2947ac;--blue2:#173f91;
+  --card:#ececf0;--ink:#12224f;
+  --green:#31b65a;--red:#d94444;
+  --shadow:0 10px 0 rgba(0,0,0,.28);
 }
 body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  color:#fff;
+  margin:0;font-family:Arial,Helvetica,sans-serif;color:#fff;
   background:
     radial-gradient(circle at top, rgba(255,255,255,.06), transparent 22%),
     linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 46%,var(--bg3) 100%);
 }
 .hidden{display:none!important}
-.app{width:100%;max-width:430px;min-height:100vh;margin:0 auto;padding:14px 12px 24px;position:relative;overflow:hidden}
+.app{max-width:430px;min-height:100vh;margin:0 auto;padding:14px 12px 24px;position:relative;overflow:hidden}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .iconBtn{
   width:52px;height:52px;border:none;border-radius:50%;cursor:pointer;
   background:var(--gold);color:#21348a;font-size:24px;font-weight:900;box-shadow:0 7px 0 var(--goldD)
 }
 .titleBox{
-  background:var(--blue);border:5px solid var(--gold);border-radius:34px;
-  padding:18px 14px;text-align:center;box-shadow:var(--shadow);margin-bottom:14px
+  background:var(--blue);border:5px solid var(--gold);border-radius:34px;padding:18px 14px;
+  text-align:center;box-shadow:var(--shadow);margin-bottom:14px
 }
 .titleBox h1{
-  margin:0;color:var(--gold);font-size:23px;line-height:1.16;
-  font-style:italic;font-weight:900;text-transform:uppercase
+  margin:0;color:var(--gold);font-size:23px;line-height:1.14;font-style:italic;font-weight:900;text-transform:uppercase
 }
 .mainBtn{
-  width:100%;border:none;cursor:pointer;border-radius:34px;
-  background:var(--gold);color:#1e2d7a;font-size:34px;font-style:italic;font-weight:900;
-  padding:18px 12px;box-shadow:0 12px 0 var(--goldD);margin-bottom:14px
+  width:100%;border:none;cursor:pointer;border-radius:34px;background:var(--gold);
+  color:#1e2d7a;font-size:34px;font-style:italic;font-weight:900;padding:18px 12px;
+  box-shadow:0 12px 0 var(--goldD);margin-bottom:14px
 }
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .smallBtn{
@@ -95,13 +94,11 @@ input,select{
 .applause .person{animation:clap .45s ease-in-out 6 alternate}
 @keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
 @keyframes clap{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-6px) rotate(5deg)}}
-
 .scoreGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:#000;padding:4px;border-radius:16px;margin-bottom:12px}
 .scoreBox{background:#111;border-radius:12px;text-align:center;padding:8px 4px}
 .scoreLabel{font-size:10px;font-weight:900;text-transform:uppercase;min-height:30px;line-height:1.15}
 .scoreValue{font-size:30px;font-weight:900}
 .greenTxt{color:#53e58d}.yellowTxt{color:var(--gold)}.redTxt{color:#ff5a64}
-
 .duelBox{
   position:relative;overflow:hidden;border:5px solid #d5d9e5;border-radius:28px;padding:12px 10px 16px;
   box-shadow:var(--shadow);margin-bottom:12px;
@@ -118,7 +115,6 @@ input,select{
 .duelAudience .person{width:14px;height:32px}.duelAudience .person .head{width:10px;height:10px}.duelAudience .person .torso{width:14px;height:16px}
 .duelRow{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .duelName{text-align:center;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px}
-
 .questionCard{background:var(--card);color:var(--ink);border-radius:28px;padding:14px 12px;box-shadow:var(--shadow)}
 .timerPill{
   width:150px;margin:0 auto 10px;text-align:center;background:var(--gold);color:#20307c;
@@ -154,7 +150,7 @@ input,select{
 .contestantText span{font-size:12px;color:#7781a3;font-weight:700;text-transform:uppercase}
 svg.avatarSvg{width:110px;height:146px;display:block;margin:0 auto}
 svg.avatarSmall{width:74px;height:100px;display:block}
-.finalImage{font-size:92px;line-height:1;margin:10px 0}
+.finalImage{font-size:98px;line-height:1;margin:8px 0}
 .finalMessage{font-size:24px;font-weight:900;color:#20307c;text-transform:uppercase;line-height:1.2}
 </style>
 </head>
@@ -166,20 +162,14 @@ svg.avatarSmall{width:74px;height:100px;display:block}
     <button class="iconBtn" id="soundBtn">🔔</button>
     <button class="iconBtn" id="lockBtn">🔒</button>
   </div>
-
-  <div class="titleBox">
-    <h1>La Catedral del Baloncesto Español</h1>
-  </div>
-
+  <div class="titleBox"><h1>La Catedral del Baloncesto Español</h1></div>
   <div class="stage">
     <div class="arch arch1"></div><div class="arch arch2"></div><div class="arch arch3"></div>
     <div class="pew pew1"></div><div class="pew pew2"></div><div class="pew pew3"></div>
     <div class="audience" id="homeAudience"></div>
     <div style="position:relative;z-index:2;display:flex;justify-content:center;align-items:flex-end;height:100%;padding-top:34px" id="hostHomeAvatar"></div>
   </div>
-
   <button class="mainBtn" id="enterBtn">¡ENTRAR!</button>
-
   <div class="grid2">
     <button class="smallBtn b1" id="dailyBtn">Clasificación diaria</button>
     <button class="smallBtn b2" id="totalBtn">Clasificación total</button>
@@ -198,18 +188,14 @@ svg.avatarSmall{width:74px;height:100px;display:block}
 </section>
 
 <section id="chooseScreen" class="hidden">
-  <div class="titleBox" style="padding:18px 16px;">
-    <h1 id="helloName">Hola</h1>
-  </div>
+  <div class="titleBox" style="padding:18px 16px;"><h1 id="helloName">Hola</h1></div>
   <button class="actionBtn grey" id="chooseContestantBtn">Elegir concursante</button>
   <button class="actionBtn grey" id="createContestantBtn">Creador de concursante</button>
   <a class="backLink" href="#" data-back="userScreen">Atrás</a>
 </section>
 
 <section id="listScreen" class="hidden">
-  <div class="titleBox" style="padding:18px 16px;">
-    <h1>¿Quién confiesa hoy?</h1>
-  </div>
+  <div class="titleBox" style="padding:18px 16px;"><h1>¿Quién confiesa hoy?</h1></div>
   <div class="list" id="contestantList"></div>
   <button class="actionBtn redBtn" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
 </section>
@@ -258,10 +244,10 @@ svg.avatarSmall{width:74px;height:100px;display:block}
     <div class="note">
       40 preguntas por partida.<br>
       15 segundos por pregunta.<br>
-      Solo preguntas sobre Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto.<br>
-      También sobre jugadores, exjugadores, entrenadores, ascensos, descensos e hitos históricos.<br>
-      Si aciertas las 40, recibes el trofeo de AGUA BENDITA.<br>
-      Si no, aparece el BURRO.
+      Solo preguntas de Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto.<br>
+      Las 3 primeras preguntas son fáciles y luego sube la dificultad cada 3.<br>
+      Si aciertas las 40, ganas AGUA BENDITA.<br>
+      Si fallas alguna, sale el BURRO.
     </div>
     <button class="actionBtn grey" id="backRulesBtn">Volver</button>
   </div>
@@ -277,32 +263,17 @@ svg.avatarSmall{width:74px;height:100px;display:block}
 
 <section id="gameScreen" class="hidden">
   <div class="scoreGrid">
-    <div class="scoreBox">
-      <div class="scoreLabel greenTxt">Canasta en el cepillo</div>
-      <div class="scoreValue greenTxt" id="hitsValue">0</div>
-    </div>
-    <div class="scoreBox">
-      <div class="scoreLabel yellowTxt">Puntos</div>
-      <div class="scoreValue yellowTxt" id="pointsValue">0</div>
-    </div>
-    <div class="scoreBox">
-      <div class="scoreLabel redTxt">Pecados</div>
-      <div class="scoreValue redTxt" id="failsValue">0</div>
-    </div>
+    <div class="scoreBox"><div class="scoreLabel greenTxt">Aciertos</div><div class="scoreValue greenTxt" id="hitsValue">0</div></div>
+    <div class="scoreBox"><div class="scoreLabel yellowTxt">Puntos</div><div class="scoreValue yellowTxt" id="pointsValue">0</div></div>
+    <div class="scoreBox"><div class="scoreLabel redTxt">Fallos</div><div class="scoreValue redTxt" id="failsValue">0</div></div>
   </div>
 
   <div class="duelBox">
     <div class="duelBg"></div>
     <div class="duelAudience" id="duelAudience"></div>
     <div class="duelRow">
-      <div>
-        <div class="duelName">Padre Jeremías</div>
-        <div id="hostGameAvatar"></div>
-      </div>
-      <div>
-        <div class="duelName" id="contestantNameGame">Concursante</div>
-        <div id="playerGameAvatar"></div>
-      </div>
+      <div><div class="duelName">Padre Jeremías</div><div id="hostGameAvatar"></div></div>
+      <div><div class="duelName" id="contestantNameGame">Concursante</div><div id="playerGameAvatar"></div></div>
     </div>
   </div>
 
@@ -370,14 +341,15 @@ svg.avatarSmall{width:74px;height:100px;display:block}
 
 <script>
 const OWNER_PIN = "1010";
-const SAVE_KEY = "catedral_partida_guardada_restringida";
-const CUSTOM_KEY = "catedral_custom_contestants_restringida";
-const RANK_DAY_KEY = "catedral_rank_day_restringida_";
-const RANK_TOTAL_KEY = "catedral_rank_total_restringida";
+const SAVE_KEY = "catedral_partida_guardada_leon_3";
+const CUSTOM_KEY = "catedral_custom_contestants_leon_3";
+const RANK_DAY_KEY = "catedral_rank_day_leon_3_";
+const RANK_TOTAL_KEY = "catedral_rank_total_leon_3";
 const QUESTIONS_PER_GAME = 40;
 const TIME_PER_QUESTION = 15;
 
 const host = {id:"jeremias",name:"Padre Jeremías",style:"jeremias",gender:"male",rate:.82,pitch:.82,voiceIndex:0};
+
 const baseContestants = [
   {id:"nazario",name:"El Nazario",subtitle:"El Mujeriego",style:"nazario",gender:"male",rate:.96,pitch:.94,voiceIndex:1},
   {id:"praxedes",name:"Tía Praxedes",subtitle:"La Gana Carreras",style:"praxedes",gender:"female",rate:.85,pitch:1.08,voiceIndex:2},
@@ -391,76 +363,77 @@ const baseContestants = [
   {id:"mamen",name:"Mamen",subtitle:"La Presidenta",style:"mamen",gender:"female",rate:.99,pitch:1.10,voiceIndex:10}
 ];
 
-const onlyTeamQuestions = [
+const QUESTION_BANK = [
   ["¿En qué ciudad jugaron Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto?","León","Burgos","Valladolid",1],
-  ["¿Qué palabra comparten Elosúa León y Baloncesto León?","León","Copa","FEB",1],
-  ["¿Qué palabra comparten Baloncesto León y Cultural Leonesa de Baloncesto?","Leonesa/León","Andorra","Murcia",1],
-  ["¿Qué equipo leonés actual aparece en este juego?","Cultural Leonesa de Baloncesto","Joventut","Bilbao Basket",1],
-  ["¿Qué nombre histórico leonés aparece en este juego?","Baloncesto León","Caja San Fernando","Pamesa Valencia",1],
-  ["¿Qué otra denominación histórica leonesa aparece en este juego?","Elosúa León","TAU Cerámica","Bàsquet Girona",1],
+  ["¿Qué palabra comparten Elosúa León y Baloncesto León?","León","Copa","NBA",1],
+  ["¿Qué palabra comparten Baloncesto León y Cultural Leonesa de Baloncesto?","León/Leonesa","Murcia","Andorra",1],
 
-  ["¿Qué club leonés alcanzó la Liga ACB en la temporada 1990-91?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León actual",2],
-  ["¿Qué club leonés fue 6.º en ACB en 1991-92?","Baloncesto León","Valencia Basket","Unicaja",2],
-  ["¿Qué club leonés fue 6.º en ACB también en 1992-93?","Baloncesto León","Gran Canaria","Baskonia",2],
-  ["¿Qué club leonés jugó la Copa Korać en los 90?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León",2],
-  ["¿Qué club leonés descendió de ACB en la temporada 1999-00?","Baloncesto León","Real Madrid","Joventut",2],
-  ["¿Qué club leonés ganó la Copa Príncipe en 2007?","Baloncesto León","Elosúa León","Cultural Leonesa de Baloncesto",2],
-  ["¿Qué club leonés ganó la Copa Castilla y León en 2004?","Baloncesto León","UCAM Murcia","Breogán",2],
+  ["¿Qué nombre de patrocinio quieres usar para el equipo leonés en las temporadas ACB de principios de los 90?","Elosúa León","Baloncesto León","Reino de León",1],
+  ["¿Qué equipo leonés quedó 6.º en la ACB 1991-92 usando la denominación de patrocinio?","Elosúa León","Cultural Leonesa de Baloncesto","Basket León",2],
+  ["¿Qué equipo leonés quedó 6.º en la ACB 1992-93 usando la denominación de patrocinio?","Elosúa León","Baloncesto León 2011-12","Reino de León",2],
 
-  ["¿Qué técnico tuvo una larga vinculación histórica con Baloncesto León?","Gustavo Aranzana","Aíto García Reneses","Pedro Martínez",3],
-  ["¿Qué entrenador aparece ligado a Baloncesto León en dos etapas distintas?","Gustavo Aranzana","Joan Plaza","Pablo Laso",3],
-  ["¿Qué entrenador figura en la etapa 2008-2012 de Baloncesto León?","Javier de Grado","Dusko Ivanovic","Pepu Hernández",3],
-  ["¿Qué entrenador figura en la etapa 1997-1999 de Baloncesto León?","Eduard Torres","Moncho Fernández","Chus Mateo",3],
-  ["¿Qué entrenador figura en la etapa 2003-2005 de Baloncesto León?","Ángel Jareño","Sergio Scariolo","Pablo Laso",3],
-  ["¿Qué entrenador figura en la etapa 2002-2003 de Baloncesto León?","Quino Salvo","Pedro Martínez","Moncho Fernández",3],
+  ["¿Qué equipo leonés logró el ascenso a la ACB en la temporada 1989-90?","Elosúa León","Cultural Leonesa de Baloncesto","Reino de León",2],
+  ["¿Qué equipo leonés jugó la Copa Korać en los 90?","Elosúa León","Cultural Leonesa de Baloncesto","Basket León 2022",2],
+  ["¿Qué equipo leonés ganó la Copa Príncipe en 2007?","Baloncesto León","Elosúa León","Cultural Leonesa de Baloncesto",2],
 
-  ["¿Qué jugador aparece como notable en Baloncesto León?","Xavi Fernández","Juan Carlos Navarro","Rudy Fernández",3],
-  ["¿Qué jugador aparece como notable en Baloncesto León?","Essie Hollis","Pau Gasol","Felipe Reyes",3],
-  ["¿Qué jugador aparece como notable en Baloncesto León?","Corny Thompson","Sergio Llull","Marc Gasol",3],
-  ["¿Qué jugador aparece como notable en Baloncesto León?","Óscar Yebra","Carlos Jiménez","Ricky Rubio",3],
-  ["¿Qué jugador aparece como notable en Baloncesto León?","Paolo Quinteros","Dejan Bodiroga","Louis Bullock",3],
-  ["¿Qué jugador aparece como notable en Baloncesto León?","Amal McCaskill","Jaycee Carroll","Joe Arlauckas",3],
-  ["¿Qué jugador aparece como notable en Baloncesto León?","J.R. Reid","Pablo Prigioni","Sergi Vidal",3],
-  ["¿Qué jugador aparece como notable en Baloncesto León?","Byron Houston","Nacho Azofra","Carlos Suárez",3],
+  ["¿Qué equipo leonés ganó la Copa Castilla y León en 2003?","Baloncesto León","Elosúa León","Cultural Leonesa de Baloncesto",2],
+  ["¿Qué equipo leonés descendió de la ACB en 1999-00?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León 1989-90",2],
+  ["¿Qué equipo leonés jugó en el Palacio de los Deportes de León?","Baloncesto León","Joventut","CB Murcia",2],
 
-  ["¿Qué equipo leonés fue 2.º en Primera División B en 1989-90 y ascendió?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León juvenil",3],
-  ["¿Qué equipo leonés fue 1.º en Segunda División en 1985-86 y ascendió?","Baloncesto León","Baskonia","Breogán",3],
-  ["¿Qué equipo leonés fue 1.º en Tercera División en 1981-82 y ascendió?","Baloncesto León","Estudiantes","Valencia Basket",3],
-  ["¿Qué equipo leonés terminó 20.º en ACB en 1990-91?","Baloncesto León","Real Madrid","Joventut",3],
-  ["¿Qué equipo leonés terminó 13.º en ACB en 1993-94?","Baloncesto León","Unicaja","Bilbao Basket",3],
-  ["¿Qué equipo leonés terminó 9.º en ACB en 1994-95?","Baloncesto León","Barcelona","Murcia",3],
-  ["¿Qué equipo leonés terminó 12.º en ACB en 1995-96?","Baloncesto León","Gran Canaria","Manresa",3],
-  ["¿Qué equipo leonés terminó 6.º en ACB en 1996-97 y volvió a Europa?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León",4],
+  ["¿Qué entrenador estuvo históricamente muy ligado al club leonés?","Gustavo Aranzana","Pablo Laso","Aíto García Reneses",3],
+  ["¿Qué entrenador asumió el equipo leonés a mitad de la temporada 1988-89?","Gustavo Aranzana","Pedro Martínez","Joan Plaza",3],
+  ["¿Qué entrenador figura en la etapa 1997-1999 del club leonés?","Eduard Torres","Pepu Hernández","Moncho Fernández",3],
 
-  ["¿Qué denominación actual del club leonés aparece en Wikipedia como equipo de baloncesto de la Cultural?","Cultural y Deportiva Leonesa (baloncesto)","Cultural Basket Endesa","León Basket Club",2],
-  ["¿Qué ciudad representa la Cultural y Deportiva Leonesa (baloncesto)?","León","Madrid","Lugo",2],
-  ["¿Qué color histórico se asocia a la Cultural Leonesa también en baloncesto?","Blanco","Verde","Morado",2],
+  ["¿Qué entrenador figura en la etapa 2002-03 del club leonés?","Quino Salvo","Chus Mateo","Sergio Scariolo",3],
+  ["¿Qué entrenador figura en la etapa 2003-05 del club leonés?","Ángel Jareño","Dusko Ivanovic","Pablo Laso",3],
+  ["¿Qué entrenador figura en la etapa 2008-12 del club leonés?","Javier de Grado","Joan Peñarroya","Luis Casimiro",3],
 
-  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña CultuBasket","Peña Azul Turquesa","Peña Costa Triple",2],
-  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña Universitaria","Peña Oro Norte","Peña Basket Sierra",2],
-  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña El Tambor","Peña Fondo Playa","Peña Triple Murcia",2],
-  ["¿Cuál de estos nombres pertenece a una peña leonesa mencionada por el usuario?","Peña Marea Roja","Peña Verde Basket","Peña ACB Centro",2],
+  ["¿Qué jugador del ejemplo corregido fue campeón de la NBA y jugó en León?","REGINALD JOHNSON","LAMONT BARNES","FEDERICO COPES",3],
+  ["¿Con qué nombre aparece Reggie Johnson en la etapa 1991-95 en España?","Elosúa León","Valencia Basket","Bilbao Basket",3],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Essie Hollis","Rudy Fernández","Sergio Rodríguez",3],
 
-  ["¿Qué palabra aparece en el nombre Peña Marea Roja?","Roja","Azul","Negra",2],
-  ["¿Qué palabra aparece en el nombre Peña El Tambor?","Tambor","Silbato","Pito",2],
-  ["¿Qué palabra aparece en el nombre Peña Universitaria?","Universitaria","Industrial","Atlética",2],
-  ["¿Qué palabra aparece en el nombre Peña CultuBasket?","Cultu","Taronja","Verdi",2],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Xavi Fernández","Ricky Rubio","Carlos Jiménez",3],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Corny Thompson","Marc Gasol","Felipe Reyes",3],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Óscar Yebra","Juan Carlos Navarro","Rafa Martínez",3],
 
-  ["¿Qué ciudad comparten las peñas leonesas citadas en este juego?","León","Málaga","Murcia",2],
-  ["¿Qué nombre de los citados corresponde a club y no a peña?","Baloncesto León","Peña El Tambor","Peña Marea Roja",2],
-  ["¿Qué nombre de los citados corresponde a club y no a peña?","Cultural Leonesa de Baloncesto","Peña Universitaria","Peña CultuBasket",2],
-  ["¿Qué nombre de los citados corresponde a club y no a peña?","Elosúa León","Peña Marea Roja","Peña El Tambor",2],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Paolo Quinteros","Sergio Llull","Pablo Prigioni",4],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Amal McCaskill","Joe Arlauckas","Jaycee Carroll",4],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","J.R. Reid","Nacho Azofra","Carlos Suárez",4],
 
-  ["¿Qué torneo nacional aparece ligado a Baloncesto León en su palmarés?","Copa Príncipe","Copa del Mundo FIBA","EuroCup",4],
-  ["¿Qué torneo autonómico aparece ligado a Baloncesto León en su palmarés?","Copa Castilla y León","Copa Galicia","Copa Andalucía",4],
-  ["¿Qué competición europea aparece asociada a Baloncesto León en los 90?","Copa Korać","Euroliga femenina","EuroChallenge 2008",4],
+  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Byron Houston","Rafa Jofresa","Sergi Vidal",4],
+  ["¿Qué técnico dirigió al club leonés en su segunda gran etapa desde 2005?","Gustavo Aranzana","Luis Castillo","Ettore Messina",4],
+  ["¿Qué temporada acabó 1.º en Segunda División y ascendió el club leonés?","1985-86","1994-95","2007-08",4],
 
-  ["¿Qué jugador del ejemplo dado por el usuario aparece como opción relacionada con Elosúa León en Andorra 89/90?","Essie Hollis","Xavi Fernández","Roberto Herreras",5],
-  ["¿Qué jugador del ejemplo dado por el usuario aparece como opción de campeón NBA que jugó en León?","Lamont Barnes","Federico Copes","Reginald Johnson",5],
+  ["¿Qué temporada acabó 2.º en Primera B y ascendió el club leonés?","1989-90","1998-99","2003-04",4],
+  ["¿Qué temporada acabó 20.º en la ACB el club leonés recién ascendido?","1990-91","1996-97","2007-08",4],
+  ["¿Qué temporada acabó 9.º el club leonés en ACB?","1994-95","1991-92","1987-88",4],
 
-  ["¿Qué base de preguntas usa este juego tras tu modificación total?","Solo Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto","Toda la ACB y la NBA","Baloncesto mundial y fútbol",1],
-  ["¿Qué resultado visual aparece si aciertas las 40?","Agua bendita","Burro","Balón dorado",1],
-  ["¿Qué resultado visual aparece si no aciertas las 40?","Burro","Agua bendita","Trofeo de copa",1]
+  ["¿Qué temporada acabó 12.º el club leonés en ACB?","1995-96","1992-93","2000-01",4],
+  ["¿Qué temporada acabó 11.º el club leonés en ACB con Eduard Torres?","1997-98","1989-90","2006-07",4],
+  ["¿Qué temporada acabó 16.º el club leonés en ACB?","1998-99","1991-92","2007-08",4],
+
+  ["¿Qué sección presentó oficialmente la Cultural en junio de 2022?","La sección de baloncesto","La sección de béisbol","La sección de hockey",2],
+  ["¿Qué clubes sénior aglutinó la Cultural en su nueva sección de baloncesto?","Basket León y Reino de León","Baloncesto León y Joventut","Elosúa León y Unicaja",3],
+  ["¿En qué categoría salió esa temporada la Cultural en baloncesto?","Liga EBA","Liga ACB","2ª FEB",3],
+
+  ["¿Qué club quedó como vinculado en la estructura presentada por la Cultural en 2022?","Reino de León","Real Madrid","Breogán",3],
+  ["¿Qué entrenador se cita en la noticia de presentación de la sección de baloncesto de la Cultural?","Luis Castillo","Gustavo Aranzana","Joan Plaza",4],
+  ["¿Qué objetivo competitivo se menciona en esa presentación para el equipo en EBA?","Subir a LEB Plata","Ganar la NBA","Jugar la Euroliga",4],
+
+  ["¿Qué entidad aparece como apoyo en la creación de la sección de baloncesto de la Cultural?","Aspire","FIBA Europa","NBA Academy",4],
+  ["¿Qué color vistió la primera temporada la nueva sección de baloncesto de la Cultural?","Blanco","Verde","Azul",4],
+  ["¿Qué ciudad quería recuperar ‘días de gloria’ de baloncesto según la presentación de 2022?","León","Sevilla","Málaga",4],
+
+  ["¿Cuál de estos nombres corresponde al proyecto actual vinculado a la Cultural?","Cultural Leonesa de Baloncesto","Elosúa León ACB","Caja León Endesa",4],
+  ["¿Qué club histórico desapareció oficialmente en 2012?","Club Baloncesto León","Cultural Leonesa de Baloncesto","Reino de León",5],
+  ["¿Qué año de desaparición del Club Baloncesto León recoge la referencia histórica?","2012","2007","1999",5],
+
+  ["¿Qué puesto fue el mejor techo ACB del equipo leonés en los 90?","6.º","2.º","10.º",5],
+  ["¿Qué competición europea alcanzó el equipo leonés además de la liga ACB?","Copa Korać","Euroliga","EuroCup",5],
+  ["¿Qué temporada logró el ascenso que abrió la etapa ACB?","1989-90","1985-86","2006-07",5],
+
+  ["¿Qué club leonés se asocia a la Copa Príncipe de 2007 y al ascenso de ese ciclo?","Baloncesto León","Cultural Leonesa de Baloncesto","Reino de León",5],
+  ["¿Qué denominación quieres que se use en preguntas históricas de inicios de los 90?","Elosúa León","Solo Baloncesto León","Solo Cultural",5]
 ];
 
 let contestants = [];
@@ -545,9 +518,7 @@ function applause(id){
   setTimeout(()=>el.classList.remove("applause"),2200);
 }
 function svgAvatar(style, small=false){
-  const W = small ? 74 : 110;
-  const H = small ? 100 : 146;
-  const skin = "#efc69a";
+  const W = small ? 74 : 110, H = small ? 100 : 146, skin = "#efc69a";
   let hair="#222", body="#394f76", extra="", glasses="", beard="", scarf="", tie="";
   switch(style){
     case "jeremias":
@@ -589,6 +560,7 @@ function svgAvatar(style, small=false){
     <circle cx="69" cy="${small?38:56}" r="${small?4:6}" fill="#000"/>
     ${glasses}
     <ellipse cx="55" cy="${small?49:70}" rx="${small?4:6}" ry="${small?7:10}" fill="#d79974"/>
+    <path d="M43" cy="${small?60:86}" />
     <path d="M43,${small?60:86} q12,${small?8:10} 24,0" fill="none" stroke="#5b1d1d" stroke-width="4" stroke-linecap="round"/>
     ${beard}
     ${tie}
@@ -599,15 +571,10 @@ function getVoices(){
   return es.length ? es : speechSynthesis.getVoices();
 }
 function speak(text, actor, callback){
-  if(!("speechSynthesis" in window)){
-    if(callback) callback();
-    return;
-  }
+  if(!("speechSynthesis" in window)){ if(callback) callback(); return; }
   const voices = getVoices();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = "es-ES";
-  u.rate = actor.rate;
-  u.pitch = actor.pitch;
+  u.lang = "es-ES"; u.rate = actor.rate; u.pitch = actor.pitch;
   if(voices.length) u.voice = voices[actor.voiceIndex % voices.length];
   u.onend = ()=>callback && callback();
   u.onerror = ()=>callback && callback();
@@ -620,10 +587,8 @@ function bellTone(){
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const now = ctx.currentTime;
     [523.25,659.25,783.99].forEach((f,i)=>{
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = f;
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = "sine"; osc.frequency.value = f;
       g.gain.setValueAtTime(0.001, now + i*0.12);
       g.gain.exponentialRampToValueAtTime(0.07, now + i*0.12 + 0.02);
       g.gain.exponentialRampToValueAtTime(0.001, now + i*0.12 + 0.9);
@@ -641,10 +606,14 @@ function updateBellContext(){
 }
 function showScreen(id){
   ["homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen","dailyScreen","totalScreen","rulesScreen","settingsScreen","gameScreen","resultScreen"]
-    .forEach(s=>document.getElementById(s).classList.add("hidden"));
+  .forEach(s=>document.getElementById(s).classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
   updateBellContext();
   window.scrollTo(0,0);
+}
+function refreshSoundUI(){
+  document.getElementById("toggleSoundBtn").textContent = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
+  document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
 }
 function getCustoms(){ return JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]"); }
 function saveCustoms(v){ localStorage.setItem(CUSTOM_KEY, JSON.stringify(v)); }
@@ -653,9 +622,9 @@ function loadContestants(){
   const box = document.getElementById("contestantList");
   box.innerHTML = "";
   contestants.forEach(c=>{
+    const style = c.style==="custom" ? (c.gender==="female" ? "custom_female" : "custom_male") : c.style;
     const d = document.createElement("div");
     d.className = "contestant";
-    const style = c.style==="custom" ? (c.gender==="female" ? "custom_female" : "custom_male") : c.style;
     d.innerHTML = `<div>${svgAvatar(style,true)}</div><div class="contestantText"><strong>${c.name}</strong><span>${c.subtitle||"Concursante"}</span></div>`;
     d.onclick = ()=>{ currentContestant = c; startGame(); };
     box.appendChild(d);
@@ -669,10 +638,6 @@ function renderPlayerAvatar(){
   const style = currentContestant.style==="custom" ? (currentContestant.gender==="female" ? "custom_female" : "custom_male") : currentContestant.style;
   document.getElementById("playerGameAvatar").innerHTML = svgAvatar(style, false);
   document.getElementById("contestantNameGame").textContent = currentContestant.name;
-}
-function refreshSoundUI(){
-  document.getElementById("toggleSoundBtn").textContent = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
-  document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
 }
 function updateScore(){
   document.getElementById("hitsValue").textContent = hits;
@@ -716,22 +681,18 @@ function shuffle(arr){
   }
   return a;
 }
-function selectQuestions(){
-  const bank = onlyTeamQuestions.map(item=>{
+function buildQuestions(){
+  const bank = QUESTION_BANK.map(item=>{
     const correct = item[1];
-    const answers = shuffle([item[1],item[2],item[3]]);
-    return { q:item[0], a:answers, c:answers.indexOf(correct), d:item[4] };
+    const options = shuffle([item[1],item[2],item[3]]);
+    return { q:item[0], a:options, c:options.indexOf(correct), d:item[4] };
   });
-
   const used = new Set();
   const result = [];
-
   for(let i=0;i<QUESTIONS_PER_GAME;i++){
     let difficulty = i < 3 ? 1 : Math.min(5, 1 + Math.floor(i/3));
     let pool = bank.map((q,idx)=>({q,idx})).filter(x => x.q.d === difficulty && !used.has(x.idx));
-    if(!pool.length){
-      pool = bank.map((q,idx)=>({q,idx})).filter(x => !used.has(x.idx));
-    }
+    if(!pool.length) pool = bank.map((q,idx)=>({q,idx})).filter(x => !used.has(x.idx));
     const chosen = rand(pool);
     used.add(chosen.idx);
     result.push(chosen.q);
@@ -776,7 +737,7 @@ function startTimer(){
   },1000);
 }
 function startGame(){
-  gameQuestions = selectQuestions();
+  gameQuestions = buildQuestions();
   currentQuestionIndex = 0;
   points = 0;
   hits = 0;
@@ -791,10 +752,7 @@ function startGame(){
 }
 function nextQuestion(){
   currentQuestionIndex++;
-  if(currentQuestionIndex >= QUESTIONS_PER_GAME){
-    endGame();
-    return;
-  }
+  if(currentQuestionIndex >= QUESTIONS_PER_GAME){ endGame(); return; }
   renderQuestion();
   startTimer();
 }
@@ -808,20 +766,15 @@ function processAnswer(index){
   buttons.forEach(b=>b.disabled=true);
   buttons[q.c].classList.add("correct");
 
-  let hostText = "";
-  let playerText = "";
-
+  let hostText = "", playerText = "";
   if(index === q.c){
-    points += 2;
-    hits += 1;
+    points += 2; hits += 1;
     if(index >= 0) buttons[index].classList.add("correct");
     hostText = rand(hostGood);
     playerText = rand(getGoodLines());
-    applause("duelAudience");
-    applause("homeAudience");
+    applause("duelAudience"); applause("homeAudience");
   }else{
-    points -= 1;
-    fails += 1;
+    points -= 1; fails += 1;
     if(index >= 0) buttons[index].classList.add("wrong");
     hostText = rand(hostBad);
     playerText = rand(getBadLines());
@@ -837,12 +790,12 @@ function processAnswer(index){
         speak(playerText, currentContestant, ()=>{
           setTimeout(nextQuestion, 1700);
         });
-      }, 500);
+      },500);
     });
-  }, 450);
+  },450);
 }
 function saveGame(){
-  const payload = { currentUser,currentContestant,gameQuestions,currentQuestionIndex,points,hits,fails,timer };
+  const payload = {currentUser,currentContestant,gameQuestions,currentQuestionIndex,points,hits,fails,timer};
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
   alert("Partida guardada");
 }
@@ -852,7 +805,7 @@ function loadGame(){
   const d = JSON.parse(raw);
   currentUser = d.currentUser || "";
   currentContestant = d.currentContestant || contestants[0];
-  gameQuestions = d.gameQuestions || selectQuestions();
+  gameQuestions = d.gameQuestions || buildQuestions();
   currentQuestionIndex = d.currentQuestionIndex || 0;
   points = d.points || 0;
   hits = d.hits || 0;
@@ -881,10 +834,8 @@ function endGame(){
   clearInterval(timerInterval);
   rankAdd(currentUser || "INVITADO", currentContestant.name, points);
   refreshRankings();
-
   document.getElementById("finalPoints").textContent = points;
-  document.getElementById("finalSummary").innerHTML = `<strong>${currentUser || "INVITADO"}</strong> con <strong>${currentContestant.name}</strong><br>Aciertos: ${hits}<br>Fallos/Pecados: ${fails}`;
-
+  document.getElementById("finalSummary").innerHTML = `<strong>${currentUser || "INVITADO"}</strong> con <strong>${currentContestant.name}</strong><br>Aciertos: ${hits}<br>Fallos: ${fails}`;
   if(hits === QUESTIONS_PER_GAME){
     document.getElementById("finalVisual").textContent = "🍼";
     document.getElementById("finalVisualText").textContent = "TROFEO POR GANAR LAS 40 PREGUNTAS";
@@ -892,7 +843,6 @@ function endGame(){
     document.getElementById("finalVisual").textContent = "🐴";
     document.getElementById("finalVisualText").textContent = "ERES UN BURRO";
   }
-
   showScreen("resultScreen");
 }
 
@@ -901,12 +851,14 @@ document.getElementById("dailyBtn").onclick = ()=>{ refreshRankings(); bellTone(
 document.getElementById("totalBtn").onclick = ()=>{ refreshRankings(); bellTone(); showScreen("totalScreen"); };
 document.getElementById("rulesBtn").onclick = ()=>{ bellTone(); showScreen("rulesScreen"); };
 document.getElementById("settingsBtn").onclick = ()=>{ bellTone(); showScreen("settingsScreen"); };
+
 document.getElementById("continueUserBtn").onclick = ()=>{
   currentUser = document.getElementById("userName").value.trim() || "Pacho";
   document.getElementById("helloName").textContent = "Hola " + currentUser;
   bellTone();
   showScreen("chooseScreen");
 };
+
 document.getElementById("chooseContestantBtn").onclick = ()=>showScreen("listScreen");
 document.getElementById("createContestantBtn").onclick = ()=>showScreen("createContestantScreen");
 document.getElementById("backChooseBtn").onclick = ()=>showScreen("chooseScreen");
@@ -922,18 +874,14 @@ document.getElementById("saveCustomBtn").onclick = ()=>{
   const gender = document.getElementById("customGender").value;
   const trait = document.getElementById("customTrait").value;
   if(!name){ alert("Escribe un nombre"); return; }
-  const customs = JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]");
+  const customs = getCustoms();
   customs.push({
-    id:"custom_"+Date.now(),
-    name,
-    subtitle:trait,
-    style:"custom",
-    gender,
+    id:"custom_"+Date.now(), name, subtitle:trait, style:"custom", gender,
     rate: gender==="female" ? 1.0 : .93,
     pitch: gender==="female" ? 1.08 : .94,
     voiceIndex: 11 + customs.length
   });
-  localStorage.setItem(CUSTOM_KEY, JSON.stringify(customs));
+  saveCustoms(customs);
   loadContestants();
   document.getElementById("customName").value = "";
   alert("Concursante guardado");
@@ -947,15 +895,12 @@ document.getElementById("openOwnerBtn").onclick = ()=>{
   if(pin === OWNER_PIN){
     document.getElementById("pinModal").classList.add("hidden");
     document.getElementById("ownerPanel").classList.remove("hidden");
-  }else{
-    alert("Clave incorrecta");
-  }
+  }else alert("Clave incorrecta");
 };
 document.getElementById("closeOwnerPanelBtn").onclick = ()=>document.getElementById("ownerPanel").classList.add("hidden");
 document.getElementById("editorBtn").onclick = ()=>alert("Panel preparado para futuras actualizaciones.");
 document.getElementById("shareBtn").onclick = async ()=>{
-  const url = location.href;
-  const text = "Te envío La Catedral del Baloncesto Español.";
+  const url = location.href, text = "Te envío La Catedral del Baloncesto Español.";
   if(navigator.share){
     try{ await navigator.share({title:"La Catedral del Baloncesto Español", text, url}); }catch(e){}
   }else{
