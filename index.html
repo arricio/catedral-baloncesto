@@ -2,349 +2,190 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>La Catedral del Baloncesto Español</title>
 <style>
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:linear-gradient(180deg,#081633 0%,#0a1d49 45%,#061127 100%);
-    color:#fff;
-  }
-  .app{
-    width:100%;
-    max-width:430px;
-    min-height:100vh;
-    margin:0 auto;
-    padding:18px 14px 28px;
-    position:relative;
-  }
-  .hidden{display:none!important}
-  .topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:14px;
-  }
-  .iconBtn{
-    width:52px;height:52px;border:none;cursor:pointer;
-    border-radius:50%;
-    background:#f0bc16;
-    color:#1f2f7e;
-    font-size:26px;
-    font-weight:bold;
-    box-shadow:0 7px 0 #9b6a00;
-  }
-  .titleBox{
-    background:#2947ac;
-    border:5px solid #e9b60e;
-    border-radius:34px;
-    padding:22px 18px;
-    text-align:center;
-    box-shadow:0 10px 0 rgba(0,0,0,.28);
-    margin-bottom:20px;
-  }
-  .titleBox h1{
-    margin:0;
-    font-size:22px;
-    line-height:1.25;
-    font-style:italic;
-    font-weight:900;
-    color:#f0bc16;
-    text-transform:uppercase;
-  }
-  .stage{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    margin-bottom:18px;
-    min-height:158px;
-  }
-  .avatarWrap{
-    text-align:center;
-  }
-  .avatar{
-    width:118px;height:118px;
-    margin:0 auto 8px;
-    border-radius:50%;
-    background:#efc69a;
-    border:6px solid #000;
-    position:relative;
-  }
-  .avatar:before,.avatar:after{
-    content:"";
-    position:absolute;
-    width:16px;height:16px;
-    background:#000;border-radius:50%;
-    top:44px;
-  }
-  .avatar:before{left:28px}
-  .avatar:after{right:28px}
-  .mouth{
-    position:absolute;
-    left:50%;
-    bottom:24px;
-    transform:translateX(-50%);
-    width:24px;height:10px;
-    border-bottom:4px solid #000;
-    border-radius:0 0 18px 18px;
-  }
-  .body{
-    width:96px;height:52px;
-    margin:0 auto;
-    background:#111;
-    border-radius:28px 28px 18px 18px;
-  }
-  .mainBtn{
-    width:100%;
-    border:none;
-    cursor:pointer;
-    border-radius:34px;
-    background:#efbc10;
-    color:#1e2d7a;
-    font-size:34px;
-    font-style:italic;
-    font-weight:900;
-    padding:18px 12px;
-    box-shadow:0 12px 0 #a86f00;
-    margin-bottom:16px;
-  }
-  .grid3{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-  .smallBtn{
-    border:none;
-    cursor:pointer;
-    border-radius:26px;
-    min-height:92px;
-    font-weight:900;
-    font-size:17px;
-    text-transform:uppercase;
-    box-shadow:0 9px 0 rgba(0,0,0,.28);
-    padding:10px;
-  }
-  .b1{background:#49b8ef;color:#091538}
-  .b2{background:#d8dbe4;color:#091538}
-  .b3{background:#9e82f0;color:#fff}
-  .b4{background:#d2d5dc;color:#091538}
-  .card{
-    background:#ececf0;
-    color:#12224f;
-    border-radius:32px;
-    padding:22px 16px;
-    box-shadow:0 10px 0 rgba(0,0,0,.28);
-  }
-  .cardTitle{
-    margin:0 0 16px;
-    text-align:center;
-    color:#2947ac;
-    font-size:22px;
-    font-style:italic;
-    font-weight:900;
-    text-transform:uppercase;
-  }
-  input[type="text"], input[type="password"]{
-    width:100%;
-    height:60px;
-    border:4px solid #000;
-    border-radius:18px;
-    padding:0 14px;
-    font-size:22px;
-    text-align:center;
-    margin-bottom:16px;
-  }
-  .actionBtn{
-    width:100%;
-    border:none;
-    border-radius:18px;
-    padding:16px 12px;
-    font-size:18px;
-    font-weight:900;
-    text-transform:uppercase;
-    cursor:pointer;
-    margin-bottom:12px;
-  }
-  .yellow{background:#efbc10;color:#1e2d7a}
-  .blue{background:#2f64eb;color:#fff}
-  .green{background:#19ad47;color:#fff}
-  .red{background:#db232c;color:#fff}
-  .grey{background:#d6d8de;color:#12224f}
-  .backLink{
-    display:block;
-    text-align:center;
-    margin-top:8px;
-    color:#c8cdd9;
-    font-weight:800;
-    text-transform:uppercase;
-    text-decoration:none;
-  }
-  .contestants{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-top:10px;
-  }
-  .contestant{
-    background:#ececf0;
-    color:#12224f;
-    border-radius:24px;
-    padding:12px;
-    display:flex;
-    gap:14px;
-    align-items:center;
-    box-shadow:0 8px 0 rgba(0,0,0,.28);
-    cursor:pointer;
-  }
-  .miniHead{
-    width:66px;height:66px;border-radius:50%;
-    background:#efc69a;border:4px solid #000;
-    position:relative;flex:0 0 auto;
-  }
-  .miniHead:before,.miniHead:after{
-    content:"";position:absolute;width:10px;height:10px;background:#000;border-radius:50%;top:24px;
-  }
-  .miniHead:before{left:15px}
-  .miniHead:after{right:15px}
-  .miniBody{
-    width:56px;height:26px;background:#384d73;border-radius:20px;margin:4px auto 0;
-  }
-  .contestantText strong{
-    display:block;
-    font-size:16px;
-    text-transform:uppercase;
-  }
-  .contestantText span{
-    font-size:12px;
-    color:#7781a3;
-    font-weight:700;
-    text-transform:uppercase;
-  }
-  .modalBg{
-    position:fixed;inset:0;background:rgba(0,0,0,.62);
-    display:flex;align-items:center;justify-content:center;
-    padding:18px;
-    z-index:50;
-  }
-  .note{
-    background:rgba(255,255,255,.08);
-    border-radius:18px;
-    padding:12px;
-    font-weight:700;
-    line-height:1.35;
-  }
-  .scoreGrid{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:4px;
-    margin-bottom:12px;
-    background:#000;
-    padding:4px;
-    border-radius:16px;
-  }
-  .scoreBox{
-    background:#111;
-    border-radius:12px;
-    text-align:center;
-    padding:10px 6px;
-  }
-  .scoreLabel{
-    font-size:11px;
-    font-weight:900;
-    text-transform:uppercase;
-    margin-bottom:6px;
-  }
-  .scoreValue{
-    font-size:32px;
-    font-weight:900;
-  }
-  .greenTxt{color:#53e58d}
-  .yellowTxt{color:#f0bc16}
-  .redTxt{color:#ff5a64}
-  .duelBox{
-    background:#2947ac;
-    border:5px solid #d5d9e5;
-    border-radius:28px;
-    padding:16px 12px;
-    margin-bottom:12px;
-    box-shadow:0 10px 0 rgba(0,0,0,.28);
-  }
-  .duelRow{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-  .duelName{
-    text-align:center;
-    font-size:12px;
-    font-weight:900;
-    text-transform:uppercase;
-    color:#fff;
-    margin-bottom:8px;
-  }
-  .questionCard{
-    background:#ececf0;
-    color:#12224f;
-    border-radius:28px;
-    padding:16px 14px;
-    box-shadow:0 10px 0 rgba(0,0,0,.28);
-  }
-  .timerPill{
-    width:150px;
-    margin:0 auto 12px;
-    text-align:center;
-    background:#efbc10;
-    color:#20307c;
-    font-weight:900;
-    border-radius:30px;
-    padding:10px 12px;
-    font-size:22px;
-  }
-  .roundTxt{
-    text-align:center;
-    font-size:13px;
-    font-weight:900;
-    color:#8d93a6;
-    text-transform:uppercase;
-    margin-bottom:6px;
-  }
-  .questionTxt{
-    font-size:22px;
-    font-weight:900;
-    text-align:center;
-    line-height:1.25;
-    margin-bottom:16px;
-    color:#20307c;
-  }
-  .answerBtn{
-    width:100%;
-    border:4px solid #000;
-    border-radius:14px;
-    padding:16px 12px;
-    text-align:left;
-    font-size:18px;
-    font-weight:900;
-    color:#20307c;
-    background:#fff;
-    margin-bottom:12px;
-    cursor:pointer;
-  }
-  .infoBox{
-    margin-top:12px;
-    background:rgba(255,255,255,.1);
-    border-radius:18px;
-    padding:12px;
-    font-size:14px;
-    font-weight:700;
-    line-height:1.35;
-  }
-  .pauseLayer{
-    position:fixed; inset:0; background:rgba(0,0,0,.6);
-    display:flex; align-items:center; justify-content:center;
-    padding:18px; z-index:60;
-  }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg1:#081633; --bg2:#0a1d49; --bg3:#061127;
+  --gold:#f0bc16; --goldD:#a86f00;
+  --blue:#2947ac; --blueD:#1c2f74;
+  --card:#ececf0; --ink:#12224f;
+  --green:#36c166; --red:#d94545; --muted:#7f8bb0;
+}
+body{
+  margin:0;font-family:Arial,Helvetica,sans-serif;color:#fff;
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,.06), transparent 24%),
+    linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 46%,var(--bg3) 100%);
+}
+.hidden{display:none!important}
+.app{max-width:430px;min-height:100vh;margin:0 auto;padding:14px 12px 24px;position:relative;overflow:hidden}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.iconBtn{
+  width:52px;height:52px;border:none;border-radius:50%;cursor:pointer;
+  background:var(--gold);color:#21348a;font-size:24px;font-weight:900;
+  box-shadow:0 7px 0 var(--goldD)
+}
+.titleBox{
+  background:var(--blue);border:5px solid var(--gold);border-radius:34px;
+  padding:18px 14px;text-align:center;box-shadow:0 10px 0 rgba(0,0,0,.28);margin-bottom:14px
+}
+.titleBox h1{
+  margin:0;color:var(--gold);font-size:23px;line-height:1.18;
+  font-style:italic;font-weight:900;text-transform:uppercase
+}
+.mainBtn{
+  width:100%;border:none;border-radius:34px;cursor:pointer;
+  background:var(--gold);color:#1e2d7a;font-size:34px;font-style:italic;font-weight:900;
+  padding:18px 12px;box-shadow:0 12px 0 var(--goldD);margin:0 0 14px
+}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.smallBtn{
+  border:none;cursor:pointer;border-radius:26px;min-height:92px;padding:10px;
+  font-size:16px;font-weight:900;text-transform:uppercase;line-height:1.12;
+  box-shadow:0 9px 0 rgba(0,0,0,.28)
+}
+.b1{background:#49b8ef;color:#091538}
+.b2{background:#d8dbe4;color:#091538}
+.b3{background:#9e82f0;color:#fff}
+.b4{background:#d2d5dc;color:#091538}
+.card{
+  background:var(--card);color:var(--ink);border-radius:30px;padding:18px 14px;
+  box-shadow:0 10px 0 rgba(0,0,0,.28)
+}
+.cardTitle{
+  margin:0 0 14px;text-align:center;color:#2947ac;font-size:22px;font-weight:900;
+  font-style:italic;text-transform:uppercase
+}
+.actionBtn{
+  width:100%;border:none;border-radius:18px;padding:15px 12px;font-size:17px;
+  font-weight:900;text-transform:uppercase;cursor:pointer;margin-bottom:12px
+}
+.yellow{background:var(--gold);color:#1e2d7a}
+.blue{background:#2f64eb;color:#fff}
+.greenBtn{background:#19ad47;color:#fff}
+.redBtn{background:#db232c;color:#fff}
+.grey{background:#d6d8de;color:#12224f}
+input,select{
+  width:100%;min-height:58px;border:4px solid #000;border-radius:16px;padding:0 12px;
+  font-size:20px;text-align:center;margin-bottom:12px;background:#fff
+}
+.backLink{
+  display:block;text-align:center;margin-top:8px;color:#c8cdd9;font-weight:800;
+  text-transform:uppercase;text-decoration:none
+}
+.note{
+  background:rgba(0,0,0,.06);border-radius:16px;padding:12px;font-size:14px;
+  font-weight:700;line-height:1.35
+}
+.stage{
+  position:relative;min-height:215px;border-radius:28px;padding:10px 10px 16px;margin-bottom:14px;
+  overflow:hidden;background:
+    linear-gradient(180deg, rgba(255,220,160,.12), rgba(0,0,0,.14)),
+    radial-gradient(circle at 50% 10%, rgba(255,255,255,.11), transparent 30%),
+    linear-gradient(180deg,#5b3b20 0%,#412614 100%);
+  box-shadow:0 10px 0 rgba(0,0,0,.28)
+}
+.arch{
+  position:absolute;top:12px;width:96px;height:160px;background:linear-gradient(180deg,#0c245c,#173f91);
+  border:6px solid #7b5733;border-bottom-width:10px;border-radius:46px 46px 8px 8px
+}
+.arch:before{
+  content:"";position:absolute;inset:10px;border-radius:36px 36px 0 0;
+  background:
+    linear-gradient(90deg, transparent 47%, rgba(255,255,255,.28) 47% 53%, transparent 53%),
+    linear-gradient(180deg, transparent 47%, rgba(255,255,255,.28) 47% 53%, transparent 53%),
+    radial-gradient(circle at 50% 22%, #e15f5f 0 18%, transparent 18%),
+    radial-gradient(circle at 28% 58%, #f0bc16 0 17%, transparent 17%),
+    radial-gradient(circle at 72% 58%, #49b8ef 0 17%, transparent 17%)
+}
+.arch1{left:12px}.arch2{left:calc(50% - 48px)}.arch3{right:12px}
+.pew{position:absolute;height:16px;background:#6e4528;border-radius:10px;box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.pew1{left:18px;right:18px;bottom:60px}.pew2{left:38px;right:38px;bottom:36px}.pew3{left:58px;right:58px;bottom:12px}
+.audience{
+  position:absolute;left:8px;right:8px;bottom:82px;display:flex;justify-content:space-evenly;align-items:flex-end;
+  pointer-events:none
+}
+.person{width:18px;height:38px;position:relative;transform-origin:bottom center;animation:sway 3.4s ease-in-out infinite}
+.person:nth-child(odd){animation-duration:2.8s}.person:nth-child(3n){animation-duration:3.8s}
+.person .head{width:14px;height:14px;border-radius:50%;background:#efc69a;border:2px solid #000;margin:0 auto}
+.person .torso{width:18px;height:20px;border-radius:10px 10px 4px 4px;background:#394f76;border:2px solid #000;margin-top:-1px}
+.applause .person{animation:clap .45s ease-in-out 6 alternate}
+@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes clap{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-6px) rotate(5deg)}}
+
+.scoreGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:#000;padding:4px;border-radius:16px;margin-bottom:12px}
+.scoreBox{background:#111;border-radius:12px;text-align:center;padding:8px 4px}
+.scoreLabel{font-size:10px;font-weight:900;text-transform:uppercase;min-height:30px;line-height:1.15}
+.scoreValue{font-size:30px;font-weight:900}
+.greenTxt{color:#53e58d}.yellowTxt{color:var(--gold)}.redTxt{color:#ff5a64}
+
+.duelBox{
+  position:relative;overflow:hidden;border:5px solid #d5d9e5;border-radius:28px;padding:12px 10px 16px;
+  box-shadow:0 10px 0 rgba(0,0,0,.28);margin-bottom:12px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.08)),
+    linear-gradient(180deg,#7c5535,#5f3b20)
+}
+.duelBg{
+  position:absolute;inset:0;opacity:.28;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255,255,255,.18), transparent 24%),
+    linear-gradient(90deg, transparent 14%, rgba(255,255,255,.08) 14% 16%, transparent 16% 32%, rgba(255,255,255,.08) 32% 34%, transparent 34% 50%, rgba(255,255,255,.08) 50% 52%, transparent 52% 68%, rgba(255,255,255,.08) 68% 70%, transparent 70% 86%, rgba(255,255,255,.08) 86% 88%, transparent 88%),
+    linear-gradient(180deg, transparent 0 68%, rgba(0,0,0,.25) 68%)
+}
+.duelAudience{position:absolute;left:10px;right:10px;bottom:18px;display:flex;justify-content:space-around;opacity:.8}
+.duelAudience .person{width:14px;height:32px}
+.duelAudience .person .head{width:10px;height:10px}
+.duelAudience .person .torso{width:14px;height:16px}
+.duelRow{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.duelName{text-align:center;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px}
+
+.questionCard{
+  background:var(--card);color:var(--ink);border-radius:28px;padding:14px 12px;
+  box-shadow:0 10px 0 rgba(0,0,0,.28)
+}
+.timerPill{
+  width:150px;margin:0 auto 10px;text-align:center;background:var(--gold);
+  color:#20307c;font-weight:900;border-radius:30px;padding:10px 12px;font-size:22px
+}
+.roundTxt{text-align:center;font-size:12px;font-weight:900;color:#8d93a6;text-transform:uppercase;margin-bottom:8px}
+.questionTxt{
+  font-size:20px;font-weight:900;text-align:center;line-height:1.25;margin-bottom:14px;color:#20307c;
+  min-height:98px;display:flex;align-items:center;justify-content:center
+}
+.answerBtn{
+  width:100%;border:4px solid #000;border-radius:14px;padding:15px 12px;text-align:left;
+  font-size:17px;font-weight:900;color:#20307c;background:#fff;margin-bottom:10px;cursor:pointer;
+  transition:transform .08s ease, background .15s ease
+}
+.answerBtn:active{transform:scale(.99)}
+.answerBtn:disabled{opacity:1}
+.correct{background:var(--green)!important;color:#fff!important}
+.wrong{background:var(--red)!important;color:#fff!important}
+
+.infoBox{
+  margin-top:12px;background:rgba(255,255,255,.10);border-radius:18px;padding:12px;
+  font-size:14px;font-weight:700;line-height:1.35
+}
+.menuRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pauseLayer,.modalBg{
+  position:fixed;inset:0;background:rgba(0,0,0,.62);
+  display:flex;align-items:center;justify-content:center;padding:18px;z-index:90
+}
+.resultBig{font-size:56px;font-weight:900;color:var(--gold);margin:6px 0 10px}
+.creatorGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.list{display:flex;flex-direction:column;gap:12px}
+.contestant{
+  background:#ececf0;color:#12224f;border-radius:24px;padding:12px;display:flex;gap:12px;align-items:center;
+  box-shadow:0 8px 0 rgba(0,0,0,.28);cursor:pointer
+}
+.contestantText strong{display:block;font-size:16px;text-transform:uppercase}
+.contestantText span{font-size:12px;color:#7781a3;font-weight:700;text-transform:uppercase}
+
+svg.avatarSvg{width:110px;height:146px;display:block;margin:0 auto}
+svg.avatarSmall{width:74px;height:100px;display:block}
 </style>
 </head>
 <body>
@@ -361,15 +202,19 @@
     </div>
 
     <div class="stage">
-      <div class="avatarWrap">
-        <div class="avatar"><div class="mouth"></div></div>
-        <div class="body"></div>
-      </div>
+      <div class="arch arch1"></div>
+      <div class="arch arch2"></div>
+      <div class="arch arch3"></div>
+      <div class="pew pew1"></div>
+      <div class="pew pew2"></div>
+      <div class="pew pew3"></div>
+      <div class="audience" id="homeAudience"></div>
+      <div style="position:relative;z-index:2;display:flex;justify-content:center;align-items:flex-end;height:100%;padding-top:34px" id="hostHomeAvatar"></div>
     </div>
 
     <button class="mainBtn" id="enterBtn">¡ENTRAR!</button>
 
-    <div class="grid3">
+    <div class="grid2">
       <button class="smallBtn b1" id="dailyBtn">Clasificación diaria</button>
       <button class="smallBtn b2" id="totalBtn">Clasificación total</button>
       <button class="smallBtn b3" id="rulesBtn">Instrucciones</button>
@@ -391,7 +236,7 @@
       <h1 id="helloName">Hola</h1>
     </div>
     <button class="actionBtn grey" id="chooseContestantBtn">Elegir concursante</button>
-    <button class="actionBtn grey" id="createContestantBtn">Crear concursante</button>
+    <button class="actionBtn grey" id="createContestantBtn">Creador de concursante</button>
     <a class="backLink" href="#" data-back="userScreen">Atrás</a>
   </section>
 
@@ -399,46 +244,38 @@
     <div class="titleBox" style="padding:18px 16px;">
       <h1>¿Quién confiesa hoy?</h1>
     </div>
-
-    <div class="contestants">
-      <div class="contestant" data-contestant="El Nazario">
-        <div><div class="miniHead"></div><div class="miniBody"></div></div>
-        <div class="contestantText"><strong>El Nazario</strong><span>Paisano con boina</span></div>
-      </div>
-
-      <div class="contestant" data-contestant="Tía Praxedes">
-        <div><div class="miniHead"></div><div class="miniBody"></div></div>
-        <div class="contestantText"><strong>Tía Praxedes</strong><span>Señora mayor con pañoleta</span></div>
-      </div>
-
-      <div class="contestant" data-contestant="Tijeras">
-        <div><div class="miniHead"></div><div class="miniBody"></div></div>
-        <div class="contestantText"><strong>Tijeras</strong><span>Hombre de pueblo</span></div>
-      </div>
-
-      <div class="contestant" data-contestant="Nachón el Taxis">
-        <div><div class="miniHead"></div><div class="miniBody"></div></div>
-        <div class="contestantText"><strong>Nachón el Taxis</strong><span>Taxista con mil historias</span></div>
-      </div>
-    </div>
-
-    <button class="actionBtn red" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
+    <div class="list" id="contestantList"></div>
+    <button class="actionBtn redBtn" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
   </section>
 
   <section id="createContestantScreen" class="hidden">
     <div class="card">
       <h2 class="cardTitle">Creador de concursante</h2>
-      <div class="note">
-        Aquí irá el creador completo con caras, pelo, barba, ropa, gafas y voz.
+      <input id="customName" type="text" placeholder="Nombre del concursante">
+      <div class="creatorGrid">
+        <select id="customGender">
+          <option value="male">Hombre</option>
+          <option value="female">Mujer</option>
+        </select>
+        <select id="customTrait">
+          <option value="vacilon">Vacilón</option>
+          <option value="mandona">Mandona</option>
+          <option value="borrachin">Borrachín</option>
+          <option value="hablador">Hablador</option>
+        </select>
       </div>
-      <button class="actionBtn yellow" style="margin-top:16px;" id="backFromCreatorBtn">Volver</button>
+      <div class="note" style="margin:12px 0;">
+        Aquí puedes crear un concursante caricaturesco sin foto. Se guardará en este móvil.
+      </div>
+      <button class="actionBtn yellow" id="saveCustomBtn">Guardar concursante</button>
+      <button class="actionBtn grey" id="backFromCreatorBtn">Volver</button>
     </div>
   </section>
 
   <section id="dailyScreen" class="hidden">
     <div class="card">
       <h2 class="cardTitle">Clasificación diaria</h2>
-      <div class="note">Aquí irá el ranking diario real.</div>
+      <div id="dailyRankingBox" class="note">Aún no hay puntuaciones.</div>
       <button class="actionBtn grey" id="backDailyBtn">Volver</button>
     </div>
   </section>
@@ -446,7 +283,7 @@
   <section id="totalScreen" class="hidden">
     <div class="card">
       <h2 class="cardTitle">Clasificación total</h2>
-      <div class="note">Aquí irá el ranking total real.</div>
+      <div id="totalRankingBox" class="note">Aún no hay puntuaciones.</div>
       <button class="actionBtn grey" id="backTotalBtn">Volver</button>
     </div>
   </section>
@@ -457,9 +294,11 @@
       <div class="note">
         40 preguntas por partida.<br>
         15 segundos por pregunta.<br>
+        3 respuestas por pregunta.<br>
         Acierto: +2 puntos.<br>
-        Fallo: -1 punto.<br>
-        3 respuestas por pregunta.
+        Fallo o tiempo agotado: -1 punto.<br>
+        Padre Jeremías habla y luego responde el concursante.<br>
+        Puedes guardar, cargar, nueva partida y salir.
       </div>
       <button class="actionBtn grey" id="backRulesBtn">Volver</button>
     </div>
@@ -490,20 +329,16 @@
     </div>
 
     <div class="duelBox">
+      <div class="duelBg"></div>
+      <div class="duelAudience" id="duelAudience"></div>
       <div class="duelRow">
         <div>
           <div class="duelName">Padre Jeremías</div>
-          <div class="avatarWrap">
-            <div class="avatar" style="width:92px;height:92px;"><div class="mouth"></div></div>
-            <div class="body" style="width:74px;height:40px;"></div>
-          </div>
+          <div id="hostGameAvatar"></div>
         </div>
         <div>
           <div class="duelName" id="contestantNameGame">Concursante</div>
-          <div class="avatarWrap">
-            <div class="avatar" style="width:92px;height:92px;"><div class="mouth"></div></div>
-            <div class="body" style="width:74px;height:40px;background:#384d73;"></div>
-          </div>
+          <div id="playerGameAvatar"></div>
         </div>
       </div>
     </div>
@@ -520,31 +355,44 @@
 
     <div class="infoBox">
       <div id="hostLine">Padre Jeremías: Bienvenido, hijo mío.</div>
-      <div style="margin-top:6px;" id="playerLine">Concursante: Hoy vengo bendecido.</div>
+      <div style="margin-top:8px" id="playerLine">Concursante: Hoy vengo bendecido.</div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+    <div class="menuRow">
       <button class="actionBtn grey" id="pauseBtn" style="margin:0;">Pausa</button>
       <button class="actionBtn yellow" id="saveBtn" style="margin:0;">Guardar</button>
     </div>
   </section>
 
+  <section id="resultScreen" class="hidden">
+    <div class="card">
+      <h2 class="cardTitle">Final de partida</h2>
+      <div class="resultBig" id="finalPoints">0</div>
+      <div class="note" id="finalSummary"></div>
+      <div id="holyPrize" class="hidden" style="margin:16px 0 4px;">
+        <div style="font-size:64px;">🍼</div>
+        <div class="note">Premio celestial: botella grande de AGUA BENDITA entregada por Padre Jeremías.</div>
+      </div>
+      <button class="actionBtn yellow" id="resultNewBtn">Nueva partida</button>
+      <button class="actionBtn grey" id="resultHomeBtn">Volver al inicio</button>
+    </div>
+  </section>
 </div>
 
 <div class="modalBg hidden" id="pinModal">
   <div class="card" style="width:100%;max-width:360px;">
     <h2 class="cardTitle">Clave dueño</h2>
-    <input id="ownerPin" type="password" placeholder="1010">
+    <input id="ownerPin" type="password" placeholder="">
     <button class="actionBtn yellow" id="openOwnerBtn">Abrir</button>
-    <button class="actionBtn red" id="closeOwnerBtn">Cerrar</button>
+    <button class="actionBtn redBtn" id="closeOwnerBtn">Cerrar</button>
   </div>
 </div>
 
 <div class="modalBg hidden" id="ownerPanel">
   <div class="card" style="width:100%;max-width:360px;">
     <h2 class="cardTitle">Sacristía</h2>
-    <button class="actionBtn blue">Editor y actualizador</button>
-    <button class="actionBtn green">Compartir WhatsApp</button>
+    <button class="actionBtn blue" id="editorBtn">Editor y actualizador</button>
+    <button class="actionBtn greenBtn" id="shareBtn">Compartir WhatsApp</button>
     <button class="actionBtn grey" id="closeOwnerPanelBtn">Volver</button>
   </div>
 </div>
@@ -554,310 +402,817 @@
     <h2 class="cardTitle">Menú de partida</h2>
     <button class="actionBtn yellow" id="resumeBtn">Seguir jugando</button>
     <button class="actionBtn blue" id="loadBtn">Cargar partida</button>
-    <button class="actionBtn green" id="newGameBtn">Nueva partida</button>
-    <button class="actionBtn red" id="exitGameBtn">Salir del juego</button>
+    <button class="actionBtn greenBtn" id="newGameBtn">Nueva partida</button>
+    <button class="actionBtn redBtn" id="exitGameBtn">Salir del juego</button>
   </div>
 </div>
 
 <script>
-  let soundOn = true;
-  let currentContestant = "";
-  let currentUser = "";
-  let currentQuestionIndex = 0;
-  let points = 0;
-  let hits = 0;
-  let fails = 0;
-  let timer = 15;
-  let timerInterval = null;
-  const SAVE_KEY = "catedral_partida_guardada";
+const OWNER_PIN = "1010";
+const SAVE_KEY = "catedral_partida_guardada_v4";
+const CUSTOM_KEY = "catedral_custom_contestants_v4";
+const RANK_DAY_KEY = "catedral_rank_day_v4_";
+const RANK_TOTAL_KEY = "catedral_rank_total_v4";
+const QUESTIONS_PER_GAME = 40;
+const TIME_PER_QUESTION = 15;
 
-  const hostGood = [
-    "Padre Jeremías: ¡Aleluya, eso ha entrado más limpio que el dinero del cepillo!",
-    "Padre Jeremías: ¡Milagro baloncestístico! Hoy vienes tocado por la gracia.",
-    "Padre Jeremías: ¡Eso merece campanas y hasta incienso!"
-  ];
+const host = {id:"jeremias",name:"Padre Jeremías",style:"jeremias",gender:"male",rate:.84,pitch:.86};
+const baseContestants = [
+  {id:"nazario",name:"El Nazario",subtitle:"El Mujeriego",style:"nazario",gender:"male",rate:.95,pitch:.95},
+  {id:"praxedes",name:"Tía Praxedes",subtitle:"La Gana Carreras",style:"praxedes",gender:"female",rate:.86,pitch:1.02},
+  {id:"tijeras",name:"Tijeras",subtitle:"El Borrachín",style:"tijeras",gender:"male",rate:.82,pitch:.9},
+  {id:"nachon",name:"Nachón el Taxis",subtitle:"El Taxis",style:"nachon",gender:"male",rate:1.02,pitch:.98},
+  {id:"chonona",name:"Chonona",subtitle:"La Mata Pollos",style:"chonona",gender:"female",rate:.94,pitch:1.04},
+  {id:"antonino",name:"Antonino",subtitle:"El Gominolo",style:"antonino",gender:"male",rate:.92,pitch:.98},
+  {id:"alvarino",name:"Alvariño",subtitle:"El Frutas",style:"alvarino",gender:"male",rate:1.04,pitch:1.02},
+  {id:"arricio",name:"Arricio",subtitle:"El Calores",style:"arricio",gender:"male",rate:.96,pitch:.94},
+  {id:"felixon",name:"Félixon",subtitle:"El Ejecutivo",style:"felixon",gender:"male",rate:.88,pitch:.9},
+  {id:"mamen",name:"Mamen",subtitle:"La Presidenta",style:"mamen",gender:"female",rate:.98,pitch:1.08}
+];
 
-  const hostBad = [
-    "Padre Jeremías: ¡Eso ha sido un pecado con repetición instantánea!",
-    "Padre Jeremías: ¡Madre mía, esa respuesta ha dolido hasta en el campanario!",
-    "Padre Jeremías: ¡Reza tres tiros libres y vuelve a intentarlo!"
-  ];
+const clubs = [
+  {club:"Real Madrid", city:"Madrid"},
+  {club:"FC Barcelona", city:"Barcelona"},
+  {club:"Joventut", city:"Badalona"},
+  {club:"Baskonia", city:"Vitoria-Gasteiz"},
+  {club:"Unicaja", city:"Málaga"},
+  {club:"Valencia Basket", city:"Valencia"},
+  {club:"Gran Canaria", city:"Las Palmas de Gran Canaria"},
+  {club:"La Laguna Tenerife", city:"San Cristóbal de La Laguna"},
+  {club:"Breogán", city:"Lugo"},
+  {club:"Bilbao Basket", city:"Bilbao"},
+  {club:"Bàsquet Manresa", city:"Manresa"},
+  {club:"Casademont Zaragoza", city:"Zaragoza"},
+  {club:"UCAM Murcia", city:"Murcia"},
+  {club:"Estudiantes", city:"Madrid"},
+  {club:"Monbus Obradoiro", city:"Santiago de Compostela"},
+  {club:"Bàsquet Girona", city:"Girona"},
+  {club:"Fuenlabrada", city:"Fuenlabrada"},
+  {club:"Cultural Leonesa", city:"León"}
+];
 
-  const playerLines = [
+const categoryFacts = [
+  ["¿Qué nombre comercial recibe hoy la ACB?","Liga Endesa","1ª FEB","2ª FEB"],
+  ["¿Qué nombre recibe actualmente la antigua LEB Oro?","1ª FEB","2ª FEB","Liga Plata ACB"],
+  ["¿Qué nombre recibe actualmente la antigua LEB Plata?","2ª FEB","1ª FEB","Liga EBA Oro"],
+  ["¿Cuántas respuestas tiene cada pregunta en este juego?","3","4","2"],
+  ["¿Cuántos puntos suma una respuesta correcta?","2","3","1"],
+  ["¿Cuántos puntos resta una respuesta fallada o el tiempo agotado?","1","2","0"],
+  ["¿Cuántos segundos hay para responder cada pregunta?","15","10","20"],
+  ["¿Cuántas preguntas tiene cada partida?","40","25","60"],
+  ["¿Qué competición es una de las más históricas del baloncesto español?","Copa del Rey","Copa de Provincias ACB","Superliga Municipal"],
+  ["¿Qué liga fue durante años la gran liga profesional del baloncesto español?","Liga ACB","LEB Plata","Copa España"]
+];
+
+const factBank = [
+  ["¿Qué club malagueño fue campeón de la Liga ACB en 2006?","Unicaja","Gran Canaria","Estudiantes"],
+  ["¿Qué histórico club de Badalona ganó la Copa de Europa en 1994?","Joventut","FC Barcelona","Real Madrid"],
+  ["¿Qué club valenciano ganó la Liga ACB en 2017?","Valencia Basket","Lucentum Alicante","CB Murcia"],
+  ["¿Qué pívot español ganó anillos NBA con Los Angeles Lakers?","Pau Gasol","Felipe Reyes","Fernando Romay"],
+  ["¿Qué escolta español fue emblema del FC Barcelona y Memphis Grizzlies?","Juan Carlos Navarro","Rafa Jofresa","Carlos Jiménez"],
+  ["¿Qué base canario brilló en Joventut y luego en la NBA?","Ricky Rubio","Sergio Llull","Pablo Laso"],
+  ["¿Qué entrenador se asocia a varias etapas históricas en Baskonia?","Dusko Ivanovic","Moncho Fernández","Pedro Martínez"],
+  ["¿Qué técnico madrileño lideró una gran etapa moderna del Real Madrid?","Pablo Laso","Chus Mateo","Aíto García Reneses"],
+  ["¿Qué árbitro español es uno de los más conocidos de la era ACB moderna?","Antonio Conde","Mateu Lahoz","Undiano Mallenco"],
+  ["¿Qué club leonés compite hoy como Cultural y Deportiva Leonesa Baloncesto?","Cultural Leonesa","Baloncesto Fuenlabrada","CB Tizona"],
+  ["¿Qué club gallego ascendió a ACB en 2024?","Leyma Coruña","Ourense","Lugo Basket"],
+  ["¿Qué nombre comercial tuvo Baskonia en los 2000?","TAU Cerámica","Caja Álava Basket","Saski Power"],
+  ["¿Qué club sevillano tuvo larga presencia ACB con varias denominaciones?","Caja San Fernando / Cajasol","CB Huelva ACB","Sevilla Triple Basket"],
+  ["¿Qué equipo madrileño fue campeón de liga en 1991-92?","Real Madrid","Estudiantes","Joventut"],
+  ["¿Qué entrenador se asocia a la frase de correr, correr y correr en el basket español?","Aíto García Reneses","Lolo Sainz","Joan Plaza"],
+  ["¿Qué club ganó la Euroliga 2023 representando al basket español?","Real Madrid","FC Barcelona","Baskonia"],
+  ["¿Qué base español jugó en Toronto Raptors y fue internacional?","José Manuel Calderón","Sergi Vidal","Tomás Jofresa"],
+  ["¿Qué internacional español fue capitán histórico del Real Madrid y España?","Felipe Reyes","Sergio Llull","Alberto Herreros"],
+  ["¿Qué escolta mallorquín es símbolo del Real Madrid y la selección?","Sergio Llull","Rafa Martínez","Carlos Suárez"],
+  ["¿Qué exjugador español fue pionero histórico en la NBA en los 80 y 90?","Fernando Martín","Pau Gasol","Rudy Fernández"],
+  ["¿Qué técnico español dirigió a la selección campeona del Mundial 2006?","Pepu Hernández","Sergio Scariolo","Pablo Laso"],
+  ["¿Qué entrenador italiano ha sido muy importante para España en la selección?","Sergio Scariolo","Ettore Messina","Luca Banchi"],
+  ["¿Qué base español fue emblema de Estudiantes en los 90?","Nacho Azofra","Pablo Prigioni","Sergio Rodríguez"],
+  ["¿Qué pívot catalán fue campeón NBA también con Toronto Raptors?","Marc Gasol","Felipe Reyes","Fran Vázquez"],
+  ["¿Qué equipo tiene como ciudad Badalona y color histórico verdinegro?","Joventut","Unicaja","Murcia"],
+  ["¿Qué club murciano juega en la ciudad de Murcia?","UCAM Murcia","CB Cartagena ACB","Estudiantes"],
+  ["¿Qué equipo juega en Bilbao?","Bilbao Basket","Baskonia","Palencia Basket"],
+  ["¿Qué entrenador español está muy ligado a Manresa y Girona en etapas recientes?","Pedro Martínez","Aíto García Reneses","Pablo Laso"],
+  ["¿Qué torneo español enfrenta a los mejores equipos ACB a mitad de temporada?","Copa del Rey","Supercopa de verano","Copa 1ª FEB"],
+  ["¿Qué acción vale 3 puntos desde fuera del arco?","Triple","Mate","Tiro libre"],
+  ["¿Qué acción vale 1 punto?","Tiro libre","Bandeja","Triple"],
+  ["¿Qué palabra describe subir de categoría?","Ascenso","Cesión","Rotación"],
+  ["¿Qué palabra describe bajar de categoría?","Descenso","Draft","Traspaso"],
+  ["¿Qué pívot español del Barça fue dominante en la pintura en los 2000?","Roberto Dueñas","Felipe Reyes","Joe Arlauckas"],
+  ["¿Qué anotador estadounidense fue legendario en el Real Madrid de los 90?","Joe Arlauckas","Louis Bullock","Jaycee Carroll"],
+  ["¿Qué tirador estadounidense fue uno de los grandes especialistas del Real Madrid moderno?","Jaycee Carroll","Joe Arlauckas","Dejan Bodiroga"],
+  ["¿Qué estrella serbia dejó una huella enorme en Real Madrid y Barcelona?","Dejan Bodiroga","Peja Stojakovic","Vlade Divac"],
+  ["¿Qué jugador argentino fue muy querido por su intensidad en Baskonia y Real Madrid?","Andrés Nocioni","Luis Scola","Pablo Prigioni"],
+  ["¿Qué club de Zaragoza tuvo denominaciones como CAI Zaragoza y hoy Casademont Zaragoza?","Zaragoza","Murcia","Manresa"],
+  ["¿Qué club compostelano fue conocido como Obradoiro?","Monbus Obradoiro","Breogán","Ourense"],
+  ["¿Qué ciudad representa Obradoiro?","Santiago de Compostela","Vigo","A Coruña"]
+];
+
+let contestants = [];
+let soundOn = true;
+let currentUser = "";
+let currentContestant = null;
+let gameQuestions = [];
+let currentQuestionIndex = 0;
+let points = 0;
+let hits = 0;
+let fails = 0;
+let timer = TIME_PER_QUESTION;
+let timerInterval = null;
+let answering = false;
+let bellInterval = null;
+
+const hostGood = [
+  "Padre Jeremías: ¡Aleluya! Eso ha entrado más limpio que el dinero del cepillo.",
+  "Padre Jeremías: ¡Milagro baloncestístico! Hoy vienes tocado por la gracia.",
+  "Padre Jeremías: ¡Canasta celestial! Ni el monaguillo la habría clavado mejor.",
+  "Padre Jeremías: ¡Eso merece campanas, incienso y repetición a cámara lenta!",
+  "Padre Jeremías: ¡Hijo mío, eso ha sido más fino que una homilía con triple!"
+];
+const hostBad = [
+  "Padre Jeremías: ¡Eso ha sido un pecado con repetición instantánea!",
+  "Padre Jeremías: ¡Madre del amor hermoso, esa respuesta ha dolido hasta en el campanario!",
+  "Padre Jeremías: ¡Reza tres tiros libres y vuelve a intentarlo, criatura!",
+  "Padre Jeremías: ¡Eso no lo arregla ni con agua bendita y prórroga!",
+  "Padre Jeremías: ¡Se ha santiguado hasta el marcador del susto!"
+];
+const contestantGood = {
+  generic:[
+    "Concursante: Ya lo sabía yo, Padre, si es que hoy vengo sembrado.",
+    "Concursante: No me aplauda tanto, que luego me vengo arriba.",
+    "Concursante: Hoy estoy más fino que un triple sin tocar aro."
+  ],
+  nazario:[
+    "El Nazario: Ya lo sabía, Padre, pero me distrae la belleza del graderío.",
+    "El Nazario: Hoy vengo tan fino que hasta la boina me aplaude.",
+    "El Nazario: Si sigo así, me fichan y me echan flores a la vez."
+  ],
+  praxedes:[
+    "Tía Praxedes: Eso lo sabía yo antes de que pusieran las opciones.",
+    "Tía Praxedes: Normal que acierte, si aquí la que manda soy yo.",
+    "Tía Praxedes: A esta parroquia le falta escucharme más y fallar menos."
+  ],
+  tijeras:[
+    "Tijeras: La sabía perfectamente... y eso que hoy vengo con niebla.",
+    "Tijeras: Padre, apunte ahí otro acierto del barril del talento.",
+    "Tijeras: Estoy que lo clavo aunque vaya dando curvas."
+  ],
+  nachon:[
+    "Nachón el Taxis: Yo esto ya lo comenté con un cliente entre semáforo y semáforo.",
+    "Nachón el Taxis: Hoy voy tan lanzado que ni el GPS me sigue.",
+    "Nachón el Taxis: Esto lo llevo más controlado que la parada del aeropuerto."
+  ],
+  chonona:[
+    "Chonona: Ya estaba tardando en demostrar quién manda aquí.",
+    "Chonona: A mí no me pilla una fácil, una media ni una difícil.",
+    "Chonona: Que aplaudan, que para eso he venido."
+  ],
+  antonino:[
+    "Antonino: Yo callo mucho, pero cuando acierto se nota.",
+    "Antonino: Esto lo traía mascado desde el calentamiento.",
+    "Antonino: Suave, elegante y para dentro."
+  ],
+  alvarino:[
+    "Alvariño: Hoy vengo más fresco que una caja de fruta en enero.",
+    "Alvariño: Esto entra solo, como los plátanos buenos.",
+    "Alvariño: Estoy repartiendo aciertos por kilos."
+  ],
+  arricio:[
+    "Arricio: Con el calor que hace y aun así estoy acertando.",
+    "Arricio: Si sigo así, me tienen que abanicar por talento.",
+    "Arricio: Esto lo meto aunque se me derrita la camiseta."
+  ],
+  felixon:[
+    "Félixon: Correcto. Gestión impecable de la respuesta.",
+    "Félixon: Todo bajo control. Como debe ser.",
+    "Félixon: Cuando hay método, hay acierto."
+  ],
+  mamen:[
+    "Mamen: Tranquilos, lo tenía planificado desde antes de sentarme.",
+    "Mamen: Orden, cabeza y canasta. Así sí.",
+    "Mamen: La presidenta no falla las importantes."
+  ]
+};
+const contestantBad = {
+  generic:[
     "Concursante: Yo la sabía, pero quise darle emoción a la parroquia.",
-    "Concursante: Padre, hoy vengo con la muñeca un poco torcida.",
-    "Concursante: Ahora remonto y quedo como un santo del triple."
-  ];
+    "Concursante: Padre, se me cruzó la respuesta con otra del bar.",
+    "Concursante: Esto es estrategia, luego remonto."
+  ],
+  nazario:[
+    "El Nazario: Padre, me distraje pensando en una moza del fondo.",
+    "El Nazario: La sabía, pero me guiñó un ojo la respuesta falsa.",
+    "El Nazario: Esto me pasa por venir tan elegante."
+  ],
+  praxedes:[
+    "Tía Praxedes: Esa estaba mal puesta, lo digo yo y punto.",
+    "Tía Praxedes: No he fallado, ha fallado la pregunta.",
+    "Tía Praxedes: Que no se acostumbren, que esto ha sido un despiste mínimo."
+  ],
+  tijeras:[
+    "Tijeras: La tenía en la punta de la lengua... y del vaso.",
+    "Tijeras: Padre, esto es culpa del reflejo de las luces.",
+    "Tijeras: Hoy voy recto, pero la respuesta iba haciendo eses."
+  ],
+  nachon:[
+    "Nachón el Taxis: Me pilló en hora punta mental, Padre.",
+    "Nachón el Taxis: Iba bien encaminado y me salté la salida buena.",
+    "Nachón el Taxis: Esto con dos rotondas más lo saco."
+  ],
+  chonona:[
+    "Chonona: No me ha gustado esa pregunta ni un pelo.",
+    "Chonona: Bueno, pues una mala la tiene cualquiera... los demás más.",
+    "Chonona: Que nadie se confíe, que ahora arranco de verdad."
+  ],
+  antonino:[
+    "Antonino: He querido ser discreto hasta para fallar.",
+    "Antonino: La correcta la dejé salir por educación.",
+    "Antonino: Se me fue, pero sin hacer ruido."
+  ],
+  alvarino:[
+    "Alvariño: Esa venía verde y yo la cogí demasiado pronto.",
+    "Alvariño: Se me mezclaron las cajas, Padre.",
+    "Alvariño: Hoy esta fruta salió rana."
+  ],
+  arricio:[
+    "Arricio: Con este calor también se derriten las respuestas.",
+    "Arricio: Padre, me ha subido la temperatura táctica.",
+    "Arricio: Necesito sombra y revancha."
+  ],
+  felixon:[
+    "Félixon: Esto ha sido un fallo de ejecución, no de concepto.",
+    "Félixon: Anoto la incidencia y seguimos.",
+    "Félixon: Hay margen de mejora, pero no cunda el pánico."
+  ],
+  mamen:[
+    "Mamen: Vale, una mal. No pasa nada, lo reconduzco.",
+    "Mamen: Esto entra en el plan B de recuperación.",
+    "Mamen: Se acepta el error, pero se remonta."
+  ]
+};
 
-  const questions = [
-    {
-      q:"¿Qué competición sustituyó con el tiempo a la antigua 1ª División como máxima referencia del baloncesto español?",
-      a:["Liga ACB","LEB Plata","Copa España"],
-      c:0
-    },
-    {
-      q:"¿Cuántas respuestas tiene cada pregunta en este juego?",
-      a:["3","4","2"],
-      c:0
-    },
-    {
-      q:"¿Cuántos puntos suma una respuesta acertada?",
-      a:["2","3","1"],
-      c:0
-    },
-    {
-      q:"¿Cuántos segundos hay para responder cada pregunta?",
-      a:["15","10","20"],
-      c:0
-    },
-    {
-      q:"¿Qué nombre recibe actualmente la ACB por patrocinio?",
-      a:["Liga Endesa","Liga FEB Oro","Superliga España"],
-      c:0
-    },
-    {
-      q:"¿Qué nombre recibe actualmente la antigua LEB Oro?",
-      a:["1ª FEB","2ª FEB","Liga Plata Endesa"],
-      c:0
-    },
-    {
-      q:"¿Qué nombre recibe actualmente la antigua LEB Plata?",
-      a:["2ª FEB","1ª FEB","Liga EBA Oro"],
-      c:0
-    },
-    {
-      q:"¿Qué competición es una de las más históricas del baloncesto español?",
-      a:["Copa del Rey","Mundial de Clubes ACB","Eurocopa FEB de Ciudades"],
-      c:0
-    }
-  ];
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function todayKey(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function deepClone(x){ return JSON.parse(JSON.stringify(x)); }
 
-  const screens = [
-    "homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen",
-    "dailyScreen","totalScreen","rulesScreen","settingsScreen","gameScreen"
-  ];
-
-  function showScreen(id){
-    screens.forEach(s => document.getElementById(s).classList.add("hidden"));
-    document.getElementById(id).classList.remove("hidden");
-    window.scrollTo(0,0);
+function svgAvatar(style, small=false){
+  const W = small ? 74 : 110, H = small ? 100 : 146, skin = "#efc69a";
+  let hair="#222", body="#394f76", extra="", glasses="", beard="", scarf="", tie="";
+  switch(style){
+    case "jeremias":
+      hair="#111"; body="#111";
+      extra += `<path d="M19,20 q18,-15 36,0 v10 h-36z" fill="#111"/>`;
+      tie = `<rect x="48" y="${small?72:104}" width="14" height="${small?16:20}" rx="2" fill="#fff" stroke="#000" stroke-width="2"/>`;
+      break;
+    case "nazario":
+      body="#4c5c7e";
+      extra += `<ellipse cx="55" cy="${small?18:22}" rx="${small?29:40}" ry="${small?10:14}" fill="#111"/><rect x="${small?20:21}" y="${small?18:22}" width="${small?58:68}" height="${small?10:14}" rx="5" fill="#111"/>`;
+      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`;
+      break;
+    case "praxedes":
+      body="#2d2d2d";
+      scarf = `<path d="M17,${small?18:24} q38,-18 76,0 v${small?24:32} h-76z" fill="#111"/><path d="M23,${small?54:78} q32,18 64,0" fill="none" stroke="#111" stroke-width="10"/>`;
+      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/>`;
+      break;
+    case "tijeras":
+      hair="#777"; body="#3f5579";
+      beard = `<path d="M37,${small?54:78} q18,20 36,0 v${small?12:16} q-18,14 -36,0z" fill="#7a7a7a"/>`;
+      break;
+    case "nachon":
+      hair="#666"; body="#4d4d4d";
+      extra += `<rect x="38" y="${small?17:23}" width="34" height="7" rx="3" fill="#cfcfcf"/>`;
+      break;
+    case "chonona":
+      hair="#efefef"; body="#a11625";
+      break;
+    case "antonino":
+      hair="#d0d0d0"; body="#35507f";
+      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`;
+      break;
+    case "alvarino":
+      hair="#2e2016"; body="#145089";
+      beard = `<path d="M39,${small?52:76} q16,15 32,0 v${small?8:12} q-16,10 -32,0z" fill="#2e2016"/>`;
+      break;
+    case "arricio":
+      hair="#555"; body="#1f1f1f";
+      glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#222"/>`;
+      break;
+    case "felixon":
+      hair="#cfcfcf"; body="#8c2323";
+      beard = `<path d="M43,${small?52:76} q12,12 24,0 v${small?8:12} q-12,10 -24,0z" fill="#444"/>`;
+      break;
+    case "mamen":
+      hair="#5d3920"; body="#9c1839";
+      extra += `<path d="M20,${small?20:26} q35,-14 70,0 v${small?18:26} q-11,-8 -48,0z" fill="#5d3920"/>`;
+      break;
+    case "custom_male":
+      hair="#222"; body="#31517a";
+      break;
+    case "custom_female":
+      hair="#6a2744"; body="#7b2044";
+      break;
   }
+  const cls = small ? "avatarSmall" : "avatarSvg";
+  return `<svg class="${cls}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="55" cy="${small?88:130}" rx="${small?24:34}" ry="${small?12:16}" fill="${body}" stroke="#000" stroke-width="4"/>
+    <rect x="${small?31:21}" y="${small?72:106}" width="${small?48:68}" height="${small?18:24}" rx="12" fill="${body}" stroke="#000" stroke-width="4"/>
+    <ellipse cx="55" cy="${small?40:58}" rx="${small?26:38}" ry="${small?26:38}" fill="${skin}" stroke="#000" stroke-width="5"/>
+    ${scarf}
+    <path d="M23,${small?18:24} q32,-10 64,0 v${small?12:18} h-64z" fill="${hair}"/>
+    ${extra}
+    <circle cx="41" cy="${small?38:56}" r="${small?4:6}" fill="#000"/>
+    <circle cx="69" cy="${small?38:56}" r="${small?4:6}" fill="#000"/>
+    ${glasses}
+    <ellipse cx="55" cy="${small?49:70}" rx="${small?4:6}" ry="${small?7:10}" fill="#d79974"/>
+    <path d="M43,${small?60:86} q12,${small?8:10} 24,0" fill="none" stroke="#5b1d1d" stroke-width="4" stroke-linecap="round"/>
+    ${beard}
+    ${tie}
+  </svg>`;
+}
 
-  function randomItem(arr){
-    return arr[Math.floor(Math.random()*arr.length)];
+function fillAudience(id, n){
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  for(let i=0;i<n;i++){
+    const p = document.createElement("div");
+    p.className = "person";
+    p.innerHTML = `<div class="head"></div><div class="torso"></div>`;
+    el.appendChild(p);
   }
+}
+function applause(id){
+  const el = document.getElementById(id);
+  el.classList.add("applause");
+  setTimeout(()=>el.classList.remove("applause"),2200);
+}
 
-  function refreshSoundText(){
-    const txt = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
-    document.getElementById("toggleSoundBtn").textContent = txt;
-    document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
+function getCustoms(){ return JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]"); }
+function saveCustoms(v){ localStorage.setItem(CUSTOM_KEY, JSON.stringify(v)); }
+function loadContestants(){
+  contestants = [...baseContestants, ...getCustoms()];
+  const box = document.getElementById("contestantList");
+  box.innerHTML = "";
+  contestants.forEach(c=>{
+    const d = document.createElement("div");
+    d.className = "contestant";
+    const style = c.style==="custom" ? (c.gender==="female" ? "custom_female" : "custom_male") : c.style;
+    d.innerHTML = `
+      <div>${svgAvatar(style, true)}</div>
+      <div class="contestantText"><strong>${c.name}</strong><span>${c.subtitle||"Concursante"}</span></div>
+    `;
+    d.onclick = ()=>{ currentContestant = c; startGame(); };
+    box.appendChild(d);
+  });
+}
+function renderFixedAvatars(){
+  document.getElementById("hostHomeAvatar").innerHTML = svgAvatar("jeremias", false);
+  document.getElementById("hostGameAvatar").innerHTML = svgAvatar("jeremias", false);
+}
+function renderPlayerAvatar(){
+  const style = currentContestant.style==="custom"
+    ? (currentContestant.gender==="female" ? "custom_female" : "custom_male")
+    : currentContestant.style;
+  document.getElementById("playerGameAvatar").innerHTML = svgAvatar(style, false);
+  document.getElementById("contestantNameGame").textContent = currentContestant.name;
+}
+
+function bellTone(){
+  if(!soundOn) return;
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    [523.25,659.25,783.99].forEach((f,i)=>{
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = f;
+      g.gain.setValueAtTime(0.001, now + i*0.12);
+      g.gain.exponentialRampToValueAtTime(0.07, now + i*0.12 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i*0.12 + 0.9);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(now + i*0.12); osc.stop(now + i*0.12 + 0.95);
+    });
+  }catch(e){}
+}
+function startBellLoop(){
+  stopBellLoop();
+  bellInterval = setInterval(bellTone, 18000);
+}
+function stopBellLoop(){
+  if(bellInterval){ clearInterval(bellInterval); bellInterval = null; }
+}
+function updateBellContext(){
+  const pre = ["homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen","dailyScreen","totalScreen","rulesScreen","settingsScreen"]
+    .some(id => !document.getElementById(id).classList.contains("hidden"));
+  if(pre && soundOn) startBellLoop(); else stopBellLoop();
+}
+function speak(text, rate, pitch, callback){
+  if(!("speechSynthesis" in window)){
+    if(callback) callback();
+    return;
   }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "es-ES";
+  u.rate = rate;
+  u.pitch = pitch;
+  u.onend = ()=>callback && callback();
+  u.onerror = ()=>callback && callback();
+  window.speechSynthesis.speak(u);
+}
 
-  function updateScore(){
-    document.getElementById("hitsValue").textContent = hits;
-    document.getElementById("pointsValue").textContent = points;
-    document.getElementById("failsValue").textContent = fails;
+function showScreen(id){
+  ["homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen","dailyScreen","totalScreen","rulesScreen","settingsScreen","gameScreen","resultScreen"]
+    .forEach(s=>document.getElementById(s).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  updateBellContext();
+  window.scrollTo(0,0);
+}
+function refreshSoundUI(){
+  document.getElementById("toggleSoundBtn").textContent = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
+  document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
+}
+function updateScore(){
+  document.getElementById("hitsValue").textContent = hits;
+  document.getElementById("pointsValue").textContent = points;
+  document.getElementById("failsValue").textContent = fails;
+}
+function updateTimer(){ document.getElementById("timerValue").textContent = timer + "s"; }
+
+function pickWrongOptions(correct, pool){
+  const options = pool.filter(x=>x!==correct);
+  const out = [];
+  while(out.length < 2 && options.length){
+    const idx = Math.floor(Math.random()*options.length);
+    out.push(options.splice(idx,1)[0]);
   }
-
-  function renderQuestion(){
-    const q = questions[currentQuestionIndex % questions.length];
-    document.getElementById("roundValue").textContent = "Ronda " + (currentQuestionIndex + 1) + "/40";
-    document.getElementById("questionText").textContent = q.q;
-    document.getElementById("answer0").textContent = "A) " + q.a[0];
-    document.getElementById("answer1").textContent = "B) " + q.a[1];
-    document.getElementById("answer2").textContent = "C) " + q.a[2];
-    document.getElementById("contestantNameGame").textContent = currentContestant || "Concursante";
-    timer = 15;
-    document.getElementById("timerValue").textContent = timer + "s";
+  return out;
+}
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
   }
+  return a;
+}
+function buildQuestions(){
+  const qs = [];
 
-  function startTimer(){
-    clearInterval(timerInterval);
-    timerInterval = setInterval(()=>{
-      timer--;
-      document.getElementById("timerValue").textContent = timer + "s";
-      if(timer <= 0){
-        clearInterval(timerInterval);
-        processAnswer(-1);
-      }
-    },1000);
+  categoryFacts.forEach(f=>{
+    qs.push({q:f[0], a:[f[1],f[2],f[3]], c:0});
+  });
+
+  factBank.forEach(f=>{
+    qs.push({q:f[0], a:[f[1],f[2],f[3]], c:0});
+  });
+
+  const cities = clubs.map(x=>x.city);
+  clubs.forEach(c=>{
+    const wrong = pickWrongOptions(c.city, cities);
+    qs.push({q:`¿Qué ciudad corresponde al club ${c.club}?`, a:[c.city, wrong[0], wrong[1]], c:0});
+  });
+
+  const competitions = ["Liga ACB / Liga Endesa","1ª FEB","2ª FEB","Copa del Rey","Supercopa"];
+  [
+    ["¿Qué competición fue durante muchos años la gran referencia profesional del baloncesto español?","Liga ACB / Liga Endesa"],
+    ["¿Qué categoría sustituyó en nombre a la antigua LEB Oro?","1ª FEB"],
+    ["¿Qué categoría sustituyó en nombre a la antigua LEB Plata?","2ª FEB"],
+    ["¿Qué torneo reúne a los mejores equipos ACB a mitad de temporada?","Copa del Rey"],
+    ["¿Qué torneo abre muchas temporadas entre campeones o aspirantes destacados?","Supercopa"]
+  ].forEach(item=>{
+    const wrong = pickWrongOptions(item[1], competitions);
+    qs.push({q:item[0], a:[item[1], wrong[0], wrong[1]], c:0});
+  });
+
+  const manual = shuffle(qs);
+  const out = [];
+  while(out.length < QUESTIONS_PER_GAME){
+    out.push(...shuffle(manual));
   }
+  return out.slice(0, QUESTIONS_PER_GAME).map(q=>{
+    const originalCorrect = q.a[q.c];
+    const shuffled = shuffle(q.a);
+    return {q:q.q, a:shuffled, c:shuffled.indexOf(originalCorrect)};
+  });
+}
 
-  function startGame(){
-    currentQuestionIndex = 0;
-    points = 0;
-    hits = 0;
-    fails = 0;
-    updateScore();
-    document.getElementById("hostLine").textContent = "Padre Jeremías: Bienvenido, hijo mío.";
-    document.getElementById("playerLine").textContent = currentContestant + ": Hoy vengo bendecido.";
-    renderQuestion();
-    showScreen("gameScreen");
-    startTimer();
-  }
+function getContestantGood(){
+  if(currentContestant.style==="custom") return contestantGood.generic;
+  return contestantGood[currentContestant.id] || contestantGood.generic;
+}
+function getContestantBad(){
+  if(currentContestant.style==="custom") return contestantBad.generic;
+  return contestantBad[currentContestant.id] || contestantBad.generic;
+}
 
-  function nextQuestion(){
-    currentQuestionIndex++;
-    if(currentQuestionIndex >= 40){
+function resetAnswers(){
+  document.querySelectorAll(".answerBtn").forEach(b=>{
+    b.disabled = false;
+    b.classList.remove("correct","wrong");
+  });
+}
+function renderQuestion(){
+  answering = false;
+  resetAnswers();
+  const q = gameQuestions[currentQuestionIndex];
+  document.getElementById("roundValue").textContent = "Ronda " + (currentQuestionIndex+1) + "/" + QUESTIONS_PER_GAME;
+  document.getElementById("questionText").textContent = q.q;
+  document.getElementById("answer0").textContent = "A) " + q.a[0];
+  document.getElementById("answer1").textContent = "B) " + q.a[1];
+  document.getElementById("answer2").textContent = "C) " + q.a[2];
+  timer = TIME_PER_QUESTION;
+  updateTimer();
+}
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timer--;
+    updateTimer();
+    if(timer <= 0){
       clearInterval(timerInterval);
-      alert("Fin de la partida. Puntos: " + points);
-      showScreen("homeScreen");
-      return;
+      processAnswer(-1);
     }
-    renderQuestion();
-    startTimer();
-  }
-
-  function processAnswer(index){
-    clearInterval(timerInterval);
-    const q = questions[currentQuestionIndex % questions.length];
-    if(index === q.c){
-      points += 2;
-      hits += 1;
-      document.getElementById("hostLine").textContent = randomItem(hostGood);
-    }else{
-      points -= 1;
-      fails += 1;
-      document.getElementById("hostLine").textContent = randomItem(hostBad);
-    }
-    document.getElementById("playerLine").textContent = randomItem(playerLines).replace("Concursante", currentContestant || "Concursante");
-    updateScore();
-    setTimeout(nextQuestion, 1800);
-  }
-
-  function saveGame(){
-    const data = {
-      currentContestant,currentUser,currentQuestionIndex,points,hits,fails,timer
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-    alert("Partida guardada");
-  }
-
-  function loadGame(){
-    const raw = localStorage.getItem(SAVE_KEY);
-    if(!raw){
-      alert("No hay partida guardada");
-      return;
-    }
-    const data = JSON.parse(raw);
-    currentContestant = data.currentContestant || "";
-    currentUser = data.currentUser || "";
-    currentQuestionIndex = data.currentQuestionIndex || 0;
-    points = data.points || 0;
-    hits = data.hits || 0;
-    fails = data.fails || 0;
-    timer = data.timer || 15;
-    updateScore();
-    renderQuestion();
-    document.getElementById("timerValue").textContent = timer + "s";
-    showScreen("gameScreen");
-    clearInterval(timerInterval);
-    timerInterval = setInterval(()=>{
-      timer--;
-      document.getElementById("timerValue").textContent = timer + "s";
-      if(timer <= 0){
-        clearInterval(timerInterval);
-        processAnswer(-1);
-      }
-    },1000);
-    document.getElementById("pauseLayer").classList.add("hidden");
-  }
-
-  document.getElementById("enterBtn").onclick = () => showScreen("userScreen");
-  document.getElementById("dailyBtn").onclick = () => showScreen("dailyScreen");
-  document.getElementById("totalBtn").onclick = () => showScreen("totalScreen");
-  document.getElementById("rulesBtn").onclick = () => showScreen("rulesScreen");
-  document.getElementById("settingsBtn").onclick = () => showScreen("settingsScreen");
-
-  document.getElementById("continueUserBtn").onclick = () => {
-    currentUser = document.getElementById("userName").value.trim() || "Pacho";
-    document.getElementById("helloName").textContent = "Hola " + currentUser;
-    showScreen("chooseScreen");
-  };
-
-  document.getElementById("chooseContestantBtn").onclick = () => showScreen("listScreen");
-  document.getElementById("createContestantBtn").onclick = () => showScreen("createContestantScreen");
-  document.getElementById("backChooseBtn").onclick = () => showScreen("chooseScreen");
-  document.getElementById("backFromCreatorBtn").onclick = () => showScreen("chooseScreen");
-  document.getElementById("backDailyBtn").onclick = () => showScreen("homeScreen");
-  document.getElementById("backTotalBtn").onclick = () => showScreen("homeScreen");
-  document.getElementById("backRulesBtn").onclick = () => showScreen("homeScreen");
-  document.getElementById("backSettingsBtn").onclick = () => showScreen("homeScreen");
-
-  document.querySelectorAll("[data-back]").forEach(a=>{
-    a.onclick = (e)=>{
-      e.preventDefault();
-      showScreen(a.dataset.back);
-    };
-  });
-
-  document.querySelectorAll(".contestant").forEach(item=>{
-    item.onclick = ()=>{
-      currentContestant = item.dataset.contestant;
-      startGame();
-    };
-  });
-
-  document.getElementById("answer0").onclick = ()=>processAnswer(0);
-  document.getElementById("answer1").onclick = ()=>processAnswer(1);
-  document.getElementById("answer2").onclick = ()=>processAnswer(2);
-
-  document.getElementById("pauseBtn").onclick = ()=>{
-    clearInterval(timerInterval);
-    document.getElementById("pauseLayer").classList.remove("hidden");
-  };
-
-  document.getElementById("resumeBtn").onclick = ()=>{
-    document.getElementById("pauseLayer").classList.add("hidden");
-    startTimer();
-  };
-
-  document.getElementById("saveBtn").onclick = saveGame;
-  document.getElementById("loadBtn").onclick = loadGame;
-
-  document.getElementById("newGameBtn").onclick = ()=>{
-    document.getElementById("pauseLayer").classList.add("hidden");
-    startGame();
-  };
-
-  document.getElementById("exitGameBtn").onclick = ()=>{
-    clearInterval(timerInterval);
-    document.getElementById("pauseLayer").classList.add("hidden");
-    showScreen("homeScreen");
-  };
-
-  document.getElementById("lockBtn").onclick = () => {
-    document.getElementById("pinModal").classList.remove("hidden");
-  };
-  document.getElementById("closeOwnerBtn").onclick = () => {
-    document.getElementById("pinModal").classList.add("hidden");
-  };
-  document.getElementById("openOwnerBtn").onclick = () => {
-    const pin = document.getElementById("ownerPin").value.trim();
-    if(pin === "1010"){
-      document.getElementById("pinModal").classList.add("hidden");
-      document.getElementById("ownerPanel").classList.remove("hidden");
-    } else {
-      alert("Clave incorrecta");
-    }
-  };
-  document.getElementById("closeOwnerPanelBtn").onclick = () => {
-    document.getElementById("ownerPanel").classList.add("hidden");
-  };
-
-  document.getElementById("toggleSoundBtn").onclick = () => {
-    soundOn = !soundOn;
-    refreshSoundText();
-  };
-
-  document.getElementById("soundBtn").onclick = () => {
-    soundOn = !soundOn;
-    refreshSoundText();
-  };
-
-  refreshSoundText();
+  },1000);
+}
+function startGame(){
+  gameQuestions = buildQuestions();
+  currentQuestionIndex = 0;
+  points = 0;
+  hits = 0;
+  fails = 0;
   updateScore();
+  renderPlayerAvatar();
+  renderQuestion();
+  document.getElementById("hostLine").textContent = "Padre Jeremías: Bienvenido, hijo mío.";
+  document.getElementById("playerLine").textContent = `${currentContestant.name}: Hoy vengo bendecido.`;
+  showScreen("gameScreen");
+  startTimer();
+}
+function nextQuestion(){
+  currentQuestionIndex++;
+  if(currentQuestionIndex >= QUESTIONS_PER_GAME){
+    endGame();
+    return;
+  }
+  renderQuestion();
+  startTimer();
+}
+function processAnswer(index){
+  if(answering) return;
+  answering = true;
+  clearInterval(timerInterval);
+
+  const q = gameQuestions[currentQuestionIndex];
+  const btns = [
+    document.getElementById("answer0"),
+    document.getElementById("answer1"),
+    document.getElementById("answer2")
+  ];
+  btns.forEach(b=>b.disabled = true);
+  btns[q.c].classList.add("correct");
+
+  let hostText = "";
+  let playerText = "";
+
+  if(index === q.c){
+    points += 2;
+    hits += 1;
+    if(index >= 0) btns[index].classList.add("correct");
+    hostText = rand(hostGood);
+    playerText = rand(getContestantGood()).replace("Concursante", currentContestant.name);
+    applause("duelAudience");
+    applause("homeAudience");
+  }else{
+    points -= 1;
+    fails += 1;
+    if(index >= 0) btns[index].classList.add("wrong");
+    hostText = rand(hostBad);
+    playerText = rand(getContestantBad()).replace("Concursante", currentContestant.name);
+  }
+
+  updateScore();
+  document.getElementById("hostLine").textContent = hostText;
+  document.getElementById("playerLine").textContent = playerText;
+
+  setTimeout(()=>{
+    speak(hostText, host.rate, host.pitch, ()=>{
+      setTimeout(()=>{
+        speak(playerText, currentContestant.rate, currentContestant.pitch, ()=>{
+          setTimeout(nextQuestion, 1700);
+        });
+      }, 500);
+    });
+  }, 450);
+}
+
+function rankAdd(username, contestantName, score){
+  const dayKey = RANK_DAY_KEY + todayKey();
+  const day = JSON.parse(localStorage.getItem(dayKey)||"[]");
+  const total = JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]");
+
+  function merge(list){
+    const idx = list.findIndex(x=>x.username===username);
+    if(idx >= 0){
+      list[idx].score += score;
+      list[idx].contestantName = contestantName;
+    }else{
+      list.push({username, contestantName, score});
+    }
+    list.sort((a,b)=>b.score-a.score);
+    return list.slice(0,20);
+  }
+
+  localStorage.setItem(dayKey, JSON.stringify(merge(day)));
+  localStorage.setItem(RANK_TOTAL_KEY, JSON.stringify(merge(total)));
+}
+function renderRanking(boxId, data){
+  const box = document.getElementById(boxId);
+  if(!data.length){
+    box.innerHTML = "Aún no hay puntuaciones.";
+    return;
+  }
+  box.innerHTML = data.map((x,i)=>
+    `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.08)">
+      <div><strong>#${i+1} ${x.username}</strong><br><span style="font-size:12px;color:#62709b">${x.contestantName}</span></div>
+      <div style="font-size:22px;font-weight:900;color:#2947ac">${x.score}</div>
+    </div>`
+  ).join("");
+}
+function refreshRankings(){
+  renderRanking("dailyRankingBox", JSON.parse(localStorage.getItem(RANK_DAY_KEY + todayKey())||"[]"));
+  renderRanking("totalRankingBox", JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]"));
+}
+
+function saveGame(){
+  const payload = {
+    currentUser,currentContestant,gameQuestions,currentQuestionIndex,points,hits,fails,timer
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+  alert("Partida guardada");
+}
+function loadGame(){
+  const raw = localStorage.getItem(SAVE_KEY);
+  if(!raw){ alert("No hay partida guardada"); return; }
+  const d = JSON.parse(raw);
+  currentUser = d.currentUser || "";
+  currentContestant = d.currentContestant || contestants[0];
+  gameQuestions = d.gameQuestions || buildQuestions();
+  currentQuestionIndex = d.currentQuestionIndex || 0;
+  points = d.points || 0;
+  hits = d.hits || 0;
+  fails = d.fails || 0;
+  timer = d.timer || TIME_PER_QUESTION;
+  updateScore();
+  renderPlayerAvatar();
+  renderQuestion();
+  timer = d.timer || TIME_PER_QUESTION;
+  updateTimer();
+  document.getElementById("hostLine").textContent = "Padre Jeremías: Partida cargada, hijo mío.";
+  document.getElementById("playerLine").textContent = `${currentContestant.name}: Seguimos donde lo dejamos.`;
+  showScreen("gameScreen");
+  document.getElementById("pauseLayer").classList.add("hidden");
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timer--;
+    updateTimer();
+    if(timer <= 0){
+      clearInterval(timerInterval);
+      processAnswer(-1);
+    }
+  },1000);
+}
+function endGame(){
+  clearInterval(timerInterval);
+  rankAdd(currentUser || "INVITADO", currentContestant.name, points);
+  refreshRankings();
+  document.getElementById("finalPoints").textContent = points;
+  document.getElementById("finalSummary").innerHTML =
+    `<strong>${currentUser || "INVITADO"}</strong> con <strong>${currentContestant.name}</strong><br>Aciertos: ${hits}<br>Fallos/Pecados: ${fails}`;
+  if(hits === QUESTIONS_PER_GAME) document.getElementById("holyPrize").classList.remove("hidden");
+  else document.getElementById("holyPrize").classList.add("hidden");
+  showScreen("resultScreen");
+}
+
+document.getElementById("enterBtn").onclick = ()=>{ bellTone(); showScreen("userScreen"); };
+document.getElementById("dailyBtn").onclick = ()=>{ refreshRankings(); bellTone(); showScreen("dailyScreen"); };
+document.getElementById("totalBtn").onclick = ()=>{ refreshRankings(); bellTone(); showScreen("totalScreen"); };
+document.getElementById("rulesBtn").onclick = ()=>{ bellTone(); showScreen("rulesScreen"); };
+document.getElementById("settingsBtn").onclick = ()=>{ bellTone(); showScreen("settingsScreen"); };
+
+document.getElementById("continueUserBtn").onclick = ()=>{
+  currentUser = document.getElementById("userName").value.trim() || "Pacho";
+  document.getElementById("helloName").textContent = "Hola " + currentUser;
+  bellTone();
+  showScreen("chooseScreen");
+};
+
+document.getElementById("chooseContestantBtn").onclick = ()=>showScreen("listScreen");
+document.getElementById("createContestantBtn").onclick = ()=>showScreen("createContestantScreen");
+document.getElementById("backChooseBtn").onclick = ()=>showScreen("chooseScreen");
+document.getElementById("backFromCreatorBtn").onclick = ()=>showScreen("chooseScreen");
+document.getElementById("backDailyBtn").onclick = ()=>showScreen("homeScreen");
+document.getElementById("backTotalBtn").onclick = ()=>showScreen("homeScreen");
+document.getElementById("backRulesBtn").onclick = ()=>showScreen("homeScreen");
+document.getElementById("backSettingsBtn").onclick = ()=>showScreen("homeScreen");
+document.querySelectorAll("[data-back]").forEach(a=>a.onclick=(e)=>{ e.preventDefault(); showScreen(a.dataset.back); });
+
+document.getElementById("saveCustomBtn").onclick = ()=>{
+  const name = document.getElementById("customName").value.trim();
+  const gender = document.getElementById("customGender").value;
+  const trait = document.getElementById("customTrait").value;
+  if(!name){ alert("Escribe un nombre"); return; }
+  const customs = getCustoms();
+  customs.push({
+    id:"custom_"+Date.now(),
+    name,
+    subtitle:trait,
+    style:"custom",
+    gender,
+    rate: gender==="female" ? 1.0 : .93,
+    pitch: gender==="female" ? 1.08 : .94
+  });
+  saveCustoms(customs);
+  loadContestants();
+  document.getElementById("customName").value = "";
+  alert("Concursante guardado");
+  showScreen("chooseScreen");
+};
+
+document.getElementById("lockBtn").onclick = ()=>{ bellTone(); document.getElementById("pinModal").classList.remove("hidden"); };
+document.getElementById("closeOwnerBtn").onclick = ()=>document.getElementById("pinModal").classList.add("hidden");
+document.getElementById("openOwnerBtn").onclick = ()=>{
+  const pin = document.getElementById("ownerPin").value.trim();
+  if(pin === OWNER_PIN){
+    document.getElementById("pinModal").classList.add("hidden");
+    document.getElementById("ownerPanel").classList.remove("hidden");
+  }else alert("Clave incorrecta");
+};
+document.getElementById("closeOwnerPanelBtn").onclick = ()=>document.getElementById("ownerPanel").classList.add("hidden");
+document.getElementById("editorBtn").onclick = ()=>alert("Pantalla preparada para futuras actualizaciones del juego.");
+document.getElementById("shareBtn").onclick = async ()=>{
+  const url = location.href;
+  const text = "Te envío La Catedral del Baloncesto Español.";
+  if(navigator.share){
+    try{ await navigator.share({title:"La Catedral del Baloncesto Español", text, url}); }catch(e){}
+  }else{
+    try{ await navigator.clipboard.writeText(url); alert("Enlace copiado para WhatsApp"); }
+    catch(e){ alert(url); }
+  }
+};
+
+document.getElementById("toggleSoundBtn").onclick = ()=>{
+  soundOn = !soundOn;
+  refreshSoundUI();
+  updateBellContext();
+};
+document.getElementById("soundBtn").onclick = ()=>{
+  soundOn = !soundOn;
+  refreshSoundUI();
+  updateBellContext();
+};
+
+document.getElementById("answer0").onclick = ()=>processAnswer(0);
+document.getElementById("answer1").onclick = ()=>processAnswer(1);
+document.getElementById("answer2").onclick = ()=>processAnswer(2);
+
+document.getElementById("pauseBtn").onclick = ()=>{
+  clearInterval(timerInterval);
+  document.getElementById("pauseLayer").classList.remove("hidden");
+};
+document.getElementById("resumeBtn").onclick = ()=>{
+  document.getElementById("pauseLayer").classList.add("hidden");
+  startTimer();
+};
+document.getElementById("saveBtn").onclick = saveGame;
+document.getElementById("loadBtn").onclick = loadGame;
+document.getElementById("newGameBtn").onclick = ()=>{
+  document.getElementById("pauseLayer").classList.add("hidden");
+  if(!currentContestant) currentContestant = contestants[0];
+  startGame();
+};
+document.getElementById("exitGameBtn").onclick = ()=>{
+  clearInterval(timerInterval);
+  document.getElementById("pauseLayer").classList.add("hidden");
   showScreen("homeScreen");
+};
+document.getElementById("resultNewBtn").onclick = ()=>{
+  if(!currentContestant) currentContestant = contestants[0];
+  startGame();
+};
+document.getElementById("resultHomeBtn").onclick = ()=>showScreen("homeScreen");
+
+fillAudience("homeAudience",8);
+fillAudience("duelAudience",6);
+renderFixedAvatars();
+loadContestants();
+refreshRankings();
+refreshSoundUI();
+showScreen("homeScreen");
+updateBellContext();
 </script>
 </body>
 </html>
