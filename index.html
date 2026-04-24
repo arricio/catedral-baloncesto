@@ -1,963 +1,705 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>La Catedral del Baloncesto Español</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>La Catedral del Baloncesto Leonés</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg1:#081633;--bg2:#0a1d49;--bg3:#061127;
-  --gold:#f0bc16;--goldD:#a86f00;
-  --blue:#2947ac;--blue2:#173f91;
-  --card:#ececf0;--ink:#12224f;
-  --green:#31b65a;--red:#d94444;
-  --shadow:0 10px 0 rgba(0,0,0,.28);
-}
-body{
-  margin:0;font-family:Arial,Helvetica,sans-serif;color:#fff;
-  background:
-    radial-gradient(circle at top, rgba(255,255,255,.06), transparent 22%),
-    linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 46%,var(--bg3) 100%);
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(#081633,#0a1d49,#061127);color:white}
 .hidden{display:none!important}
-.app{max-width:430px;min-height:100vh;margin:0 auto;padding:14px 12px 24px;position:relative;overflow:hidden}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.iconBtn{
-  width:52px;height:52px;border:none;border-radius:50%;cursor:pointer;
-  background:var(--gold);color:#21348a;font-size:24px;font-weight:900;box-shadow:0 7px 0 var(--goldD)
-}
-.titleBox{
-  background:var(--blue);border:5px solid var(--gold);border-radius:34px;padding:18px 14px;
-  text-align:center;box-shadow:var(--shadow);margin-bottom:14px
-}
-.titleBox h1{
-  margin:0;color:var(--gold);font-size:23px;line-height:1.14;font-style:italic;font-weight:900;text-transform:uppercase
-}
-.mainBtn{
-  width:100%;border:none;cursor:pointer;border-radius:34px;background:var(--gold);
-  color:#1e2d7a;font-size:34px;font-style:italic;font-weight:900;padding:18px 12px;
-  box-shadow:0 12px 0 var(--goldD);margin-bottom:14px
-}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.smallBtn{
-  border:none;cursor:pointer;border-radius:26px;min-height:92px;padding:10px;
-  font-size:16px;font-weight:900;text-transform:uppercase;line-height:1.12;box-shadow:0 9px 0 rgba(0,0,0,.28)
-}
-.b1{background:#49b8ef;color:#091538}.b2{background:#d8dbe4;color:#091538}.b3{background:#9e82f0;color:#fff}.b4{background:#d2d5dc;color:#091538}
-.card{background:var(--card);color:var(--ink);border-radius:30px;padding:18px 14px;box-shadow:var(--shadow)}
-.cardTitle{margin:0 0 14px;text-align:center;color:#2947ac;font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase}
-.actionBtn{
-  width:100%;border:none;border-radius:18px;padding:15px 12px;font-size:17px;font-weight:900;
-  text-transform:uppercase;cursor:pointer;margin-bottom:12px
-}
-.yellow{background:var(--gold);color:#1e2d7a}.blue{background:#2f64eb;color:#fff}.greenBtn{background:#19ad47;color:#fff}.redBtn{background:#db232c;color:#fff}.grey{background:#d6d8de;color:#12224f}
-input,select{
-  width:100%;min-height:58px;border:4px solid #000;border-radius:16px;padding:0 12px;
-  font-size:20px;text-align:center;margin-bottom:12px;background:#fff
-}
-.backLink{
-  display:block;text-align:center;margin-top:8px;color:#c8cdd9;font-weight:800;text-transform:uppercase;text-decoration:none
-}
-.note{background:rgba(0,0,0,.06);border-radius:16px;padding:12px;font-size:14px;font-weight:700;line-height:1.35}
-.stage{
-  position:relative;min-height:220px;border-radius:28px;padding:10px 10px 16px;margin-bottom:14px;overflow:hidden;
-  background:
-    linear-gradient(180deg, rgba(255,220,160,.12), rgba(0,0,0,.14)),
-    radial-gradient(circle at 50% 10%, rgba(255,255,255,.10), transparent 30%),
-    linear-gradient(180deg,#5b3b20 0%,#412614 100%);
-  box-shadow:var(--shadow)
-}
-.arch{
-  position:absolute;top:12px;width:96px;height:160px;background:linear-gradient(180deg,#0c245c,#173f91);
-  border:6px solid #7b5733;border-bottom-width:10px;border-radius:46px 46px 8px 8px
-}
-.arch:before{
-  content:"";position:absolute;inset:10px;border-radius:36px 36px 0 0;
-  background:
-    linear-gradient(90deg, transparent 47%, rgba(255,255,255,.28) 47% 53%, transparent 53%),
-    linear-gradient(180deg, transparent 47%, rgba(255,255,255,.28) 47% 53%, transparent 53%),
-    radial-gradient(circle at 50% 22%, #e15f5f 0 18%, transparent 18%),
-    radial-gradient(circle at 28% 58%, #f0bc16 0 17%, transparent 17%),
-    radial-gradient(circle at 72% 58%, #49b8ef 0 17%, transparent 17%)
-}
-.arch1{left:12px}.arch2{left:calc(50% - 48px)}.arch3{right:12px}
-.pew{position:absolute;height:16px;background:#6e4528;border-radius:10px;box-shadow:0 3px 0 rgba(0,0,0,.3)}
-.pew1{left:18px;right:18px;bottom:60px}.pew2{left:38px;right:38px;bottom:36px}.pew3{left:58px;right:58px;bottom:12px}
-.audience{
-  position:absolute;left:8px;right:8px;bottom:82px;display:flex;justify-content:space-evenly;align-items:flex-end;pointer-events:none
-}
-.person{width:18px;height:38px;position:relative;transform-origin:bottom center;animation:sway 3.4s ease-in-out infinite}
-.person:nth-child(odd){animation-duration:2.8s}.person:nth-child(3n){animation-duration:3.8s}
-.person .head{width:14px;height:14px;border-radius:50%;background:#efc69a;border:2px solid #000;margin:0 auto}
-.person .torso{width:18px;height:20px;border-radius:10px 10px 4px 4px;background:#394f76;border:2px solid #000;margin-top:-1px}
-.applause .person{animation:clap .45s ease-in-out 6 alternate}
-@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
-@keyframes clap{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-6px) rotate(5deg)}}
-.scoreGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:#000;padding:4px;border-radius:16px;margin-bottom:12px}
-.scoreBox{background:#111;border-radius:12px;text-align:center;padding:8px 4px}
-.scoreLabel{font-size:10px;font-weight:900;text-transform:uppercase;min-height:30px;line-height:1.15}
-.scoreValue{font-size:30px;font-weight:900}
-.greenTxt{color:#53e58d}.yellowTxt{color:var(--gold)}.redTxt{color:#ff5a64}
-.duelBox{
-  position:relative;overflow:hidden;border:5px solid #d5d9e5;border-radius:28px;padding:12px 10px 16px;
-  box-shadow:var(--shadow);margin-bottom:12px;
-  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.08)),linear-gradient(180deg,#7c5535,#5f3b20)
-}
-.duelBg{
-  position:absolute;inset:0;opacity:.28;pointer-events:none;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(255,255,255,.18), transparent 24%),
-    linear-gradient(90deg, transparent 14%, rgba(255,255,255,.08) 14% 16%, transparent 16% 32%, rgba(255,255,255,.08) 32% 34%, transparent 34% 50%, rgba(255,255,255,.08) 50% 52%, transparent 52% 68%, rgba(255,255,255,.08) 68% 70%, transparent 70% 86%, rgba(255,255,255,.08) 86% 88%, transparent 88%),
-    linear-gradient(180deg, transparent 0 68%, rgba(0,0,0,.25) 68%)
-}
-.duelAudience{position:absolute;left:10px;right:10px;bottom:18px;display:flex;justify-content:space-around;opacity:.8}
-.duelAudience .person{width:14px;height:32px}.duelAudience .person .head{width:10px;height:10px}.duelAudience .person .torso{width:14px;height:16px}
-.duelRow{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.duelName{text-align:center;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px}
-.questionCard{background:var(--card);color:var(--ink);border-radius:28px;padding:14px 12px;box-shadow:var(--shadow)}
-.timerPill{
-  width:150px;margin:0 auto 10px;text-align:center;background:var(--gold);color:#20307c;
-  font-weight:900;border-radius:30px;padding:10px 12px;font-size:22px
-}
-.roundTxt{text-align:center;font-size:12px;font-weight:900;color:#8d93a6;text-transform:uppercase;margin-bottom:8px}
-.questionTxt{
-  font-size:20px;font-weight:900;text-align:center;line-height:1.25;margin-bottom:14px;color:#20307c;
-  min-height:98px;display:flex;align-items:center;justify-content:center
-}
-.answerBtn{
-  width:100%;border:4px solid #000;border-radius:14px;padding:15px 12px;text-align:left;
-  font-size:17px;font-weight:900;color:#20307c;background:#fff;margin-bottom:10px;cursor:pointer;
-  transition:transform .08s ease, background .15s ease
-}
-.answerBtn:active{transform:scale(.99)}
-.answerBtn:disabled{opacity:1}
-.correct{background:var(--green)!important;color:#fff!important}
-.wrong{background:var(--red)!important;color:#fff!important}
-.infoBox{margin-top:12px;background:rgba(255,255,255,.10);border-radius:18px;padding:12px;font-size:14px;font-weight:700;line-height:1.35}
-.menuRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.pauseLayer,.modalBg{
-  position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:18px;z-index:90
-}
-.resultBig{font-size:56px;font-weight:900;color:var(--gold);margin:6px 0 10px}
-.creatorGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.list{display:flex;flex-direction:column;gap:12px}
-.contestant{
-  background:#ececf0;color:#12224f;border-radius:24px;padding:12px;display:flex;gap:12px;align-items:center;
-  box-shadow:0 8px 0 rgba(0,0,0,.28);cursor:pointer
-}
-.contestantText strong{display:block;font-size:16px;text-transform:uppercase}
-.contestantText span{font-size:12px;color:#7781a3;font-weight:700;text-transform:uppercase}
-svg.avatarSvg{width:110px;height:146px;display:block;margin:0 auto}
-svg.avatarSmall{width:74px;height:100px;display:block}
-.finalImage{font-size:98px;line-height:1;margin:8px 0}
-.finalMessage{font-size:24px;font-weight:900;color:#20307c;text-transform:uppercase;line-height:1.2}
+.app{max-width:430px;margin:auto;min-height:100vh;padding:14px}
+button{cursor:pointer}
+.title{background:#2947ac;border:5px solid #f0bc16;border-radius:30px;padding:16px;text-align:center;box-shadow:0 10px 0 #0006;margin-bottom:14px}
+.title h1{margin:0;color:#f0bc16;font-size:24px;font-style:italic}
+.mainBtn{width:100%;border:0;border-radius:30px;background:#f0bc16;color:#1e2d7a;font-size:34px;font-weight:900;padding:18px;box-shadow:0 10px 0 #a86f00;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.menuBtn{border:0;border-radius:22px;min-height:86px;font-size:16px;font-weight:900;text-transform:uppercase;box-shadow:0 8px 0 #0005}
+.b1{background:#49b8ef}.b2{background:#ddd}.b3{background:#9e82f0;color:white}.b4{background:#ddd}
+.card{background:#ececf0;color:#12224f;border-radius:26px;padding:16px;box-shadow:0 10px 0 #0006}
+.card h2{text-align:center;color:#2947ac;margin-top:0}
+input,select{width:100%;min-height:56px;border:4px solid #000;border-radius:14px;text-align:center;font-size:20px;margin-bottom:12px}
+.action{width:100%;border:0;border-radius:18px;padding:15px;font-size:17px;font-weight:900;margin-bottom:10px}
+.yellow{background:#f0bc16;color:#1e2d7a}.grey{background:#d6d8de;color:#12224f}.red{background:#d94444;color:white}.green{background:#19ad47;color:white}.blue{background:#2f64eb;color:white}
+.back{display:block;text-align:center;color:white;font-weight:900;margin-top:12px;text-decoration:none}
+.stage{height:220px;border-radius:28px;background:linear-gradient(#7b4c2b,#3c2414);box-shadow:0 10px 0 #0006;position:relative;overflow:hidden;margin-bottom:14px}
+.arch{position:absolute;top:12px;width:95px;height:150px;background:#173f91;border:6px solid #7b5733;border-radius:45px 45px 8px 8px}
+.a1{left:10px}.a2{left:calc(50% - 48px)}.a3{right:10px}
+.pew{position:absolute;height:16px;background:#6e4528;border-radius:10px;left:25px;right:25px}
+.p1{bottom:60px}.p2{bottom:35px}.p3{bottom:12px}
+.audience{position:absolute;left:8px;right:8px;bottom:82px;display:flex;justify-content:space-around}
+.person{width:18px;height:38px;animation:sway 3s infinite ease-in-out;transform-origin:bottom}
+.head{width:14px;height:14px;border-radius:50%;background:#efc69a;border:2px solid #000;margin:auto}
+.body{width:18px;height:20px;background:#394f76;border:2px solid #000;border-radius:8px}
+.applause .person{animation:clap .4s 6 alternate}
+@keyframes sway{50%{transform:rotate(3deg)}}@keyframes clap{100%{transform:translateY(-6px) rotate(6deg)}}
+.score{display:grid;grid-template-columns:1fr 1fr 1fr;background:#000;padding:4px;border-radius:14px;gap:4px;margin-bottom:12px}
+.score div{background:#111;border-radius:10px;text-align:center;padding:8px 4px;font-weight:900}
+.score span{display:block;font-size:30px}
+.duel{background:linear-gradient(#7c5535,#5f3b20);border:5px solid #d5d9e5;border-radius:26px;padding:12px;margin-bottom:12px;box-shadow:0 10px 0 #0006}
+.duelRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.name{text-align:center;font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:4px}
+.avatar{font-size:76px;text-align:center}
+.qcard{background:#ececf0;color:#12224f;border-radius:26px;padding:14px;box-shadow:0 10px 0 #0006}
+.timer{background:#f0bc16;color:#20307c;font-weight:900;border-radius:25px;width:140px;margin:auto auto 10px;padding:10px;text-align:center;font-size:22px}
+.round{text-align:center;font-size:12px;color:#777;font-weight:900;margin-bottom:8px}
+.question{min-height:104px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:20px;font-weight:900;line-height:1.25;margin-bottom:12px}
+.answer{width:100%;border:4px solid #000;border-radius:14px;background:white;color:#20307c;text-align:left;padding:15px;font-size:17px;font-weight:900;margin-bottom:10px}
+.answer:disabled{opacity:1}
+.correct{background:#31b65a!important;color:white!important}.wrong{background:#d94444!important;color:white!important}
+.info{background:#ffffff18;border-radius:16px;padding:12px;font-weight:700;margin-top:12px}
+.finalImg{font-size:92px;text-align:center}.finalText{text-align:center;font-size:24px;font-weight:900;color:#20307c}
+.modalBg,.pauseLayer{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:18px;z-index:99}
+.resultBig{text-align:center;font-size:54px;font-weight:900;color:#f0bc16}
+.note{background:#0001;border-radius:14px;padding:12px;font-weight:700}
+.listItem{margin-bottom:12px;display:flex;align-items:center;gap:12px}
 </style>
 </head>
+
 <body>
 <div class="app">
 
-<section id="homeScreen">
-  <div class="topbar">
-    <button class="iconBtn" id="soundBtn">🔔</button>
-    <button class="iconBtn" id="lockBtn">🔒</button>
+<section id="home">
+  <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+    <button class="action yellow" id="soundBtn" style="width:64px">🔔</button>
+    <button class="action yellow" id="lockBtn" style="width:64px">🔒</button>
   </div>
-  <div class="titleBox"><h1>La Catedral del Baloncesto Español</h1></div>
+  <div class="title"><h1>La Catedral del Baloncesto Leonés</h1></div>
   <div class="stage">
-    <div class="arch arch1"></div><div class="arch arch2"></div><div class="arch arch3"></div>
-    <div class="pew pew1"></div><div class="pew pew2"></div><div class="pew pew3"></div>
-    <div class="audience" id="homeAudience"></div>
-    <div style="position:relative;z-index:2;display:flex;justify-content:center;align-items:flex-end;height:100%;padding-top:34px" id="hostHomeAvatar"></div>
+    <div class="arch a1"></div><div class="arch a2"></div><div class="arch a3"></div>
+    <div class="pew p1"></div><div class="pew p2"></div><div class="pew p3"></div>
+    <div class="audience" id="aud1"></div>
+    <div style="position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:78px">⛪👨‍🦲</div>
   </div>
-  <button class="mainBtn" id="enterBtn">¡ENTRAR!</button>
-  <div class="grid2">
-    <button class="smallBtn b1" id="dailyBtn">Clasificación diaria</button>
-    <button class="smallBtn b2" id="totalBtn">Clasificación total</button>
-    <button class="smallBtn b3" id="rulesBtn">Instrucciones</button>
-    <button class="smallBtn b4" id="settingsBtn">Ajustes</button>
+  <button class="mainBtn" id="enter">¡ENTRAR!</button>
+  <div class="grid">
+    <button class="menuBtn b1" id="daily">Clasificación diaria</button>
+    <button class="menuBtn b2" id="total">Clasificación total</button>
+    <button class="menuBtn b3" id="rules">Instrucciones</button>
+    <button class="menuBtn b4" id="settings">Ajustes</button>
   </div>
 </section>
 
-<section id="userScreen" class="hidden">
+<section id="user" class="hidden">
   <div class="card">
-    <h2 class="cardTitle">Crear usuario</h2>
-    <input id="userName" type="text" placeholder="Tu nombre">
-    <button class="actionBtn yellow" id="continueUserBtn">Continuar</button>
+    <h2>Crear usuario</h2>
+    <input id="userName" placeholder="Tu nombre">
+    <button class="action yellow" id="continueBtn">Continuar</button>
   </div>
-  <a class="backLink" href="#" data-back="homeScreen">Volver</a>
+  <a class="back" data-go="home">Volver</a>
 </section>
 
-<section id="chooseScreen" class="hidden">
-  <div class="titleBox" style="padding:18px 16px;"><h1 id="helloName">Hola</h1></div>
-  <button class="actionBtn grey" id="chooseContestantBtn">Elegir concursante</button>
-  <button class="actionBtn grey" id="createContestantBtn">Creador de concursante</button>
-  <a class="backLink" href="#" data-back="userScreen">Atrás</a>
+<section id="choose" class="hidden">
+  <div class="title"><h1 id="hello">Hola</h1></div>
+  <button class="action grey" id="choosePlayer">Elegir concursante</button>
+  <button class="action grey" id="createPlayer">Crear concursante</button>
+  <a class="back" data-go="user">Atrás</a>
 </section>
 
-<section id="listScreen" class="hidden">
-  <div class="titleBox" style="padding:18px 16px;"><h1>¿Quién confiesa hoy?</h1></div>
-  <div class="list" id="contestantList"></div>
-  <button class="actionBtn redBtn" style="margin-top:18px;" id="backChooseBtn">Volver atrás</button>
+<section id="players" class="hidden">
+  <div class="title"><h1>Elige concursante</h1></div>
+  <div id="playerList"></div>
+  <button class="action red" data-go="choose">Volver</button>
 </section>
 
-<section id="createContestantScreen" class="hidden">
+<section id="creator" class="hidden">
   <div class="card">
-    <h2 class="cardTitle">Creador de concursante</h2>
-    <input id="customName" type="text" placeholder="Nombre del concursante">
-    <div class="creatorGrid">
-      <select id="customGender">
-        <option value="male">Hombre</option>
-        <option value="female">Mujer</option>
-      </select>
-      <select id="customTrait">
-        <option value="vacilon">Vacilón</option>
-        <option value="mandona">Mandona</option>
-        <option value="borrachin">Borrachín</option>
-        <option value="hablador">Hablador</option>
-      </select>
-    </div>
-    <div class="note" style="margin:12px 0;">Aquí puedes crear un concursante caricaturesco sin foto. Se guardará en este móvil.</div>
-    <button class="actionBtn yellow" id="saveCustomBtn">Guardar concursante</button>
-    <button class="actionBtn grey" id="backFromCreatorBtn">Volver</button>
+    <h2>Creador de concursante</h2>
+    <input id="customName" placeholder="Nombre">
+    <select id="customGender"><option value="male">Hombre</option><option value="female">Mujer</option></select>
+    <button class="action yellow" id="saveCustom">Guardar</button>
+    <button class="action grey" data-go="choose">Volver</button>
   </div>
 </section>
 
 <section id="dailyScreen" class="hidden">
-  <div class="card">
-    <h2 class="cardTitle">Clasificación diaria</h2>
-    <div id="dailyRankingBox" class="note">Aún no hay puntuaciones.</div>
-    <button class="actionBtn grey" id="backDailyBtn">Volver</button>
-  </div>
+  <div class="card"><h2>Clasificación diaria</h2><div id="dailyBox"></div><button class="action grey" data-go="home">Volver</button></div>
 </section>
 
 <section id="totalScreen" class="hidden">
-  <div class="card">
-    <h2 class="cardTitle">Clasificación total</h2>
-    <div id="totalRankingBox" class="note">Aún no hay puntuaciones.</div>
-    <button class="actionBtn grey" id="backTotalBtn">Volver</button>
-  </div>
+  <div class="card"><h2>Clasificación total</h2><div id="totalBox"></div><button class="action grey" data-go="home">Volver</button></div>
 </section>
 
 <section id="rulesScreen" class="hidden">
   <div class="card">
-    <h2 class="cardTitle">Instrucciones del juego</h2>
-    <div class="note">
-      40 preguntas por partida.<br>
-      15 segundos por pregunta.<br>
-      Solo preguntas de Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto.<br>
-      Las 3 primeras preguntas son fáciles y luego sube la dificultad cada 3.<br>
-      Si aciertas las 40, ganas AGUA BENDITA.<br>
-      Si fallas alguna, sale el BURRO.
-    </div>
-    <button class="actionBtn grey" id="backRulesBtn">Volver</button>
+    <h2>Instrucciones</h2>
+    <p>40 preguntas por partida. Solo baloncesto leonés. Las 3 primeras preguntas son fáciles y después sube bastante la dificultad. Las preguntas salen mezcladas por temas.</p>
+    <button class="action grey" data-go="home">Volver</button>
   </div>
 </section>
 
 <section id="settingsScreen" class="hidden">
-  <div class="card">
-    <h2 class="cardTitle">Ajustes</h2>
-    <button class="actionBtn yellow" id="toggleSoundBtn">Sonido de campanas: ON</button>
-    <button class="actionBtn grey" id="backSettingsBtn">Volver</button>
-  </div>
+  <div class="card"><h2>Ajustes</h2><button class="action yellow" id="toggleSound">Sonido: ON</button><button class="action grey" data-go="home">Volver</button></div>
 </section>
 
-<section id="gameScreen" class="hidden">
-  <div class="scoreGrid">
-    <div class="scoreBox"><div class="scoreLabel greenTxt">Aciertos</div><div class="scoreValue greenTxt" id="hitsValue">0</div></div>
-    <div class="scoreBox"><div class="scoreLabel yellowTxt">Puntos</div><div class="scoreValue yellowTxt" id="pointsValue">0</div></div>
-    <div class="scoreBox"><div class="scoreLabel redTxt">Fallos</div><div class="scoreValue redTxt" id="failsValue">0</div></div>
+<section id="game" class="hidden">
+  <div class="score">
+    <div>Aciertos<span id="hits">0</span></div>
+    <div>Puntos<span id="points">0</span></div>
+    <div>Fallos<span id="fails">0</span></div>
   </div>
 
-  <div class="duelBox">
-    <div class="duelBg"></div>
-    <div class="duelAudience" id="duelAudience"></div>
+  <div class="duel">
     <div class="duelRow">
-      <div><div class="duelName">Padre Jeremías</div><div id="hostGameAvatar"></div></div>
-      <div><div class="duelName" id="contestantNameGame">Concursante</div><div id="playerGameAvatar"></div></div>
+      <div><div class="name">Padre Jeremías</div><div class="avatar">👨‍🦲</div></div>
+      <div><div class="name" id="playerName">Concursante</div><div class="avatar" id="playerAvatar">🏀</div></div>
     </div>
   </div>
 
-  <div class="questionCard">
-    <div class="timerPill" id="timerValue">15s</div>
-    <div class="roundTxt" id="roundValue">Ronda 1/40</div>
-    <div class="questionTxt" id="questionText">Pregunta</div>
-    <button class="answerBtn" id="answer0"></button>
-    <button class="answerBtn" id="answer1"></button>
-    <button class="answerBtn" id="answer2"></button>
+  <div class="qcard">
+    <div class="timer" id="timer">15s</div>
+    <div class="round" id="round">Ronda 1/40</div>
+    <div class="question" id="question"></div>
+    <button class="answer" id="a0"></button>
+    <button class="answer" id="a1"></button>
+    <button class="answer" id="a2"></button>
   </div>
 
-  <div class="infoBox">
+  <div class="info">
     <div id="hostLine">Bienvenido, hijo mío.</div>
-    <div style="margin-top:8px" id="playerLine">Hoy vengo bendecido.</div>
+    <div id="playerLine" style="margin-top:8px">Hoy vengo bendecido.</div>
   </div>
 
-  <div class="menuRow">
-    <button class="actionBtn grey" id="pauseBtn" style="margin:0;">Pausa</button>
-    <button class="actionBtn yellow" id="saveBtn" style="margin:0;">Guardar</button>
+  <div class="grid" style="margin-top:12px">
+    <button class="action grey" id="pause">Pausa</button>
+    <button class="action yellow" id="saveGameBtn">Guardar</button>
   </div>
 </section>
 
-<section id="resultScreen" class="hidden">
+<section id="result" class="hidden">
   <div class="card">
-    <h2 class="cardTitle">Final de partida</h2>
+    <h2>Final de partida</h2>
     <div class="resultBig" id="finalPoints">0</div>
-    <div id="finalVisual" class="finalImage">🐴</div>
-    <div id="finalVisualText" class="finalMessage">ERES UN BURRO</div>
-    <div class="note" id="finalSummary"></div>
-    <button class="actionBtn yellow" id="resultNewBtn">Nueva partida</button>
-    <button class="actionBtn grey" id="resultHomeBtn">Volver al inicio</button>
+    <div class="finalImg" id="finalImg">🐴</div>
+    <div class="finalText" id="finalText">ERES UN BURRO</div>
+    <div class="note" id="summary"></div>
+    <button class="action yellow" id="again">Nueva partida</button>
+    <button class="action grey" data-go="home">Inicio</button>
   </div>
 </section>
 
 </div>
 
 <div class="modalBg hidden" id="pinModal">
-  <div class="card" style="width:100%;max-width:360px;">
-    <h2 class="cardTitle">Clave dueño</h2>
-    <input id="ownerPin" type="password" placeholder="">
-    <button class="actionBtn yellow" id="openOwnerBtn">Abrir</button>
-    <button class="actionBtn redBtn" id="closeOwnerBtn">Cerrar</button>
+  <div class="card" style="max-width:360px;width:100%">
+    <h2>Clave dueño</h2>
+    <input id="pin" type="password">
+    <button class="action yellow" id="openOwner">Abrir</button>
+    <button class="action red" id="closePin">Cerrar</button>
   </div>
 </div>
 
-<div class="modalBg hidden" id="ownerPanel">
-  <div class="card" style="width:100%;max-width:360px;">
-    <h2 class="cardTitle">Sacristía</h2>
-    <button class="actionBtn blue" id="editorBtn">Editor y actualizador</button>
-    <button class="actionBtn greenBtn" id="shareBtn">Compartir WhatsApp</button>
-    <button class="actionBtn grey" id="closeOwnerPanelBtn">Volver</button>
+<div class="modalBg hidden" id="owner">
+  <div class="card" style="max-width:360px;width:100%">
+    <h2>Sacristía</h2>
+    <button class="action blue" id="editorBtn">Editor preparado</button>
+    <button class="action green" id="share">Compartir</button>
+    <button class="action grey" id="closeOwner">Volver</button>
   </div>
 </div>
 
-<div class="pauseLayer hidden" id="pauseLayer">
-  <div class="card" style="width:100%;max-width:360px;">
-    <h2 class="cardTitle">Menú de partida</h2>
-    <button class="actionBtn yellow" id="resumeBtn">Seguir jugando</button>
-    <button class="actionBtn blue" id="loadBtn">Cargar partida</button>
-    <button class="actionBtn greenBtn" id="newGameBtn">Nueva partida</button>
-    <button class="actionBtn redBtn" id="exitGameBtn">Salir del juego</button>
+<div class="pauseLayer hidden" id="pauseMenu">
+  <div class="card" style="max-width:360px;width:100%">
+    <h2>Pausa</h2>
+    <button class="action yellow" id="resume">Seguir</button>
+    <button class="action blue" id="loadGameBtn">Cargar</button>
+    <button class="action green" id="newGame">Nueva partida</button>
+    <button class="action red" id="exitGame">Salir</button>
   </div>
 </div>
 
 <script>
-const OWNER_PIN = "1010";
-const SAVE_KEY = "catedral_partida_guardada_leon_3";
-const CUSTOM_KEY = "catedral_custom_contestants_leon_3";
-const RANK_DAY_KEY = "catedral_rank_day_leon_3_";
-const RANK_TOTAL_KEY = "catedral_rank_total_leon_3";
 const QUESTIONS_PER_GAME = 40;
 const TIME_PER_QUESTION = 15;
+const OWNER_PIN = "1010";
+const SAVE_KEY = "catedral_leonesa_save_v7";
+const CUSTOM_KEY = "catedral_leonesa_custom_v7";
+const RANK_DAY = "catedral_leonesa_day_v7_";
+const RANK_TOTAL = "catedral_leonesa_total_v7";
 
-const host = {id:"jeremias",name:"Padre Jeremías",style:"jeremias",gender:"male",rate:.82,pitch:.82,voiceIndex:0};
-
-const baseContestants = [
-  {id:"nazario",name:"El Nazario",subtitle:"El Mujeriego",style:"nazario",gender:"male",rate:.96,pitch:.94,voiceIndex:1},
-  {id:"praxedes",name:"Tía Praxedes",subtitle:"La Gana Carreras",style:"praxedes",gender:"female",rate:.85,pitch:1.08,voiceIndex:2},
-  {id:"tijeras",name:"Tijeras",subtitle:"El Borrachín",style:"tijeras",gender:"male",rate:.80,pitch:.88,voiceIndex:3},
-  {id:"nachon",name:"Nachón el Taxis",subtitle:"El Taxis",style:"nachon",gender:"male",rate:1.03,pitch:.98,voiceIndex:4},
-  {id:"chonona",name:"Chonona",subtitle:"La Mata Pollos",style:"chonona",gender:"female",rate:.95,pitch:1.05,voiceIndex:5},
-  {id:"antonino",name:"Antonino",subtitle:"El Gominolo",style:"antonino",gender:"male",rate:.91,pitch:.96,voiceIndex:6},
-  {id:"alvarino",name:"Alvariño",subtitle:"El Frutas",style:"alvarino",gender:"male",rate:1.04,pitch:1.02,voiceIndex:7},
-  {id:"arricio",name:"Arricio",subtitle:"El Calores",style:"arricio",gender:"male",rate:.97,pitch:.92,voiceIndex:8},
-  {id:"felixon",name:"Félixon",subtitle:"El Ejecutivo",style:"felixon",gender:"male",rate:.88,pitch:.90,voiceIndex:9},
-  {id:"mamen",name:"Mamen",subtitle:"La Presidenta",style:"mamen",gender:"female",rate:.99,pitch:1.10,voiceIndex:10}
-];
-
-const QUESTION_BANK = [
-  ["¿En qué ciudad jugaron Elosúa León, Baloncesto León y Cultural Leonesa de Baloncesto?","León","Burgos","Valladolid",1],
-  ["¿Qué palabra comparten Elosúa León y Baloncesto León?","León","Copa","NBA",1],
-  ["¿Qué palabra comparten Baloncesto León y Cultural Leonesa de Baloncesto?","León/Leonesa","Murcia","Andorra",1],
-
-  ["¿Qué nombre de patrocinio quieres usar para el equipo leonés en las temporadas ACB de principios de los 90?","Elosúa León","Baloncesto León","Reino de León",1],
-  ["¿Qué equipo leonés quedó 6.º en la ACB 1991-92 usando la denominación de patrocinio?","Elosúa León","Cultural Leonesa de Baloncesto","Basket León",2],
-  ["¿Qué equipo leonés quedó 6.º en la ACB 1992-93 usando la denominación de patrocinio?","Elosúa León","Baloncesto León 2011-12","Reino de León",2],
-
-  ["¿Qué equipo leonés logró el ascenso a la ACB en la temporada 1989-90?","Elosúa León","Cultural Leonesa de Baloncesto","Reino de León",2],
-  ["¿Qué equipo leonés jugó la Copa Korać en los 90?","Elosúa León","Cultural Leonesa de Baloncesto","Basket León 2022",2],
-  ["¿Qué equipo leonés ganó la Copa Príncipe en 2007?","Baloncesto León","Elosúa León","Cultural Leonesa de Baloncesto",2],
-
-  ["¿Qué equipo leonés ganó la Copa Castilla y León en 2003?","Baloncesto León","Elosúa León","Cultural Leonesa de Baloncesto",2],
-  ["¿Qué equipo leonés descendió de la ACB en 1999-00?","Baloncesto León","Cultural Leonesa de Baloncesto","Elosúa León 1989-90",2],
-  ["¿Qué equipo leonés jugó en el Palacio de los Deportes de León?","Baloncesto León","Joventut","CB Murcia",2],
-
-  ["¿Qué entrenador estuvo históricamente muy ligado al club leonés?","Gustavo Aranzana","Pablo Laso","Aíto García Reneses",3],
-  ["¿Qué entrenador asumió el equipo leonés a mitad de la temporada 1988-89?","Gustavo Aranzana","Pedro Martínez","Joan Plaza",3],
-  ["¿Qué entrenador figura en la etapa 1997-1999 del club leonés?","Eduard Torres","Pepu Hernández","Moncho Fernández",3],
-
-  ["¿Qué entrenador figura en la etapa 2002-03 del club leonés?","Quino Salvo","Chus Mateo","Sergio Scariolo",3],
-  ["¿Qué entrenador figura en la etapa 2003-05 del club leonés?","Ángel Jareño","Dusko Ivanovic","Pablo Laso",3],
-  ["¿Qué entrenador figura en la etapa 2008-12 del club leonés?","Javier de Grado","Joan Peñarroya","Luis Casimiro",3],
-
-  ["¿Qué jugador del ejemplo corregido fue campeón de la NBA y jugó en León?","REGINALD JOHNSON","LAMONT BARNES","FEDERICO COPES",3],
-  ["¿Con qué nombre aparece Reggie Johnson en la etapa 1991-95 en España?","Elosúa León","Valencia Basket","Bilbao Basket",3],
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Essie Hollis","Rudy Fernández","Sergio Rodríguez",3],
-
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Xavi Fernández","Ricky Rubio","Carlos Jiménez",3],
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Corny Thompson","Marc Gasol","Felipe Reyes",3],
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Óscar Yebra","Juan Carlos Navarro","Rafa Martínez",3],
-
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Paolo Quinteros","Sergio Llull","Pablo Prigioni",4],
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Amal McCaskill","Joe Arlauckas","Jaycee Carroll",4],
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","J.R. Reid","Nacho Azofra","Carlos Suárez",4],
-
-  ["¿Qué jugador aparece entre los nombres destacados del club leonés?","Byron Houston","Rafa Jofresa","Sergi Vidal",4],
-  ["¿Qué técnico dirigió al club leonés en su segunda gran etapa desde 2005?","Gustavo Aranzana","Luis Castillo","Ettore Messina",4],
-  ["¿Qué temporada acabó 1.º en Segunda División y ascendió el club leonés?","1985-86","1994-95","2007-08",4],
-
-  ["¿Qué temporada acabó 2.º en Primera B y ascendió el club leonés?","1989-90","1998-99","2003-04",4],
-  ["¿Qué temporada acabó 20.º en la ACB el club leonés recién ascendido?","1990-91","1996-97","2007-08",4],
-  ["¿Qué temporada acabó 9.º el club leonés en ACB?","1994-95","1991-92","1987-88",4],
-
-  ["¿Qué temporada acabó 12.º el club leonés en ACB?","1995-96","1992-93","2000-01",4],
-  ["¿Qué temporada acabó 11.º el club leonés en ACB con Eduard Torres?","1997-98","1989-90","2006-07",4],
-  ["¿Qué temporada acabó 16.º el club leonés en ACB?","1998-99","1991-92","2007-08",4],
-
-  ["¿Qué sección presentó oficialmente la Cultural en junio de 2022?","La sección de baloncesto","La sección de béisbol","La sección de hockey",2],
-  ["¿Qué clubes sénior aglutinó la Cultural en su nueva sección de baloncesto?","Basket León y Reino de León","Baloncesto León y Joventut","Elosúa León y Unicaja",3],
-  ["¿En qué categoría salió esa temporada la Cultural en baloncesto?","Liga EBA","Liga ACB","2ª FEB",3],
-
-  ["¿Qué club quedó como vinculado en la estructura presentada por la Cultural en 2022?","Reino de León","Real Madrid","Breogán",3],
-  ["¿Qué entrenador se cita en la noticia de presentación de la sección de baloncesto de la Cultural?","Luis Castillo","Gustavo Aranzana","Joan Plaza",4],
-  ["¿Qué objetivo competitivo se menciona en esa presentación para el equipo en EBA?","Subir a LEB Plata","Ganar la NBA","Jugar la Euroliga",4],
-
-  ["¿Qué entidad aparece como apoyo en la creación de la sección de baloncesto de la Cultural?","Aspire","FIBA Europa","NBA Academy",4],
-  ["¿Qué color vistió la primera temporada la nueva sección de baloncesto de la Cultural?","Blanco","Verde","Azul",4],
-  ["¿Qué ciudad quería recuperar ‘días de gloria’ de baloncesto según la presentación de 2022?","León","Sevilla","Málaga",4],
-
-  ["¿Cuál de estos nombres corresponde al proyecto actual vinculado a la Cultural?","Cultural Leonesa de Baloncesto","Elosúa León ACB","Caja León Endesa",4],
-  ["¿Qué club histórico desapareció oficialmente en 2012?","Club Baloncesto León","Cultural Leonesa de Baloncesto","Reino de León",5],
-  ["¿Qué año de desaparición del Club Baloncesto León recoge la referencia histórica?","2012","2007","1999",5],
-
-  ["¿Qué puesto fue el mejor techo ACB del equipo leonés en los 90?","6.º","2.º","10.º",5],
-  ["¿Qué competición europea alcanzó el equipo leonés además de la liga ACB?","Copa Korać","Euroliga","EuroCup",5],
-  ["¿Qué temporada logró el ascenso que abrió la etapa ACB?","1989-90","1985-86","2006-07",5],
-
-  ["¿Qué club leonés se asocia a la Copa Príncipe de 2007 y al ascenso de ese ciclo?","Baloncesto León","Cultural Leonesa de Baloncesto","Reino de León",5],
-  ["¿Qué denominación quieres que se use en preguntas históricas de inicios de los 90?","Elosúa León","Solo Baloncesto León","Solo Cultural",5]
-];
-
-let contestants = [];
-let currentUser = "";
-let currentContestant = null;
-let gameQuestions = [];
-let currentQuestionIndex = 0;
-let points = 0;
+let soundOn = true;
+let user = "";
+let player = null;
+let questions = [];
+let idx = 0;
+let score = 0;
 let hits = 0;
 let fails = 0;
-let timer = TIME_PER_QUESTION;
-let timerInterval = null;
-let answering = false;
-let soundOn = true;
-let bellInterval = null;
+let time = TIME_PER_QUESTION;
+let timerInt = null;
+let blocked = false;
 
-const hostGood = [
-  "¡Aleluya! Esa ha entrado limpia.",
-  "¡Canasta celestial!",
-  "¡Muy bien, hijo mío!",
-  "¡Milagro baloncestístico!",
-  "¡Eso ha sido bendición pura!",
-  "¡Qué buena respuesta!",
-  "¡Perfecta, criatura!",
-  "¡Así se responde en esta catedral!"
+const contestants = [
+  {id:"nazario",name:"El Nazario",avatar:"🎩",rate:.96,pitch:.94},
+  {id:"praxedes",name:"Tía Praxedes",avatar:"👵",rate:.86,pitch:1.08},
+  {id:"tijeras",name:"Tijeras",avatar:"🍷",rate:.82,pitch:.88},
+  {id:"nachon",name:"Nachón el Taxis",avatar:"🚕",rate:1.03,pitch:.98},
+  {id:"chonona",name:"Chonona",avatar:"👩",rate:.95,pitch:1.06},
+  {id:"antonino",name:"Antonino",avatar:"🧔",rate:.91,pitch:.96},
+  {id:"alvarino",name:"Alvariño",avatar:"🍎",rate:1.04,pitch:1.02},
+  {id:"arricio",name:"Arricio",avatar:"😎",rate:.97,pitch:.92},
+  {id:"felixon",name:"Félixon",avatar:"👔",rate:.88,pitch:.90},
+  {id:"mamen",name:"Mamen",avatar:"👩‍💼",rate:.99,pitch:1.10}
 ];
-const hostBad = [
-  "¡Eso ha sido un pecado baloncestístico!",
-  "¡No era esa!",
-  "¡Se ha torcido la respuesta!",
-  "¡Madre del amor hermoso!",
-  "¡Esa se fue al limbo!",
-  "¡Has fallado, hijo mío!",
-  "¡Ni con agua bendita entraba!",
-  "¡Eso ha dolido en el campanario!"
-];
-const contestantGood = {
-  generic:["Hoy vengo sembrado.","Eso estaba cantado.","Voy muy fino.","Seguimos acertando.","Así sí.","Otra para dentro."],
-  nazario:["Ya lo sabía.","Estoy lanzado.","Hoy no perdono una.","Eso lo llevaba yo puesto.","Voy con el sombrero enchufado."],
-  praxedes:["Eso lo sabía yo antes.","Aquí mando yo.","Normal que acierte.","Otra más para la jefa.","Esto estaba clarísimo."],
-  tijeras:["La sabía perfectamente.","Hoy vengo inspirado.","Otra dentro.","No me distrae nada.","Voy recto al acierto."],
-  nachon:["Esto lo llevaba en ruta.","Otra bien metida.","Voy tan lanzado que ni el GPS me sigue.","Me conozco esta parada.","Seguimos bien encaminados."],
-  chonona:["Ya está.","Otra para mí.","Que aplaudan.","Aquí se viene acertado.","Voy mandando."],
-  antonino:["Sin hacer ruido, pero acertando.","Suave y dentro.","Eso estaba preparado.","Vamos bien.","Otra elegante."],
-  alvarino:["Esto entra solo.","Estoy repartiendo aciertos.","Otra madura.","Voy fresco.","Qué bien sale cuando sale."],
-  arricio:["Con calor o sin calor, dentro.","Otra acertada.","Estoy fino.","Eso va para dentro.","Seguimos vivos."],
-  felixon:["Correcto.","Todo bajo control.","Gestión impecable.","Seguimos en línea.","Eso estaba auditado."],
-  mamen:["Lo tenía previsto.","Orden y acierto.","Otra correcta.","Esto entra en el plan.","Se sigue mandando."]
-};
-const contestantBad = {
-  generic:["Se me fue.","Bueno, una mala la tiene cualquiera.","La buena era la otra.","Se me cruzó.","Luego remonto.","No pasa nada."],
-  nazario:["Me distraje.","La buena era la otra.","Esto me pasa por elegante.","No se puede estar a todo.","Se me fue la mirada."],
-  praxedes:["Esa estaba mal puesta.","No he fallado yo, falló la pregunta.","No pasa nada.","Ahora remonto.","Que nadie se crezca."],
-  tijeras:["Se me escapó.","La tenía ahí.","Esto con otra vuelta entra.","La buena se evaporó.","No pasa nada."],
-  nachon:["Tomé la salida mala.","Iba bien y me desvié.","Esto con otra rotonda sale.","Me pilló en hora punta.","Ajustamos ruta."],
-  chonona:["No me ha gustado esa.","Bueno, una mala.","Ahora arranco.","No pasa nada.","La próxima entra."],
-  antonino:["Se me fue en silencio.","No pasa nada.","La correcta se escapó.","Volvemos con calma.","Ajusto y sigo."],
-  alvarino:["La cogí verde.","Se me mezclaron las cajas.","No estaba madura.","La buena quedó al lado.","Luego entra."],
-  arricio:["Con este calor se derriten.","Necesito sombra.","La buena se me pegó.","No pasa nada.","Sigo en pie."],
-  felixon:["Fallo de ejecución.","Anotado.","Se corrige.","No cunda el pánico.","Seguimos."],
-  mamen:["Lo reconduzco.","No pasa nada.","Se ajusta y listo.","Plan B.","Ahora sí."]
-};
 
-function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
-function todayKey(){
-  const d = new Date();
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const USER_QUESTIONS = [
+["¿DE QUÉ PEÑA ES MAMEN PRESIDENTA?","PEÑA MAREA ROJA","PEÑA EL TAMBOR","PEÑA CULTUBASKET",2,"peñas"],
+["¿EN QUÉ TEMPORADA ASCENDIÓ A LA LIGA EBA EL CB SAN ANDRÉS?","2017/2018","2002/2003","2023/2024",3,"competiciones"],
+["¿QUÉ JUGADOR DEL ELOSÚA LEÓN PARTICIPÓ EN UNAS OLIMPIADAS?","XAVI FERNÁNDEZ","JOSINES GONZÁLEZ","SAMUEL PUENTE",3,"jugadores"],
+["¿EN QUÉ EQUIPO NO HA JUGADO MIGUEL DOMÍNGUEZ?","VALENCIA BASKET","AGUSTINOS ERAS","CB SAN ANDRÉS",4,"jugadores"],
+["¿EN QUÉ EQUIPO HA JUGADO DIDAC CEBOLLA EN LA TEMPORADA 2025/2026?","CULTURAL LEONESA BALONCESTO","OBRADOIRO","SUPER AGROPAL PALENCIA",4,"jugadores"],
+["¿CUÁL ES EL PRESIDENTE DE LA CULTURAL LEONESA DE BALONCESTO?","ALEJANDRO CABAÑEROS","MIGUEL ÁNGEL RODRÍGUEZ","ADRIÁN ÁLVAREZ",3,"directiva"],
+["¿CUÁL FUE EL PRIMER JUGADOR AMERICANO DEL ELOSÚA LEÓN?","ESSIE HOLLIS","RAYMOND BROWN","HAROLD PRESSLEY",4,"jugadores"],
+["¿QUÉ MEDALLA GANÓ JULIO GONZÁLEZ CON LA SELECCIÓN ESPAÑOLA JÚNIOR?","ORO","OJALATA","PLATA",3,"jugadores"],
+["¿EN QUÉ AÑO DESAPARECIÓ EL CB LEÓN?","2012","1990","2011",2,"historia"],
+["¿EN QUÉ LIGA JUGABA EL CB SAN ANDRÉS EN LA TEMPORADA 2017/2018?","1ª NACIONAL","AUTONÓMICA","LEB ORO",3,"competiciones"],
+["¿CUÁL FUE ENTRENADOR DEL CB AGUSTINOS ERAS?","FÉLIX ALONSO","JOSÉ LUIS OLIETE","ALEXIS ÁLVAREZ",3,"entrenadores"],
+["¿A QUÉ EQUIPO ELIMINÓ LA CULTURAL LEONESA DE BALONCESTO EN EL PLAYOFF 2024/2025?","BENICARLÓ","FIBWI PALMA MALLORCA","CÁCERES",4,"hitos"],
+["¿CUÁNTAS COPAS PRÍNCIPE GANÓ EL CB LEÓN?","1","0","3",2,"competiciones"],
+["¿CUÁL ES EL DELEGADO DE EQUIPO DE LA CULTURAL LEONESA DE BALONCESTO?","ÓSCAR PAREDES","RICARDO GARCÍA","ÁLVARO LLAMAZARES",3,"staff"],
+["¿EN QUÉ AÑO SE CREÓ EL CB LEÓN?","1981","1978","1987",2,"historia"],
+["¿CUÁNTAS TEMPORADAS JUGÓ ROGER FÁBREGA EN LA CULTURAL LEONESA DE BALONCESTO?","2","4","1",3,"jugadores"],
+["¿QUÉ JUGADOR CANADIENSE JUGÓ EN EL ELOSÚA LEÓN?","GERALD FRANCIS KAZANOWSKI","BILL WENNINGTON","JAMAL MURRAY",4,"jugadores"],
+["¿CUÁNTAS TEMPORADAS HA ESTADO PACHO DE DELEGADO DE EQUIPO?","DIECIOCHO","CINCO","CERO",3,"staff"],
+["¿DE QUÉ EQUIPO VINO XAVI FERNÁNDEZ PARA JUGAR EN EL ELOSÚA LEÓN?","SANTA COLOMA","FERRIS LLIRIA","ASKATUAK",4,"jugadores"],
+["¿EN QUÉ EQUIPO JUGÓ BERTHOLD ELUKU LA TEMPORADA 2024/2025?","CULTURAL LEONESA DE BALONCESTO","CÁCERES","CLAVIJO",3,"jugadores"],
+["¿QUÉ ENTRENADOR ASCENDIÓ AL ELOSÚA LEÓN A LA ACB?","GUSTAVO ARANZANA","FÉLIX ALONSO","EDU TORRES",3,"entrenadores"],
+["¿QUÉ ENTRENADOR ESTUVO EN LA TEMPORADA 2017/2018 EN EL CB SAN ANDRÉS?","ADRIÁN RODRÍGUEZ","DIEGO CUESTA","JOSÉ CARLOS GONZÁLEZ",3,"entrenadores"],
+["¿CUÁL HA SIDO EL ÚLTIMO PRESIDENTE DEL CB LEÓN?","JOAQUÍN RODRÍGUEZ","JOSECHO PARDO","PEPE ESTRADA",4,"directiva"],
+["¿QUIÉN FUE ENTRENADOR DEL CB AGUSTINOS ERAS EN LA TEMPORADA 2014/2015?","ANDRÉS RODRÍGUEZ","JOSÉ SANTOVENIA","DIEGO MATEOS",4,"entrenadores"],
+["¿EN QUÉ AÑO SE CREÓ EL CB REINO DE LEÓN?","2018","2011","2015",3,"historia"],
+["¿QUÉ JUGADOR FICHÓ LA CULTURAL LEONESA DE BALONCESTO PROCEDENTE DEL CB SANT ANTONI EN 2025/2026?","JAIME LLAMAS","ADRIÁN DOMÍNGUEZ","ALBERTO CABRERA",4,"jugadores"],
+["¿CUÁL ES EL ÚLTIMO JUGADOR QUE FICHÓ LA CULTURAL LEONESA DE BALONCESTO EN LA TEMPORADA 2025/2026?","ABOUBACAR TRAORÉ","MAJOK DENG","DIDAC CEBOLLA",4,"jugadores"],
+["¿EN QUÉ TEMPORADA SE CREÓ LA PEÑA CULTUBASKET?","2023/2024","2022/2023","2024/2025",2,"peñas"],
+["¿QUIÉN CREÓ EL LOGOTIPO DE LA PEÑA CULTUBASKET?","FER","KAP","PACHO",3,"peñas"],
+["¿EN QUÉ PABELLÓN ASCENDIÓ LA CULTURAL LEONESA DE BALONCESTO A 2ª FEB?","PABELLÓN MUNICIPAL DE GANDÍA","PABELLÓN ROIG ARENA VALENCIA","PABELLÓN MULTIUSOS DE CÁCERES",3,"hitos"],
+["¿QUIÉN ES EL ENCARGADO DE LOS VOLUNTARIOS DE LA CULTURAL LEONESA DE BALONCESTO?","JOSÉ FÉLIX","GERMÁN","PACHO",3,"staff"],
+["¿CUÁNTOS PARTIDOS LE GANÓ EN LA TEMPORADA 2017/2018 CB SAN ANDRÉS A CB TORMES?","5","1","2",5,"hitos"],
+["¿EN QUÉ EQUIPO JUGÓ HÉCTOR DE PRADA?","CB SAN ANDRÉS","CB LEÓN","SDP PONFERRADA",3,"jugadores"],
+["¿QUÉ JUGADOR AMERICANO ASCENDIÓ A LA ACB CON EL ELOSÚA LEÓN?","CHEROKEE RHONE","JOE WALLACE","ESSIE HOLLIS",4,"jugadores"],
+["¿QUÉ JUGADOR SE LE CONOCE COMO EL HELICÓPTERO?","ESSIE HOLLIS","HARPER WILLIAMS","HAROLD PRESSLEY",3,"jugadores"],
+["¿QUÉ JUGADOR DE URUGUAY JUGÓ EN EL CB LEÓN?","MARCELO CAPALBO","TUKY BULFONI","MARTÍN LEIVA",4,"jugadores"],
+["¿QUÉ BASE ALICANTINO JUGÓ EN EL CB LEÓN?","JUANJO BERNABÉ","PEPE LLORENTE","JOSÉ LUIS GALILEA",4,"jugadores"],
+["¿QUIÉN ES EL ENCARGADO DE LAS REDES SOCIALES DE LA CULTURAL LEONESA DE BALONCESTO?","VÍCTOR","RAÚL QUIJADA","DANI GARCÍA",3,"staff"],
+["¿QUIÉN ES EL FOTÓGRAFO OFICIAL DE LA CULTURAL LEONESA DE BALONCESTO?","RAÚL QUIJADA","VÍCTOR","PACHO",3,"staff"],
+["¿QUÉ CAPACIDAD DE ESPECTADORES TIENE EL PALACIO DE LOS DEPORTES URBANO GONZÁLEZ?","5188","5187","5189",3,"pabellon"],
+["¿QUÉ JUGADOR DEL ELOSÚA LEÓN METIÓ 3 TIROS LIBRES EN ANDORRA EN EL PLAYOFF 1989/1990?","XAVI FERNÁNDEZ","ESSIE HOLLIS","ROBERTO HERRERAS",4,"hitos"],
+["¿QUÉ JUGADOR QUE FUE CAMPEÓN DE LA NBA JUGÓ EN LEÓN?","REGINALD JOHNSON","LAMONT BARNES","FEDERICO COPES",4,"jugadores"]
+];
+
+const GENERATED_BASE = [
+["¿QUÉ EQUIPO LEONÉS LOGRÓ EL ASCENSO A LA ACB EN LA TEMPORADA 1989/1990?","ELOSÚA LEÓN","CB SAN ANDRÉS","CB REINO DE LEÓN",2,"hitos"],
+["¿QUÉ EQUIPO LEONÉS JUGÓ LA COPA KORAĆ EN LOS AÑOS 90?","ELOSÚA LEÓN","CB AGUSTINOS ERAS","CULTURAL LEONESA BALONCESTO",3,"competiciones"],
+["¿QUÉ EQUIPO LEONÉS GANÓ LA COPA PRÍNCIPE EN 2007?","CB LEÓN","CB SAN ANDRÉS","CB REINO DE LEÓN",2,"competiciones"],
+["¿QUÉ EQUIPO LEONÉS DESAPARECIÓ EN 2012?","CB LEÓN","CB AGUSTINOS ERAS","CB SAN ANDRÉS",2,"historia"],
+["¿QUÉ EQUIPO LEONÉS ESTÁ RELACIONADO CON EL COLEGIO AGUSTINOS?","CB AGUSTINOS ERAS","ELOSÚA LEÓN","VALENCIA BASKET",2,"equipos"],
+["¿QUÉ EQUIPO ESTÁ RELACIONADO CON SAN ANDRÉS DEL RABANEDO?","CB SAN ANDRÉS","REAL MADRID","UNICAJA",2,"equipos"],
+["¿QUÉ EQUIPO ESTÁ RELACIONADO CON EL PROYECTO REINO DE LEÓN?","CB REINO DE LEÓN","JOVENTUT","BASKONIA",2,"equipos"],
+["¿QUÉ CLUB LEONÉS ACTUAL ASCENDIÓ A 2ª FEB?","CULTURAL LEONESA DE BALONCESTO","CB LEÓN","ELOSÚA LEÓN",3,"hitos"]
+];
+
+const TEAMS = ["ELOSÚA LEÓN","CB LEÓN","BALONCESTO LEÓN","CULTURAL LEONESA DE BALONCESTO","CB AGUSTINOS ERAS","CB REINO DE LEÓN","CB SAN ANDRÉS"];
+const PLAYERS = ["XAVI FERNÁNDEZ","ESSIE HOLLIS","REGINALD JOHNSON","CHEROKEE RHONE","GERALD FRANCIS KAZANOWSKI","CORNIE THOMPSON","ÓSCAR YEBRA","PAOLO QUINTEROS","AMAL MCCASKILL","J.R. REID","BYRON HOUSTON","MARCELO CAPALBO","JUANJO BERNABÉ","HÉCTOR DE PRADA","DIDAC CEBOLLA","BERTHOLD ELUKU","JAIME LLAMAS","ABOUBACAR TRAORÉ","ROGER FÁBREGA","MIGUEL DOMÍNGUEZ"];
+const COACHES = ["GUSTAVO ARANZANA","EDU TORRES","QUINO SALVO","ÁNGEL JAREÑO","JAVIER DE GRADO","FÉLIX ALONSO","ANDRÉS RODRÍGUEZ","ADRIÁN RODRÍGUEZ","LUIS CASTILLO"];
+const WRONG_PLAYERS = ["LAMONT BARNES","FEDERICO COPES","RICKY RUBIO","PAU GASOL","SERGIO LLULL","MARC GASOL","HAROLD PRESSLEY","HARPER WILLIAMS","ROBERTO HERRERAS","JOSINES GONZÁLEZ","SAMUEL PUENTE","TUKY BULFONI","MARTÍN LEIVA","PEPE LLORENTE","JOSÉ LUIS GALILEA"];
+const WRONG_TEAMS = ["VALENCIA BASKET","OBRADOIRO","SUPER AGROPAL PALENCIA","CÁCERES","CLAVIJO","BENICARLÓ","FIBWI PALMA MALLORCA","UNICAJA","BASKONIA","REAL MADRID","JOVENTUT","CB TORMES"];
+
+const hostGood = ["¡Aleluya, canasta celestial!","¡Respuesta bendecida!","¡Eso ha entrado limpio!","¡Muy bien, hijo mío!","¡Milagro en la pintura!","¡Triple de fe!","¡El aro ha escuchado tus plegarias!","¡Así se responde en la Catedral!","¡El campanario aplaude!","¡Respuesta de playoff!","¡Eso merece agua bendita!","¡Has clavado la respuesta!"];
+const hostBad = ["¡Pecado baloncestístico!","¡No era esa, criatura!","¡Esa se fue al limbo!","¡Ha dolido en el campanario!","¡Ni con prórroga entraba!","¡Respuesta fuera de banda!","¡Reza dos tiros libres!","¡Se torció el ataque!","¡Eso fue pérdida de balón!","¡Ay, hijo mío, fallaste!","¡El aro la escupió!","¡Eso necesita confesión!"];
+const goodLines = ["Lo tenía clarísimo.","Vamos, otra para dentro.","Hoy vengo fino.","Seguimos acertando.","Esto lo sabía de memoria.","Estoy en racha.","Otra canasta.","No me tiembla la mano.","Esto es puro baloncesto leonés.","Vamos a por la siguiente.","Estoy enchufado.","La Catedral me inspira.","Hoy no fallo.","Eso era fácil para mí.","Vengo bendecido."];
+const badLines = ["Se me fue.","La buena era la otra.","Bueno, todavía queda partido.","Ahora remonto.","Me lié con las opciones.","Fallo puntual.","La próxima entra.","Me precipité.","Eso fue una pérdida tonta.","Necesito tiempo muerto.","No pasa nada, seguimos.","La tiré forzado.","Me faltó concentración.","La tenía y se escapó.","Ahora me centro."];
+
+function mix(a){let r=[...a];for(let i=r.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+function rand(a){return a[Math.floor(Math.random()*a.length)]}
+function makeQ(q,correct,w1,w2,d,cat){return [q,correct,w1,w2,d,cat]}
+function wrong(pool,correct){return mix(pool.filter(x=>x!==correct)).slice(0,2)}
+
+function buildBank(){
+  let bank = [...USER_QUESTIONS, ...GENERATED_BASE];
+
+  TEAMS.forEach(t=>{
+    let w=wrong(WRONG_TEAMS,t);
+    bank.push(makeQ("¿CUÁL DE ESTOS EQUIPOS PERTENECE AL BALONCESTO LEONÉS?",t,w[0],w[1],2,"equipos"));
+    bank.push(makeQ("¿QUÉ NOMBRE ESTÁ RELACIONADO CON LA HISTORIA DEL BALONCESTO LEONÉS?",t,w[1],w[0],3,"historia"));
+  });
+
+  PLAYERS.forEach(p=>{
+    let w=wrong(WRONG_PLAYERS,p);
+    bank.push(makeQ("¿CUÁL DE ESTOS JUGADORES ESTÁ RELACIONADO CON EL BALONCESTO LEONÉS?",p,w[0],w[1],4,"jugadores"));
+  });
+
+  COACHES.forEach(c=>{
+    let w=wrong(["PABLO LASO","AÍTO GARCÍA RENESES","SERGIO SCARIOLO","JOAN PLAZA","DUSKO IVANOVIC","CHUS MATEO"],c);
+    bank.push(makeQ("¿CUÁL DE ESTOS ENTRENADORES ESTÁ RELACIONADO CON EL BALONCESTO LEONÉS?",c,w[0],w[1],4,"entrenadores"));
+  });
+
+  while(bank.length < 220){
+    let p=rand(PLAYERS);
+    let w=wrong(WRONG_PLAYERS,p);
+    bank.push(makeQ("¿QUÉ JUGADOR DE ESTA LISTA ESTÁ VINCULADO AL BALONCESTO LEONÉS?",p,w[0],w[1],5,"jugadores"));
+  }
+
+  return bank;
 }
-function fillAudience(id, n){
-  const el = document.getElementById(id);
-  el.innerHTML = "";
-  for(let i=0;i<n;i++){
-    const p = document.createElement("div");
-    p.className = "person";
-    p.innerHTML = '<div class="head"></div><div class="torso"></div>';
-    el.appendChild(p);
+
+function prepareQuestions(){
+  let bank = buildBank().map(q=>{
+    let opts = mix([q[1],q[2],q[3]]);
+    return {q:q[0],a:opts,c:opts.indexOf(q[1]),d:q[4],cat:q[5]};
+  });
+
+  let result = [];
+  let used = new Set();
+  let lastCats = [];
+
+  for(let i=0;i<QUESTIONS_PER_GAME;i++){
+    let difficulty = i < 3 ? 1 : Math.min(5, 2 + Math.floor((i-3)/6));
+
+    let pool = bank.map((q,n)=>({q,n})).filter(x =>
+      !used.has(x.n) &&
+      x.q.d <= difficulty + 1 &&
+      !(lastCats.length >= 2 && lastCats[0] === x.q.cat && lastCats[1] === x.q.cat)
+    );
+
+    if(!pool.length){
+      pool = bank.map((q,n)=>({q,n})).filter(x=>!used.has(x.n));
+    }
+
+    let picked = rand(pool);
+    used.add(picked.n);
+    result.push(picked.q);
+    lastCats.push(picked.q.cat);
+    if(lastCats.length>2) lastCats.shift();
+  }
+
+  return result;
+}
+
+function show(id){
+  ["home","user","choose","players","creator","dailyScreen","totalScreen","rulesScreen","settingsScreen","game","result"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  window.scrollTo(0,0);
+}
+
+function fillAudience(){
+  let e=document.getElementById("aud1");
+  e.innerHTML="";
+  for(let i=0;i<8;i++){
+    e.innerHTML += '<div class="person"><div class="head"></div><div class="body"></div></div>';
   }
 }
-function applause(id){
-  const el = document.getElementById(id);
-  el.classList.add("applause");
-  setTimeout(()=>el.classList.remove("applause"),2200);
+
+function applause(){
+  let e=document.getElementById("aud1");
+  e.classList.add("applause");
+  setTimeout(()=>e.classList.remove("applause"),1800);
 }
-function svgAvatar(style, small=false){
-  const W = small ? 74 : 110, H = small ? 100 : 146, skin = "#efc69a";
-  let hair="#222", body="#394f76", extra="", glasses="", beard="", scarf="", tie="";
-  switch(style){
-    case "jeremias":
-      hair="#111"; body="#111"; extra += `<path d="M19,20 q18,-15 36,0 v10 h-36z" fill="#111"/>`; tie = `<rect x="48" y="${small?72:104}" width="14" height="${small?16:20}" rx="2" fill="#fff" stroke="#000" stroke-width="2"/>`; break;
-    case "nazario":
-      body="#4c5c7e"; extra += `<ellipse cx="55" cy="${small?18:22}" rx="${small?29:40}" ry="${small?10:14}" fill="#111"/><rect x="${small?20:21}" y="${small?18:22}" width="${small?58:68}" height="${small?10:14}" rx="5" fill="#111"/>`; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`; break;
-    case "praxedes":
-      body="#2d2d2d"; scarf = `<path d="M17,${small?18:24} q38,-18 76,0 v${small?24:32} h-76z" fill="#111"/><path d="M23,${small?54:78} q32,18 64,0" fill="none" stroke="#111" stroke-width="10"/>`; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="#111" stroke="#000" stroke-width="2"/>`; break;
-    case "tijeras":
-      hair="#777"; body="#3f5579"; beard = `<path d="M37,${small?54:78} q18,20 36,0 v${small?12:16} q-18,14 -36,0z" fill="#7a7a7a"/>`; break;
-    case "nachon":
-      hair="#666"; body="#4d4d4d"; extra += `<rect x="38" y="${small?17:23}" width="34" height="7" rx="3" fill="#cfcfcf"/>`; break;
-    case "chonona":
-      hair="#efefef"; body="#a11625"; break;
-    case "antonino":
-      hair="#d0d0d0"; body="#35507f"; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#463222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#463222"/>`; break;
-    case "alvarino":
-      hair="#2e2016"; body="#145089"; beard = `<path d="M39,${small?52:76} q16,15 32,0 v${small?8:12} q-16,10 -32,0z" fill="#2e2016"/>`; break;
-    case "arricio":
-      hair="#555"; body="#1f1f1f"; glasses = `<circle cx="41" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><circle cx="69" cy="${small?38:56}" r="${small?8:11}" fill="none" stroke="#222" stroke-width="3"/><rect x="49" y="${small?36:54}" width="12" height="3" fill="#222"/>`; break;
-    case "felixon":
-      hair="#cfcfcf"; body="#8c2323"; beard = `<path d="M43,${small?52:76} q12,12 24,0 v${small?8:12} q-12,10 -24,0z" fill="#444"/>`; break;
-    case "mamen":
-      hair="#5d3920"; body="#9c1839"; extra += `<path d="M20,${small?20:26} q35,-14 70,0 v${small?18:26} q-11,-8 -48,0z" fill="#5d3920"/>`; break;
-    case "custom_male":
-      hair="#222"; body="#31517a"; break;
-    case "custom_female":
-      hair="#6a2744"; body="#7b2044"; break;
-  }
-  const cls = small ? "avatarSmall" : "avatarSvg";
-  return `<svg class="${cls}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="55" cy="${small?88:130}" rx="${small?24:34}" ry="${small?12:16}" fill="${body}" stroke="#000" stroke-width="4"/>
-    <rect x="${small?31:21}" y="${small?72:106}" width="${small?48:68}" height="${small?18:24}" rx="12" fill="${body}" stroke="#000" stroke-width="4"/>
-    <ellipse cx="55" cy="${small?40:58}" rx="${small?26:38}" ry="${small?26:38}" fill="${skin}" stroke="#000" stroke-width="5"/>
-    ${scarf}
-    <path d="M23,${small?18:24} q32,-10 64,0 v${small?12:18} h-64z" fill="${hair}"/>
-    ${extra}
-    <circle cx="41" cy="${small?38:56}" r="${small?4:6}" fill="#000"/>
-    <circle cx="69" cy="${small?38:56}" r="${small?4:6}" fill="#000"/>
-    ${glasses}
-    <ellipse cx="55" cy="${small?49:70}" rx="${small?4:6}" ry="${small?7:10}" fill="#d79974"/>
-    <path d="M43" cy="${small?60:86}" />
-    <path d="M43,${small?60:86} q12,${small?8:10} 24,0" fill="none" stroke="#5b1d1d" stroke-width="4" stroke-linecap="round"/>
-    ${beard}
-    ${tie}
-  </svg>`;
+
+function voices(){
+  let v = speechSynthesis.getVoices().filter(x=>x.lang && x.lang.toLowerCase().includes("es"));
+  return v.length ? v : speechSynthesis.getVoices();
 }
-function getVoices(){
-  const es = speechSynthesis.getVoices().filter(v => (v.lang||"").toLowerCase().includes("es"));
-  return es.length ? es : speechSynthesis.getVoices();
+
+function say(text,rate,pitch,cb){
+  if(!("speechSynthesis" in window)){cb&&cb();return}
+  let u = new SpeechSynthesisUtterance(text);
+  u.lang="es-ES";
+  u.rate=rate;
+  u.pitch=pitch;
+  let v=voices();
+  if(v.length) u.voice=v[Math.floor(Math.random()*v.length)];
+  u.onend=()=>cb&&cb();
+  u.onerror=()=>cb&&cb();
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
-function speak(text, actor, callback){
-  if(!("speechSynthesis" in window)){ if(callback) callback(); return; }
-  const voices = getVoices();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "es-ES"; u.rate = actor.rate; u.pitch = actor.pitch;
-  if(voices.length) u.voice = voices[actor.voiceIndex % voices.length];
-  u.onend = ()=>callback && callback();
-  u.onerror = ()=>callback && callback();
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(u);
-}
-function bellTone(){
-  if(!soundOn) return;
+
+function bell(){
+  if(!soundOn)return;
   try{
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-    [523.25,659.25,783.99].forEach((f,i)=>{
-      const osc = ctx.createOscillator(), g = ctx.createGain();
-      osc.type = "sine"; osc.frequency.value = f;
-      g.gain.setValueAtTime(0.001, now + i*0.12);
-      g.gain.exponentialRampToValueAtTime(0.07, now + i*0.12 + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, now + i*0.12 + 0.9);
-      osc.connect(g); g.connect(ctx.destination);
-      osc.start(now + i*0.12); osc.stop(now + i*0.12 + 0.95);
+    let c=new (AudioContext||webkitAudioContext)();
+    let n=c.currentTime;
+    [523,659,784].forEach((f,i)=>{
+      let o=c.createOscillator(),g=c.createGain();
+      o.frequency.value=f;
+      g.gain.setValueAtTime(.001,n+i*.12);
+      g.gain.exponentialRampToValueAtTime(.07,n+i*.12+.02);
+      g.gain.exponentialRampToValueAtTime(.001,n+i*.12+.9);
+      o.connect(g);g.connect(c.destination);
+      o.start(n+i*.12);o.stop(n+i*.12+.95);
     });
   }catch(e){}
 }
-function startBellLoop(){ stopBellLoop(); bellInterval = setInterval(bellTone, 18000); }
-function stopBellLoop(){ if(bellInterval){ clearInterval(bellInterval); bellInterval = null; } }
-function updateBellContext(){
-  const pre = ["homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen","dailyScreen","totalScreen","rulesScreen","settingsScreen"]
-    .some(id => !document.getElementById(id).classList.contains("hidden"));
-  if(pre && soundOn) startBellLoop(); else stopBellLoop();
-}
-function showScreen(id){
-  ["homeScreen","userScreen","chooseScreen","listScreen","createContestantScreen","dailyScreen","totalScreen","rulesScreen","settingsScreen","gameScreen","resultScreen"]
-  .forEach(s=>document.getElementById(s).classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  updateBellContext();
-  window.scrollTo(0,0);
-}
-function refreshSoundUI(){
-  document.getElementById("toggleSoundBtn").textContent = "Sonido de campanas: " + (soundOn ? "ON" : "OFF");
-  document.getElementById("soundBtn").textContent = soundOn ? "🔔" : "🔕";
-}
-function getCustoms(){ return JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]"); }
-function saveCustoms(v){ localStorage.setItem(CUSTOM_KEY, JSON.stringify(v)); }
-function loadContestants(){
-  contestants = [...baseContestants, ...getCustoms()];
-  const box = document.getElementById("contestantList");
-  box.innerHTML = "";
-  contestants.forEach(c=>{
-    const style = c.style==="custom" ? (c.gender==="female" ? "custom_female" : "custom_male") : c.style;
-    const d = document.createElement("div");
-    d.className = "contestant";
-    d.innerHTML = `<div>${svgAvatar(style,true)}</div><div class="contestantText"><strong>${c.name}</strong><span>${c.subtitle||"Concursante"}</span></div>`;
-    d.onclick = ()=>{ currentContestant = c; startGame(); };
+
+function loadPlayers(){
+  let custom = JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]");
+  let all = [...contestants,...custom];
+  let box = document.getElementById("playerList");
+  box.innerHTML="";
+  all.forEach(p=>{
+    let d=document.createElement("div");
+    d.className="card listItem";
+    d.innerHTML=`<div style="font-size:48px">${p.avatar||"🏀"}</div><div><b>${p.name}</b><br>Concursante</div>`;
+    d.onclick=()=>{player=p;startGame()};
     box.appendChild(d);
   });
 }
-function renderFixedAvatars(){
-  document.getElementById("hostHomeAvatar").innerHTML = svgAvatar("jeremias", false);
-  document.getElementById("hostGameAvatar").innerHTML = svgAvatar("jeremias", false);
-}
-function renderPlayerAvatar(){
-  const style = currentContestant.style==="custom" ? (currentContestant.gender==="female" ? "custom_female" : "custom_male") : currentContestant.style;
-  document.getElementById("playerGameAvatar").innerHTML = svgAvatar(style, false);
-  document.getElementById("contestantNameGame").textContent = currentContestant.name;
-}
+
 function updateScore(){
-  document.getElementById("hitsValue").textContent = hits;
-  document.getElementById("pointsValue").textContent = points;
-  document.getElementById("failsValue").textContent = fails;
+  document.getElementById("hits").textContent=hits;
+  document.getElementById("points").textContent=score;
+  document.getElementById("fails").textContent=fails;
 }
-function updateTimer(){ document.getElementById("timerValue").textContent = timer + "s"; }
-function rankAdd(username, contestantName, score){
-  const dayKey = RANK_DAY_KEY + todayKey();
-  const day = JSON.parse(localStorage.getItem(dayKey)||"[]");
-  const total = JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]");
-  function merge(list){
-    const idx = list.findIndex(x=>x.username===username);
-    if(idx>=0){ list[idx].score += score; list[idx].contestantName = contestantName; }
-    else list.push({username, contestantName, score});
-    list.sort((a,b)=>b.score-a.score);
-    return list.slice(0,20);
-  }
-  localStorage.setItem(dayKey, JSON.stringify(merge(day)));
-  localStorage.setItem(RANK_TOTAL_KEY, JSON.stringify(merge(total)));
+
+function startGame(){
+  questions=prepareQuestions();
+  idx=0;score=0;hits=0;fails=0;
+  document.getElementById("playerName").textContent=player.name;
+  document.getElementById("playerAvatar").textContent=player.avatar||"🏀";
+  updateScore();
+  show("game");
+  renderQ();
+  startTimer();
 }
-function renderRanking(boxId, data){
-  const box = document.getElementById(boxId);
-  if(!data.length){ box.innerHTML = "Aún no hay puntuaciones."; return; }
-  box.innerHTML = data.map((x,i)=>
-    `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.08)">
-      <div><strong>#${i+1} ${x.username}</strong><br><span style="font-size:12px;color:#62709b">${x.contestantName}</span></div>
-      <div style="font-size:22px;font-weight:900;color:#2947ac">${x.score}</div>
-    </div>`
-  ).join("");
-}
-function refreshRankings(){
-  renderRanking("dailyRankingBox", JSON.parse(localStorage.getItem(RANK_DAY_KEY + todayKey())||"[]"));
-  renderRanking("totalRankingBox", JSON.parse(localStorage.getItem(RANK_TOTAL_KEY)||"[]"));
-}
-function shuffle(arr){
-  const a = [...arr];
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-}
-function buildQuestions(){
-  const bank = QUESTION_BANK.map(item=>{
-    const correct = item[1];
-    const options = shuffle([item[1],item[2],item[3]]);
-    return { q:item[0], a:options, c:options.indexOf(correct), d:item[4] };
-  });
-  const used = new Set();
-  const result = [];
-  for(let i=0;i<QUESTIONS_PER_GAME;i++){
-    let difficulty = i < 3 ? 1 : Math.min(5, 1 + Math.floor(i/3));
-    let pool = bank.map((q,idx)=>({q,idx})).filter(x => x.q.d === difficulty && !used.has(x.idx));
-    if(!pool.length) pool = bank.map((q,idx)=>({q,idx})).filter(x => !used.has(x.idx));
-    const chosen = rand(pool);
-    used.add(chosen.idx);
-    result.push(chosen.q);
-  }
-  return result;
-}
-function getGoodLines(){
-  if(currentContestant.style==="custom") return contestantGood.generic;
-  return contestantGood[currentContestant.id] || contestantGood.generic;
-}
-function getBadLines(){
-  if(currentContestant.style==="custom") return contestantBad.generic;
-  return contestantBad[currentContestant.id] || contestantBad.generic;
-}
-function resetAnswerButtons(){
-  document.querySelectorAll(".answerBtn").forEach(b=>{
-    b.disabled = false;
+
+function renderQ(){
+  blocked=false;
+  let q=questions[idx];
+  document.getElementById("round").textContent=`Ronda ${idx+1}/40`;
+  document.getElementById("question").textContent=q.q;
+  [a0,a1,a2].forEach((b,i)=>{
+    b.textContent=["A) ","B) ","C) "][i]+q.a[i];
+    b.disabled=false;
     b.classList.remove("correct","wrong");
   });
+  time=TIME_PER_QUESTION;
+  document.getElementById("timer").textContent=time+"s";
 }
-function renderQuestion(){
-  answering = false;
-  resetAnswerButtons();
-  const q = gameQuestions[currentQuestionIndex];
-  document.getElementById("roundValue").textContent = "Ronda " + (currentQuestionIndex+1) + "/" + QUESTIONS_PER_GAME;
-  document.getElementById("questionText").textContent = q.q;
-  document.getElementById("answer0").textContent = "A) " + q.a[0];
-  document.getElementById("answer1").textContent = "B) " + q.a[1];
-  document.getElementById("answer2").textContent = "C) " + q.a[2];
-  timer = TIME_PER_QUESTION;
-  updateTimer();
-}
+
 function startTimer(){
-  clearInterval(timerInterval);
-  timerInterval = setInterval(()=>{
-    timer--;
-    updateTimer();
-    if(timer <= 0){
-      clearInterval(timerInterval);
-      processAnswer(-1);
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{
+    time--;
+    document.getElementById("timer").textContent=time+"s";
+    if(time<=0){
+      clearInterval(timerInt);
+      answer(-1);
     }
   },1000);
 }
-function startGame(){
-  gameQuestions = buildQuestions();
-  currentQuestionIndex = 0;
-  points = 0;
-  hits = 0;
-  fails = 0;
-  updateScore();
-  renderPlayerAvatar();
-  renderQuestion();
-  document.getElementById("hostLine").textContent = "Bienvenido, hijo mío.";
-  document.getElementById("playerLine").textContent = "Hoy vengo bendecido.";
-  showScreen("gameScreen");
-  startTimer();
-}
-function nextQuestion(){
-  currentQuestionIndex++;
-  if(currentQuestionIndex >= QUESTIONS_PER_GAME){ endGame(); return; }
-  renderQuestion();
-  startTimer();
-}
-function processAnswer(index){
-  if(answering) return;
-  answering = true;
-  clearInterval(timerInterval);
 
-  const q = gameQuestions[currentQuestionIndex];
-  const buttons = [document.getElementById("answer0"),document.getElementById("answer1"),document.getElementById("answer2")];
-  buttons.forEach(b=>b.disabled=true);
-  buttons[q.c].classList.add("correct");
+function answer(n){
+  if(blocked)return;
+  blocked=true;
+  clearInterval(timerInt);
 
-  let hostText = "", playerText = "";
-  if(index === q.c){
-    points += 2; hits += 1;
-    if(index >= 0) buttons[index].classList.add("correct");
-    hostText = rand(hostGood);
-    playerText = rand(getGoodLines());
-    applause("duelAudience"); applause("homeAudience");
+  let q=questions[idx];
+  let btns=[a0,a1,a2];
+  btns.forEach(b=>b.disabled=true);
+  btns[q.c].classList.add("correct");
+
+  let ht,pt;
+  if(n===q.c){
+    hits++;score+=2;
+    if(n>=0)btns[n].classList.add("correct");
+    ht=rand(hostGood);
+    pt=rand(goodLines);
+    applause();
   }else{
-    points -= 1; fails += 1;
-    if(index >= 0) buttons[index].classList.add("wrong");
-    hostText = rand(hostBad);
-    playerText = rand(getBadLines());
+    fails++;score--;
+    if(n>=0)btns[n].classList.add("wrong");
+    ht=rand(hostBad);
+    pt=rand(badLines);
   }
 
   updateScore();
-  document.getElementById("hostLine").textContent = hostText;
-  document.getElementById("playerLine").textContent = playerText;
+  document.getElementById("hostLine").textContent=ht;
+  document.getElementById("playerLine").textContent=pt;
 
   setTimeout(()=>{
-    speak(hostText, host, ()=>{
+    say(ht,.82,.82,()=>{
       setTimeout(()=>{
-        speak(playerText, currentContestant, ()=>{
-          setTimeout(nextQuestion, 1700);
+        say(pt,player.rate||1,player.pitch||1,()=>{
+          setTimeout(nextQ,1400);
         });
-      },500);
+      },400);
     });
-  },450);
+  },300);
 }
+
+function nextQ(){
+  idx++;
+  if(idx>=QUESTIONS_PER_GAME){
+    endGame();
+    return;
+  }
+  renderQ();
+  startTimer();
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  saveRank();
+  show("result");
+  document.getElementById("finalPoints").textContent=score;
+  document.getElementById("summary").innerHTML=`<b>${user}</b> con <b>${player.name}</b><br>Aciertos: ${hits}<br>Fallos: ${fails}`;
+
+  if(hits===QUESTIONS_PER_GAME){
+    document.getElementById("finalImg").textContent="🍼";
+    document.getElementById("finalText").textContent="TROFEO POR GANAR LAS 40 PREGUNTAS";
+  }else{
+    document.getElementById("finalImg").textContent="🐴";
+    document.getElementById("finalText").textContent="ERES UN BURRO";
+  }
+}
+
+function keyDay(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function saveRank(){
+  let dk=RANK_DAY+keyDay();
+  let day=JSON.parse(localStorage.getItem(dk)||"[]");
+  let tot=JSON.parse(localStorage.getItem(RANK_TOTAL)||"[]");
+
+  function add(list){
+    list.push({u:user,p:player.name,s:score});
+    list.sort((a,b)=>b.s-a.s);
+    return list.slice(0,20);
+  }
+
+  localStorage.setItem(dk,JSON.stringify(add(day)));
+  localStorage.setItem(RANK_TOTAL,JSON.stringify(add(tot)));
+}
+
+function showRank(id,key){
+  let arr=JSON.parse(localStorage.getItem(key)||"[]");
+  document.getElementById(id).innerHTML = arr.length
+    ? arr.map((x,i)=>`#${i+1} <b>${x.u}</b> (${x.p}) - ${x.s}<br>`).join("")
+    : "Aún no hay puntuaciones.";
+}
+
 function saveGame(){
-  const payload = {currentUser,currentContestant,gameQuestions,currentQuestionIndex,points,hits,fails,timer};
-  localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+  localStorage.setItem(SAVE_KEY,JSON.stringify({user,player,questions,idx,score,hits,fails,time}));
   alert("Partida guardada");
 }
+
 function loadGame(){
-  const raw = localStorage.getItem(SAVE_KEY);
-  if(!raw){ alert("No hay partida guardada"); return; }
-  const d = JSON.parse(raw);
-  currentUser = d.currentUser || "";
-  currentContestant = d.currentContestant || contestants[0];
-  gameQuestions = d.gameQuestions || buildQuestions();
-  currentQuestionIndex = d.currentQuestionIndex || 0;
-  points = d.points || 0;
-  hits = d.hits || 0;
-  fails = d.fails || 0;
-  timer = d.timer || TIME_PER_QUESTION;
+  let r=localStorage.getItem(SAVE_KEY);
+  if(!r){alert("No hay partida guardada");return}
+  let d=JSON.parse(r);
+  user=d.user;player=d.player;questions=d.questions;idx=d.idx;score=d.score;hits=d.hits;fails=d.fails;time=d.time;
+  document.getElementById("playerName").textContent=player.name;
+  document.getElementById("playerAvatar").textContent=player.avatar||"🏀";
   updateScore();
-  renderPlayerAvatar();
-  renderQuestion();
-  timer = d.timer || TIME_PER_QUESTION;
-  updateTimer();
-  document.getElementById("hostLine").textContent = "Partida cargada, hijo mío.";
-  document.getElementById("playerLine").textContent = "Seguimos donde lo dejamos.";
-  showScreen("gameScreen");
-  document.getElementById("pauseLayer").classList.add("hidden");
-  clearInterval(timerInterval);
-  timerInterval = setInterval(()=>{
-    timer--;
-    updateTimer();
-    if(timer <= 0){
-      clearInterval(timerInterval);
-      processAnswer(-1);
-    }
-  },1000);
-}
-function endGame(){
-  clearInterval(timerInterval);
-  rankAdd(currentUser || "INVITADO", currentContestant.name, points);
-  refreshRankings();
-  document.getElementById("finalPoints").textContent = points;
-  document.getElementById("finalSummary").innerHTML = `<strong>${currentUser || "INVITADO"}</strong> con <strong>${currentContestant.name}</strong><br>Aciertos: ${hits}<br>Fallos: ${fails}`;
-  if(hits === QUESTIONS_PER_GAME){
-    document.getElementById("finalVisual").textContent = "🍼";
-    document.getElementById("finalVisualText").textContent = "TROFEO POR GANAR LAS 40 PREGUNTAS";
-  }else{
-    document.getElementById("finalVisual").textContent = "🐴";
-    document.getElementById("finalVisualText").textContent = "ERES UN BURRO";
-  }
-  showScreen("resultScreen");
+  show("game");
+  renderQ();
+  startTimer();
 }
 
-document.getElementById("enterBtn").onclick = ()=>{ bellTone(); showScreen("userScreen"); };
-document.getElementById("dailyBtn").onclick = ()=>{ refreshRankings(); bellTone(); showScreen("dailyScreen"); };
-document.getElementById("totalBtn").onclick = ()=>{ refreshRankings(); bellTone(); showScreen("totalScreen"); };
-document.getElementById("rulesBtn").onclick = ()=>{ bellTone(); showScreen("rulesScreen"); };
-document.getElementById("settingsBtn").onclick = ()=>{ bellTone(); showScreen("settingsScreen"); };
+document.getElementById("enter").onclick=()=>{bell();show("user")};
 
-document.getElementById("continueUserBtn").onclick = ()=>{
-  currentUser = document.getElementById("userName").value.trim() || "Pacho";
-  document.getElementById("helloName").textContent = "Hola " + currentUser;
-  bellTone();
-  showScreen("chooseScreen");
+document.getElementById("continueBtn").onclick=()=>{
+  user=document.getElementById("userName").value.trim()||"INVITADO";
+  document.getElementById("hello").textContent="Hola "+user;
+  show("choose");
 };
 
-document.getElementById("chooseContestantBtn").onclick = ()=>showScreen("listScreen");
-document.getElementById("createContestantBtn").onclick = ()=>showScreen("createContestantScreen");
-document.getElementById("backChooseBtn").onclick = ()=>showScreen("chooseScreen");
-document.getElementById("backFromCreatorBtn").onclick = ()=>showScreen("chooseScreen");
-document.getElementById("backDailyBtn").onclick = ()=>showScreen("homeScreen");
-document.getElementById("backTotalBtn").onclick = ()=>showScreen("homeScreen");
-document.getElementById("backRulesBtn").onclick = ()=>showScreen("homeScreen");
-document.getElementById("backSettingsBtn").onclick = ()=>showScreen("homeScreen");
-document.querySelectorAll("[data-back]").forEach(a=>a.onclick=(e)=>{ e.preventDefault(); showScreen(a.dataset.back); });
+document.getElementById("choosePlayer").onclick=()=>{
+  loadPlayers();
+  show("players");
+};
 
-document.getElementById("saveCustomBtn").onclick = ()=>{
-  const name = document.getElementById("customName").value.trim();
-  const gender = document.getElementById("customGender").value;
-  const trait = document.getElementById("customTrait").value;
-  if(!name){ alert("Escribe un nombre"); return; }
-  const customs = getCustoms();
-  customs.push({
-    id:"custom_"+Date.now(), name, subtitle:trait, style:"custom", gender,
-    rate: gender==="female" ? 1.0 : .93,
-    pitch: gender==="female" ? 1.08 : .94,
-    voiceIndex: 11 + customs.length
-  });
-  saveCustoms(customs);
-  loadContestants();
-  document.getElementById("customName").value = "";
+document.getElementById("createPlayer").onclick=()=>show("creator");
+
+document.getElementById("saveCustom").onclick=()=>{
+  let name=document.getElementById("customName").value.trim();
+  if(!name){alert("Escribe un nombre");return}
+  let arr=JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]");
+  let gender=document.getElementById("customGender").value;
+  arr.push({id:"c"+Date.now(),name,avatar:gender==="female"?"👩":"🧔",gender,rate:1,pitch:gender==="female"?1.08:.94});
+  localStorage.setItem(CUSTOM_KEY,JSON.stringify(arr));
+  document.getElementById("customName").value="";
   alert("Concursante guardado");
-  showScreen("chooseScreen");
+  show("choose");
 };
 
-document.getElementById("lockBtn").onclick = ()=>{ bellTone(); document.getElementById("pinModal").classList.remove("hidden"); };
-document.getElementById("closeOwnerBtn").onclick = ()=>document.getElementById("pinModal").classList.add("hidden");
-document.getElementById("openOwnerBtn").onclick = ()=>{
-  const pin = document.getElementById("ownerPin").value.trim();
-  if(pin === OWNER_PIN){
-    document.getElementById("pinModal").classList.add("hidden");
-    document.getElementById("ownerPanel").classList.remove("hidden");
-  }else alert("Clave incorrecta");
-};
-document.getElementById("closeOwnerPanelBtn").onclick = ()=>document.getElementById("ownerPanel").classList.add("hidden");
-document.getElementById("editorBtn").onclick = ()=>alert("Panel preparado para futuras actualizaciones.");
-document.getElementById("shareBtn").onclick = async ()=>{
-  const url = location.href, text = "Te envío La Catedral del Baloncesto Español.";
-  if(navigator.share){
-    try{ await navigator.share({title:"La Catedral del Baloncesto Español", text, url}); }catch(e){}
-  }else{
-    try{ await navigator.clipboard.writeText(url); alert("Enlace copiado para WhatsApp"); }
-    catch(e){ alert(url); }
-  }
+document.getElementById("daily").onclick=()=>{
+  showRank("dailyBox",RANK_DAY+keyDay());
+  show("dailyScreen");
 };
 
-document.getElementById("toggleSoundBtn").onclick = ()=>{
-  soundOn = !soundOn;
-  refreshSoundUI();
-  updateBellContext();
-};
-document.getElementById("soundBtn").onclick = ()=>{
-  soundOn = !soundOn;
-  refreshSoundUI();
-  updateBellContext();
+document.getElementById("total").onclick=()=>{
+  showRank("totalBox",RANK_TOTAL);
+  show("totalScreen");
 };
 
-document.getElementById("answer0").onclick = ()=>processAnswer(0);
-document.getElementById("answer1").onclick = ()=>processAnswer(1);
-document.getElementById("answer2").onclick = ()=>processAnswer(2);
+document.getElementById("rules").onclick=()=>show("rulesScreen");
+document.getElementById("settings").onclick=()=>show("settingsScreen");
 
-document.getElementById("pauseBtn").onclick = ()=>{
-  clearInterval(timerInterval);
-  document.getElementById("pauseLayer").classList.remove("hidden");
+document.getElementById("toggleSound").onclick=()=>{
+  soundOn=!soundOn;
+  document.getElementById("toggleSound").textContent="Sonido: "+(soundOn?"ON":"OFF");
+  document.getElementById("soundBtn").textContent=soundOn?"🔔":"🔕";
 };
-document.getElementById("resumeBtn").onclick = ()=>{
-  document.getElementById("pauseLayer").classList.add("hidden");
+document.getElementById("soundBtn").onclick=document.getElementById("toggleSound").onclick;
+
+[a0,a1,a2].forEach((b,i)=>b.onclick=()=>answer(i));
+
+document.getElementById("pause").onclick=()=>{
+  clearInterval(timerInt);
+  document.getElementById("pauseMenu").classList.remove("hidden");
+};
+
+document.getElementById("resume").onclick=()=>{
+  document.getElementById("pauseMenu").classList.add("hidden");
   startTimer();
 };
-document.getElementById("saveBtn").onclick = saveGame;
-document.getElementById("loadBtn").onclick = loadGame;
-document.getElementById("newGameBtn").onclick = ()=>{
-  document.getElementById("pauseLayer").classList.add("hidden");
-  if(!currentContestant) currentContestant = contestants[0];
-  startGame();
-};
-document.getElementById("exitGameBtn").onclick = ()=>{
-  clearInterval(timerInterval);
-  document.getElementById("pauseLayer").classList.add("hidden");
-  showScreen("homeScreen");
-};
-document.getElementById("resultNewBtn").onclick = ()=>{
-  if(!currentContestant) currentContestant = contestants[0];
-  startGame();
-};
-document.getElementById("resultHomeBtn").onclick = ()=>showScreen("homeScreen");
 
-fillAudience("homeAudience",8);
-fillAudience("duelAudience",6);
-renderFixedAvatars();
-loadContestants();
-refreshRankings();
-refreshSoundUI();
-showScreen("homeScreen");
-updateBellContext();
+document.getElementById("saveGameBtn").onclick=saveGame;
+document.getElementById("loadGameBtn").onclick=loadGame;
+
+document.getElementById("newGame").onclick=()=>{
+  document.getElementById("pauseMenu").classList.add("hidden");
+  startGame();
+};
+
+document.getElementById("exitGame").onclick=()=>{
+  clearInterval(timerInt);
+  document.getElementById("pauseMenu").classList.add("hidden");
+  show("home");
+};
+
+document.getElementById("again").onclick=()=>startGame();
+
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
+
+document.getElementById("lockBtn").onclick=()=>document.getElementById("pinModal").classList.remove("hidden");
+document.getElementById("closePin").onclick=()=>document.getElementById("pinModal").classList.add("hidden");
+
+document.getElementById("openOwner").onclick=()=>{
+  if(document.getElementById("pin").value===OWNER_PIN){
+    document.getElementById("pinModal").classList.add("hidden");
+    document.getElementById("owner").classList.remove("hidden");
+  }else{
+    alert("Clave incorrecta");
+  }
+};
+
+document.getElementById("closeOwner").onclick=()=>document.getElementById("owner").classList.add("hidden");
+
+document.getElementById("share").onclick=()=>{
+  if(navigator.share){
+    navigator.share({title:"La Catedral del Baloncesto Leonés",url:location.href});
+  }else{
+    alert(location.href);
+  }
+};
+
+document.getElementById("editorBtn").onclick=()=>alert("Panel preparado para futuras actualizaciones.");
+
+fillAudience();
+show("home");
 </script>
 </body>
 </html>
