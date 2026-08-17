@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Sorríos de Ordás — La Granja de Arricio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Simulador de granja en el pueblo leonés de Sorríos de Ordás. Ordeña a mano, cuida vacas, ovejas, gallinas y un burro, siembra el huerto y forma una familia.">
+<meta name="theme-color" content="#1b2b1f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <!-- Controles táctiles (móvil) -->
+  <div id="touch" class="hidden">
+    <div id="stick" class="pad">
+      <div id="stick-base"></div>
+      <div id="stick-knob"></div>
+    </div>
+    <div id="buttons">
+      <button class="btn btn-b" data-act="tool"   aria-label="Usar herramienta">✋</button>
+      <button class="btn btn-a" data-act="action" aria-label="Acción">A</button>
+      <button class="btn btn-y" data-act="prev"   aria-label="Herramienta anterior">◀</button>
+      <button class="btn btn-x" data-act="next"   aria-label="Herramienta siguiente">▶</button>
+    </div>
+    <button class="btn btn-menu" data-act="menu" aria-label="Menú">☰</button>
+  </div>
+
+  <div id="rotate" class="overlay hidden">
+    <div class="card">
+      <h2>Gira el móvil</h2>
+      <p>Este juego se ve mejor en <b>horizontal</b>.</p>
+    </div>
+  </div>
+
+  <div id="boot" class="overlay">
+    <div class="card">
+      <h1>SORRÍOS DE ORDÁS</h1>
+      <p class="sub">La granja de Arricio</p>
+      <div class="loader"><i></i></div>
+      <p id="boot-msg">Cargando el pueblo…</p>
+    </div>
+  </div>
+</div>
+
+<script src="src/core.js"></script>
+<script src="src/art.js"></script>
+<script src="src/data.js"></script>
+<script src="src/world.js"></script>
+<script src="src/time.js"></script>
+<script src="src/entities.js"></script>
+<script src="src/systems.js"></script>
+<script src="src/render.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/game.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

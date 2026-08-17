@@ -1,0 +1,105 @@
+/* Sorríos de Ordás — estilos del contenedor y controles táctiles */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: #0a0d0a; color: #e8e2cf; overflow: hidden;
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  overscroll-behavior: none; touch-action: none; user-select: none;
+  -webkit-user-select: none;
+}
+#app { position: fixed; inset: 0; }
+
+canvas#game {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #0a0d0a;
+  touch-action: none;
+}
+
+/* ---------- Controles táctiles ---------- */
+#touch { position: absolute; inset: 0; pointer-events: none; }
+#touch.hidden { display: none; }
+
+#stick {
+  position: absolute;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: 148px; height: 148px;
+  pointer-events: auto;
+}
+#stick-base {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.13), rgba(255,255,255,.04) 65%, rgba(0,0,0,0) 70%);
+  border: 2px solid rgba(255,255,255,.20);
+}
+#stick-knob {
+  position: absolute; left: 50%; top: 50%;
+  width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #f2ead6, #a89b78);
+  border: 2px solid rgba(0,0,0,.35);
+  box-shadow: 0 3px 8px rgba(0,0,0,.45);
+  transition: transform .06s linear;
+}
+
+#buttons {
+  position: absolute;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: 172px; height: 172px;
+  pointer-events: auto;
+}
+.btn {
+  position: absolute;
+  border: 2px solid rgba(0,0,0,.4);
+  border-radius: 50%;
+  font: bold 20px/1 "Trebuchet MS", sans-serif;
+  color: #241c10;
+  background: radial-gradient(circle at 38% 32%, #ffe9ae, #c9a45c);
+  box-shadow: 0 3px 10px rgba(0,0,0,.45);
+  pointer-events: auto;
+  padding: 0;
+}
+.btn:active { transform: scale(.93); filter: brightness(1.15); }
+.btn-a { width: 78px; height: 78px; right: 4px; bottom: 22px; font-size: 26px; }
+.btn-b { width: 64px; height: 64px; right: 84px; bottom: 74px; font-size: 24px;
+         background: radial-gradient(circle at 38% 32%, #cfe9ff, #6d9dc5); }
+.btn-x, .btn-y { width: 46px; height: 46px; font-size: 16px;
+         background: radial-gradient(circle at 38% 32%, #e8dcc8, #9b8f78); }
+.btn-y { right: 104px; bottom: 8px; }
+.btn-x { right: 52px; bottom: 0px; }
+.btn-menu {
+  position: absolute; width: 46px; height: 46px;
+  right: max(12px, env(safe-area-inset-right));
+  top: max(12px, env(safe-area-inset-top));
+  font-size: 20px;
+  background: radial-gradient(circle at 38% 32%, #e8dcc8, #8d8270);
+}
+
+/* ---------- Overlays ---------- */
+.overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #12200f, #060a06 70%);
+  z-index: 50; text-align: center; padding: 20px;
+}
+.overlay.hidden { display: none; }
+.card { max-width: 460px; }
+.card h1 {
+  margin: 0 0 6px; font-size: clamp(26px, 7vw, 46px); letter-spacing: 3px;
+  color: #f4e2a8; text-shadow: 0 3px 0 #6b4a1c, 0 5px 14px rgba(0,0,0,.7);
+}
+.card h2 { margin: 0 0 8px; color: #f4e2a8; }
+.card .sub { margin: 0 0 22px; color: #cbbf98; letter-spacing: 1px; }
+.card p { color: #cbbf98; font-size: 15px; }
+.loader { width: 220px; height: 10px; margin: 0 auto 12px; background: rgba(255,255,255,.12); border-radius: 6px; overflow: hidden; }
+.loader i { display: block; height: 100%; width: 30%; border-radius: 6px;
+  background: linear-gradient(90deg, #8fc45c, #f4e2a8);
+  animation: slide 1.1s ease-in-out infinite; }
+@keyframes slide { 0% { margin-left: -32%; } 100% { margin-left: 102%; } }
+
+@media (orientation: portrait) and (max-height: 520px) {
+  #stick { width: 118px; height: 118px; }
+  #buttons { width: 140px; height: 140px; }
+}
