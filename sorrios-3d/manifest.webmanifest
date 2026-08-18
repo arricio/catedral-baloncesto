@@ -1,0 +1,19 @@
+{
+  "name": "Sorríos de Ordás — Simulador de Granja 3D",
+  "short_name": "Sorríos 3D",
+  "description": "Simulador de granja en 3D en un pueblo de León: tractor y aperos, ordeño a mano, ganado, huerto, vecinos, día y noche, cuatro estaciones y meteorología.",
+  "lang": "es",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#05080a",
+  "theme_color": "#0f1a12",
+  "categories": ["games", "simulation"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

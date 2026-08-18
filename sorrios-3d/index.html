@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Sorríos de Ordás — Simulador de Granja 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Simulador de granja en 3D ambientado en Sorríos de Ordás (León): tractor y aperos, ordeño a mano, ganado, huerto, pueblo con vecinos, ciclo día/noche, cuatro estaciones y meteorología.">
+<meta name="theme-color" content="#0f1a12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="lienzo"></canvas>
+
+  <!-- ============================ HUD ============================ -->
+  <div id="hud" class="oculto">
+    <div id="panel-tiempo" class="panel">
+      <div class="fila-fecha"><span id="ui-fecha">Lunes, 1 de Primavera</span><span id="ui-anio">Año 1</span></div>
+      <div class="fila-hora">
+        <span id="ui-hora">06:00</span>
+        <span id="ui-meteo" class="meteo">☀️</span>
+        <span id="ui-estacion" class="chip">Primavera</span>
+      </div>
+    </div>
+
+    <div id="panel-dinero" class="panel"><span class="euro">💶</span><span id="ui-dinero">2.500 €</span></div>
+
+    <div id="panel-energia" class="panel">
+      <div class="etiqueta">Fuerzas</div>
+      <div class="barra"><i id="ui-energia"></i></div>
+    </div>
+
+    <div id="panel-tractor" class="panel oculto">
+      <div class="velocimetro"><span id="ui-kmh">0</span><small>km/h</small></div>
+      <div class="tractor-datos">
+        <div class="mini"><span>Apero</span><b id="ui-apero">Ninguno</b></div>
+        <div class="mini"><span>Estado</span><b id="ui-apero-estado">—</b></div>
+        <div class="mini"><span>Gasóleo</span><div class="barra fina"><i id="ui-gasoil"></i></div></div>
+      </div>
+    </div>
+
+    <div id="aviso-central"></div>
+    <div id="prompt"></div>
+    <div id="toasts"></div>
+
+    <div id="cinturon"></div>
+
+    <div id="brujula"><span id="ui-brujula">N</span></div>
+  </div>
+
+  <!-- ====================== CONTROLES TÁCTILES ==================== -->
+  <div id="tactil" class="oculto">
+    <div id="joystick"><div id="joystick-base"></div><div id="joystick-mando"></div></div>
+    <div id="botonera">
+      <button class="bt bt-a" data-accion="accion">A</button>
+      <button class="bt bt-b" data-accion="herramienta">✋</button>
+      <button class="bt bt-c" data-accion="correr">⏩</button>
+      <button class="bt bt-d" data-accion="montar">🚜</button>
+    </div>
+    <div id="botones-sup">
+      <button class="bt-min" data-accion="menu">☰</button>
+      <button class="bt-min" data-accion="anterior">◀</button>
+      <button class="bt-min" data-accion="siguiente">▶</button>
+    </div>
+    <div id="mirador"></div>
+  </div>
+
+  <!-- ========================= PANTALLAS ========================== -->
+  <div id="menu" class="overlay oculto">
+    <div class="ventana">
+      <div class="pestanas">
+        <button class="pest activa" data-tab="mochila">Mochila</button>
+        <button class="pest" data-tab="granja">Granja</button>
+        <button class="pest" data-tab="vecinos">Vecinos</button>
+        <button class="pest" data-tab="ayuda">Ayuda</button>
+        <button class="pest" data-tab="ajustes">Ajustes</button>
+      </div>
+      <div id="menu-cuerpo"></div>
+      <button class="cerrar" data-cerrar="menu">✕</button>
+    </div>
+  </div>
+
+  <div id="tienda" class="overlay oculto">
+    <div class="ventana">
+      <h2 id="tienda-nombre">Tienda</h2>
+      <div class="pestanas">
+        <button class="pest activa" data-shoptab="comprar">Comprar</button>
+        <button class="pest" data-shoptab="vender">Vender</button>
+        <button class="pest" data-shoptab="ganado">Ganado</button>
+      </div>
+      <div id="tienda-lista"></div>
+      <div class="pie"><span id="tienda-dinero"></span><button class="cerrar" data-cerrar="tienda">✕</button></div>
+    </div>
+  </div>
+
+  <div id="dialogo" class="oculto">
+    <div class="caja">
+      <div class="quien"><span id="dlg-nombre"></span><span id="dlg-corazones"></span></div>
+      <p id="dlg-texto"></p>
+      <div class="continuar">Pulsa A / clic para seguir ▸</div>
+    </div>
+  </div>
+
+  <div id="ordeno" class="overlay oculto">
+    <div class="ventana estrecha">
+      <h2 id="ordeno-titulo">Ordeñando</h2>
+      <div class="ordeno-escena">
+        <div class="cubo"><i id="ordeno-leche"></i><span id="ordeno-pct">0%</span></div>
+        <div class="manos">
+          <button class="mano" id="mano-izq">◀<small>IZQUIERDA</small></button>
+          <button class="mano" id="mano-der">▶<small>DERECHA</small></button>
+        </div>
+      </div>
+      <div class="compas"><i id="ordeno-compas"></i><b class="zona"></b></div>
+      <p id="ordeno-msg">Alterna las manos siguiendo el compás</p>
+      <p class="fallos">Fallos: <span id="ordeno-fallos">0</span>/5</p>
+    </div>
+  </div>
+
+  <div id="parte" class="overlay oculto">
+    <div class="ventana">
+      <h2 id="parte-fecha"></h2>
+      <div id="parte-meteo"></div>
+      <ul id="parte-lista"></ul>
+      <button class="boton grande" id="parte-ok">Empezar el día</button>
+    </div>
+  </div>
+
+  <div id="titulo" class="overlay">
+    <div class="portada">
+      <h1>SORRÍOS DE ORDÁS</h1>
+      <p class="lema">Simulador de granja · La finca de Arricio</p>
+      <div id="titulo-botones">
+        <button class="boton grande" id="btn-continuar">Continuar partida</button>
+        <button class="boton grande" id="btn-nueva">Partida nueva</button>
+      </div>
+      <p class="creditos">Ordeña a mano · Labra con el tractor · Cuida el ganado · Forma una familia</p>
+    </div>
+  </div>
+
+  <div id="carga" class="overlay">
+    <div class="portada">
+      <h1>SORRÍOS DE ORDÁS</h1>
+      <p class="lema">Preparando el valle…</p>
+      <div class="cargador"><i id="carga-barra"></i></div>
+      <p id="carga-msg">Generando el terreno</p>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="src/util.js"></script>
+<script src="src/textures.js"></script>
+<script src="src/data.js"></script>
+<script src="src/sky.js"></script>
+<script src="src/terrain.js"></script>
+<script src="src/models.js"></script>
+<script src="src/actors.js"></script>
+<script src="src/vehicles.js"></script>
+<script src="src/farm.js"></script>
+<script src="src/npcs.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/input.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/game.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
