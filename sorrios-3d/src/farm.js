@@ -100,11 +100,13 @@
     }
     var rnd = S.RNG(tipo.length * 17 + 3);
     if (tipo === 'cereal') {
-      for (var i = 0; i < 14; i++) {
-        var a = rnd() * 6.28, r = rnd() * 0.55;
-        addBox(0.028, 0.85 + rnd() * 0.25, 0.028, Math.cos(a) * r, 0, Math.sin(a) * r,
-          (rnd() - 0.5) * 0.18, (rnd() - 0.5) * 0.18);
-        addBox(0.055, 0.20, 0.055, Math.cos(a) * r, 0.82, Math.sin(a) * r, 0, 0);
+      // Mata densa: un campo de trigo no son cuatro cañas sueltas
+      for (var i = 0; i < 34; i++) {
+        var a = rnd() * 6.28, r = Math.sqrt(rnd()) * 0.68;
+        var alt = 0.62 + rnd() * 0.22;
+        addBox(0.022, alt, 0.022, Math.cos(a) * r, 0, Math.sin(a) * r,
+          (rnd() - 0.5) * 0.22, (rnd() - 0.5) * 0.22);
+        addBox(0.045, 0.17, 0.045, Math.cos(a) * r, alt - 0.03, Math.sin(a) * r, 0, 0);
       }
     } else if (tipo === 'maiz') {
       for (var m = 0; m < 4; m++) {
@@ -116,10 +118,10 @@
         }
       }
     } else if (tipo === 'forraje') {
-      for (var f = 0; f < 20; f++) {
-        var af = rnd() * 6.28, rf = rnd() * 0.6;
-        addBox(0.035, 0.42 + rnd() * 0.2, 0.035, Math.cos(af) * rf, 0, Math.sin(af) * rf,
-          (rnd() - 0.5) * 0.5, (rnd() - 0.5) * 0.5);
+      for (var f = 0; f < 36; f++) {
+        var af = rnd() * 6.28, rf = Math.sqrt(rnd()) * 0.66;
+        addBox(0.028, 0.34 + rnd() * 0.18, 0.028, Math.cos(af) * rf, 0, Math.sin(af) * rf,
+          (rnd() - 0.5) * 0.6, (rnd() - 0.5) * 0.6);
       }
     } else if (tipo === 'hoja') {
       for (var l = 0; l < 7; l++) {

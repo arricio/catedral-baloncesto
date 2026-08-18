@@ -82,15 +82,16 @@
     var puntos = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
     $('ui-brujula').textContent = puntos[Math.round(dir / 45) % 8];
 
-    // panel del tractor
+    // panel de la yunta
     var pt = $('panel-tractor');
-    if (g.conduciendo && g.tractor) {
+    if (g.guiando && g.yunta && g.yunta.uncida) {
       pt.classList.remove('oculto');
-      $('ui-kmh').textContent = Math.round(g.tractor.kmh());
-      var ap = g.tractor.attached;
-      $('ui-apero').textContent = ap ? g.tractor.attachments[ap].userData.nombre : 'Ninguno';
-      $('ui-apero-estado').textContent = !ap ? '—' : (g.tractor.lowered ? 'Trabajando' : 'Levantado');
-      $('ui-gasoil').style.width = g.tractor.fuel + '%';
+      $('ui-kmh').textContent = g.yunta.kmh().toFixed(1);
+      $('ui-apero').textContent = g.yunta.nombreApero();
+      $('ui-apero-estado').textContent = g.yunta.apero === 'carro'
+        ? ('Carro: ' + g.yunta.cargaCarro + '/40')
+        : (g.yunta.clavado ? 'Clavado, labrando' : 'Levantado');
+      $('ui-gasoil').style.width = Math.round((1 - g.yunta.fatiga) * 100) + '%';
     } else pt.classList.add('oculto');
 
     this.pintarCinturon();
@@ -207,16 +208,15 @@
     } else if (this.tab === 'ayuda') {
       cuerpo.appendChild(el('p', 'seccion', 'Controles'));
       var ctrl = [
-        ['Moverse', 'W A S D  ·  joystick'],
+        ['Andar', 'W A S D  ·  joystick'],
         ['Correr', 'Mayúsculas  ·  botón ⏩'],
         ['Mirar', 'ratón  ·  arrastrar en la pantalla'],
-        ['Acción / hablar / recoger', 'E  ·  botón A'],
-        ['Usar herramienta', 'F  ·  botón ✋'],
-        ['Subir o bajar del tractor', 'T  ·  botón 🚜'],
-        ['Cambiar de apero', 'C'],
-        ['Bajar o subir el apero', 'H'],
-        ['Arrancar o parar el motor', 'P'],
-        ['Cambiar de objeto', 'Q / R  ·  ◀ ▶  ·  teclas 1-9'],
+        ['Acción, hablar, coger', 'E  ·  botón A'],
+        ['Usar el apero de mano / regalar', 'F  ·  botón ✋'],
+        ['Uncir la yunta o ponerse al arado', 'T  ·  botón 🐂'],
+        ['Clavar o levantar el arado', 'H'],
+        ['Cambiar de apero (arado, grada, carro)', 'C'],
+        ['Cambiar de objeto en la mano', 'Q / R  ·  ◀ ▶  ·  teclas 1-9'],
         ['Cambiar de cámara', 'V'],
         ['Menú', 'Esc  ·  botón ☰']
       ];
@@ -238,7 +238,7 @@
         f.addEventListener('click', function () { o[2](); self.pintarMenu(); });
         cuerpo.appendChild(f);
       });
-      cuerpo.appendChild(el('p', 'seccion', 'Sorríos de Ordás 3D · hecho para Arricio'));
+      cuerpo.appendChild(el('p', 'seccion', 'Sorríos de Ordás 3D · la casa de Nazario'));
     }
   };
 

@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Sorríos de Ordás — Simulador de Granja 3D</title>
+<title>Sorríos de Ordás — Nazario y su yunta</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="Simulador de granja en 3D ambientado en Sorríos de Ordás (León): tractor y aperos, ordeño a mano, ganado, huerto, pueblo con vecinos, ciclo día/noche, cuatro estaciones y meteorología.">
+<meta name="description" content="Simulador de granja de antes en 3D en Sorríos de Ordás (León): yunta de vacas y arado de madera, carro del país, ordeño a mano con caldero, huerta, ermita y vecinos.">
 <meta name="theme-color" content="#0f1a12">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,7 +40,7 @@
       <div class="tractor-datos">
         <div class="mini"><span>Apero</span><b id="ui-apero">Ninguno</b></div>
         <div class="mini"><span>Estado</span><b id="ui-apero-estado">—</b></div>
-        <div class="mini"><span>Gasóleo</span><div class="barra fina"><i id="ui-gasoil"></i></div></div>
+        <div class="mini"><span>Bestias</span><div class="barra fina"><i id="ui-gasoil"></i></div></div>
       </div>
     </div>
 
@@ -60,7 +60,7 @@
       <button class="bt bt-a" data-accion="accion">A</button>
       <button class="bt bt-b" data-accion="herramienta">✋</button>
       <button class="bt bt-c" data-accion="correr">⏩</button>
-      <button class="bt bt-d" data-accion="montar">🚜</button>
+      <button class="bt bt-d" data-accion="montar">🐂</button>
     </div>
     <div id="botones-sup">
       <button class="bt-min" data-accion="menu">☰</button>
@@ -134,12 +134,12 @@
   <div id="titulo" class="overlay">
     <div class="portada">
       <h1>SORRÍOS DE ORDÁS</h1>
-      <p class="lema">Simulador de granja · La finca de Arricio</p>
+      <p class="lema">Simulador de granja de antes · Nazario y su yunta</p>
       <div id="titulo-botones">
         <button class="boton grande" id="btn-continuar">Continuar partida</button>
         <button class="boton grande" id="btn-nueva">Partida nueva</button>
       </div>
-      <p class="creditos">Ordeña a mano · Labra con el tractor · Cuida el ganado · Forma una familia</p>
+      <p class="creditos">Ordeña a mano · Labra con las vacas · Siega a guadaña · Forma una familia</p>
     </div>
   </div>
 
@@ -161,11 +161,12 @@
 <script src="src/terrain.js"></script>
 <script src="src/models.js"></script>
 <script src="src/actors.js"></script>
-<script src="src/vehicles.js"></script>
+<script src="src/yunta.js"></script>
 <script src="src/farm.js"></script>
 <script src="src/npcs.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/input.js"></script>
+<script src="src/post.js"></script>
 <script src="src/ui.js"></script>
 <script src="src/game.js"></script>
 <script src="src/main.js"></script>

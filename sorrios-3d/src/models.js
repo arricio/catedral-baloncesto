@@ -1,7 +1,7 @@
 /* ============================================================================
    SORRÍOS DE ORDÁS 3D — models.js
    Construcción procedural de edificios (casa, cuadra, gallinero, tiendas,
-   iglesia, silo), vegetación instanciada, vallas y aperos de la granja.
+   ermita, panera), vegetación, vallas y aperos de tracción animal.
    ========================================================================== */
 (function (global) {
   'use strict';
@@ -12,14 +12,15 @@
   function initMaterials(season) {
     MAT.stone = TX.matFrom(TX.stoneWallCanvas(512), { repeat: 1, bump: 2.6, roughness: 1 });
     MAT.stoneWall = TX.matFrom(TX.stoneWallCanvas(512), { repeat: 3, bump: 2.6 });
-    MAT.plaster = TX.matFrom(TX.plasterCanvas(512, '#ddceac'), { repeat: 2, bump: 1.2 });
-    MAT.plasterWhite = TX.matFrom(TX.plasterCanvas(512, '#e8e2d2'), { repeat: 2, bump: 1.2 });
-    MAT.roof = TX.matFrom(TX.roofTilesCanvas(512, '#a34b30'), { repeat: 4, bump: 3.0 });
-    MAT.roofDark = TX.matFrom(TX.roofTilesCanvas(512, '#6d4432'), { repeat: 4, bump: 3.0 });
+    MAT.plaster = TX.matFrom(TX.plasterCanvas(512, '#cfc0a2'), { repeat: 2, bump: 0.35, roughLo: 0.86, roughHi: 1 });
+    MAT.plasterWhite = TX.matFrom(TX.plasterCanvas(512, '#ddd6c4'), { repeat: 2, bump: 0.35, roughLo: 0.86, roughHi: 1 });
+    MAT.roof = TX.matFrom(TX.roofTilesCanvas(512, '#96513a'), { repeat: 4, bump: 3.0 });
+    MAT.roofDark = TX.matFrom(TX.roofTilesCanvas(512, '#6d4d3a'), { repeat: 4, bump: 3.0 });
     MAT.roofSlate = TX.matFrom(TX.roofTilesCanvas(512, '#5a5f66'), { repeat: 4, bump: 2.6 });
-    MAT.wood = TX.matFrom(TX.woodCanvas(512, '#8a6038'), { repeat: 2, bump: 2.0 });
-    MAT.woodDark = TX.matFrom(TX.woodCanvas(512, '#5f4128'), { repeat: 2, bump: 2.0 });
-    MAT.woodRed = TX.matFrom(TX.woodCanvas(512, '#9a3b2c'), { repeat: 3, bump: 2.0 });
+    MAT.wood = TX.matFrom(TX.woodCanvas(512, '#7d5836'), { repeat: 2, bump: 2.0 });
+    MAT.woodDark = TX.matFrom(TX.woodCanvas(512, '#573b24'), { repeat: 2, bump: 2.0 });
+    // La tenada del país es de tablas viejas curtidas, no un granero rojo
+    MAT.woodRed = TX.matFrom(TX.woodCanvas(512, '#6b4a33'), { repeat: 3, bump: 2.2 });
     MAT.door = TX.matFrom(TX.doorCanvas('#6b4526'), { repeat: 1, bump: 2.0 });
     MAT.hay = TX.matFrom(TX.hayCanvas(512), { repeat: 2, bump: 2.4 });
     MAT.bark = TX.matFrom(TX.barkCanvas(256), { repeat: 2, bump: 2.6 });
@@ -134,7 +135,7 @@
     var walls = box(w, h, d, matScaled(wallMat, w * 0.28, h * 0.28), 0, h / 2, 0);
     g.add(walls);
     // zócalo de piedra
-    g.add(box(w + 0.2, 0.9, d + 0.2, MAT.stone, 0, 0.45, 0));
+    g.add(box(w + 0.2, 0.9, d + 0.2, matScaled(MAT.stone, (w + 0.2) / 3.2, 0.9 / 2.2), 0, 0.45, 0));
     // tejado
     var roof = gableRoof(w, d, o.roofH || 2.3, o.slate ? MAT.roofSlate : (o.darkRoof ? MAT.roofDark : MAT.roof), 0.5);
     roof.position.y = h;
@@ -142,7 +143,7 @@
     // puerta
     var door = box(1.25, 2.3, 0.16, MAT.door, o.doorX || 0, 1.15, d / 2 + 0.02);
     g.add(door);
-    g.add(box(1.75, 0.18, 0.5, MAT.stone, o.doorX || 0, 2.38, d / 2 + 0.1));
+    g.add(box(1.75, 0.18, 0.5, matScaled(MAT.stone, 1.75 / 3.2, 0.18 / 2.2), o.doorX || 0, 2.38, d / 2 + 0.1));
     // ventanas frontales y laterales
     var wins = o.windows == null ? 2 : o.windows;
     for (var i = 0; i < wins; i++) {
@@ -168,9 +169,10 @@
       g.add(back);
     }
     // chimenea humeante
-    var ch = box(0.8, 2.2, 0.8, MAT.stone, w * 0.28, h + 1.9, -d * 0.2);
+    var pie = matScaled(MAT.stone, 0.8 / 3.2, 2.2 / 2.2);
+    var ch = box(0.8, 2.2, 0.8, pie, w * 0.28, h + 1.9, -d * 0.2);
     g.add(ch);
-    g.add(box(1.0, 0.18, 1.0, MAT.stone, w * 0.28, h + 3.0, -d * 0.2));
+    g.add(box(1.0, 0.18, 1.0, pie, w * 0.28, h + 3.0, -d * 0.2));
     g.userData.chimney = new THREE.Vector3(w * 0.28, h + 3.1, -d * 0.2);
     g.userData.size = { w: w, d: d, h: h };
     g.userData.door = new THREE.Vector3(o.doorX || 0, 0, d / 2 + 1.2);
@@ -226,36 +228,51 @@
     return g;
   }
 
-  // Silo metálico: la silueta más reconocible de una granja moderna.
-  function silo(o) {
+  // Panera leonesa (hórreo): el granero de siempre, levantado sobre pilares
+  // de piedra para que no suba la humedad ni los ratones.
+  function panera(o) {
     o = o || {};
-    var r = o.r || 2.6, h = o.h || 12;
+    var w = o.w || 6, d = o.d || 4.2, h = o.h || 2.6;
     var g = new THREE.Group();
-    var body = cyl(r, r, h, 20, MAT.metal, 0, h / 2, 0);
-    g.add(body);
-    // aros
-    for (var i = 1; i < 6; i++) {
-      var ring = new THREE.Mesh(new THREE.TorusGeometry(r + 0.03, 0.06, 6, 20), MAT.metal);
-      ring.position.y = i * (h / 6);
-      ring.rotation.x = Math.PI / 2;
-      ring.castShadow = true;
-      g.add(ring);
+    var suelo = 2.0;
+    // pegollos (pilares) con su muela encima
+    for (var i = -1; i <= 1; i += 2) {
+      for (var j = -1; j <= 1; j += 2) {
+        var px = i * (w / 2 - 0.6), pz = j * (d / 2 - 0.5);
+        g.add(cyl(0.28, 0.36, suelo - 0.3, 8, MAT.stone, px, (suelo - 0.3) / 2, pz));
+        var muela = cyl(0.62, 0.5, 0.22, 10, MAT.stone, px, suelo - 0.18, pz);
+        g.add(muela);
+      }
     }
-    var cone = new THREE.Mesh(new THREE.ConeGeometry(r + 0.25, 1.6, 20), MAT.metal);
-    cone.position.y = h + 0.8; cone.castShadow = true;
-    g.add(cone);
-    g.add(cyl(0.12, 0.12, 1.2, 8, MAT.metal, 0, h + 2.1, 0));
-    // escalerilla
-    for (var s = 0; s < h * 2; s++) {
-      g.add(box(0.5, 0.05, 0.05, MAT.metal, 0, 0.4 + s * 0.5, r + 0.18));
+    if (w > 7) {
+      for (var k = -1; k <= 1; k += 2) {
+        g.add(cyl(0.28, 0.36, suelo - 0.3, 8, MAT.stone, 0, (suelo - 0.3) / 2, k * (d / 2 - 0.5)));
+        g.add(cyl(0.62, 0.5, 0.22, 10, MAT.stone, 0, suelo - 0.18, k * (d / 2 - 0.5)));
+      }
     }
-    g.add(box(0.05, h, 0.05, MAT.metal, -0.25, h / 2, r + 0.18));
-    g.add(box(0.05, h, 0.05, MAT.metal, 0.25, h / 2, r + 0.18));
-    g.userData.size = { w: r * 2, d: r * 2, h: h };
+    // cuerpo de madera con tablas verticales
+    g.add(box(w, 0.18, d, MAT.woodDark, 0, suelo, 0));
+    var cuerpo = box(w - 0.2, h, d - 0.2, matScaled(MAT.wood, w * 0.5, h * 0.5), 0, suelo + h / 2 + 0.09, 0);
+    g.add(cuerpo);
+    for (var t = -Math.floor(w / 0.5) / 2; t <= Math.floor(w / 0.5) / 2; t++) {
+      g.add(box(0.06, h, 0.06, MAT.woodDark, t * 0.5, suelo + h / 2 + 0.09, d / 2 - 0.08));
+      g.add(box(0.06, h, 0.06, MAT.woodDark, t * 0.5, suelo + h / 2 + 0.09, -d / 2 + 0.08));
+    }
+    // puertecilla
+    g.add(box(0.9, 1.5, 0.1, MAT.woodDark, 0, suelo + 0.84, d / 2 - 0.02));
+    // tejado de teja
+    var roof = gableRoof(w, d, 1.2, MAT.roof, 0.55);
+    roof.position.y = suelo + h + 0.18;
+    g.add(roof);
+    // escalera de piedra
+    for (var e = 0; e < 4; e++) {
+      g.add(box(1.2, 0.22, 0.5, MAT.stone, 0, 0.11 + e * 0.44, d / 2 + 1.4 - e * 0.42));
+    }
+    g.userData.size = { w: w, d: d + 2, h: suelo + h + 1.2 };
     return g;
   }
 
-  // Cobertizo abierto para el tractor y los aperos
+  // Tenada: cobertizo abierto donde se guardan el carro y los aperos
   function shed(o) {
     o = o || {};
     var w = o.w || 12, d = o.d || 7, h = o.h || 4.2;
@@ -297,53 +314,58 @@
     return g;
   }
 
-  function church(o) {
+  // Ermita del pueblo: pequeña, de mampostería, con espadaña de un ojo,
+  // pórtico de madera y su campana. Nada de iglesia grande.
+  function ermita(o) {
     o = o || {};
     var g = new THREE.Group();
-    var w = 12, d = 18, h = 7;
-    g.add(box(w, h, d, matScaled(MAT.stoneWall, w * 0.25, h * 0.25), 0, h / 2, 0));
-    var roof = gableRoof(w, d, 3.0, MAT.roofSlate, 0.5);
+    var w = 7, d = 11, h = 4.2;
+    g.add(box(w, h, d, matScaled(MAT.stoneWall, w * 0.3, h * 0.3), 0, h / 2, 0));
+    g.add(box(w + 0.25, 0.7, d + 0.25, MAT.stone, 0, 0.35, 0));
+    var roof = gableRoof(w, d, 2.0, MAT.roof, 0.6);
     roof.position.y = h;
     g.add(roof);
-    // torre del campanario
-    var tw = 5, th = 15;
-    var tower = box(tw, th, tw, MAT.stoneWall, 0, th / 2, -d / 2 - tw / 2 + 0.4);
-    g.add(tower);
-    var spire = new THREE.Mesh(new THREE.ConeGeometry(tw * 0.78, 5, 4), MAT.roofSlate);
-    spire.position.set(0, th + 2.5, -d / 2 - tw / 2 + 0.4);
-    spire.rotation.y = Math.PI / 4;
-    spire.castShadow = true;
-    g.add(spire);
-    // vanos del campanario
-    for (var s = 0; s < 4; s++) {
-      var a = s * Math.PI / 2;
-      var hole = box(1.6, 2.4, 0.3, MAT.woodDark,
-        Math.sin(a) * (tw / 2), th - 2.2, -d / 2 - tw / 2 + 0.4 + Math.cos(a) * (tw / 2));
-      hole.rotation.y = a;
-      g.add(hole);
+
+    // espadaña: el muro que remata la fachada con el hueco de la campana
+    var esp = new THREE.Group();
+    esp.position.set(0, h + 2.0, d / 2 - 0.25);
+    g.add(esp);
+    esp.add(box(2.6, 2.6, 0.45, matScaled(MAT.stoneWall, 1.2, 1.2), 0, 1.3, 0));
+    // hueco del campanario
+    esp.add(box(1.0, 1.2, 0.5, new THREE.MeshStandardMaterial({ color: 0x14100c, roughness: 1 }), 0, 1.35, 0.02));
+    var arco = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.16, 6, 12, Math.PI), MAT.stone);
+    arco.position.set(0, 1.95, 0.02);
+    esp.add(arco);
+    // campana
+    var campana = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.26, 0.34, 10), MAT.metal);
+    campana.position.set(0, 1.5, 0.02);
+    esp.add(campana);
+    esp.add(box(0.9, 0.07, 0.07, MAT.woodDark, 0, 1.78, 0.02));
+    // remate y cruz
+    for (var r = 0; r < 8; r++) esp.add(box(2.6 - r * 0.26, 0.14, 0.5, MAT.stone, 0, 2.6 + r * 0.13, 0));
+    esp.add(box(0.1, 0.75, 0.1, MAT.metal, 0, 3.9, 0));
+    esp.add(box(0.42, 0.1, 0.1, MAT.metal, 0, 4.05, 0));
+
+    // pórtico de madera delante de la puerta
+    var por = new THREE.Group();
+    por.position.set(0, 0, d / 2 + 1.1);
+    g.add(por);
+    for (var i = -1; i <= 1; i += 2) por.add(box(0.2, 2.6, 0.2, MAT.woodDark, i * 1.5, 1.3, 0.7));
+    var tej = gableRoof(4.0, 2.4, 0.7, MAT.roof, 0.35);
+    tej.position.y = 2.6;
+    por.add(tej);
+    // puerta con clavos
+    g.add(box(1.4, 2.4, 0.18, MAT.door, 0, 1.2, d / 2 + 0.02));
+    g.add(box(1.8, 0.2, 0.5, MAT.stone, 0, 2.5, d / 2 + 0.12));
+    // ventanuco lateral
+    for (var lado = -1; lado <= 1; lado += 2) {
+      var vt = windowFrame(0.6, 0.9, MAT.stoneWall);
+      vt.position.set(lado * (w / 2 + 0.06), 2.4, -1.5);
+      vt.rotation.y = lado * Math.PI / 2;
+      g.add(vt);
     }
-    // cruz
-    g.add(box(0.16, 1.8, 0.16, MAT.metal, 0, th + 6.0, -d / 2 - tw / 2 + 0.4));
-    g.add(box(0.9, 0.16, 0.16, MAT.metal, 0, th + 6.4, -d / 2 - tw / 2 + 0.4));
-    // portada y rosetón
-    g.add(box(2.0, 3.2, 0.2, MAT.door, 0, 1.6, d / 2 + 0.02));
-    var rose = new THREE.Mesh(new THREE.CircleGeometry(1.1, 16), MAT.glass);
-    rose.position.set(0, 5.2, d / 2 + 0.06);
-    g.add(rose);
-    var arch = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.14, 6, 16), MAT.stone);
-    arch.position.set(0, 5.2, d / 2 + 0.08);
-    g.add(arch);
-    // ventanales laterales
-    for (var i = -1; i <= 1; i++) {
-      for (var sgn = -1; sgn <= 1; sgn += 2) {
-        var wf = windowFrame(0.9, 2.2, MAT.stoneWall);
-        wf.position.set(sgn * (w / 2 + 0.06), 4.2, i * 4.5);
-        wf.rotation.y = sgn * Math.PI / 2;
-        g.add(wf);
-      }
-    }
-    g.userData.size = { w: w, d: d + tw, h: h };
-    g.userData.door = new THREE.Vector3(0, 0, d / 2 + 1.4);
+    g.userData.size = { w: w, d: d + 2, h: h };
+    g.userData.door = new THREE.Vector3(0, 0, d / 2 + 2.4);
     return g;
   }
 
@@ -503,28 +525,224 @@
     this.meshes = [pm, rm];
   }
 
+
+  /* ================================================ APEROS DE TIRO ====== */
+  // Yugo de cornamenta: la pieza de madera labrada que se ata a la testuz de
+  // las vacas con las coyundas de cuero.
+  function yugo(largo) {
+    var g = new THREE.Group();
+    var L = largo || 1.9;
+    var mad = matScaled(MAT.woodDark, 2, 1);
+    var viga = box(L, 0.20, 0.24, mad, 0, 0, 0);
+    g.add(viga);
+    // remates tallados en los extremos
+    for (var i = -1; i <= 1; i += 2) {
+      g.add(box(0.26, 0.30, 0.30, mad, i * L / 2, 0.02, 0));
+      // gamellas: los huecos donde apoya el testuz
+      g.add(box(0.34, 0.12, 0.34, mad, i * (L / 2 - 0.42), -0.12, 0));
+      // coyundas de cuero
+      var cor = new THREE.MeshStandardMaterial({ color: 0x5a3a20, roughness: 0.9 });
+      for (var c = 0; c < 3; c++) {
+        var cinta = box(0.05, 0.34, 0.30, cor, i * (L / 2 - 0.30 - c * 0.12), -0.20, 0);
+        g.add(cinta);
+      }
+      // subiugas (los palos que sujetan por debajo)
+      g.add(box(0.06, 0.34, 0.06, mad, i * (L / 2 - 0.60), -0.20, 0.14));
+      g.add(box(0.06, 0.34, 0.06, mad, i * (L / 2 - 0.60), -0.20, -0.14));
+    }
+    // adorno tallado del centro
+    g.add(box(0.40, 0.26, 0.28, mad, 0, 0.02, 0));
+    // argolla central de donde tira el apero
+    var anilla = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.025, 6, 12), MAT.metal);
+    anilla.rotation.x = Math.PI / 2;
+    anilla.position.set(0, -0.16, 0);
+    g.add(anilla);
+    g.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return g;
+  }
+
+  // Arado romano de madera con reja de hierro: timón, mancera y dental.
+  function arado() {
+    var g = new THREE.Group();
+    var mad = matScaled(MAT.wood, 2, 1);
+    var hierro = new THREE.MeshStandardMaterial({ color: 0x6a6e74, roughness: 0.42, metalness: 0.8 });
+    // timón: la vara larga que va hasta el yugo
+    var timon = box(0.11, 0.11, 3.1, mad, 0, 0.72, 1.15);
+    timon.rotation.x = -0.14;
+    g.add(timon);
+    // cama y dental (la pieza que va por la tierra)
+    g.add(box(0.13, 0.16, 1.15, mad, 0, 0.30, -0.35));
+    // reja de hierro
+    var reja = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.5, 4), hierro);
+    reja.rotation.x = -Math.PI / 2 - 0.25;
+    reja.rotation.y = Math.PI / 4;
+    reja.position.set(0, 0.17, -0.92);
+    g.add(reja);
+    // orejeras que voltean la tierra
+    for (var i = -1; i <= 1; i += 2) {
+      var or = box(0.05, 0.26, 0.5, mad, i * 0.11, 0.30, -0.66);
+      or.rotation.z = i * 0.5;
+      g.add(or);
+    }
+    // esteva o mancera: el mango por donde se agarra
+    var mancera = box(0.09, 1.05, 0.09, mad, 0, 0.80, -0.62);
+    mancera.rotation.x = 0.22;
+    g.add(mancera);
+    g.add(box(0.34, 0.08, 0.08, mad, 0, 1.28, -0.72));
+    // cuñas y clavijas
+    g.add(box(0.06, 0.24, 0.06, MAT.woodDark, 0, 0.55, 0.32));
+    g.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    g.userData = { tipo: 'arado', ancho: 0.9, nombre: 'Arado de madera', engancheZ: 2.55 };
+    return g;
+  }
+
+  // Rueda de carro de radios, con llanta de hierro
+  function ruedaCarro(r) {
+    var g = new THREE.Group();
+    var mad = MAT.woodDark;
+    var hierro = new THREE.MeshStandardMaterial({ color: 0x4a4e54, roughness: 0.5, metalness: 0.7 });
+    var llanta = new THREE.Mesh(new THREE.TorusGeometry(r, 0.055, 8, 22), hierro);
+    g.add(llanta);
+    var pina = new THREE.Mesh(new THREE.TorusGeometry(r - 0.07, 0.07, 6, 22), mad);
+    g.add(pina);
+    for (var i = 0; i < 10; i++) {
+      var a = i / 10 * Math.PI * 2;
+      var radio = box(0.055, r - 0.16, 0.055, mad, 0, 0, 0);
+      radio.position.set(Math.cos(a) * (r / 2 - 0.02), Math.sin(a) * (r / 2 - 0.02), 0);
+      radio.rotation.z = a - Math.PI / 2;
+      g.add(radio);
+    }
+    g.add(cyl(0.11, 0.11, 0.26, 10, mad, 0, 0, 0).rotateX(Math.PI / 2));
+    g.rotation.y = Math.PI / 2;
+    g.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return g;
+  }
+
+  // Carro del país: caja de tablas, dos ruedas grandes y pértigo hasta el yugo.
+  function carro() {
+    var g = new THREE.Group();
+    var mad = matScaled(MAT.wood, 3, 1);
+    var alturaEje = 0.72;
+    // piso
+    g.add(box(1.75, 0.12, 3.0, mad, 0, alturaEje + 0.18, -0.2));
+    // adrales (los laterales de estacas)
+    for (var i = -1; i <= 1; i += 2) {
+      g.add(box(0.08, 0.55, 3.0, mad, i * 0.85, alturaEje + 0.5, -0.2));
+      for (var e = 0; e < 6; e++) {
+        g.add(box(0.07, 0.85, 0.07, MAT.woodDark, i * 0.85, alturaEje + 0.62, -1.6 + e * 0.56));
+      }
+    }
+    g.add(box(1.75, 0.55, 0.08, mad, 0, alturaEje + 0.5, -1.72));
+    // eje y ruedas
+    g.add(box(2.0, 0.12, 0.12, MAT.woodDark, 0, alturaEje, -0.5));
+    var r1 = ruedaCarro(0.72); r1.position.set(-1.02, alturaEje, -0.5); g.add(r1);
+    var r2 = ruedaCarro(0.72); r2.position.set(1.02, alturaEje, -0.5); g.add(r2);
+    g.userData.ruedas = [r1, r2];
+    // pértigo (la lanza que llega al yugo)
+    var pertigo = box(0.13, 0.13, 3.2, mad, 0, alturaEje + 0.12, 1.65);
+    g.add(pertigo);
+    g.add(box(0.5, 0.09, 0.09, MAT.woodDark, 0, alturaEje + 0.12, 3.1));
+    // carga de hierba (se muestra cuando va lleno)
+    var carga = new THREE.Group();
+    var heno = MAT.hay;
+    for (var h = 0; h < 5; h++) {
+      var mont = new THREE.Mesh(new THREE.SphereGeometry(0.55 + Math.random() * 0.2, 8, 6), heno);
+      mont.position.set((Math.random() - 0.5) * 1.1, alturaEje + 0.85 + Math.random() * 0.25, -1.4 + h * 0.62);
+      mont.scale.set(1.3, 0.75, 1.1);
+      mont.castShadow = true;
+      carga.add(mont);
+    }
+    carga.visible = false;
+    g.add(carga);
+    g.userData.carga = carga;
+    g.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    g.userData.tipo = 'carro';
+    g.userData.ancho = 1.9;
+    g.userData.nombre = 'Carro del país';
+    g.userData.engancheZ = 3.1;
+    return g;
+  }
+
+  // Grada de ramas para desterronar después de arar
+  function grada() {
+    var g = new THREE.Group();
+    var mad = MAT.woodDark;
+    for (var i = 0; i < 4; i++) g.add(box(1.5, 0.08, 0.08, mad, 0, 0.25, -i * 0.28));
+    for (var j = -2; j <= 2; j++) g.add(box(0.07, 0.08, 1.0, mad, j * 0.34, 0.25, -0.42));
+    for (var k = -2; k <= 2; k++) {
+      for (var r = 0; r < 4; r++) {
+        g.add(box(0.05, 0.22, 0.05, mad, k * 0.34, 0.12, -r * 0.28));
+      }
+    }
+    g.add(box(0.09, 0.09, 2.4, mad, 0, 0.30, 1.2));
+    g.traverse(function (o) { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    g.userData = { tipo: 'grada', ancho: 1.5, nombre: 'Grada de madera', engancheZ: 2.3 };
+    return g;
+  }
+
   /* ============================================================ ÁRBOLES = */
-  function foliageGeometry(r, seed) {
-    var geo = new THREE.IcosahedronGeometry(r, 1);
+  function foliageGeometry(r, seed, det) {
+    var geo = new THREE.IcosahedronGeometry(r, det == null ? 1 : det);
     var pos = geo.attributes.position;
+    var n = S.Noise(seed || 7);
     var rnd = S.RNG(seed || 7);
     for (var i = 0; i < pos.count; i++) {
       var v = new THREE.Vector3().fromBufferAttribute(pos, i);
-      var f = 0.78 + rnd() * 0.42;
+      var d = v.clone().normalize();
+      // bultos grandes (racimos de rama) + rizado fino del borde de la hoja
+      var grande = n.fbm(d.x * 1.4 + 5, d.z * 1.4 + d.y * 1.4 + 5, 3);
+      var fino = n.fbm(d.x * 6.0, d.z * 6.0 + d.y * 6.0, 2);
+      var f = 0.72 + grande * 0.52 + (fino - 0.5) * 0.16 + rnd() * 0.06;
       v.multiplyScalar(f);
-      v.y *= 0.86;
+      v.y *= 0.88;
       pos.setXYZ(i, v.x, v.y, v.z);
+    }
+    geo.computeVertexNormals();
+    geo.computeVertexNormals();
+    return geo;
+  }
+
+  // Copa de conífera: cono con el perfil roto en pisos de ramas
+  function coneFoliage(r, h, seg) {
+    var geo = new THREE.ConeGeometry(r, h, seg, 6);
+    var pos = geo.attributes.position;
+    var n = S.Noise(23);
+    for (var i = 0; i < pos.count; i++) {
+      var v = new THREE.Vector3().fromBufferAttribute(pos, i);
+      var rad = Math.hypot(v.x, v.z);
+      if (rad > 0.001) {
+        var piso = 0.80 + Math.abs(Math.sin(v.y * 3.1)) * 0.34;
+        var rug = 0.86 + n.fbm(v.x * 2.0 + 3, v.z * 2.0 + v.y * 2.0, 3) * 0.42;
+        var f = piso * rug;
+        v.x *= f; v.z *= f;
+        pos.setXYZ(i, v.x, v.y, v.z);
+      }
     }
     geo.computeVertexNormals();
     return geo;
   }
 
   var SEASON_LEAF = [
-    { c: 0x4f8a2f, c2: 0x6fae45 },   // primavera
-    { c: 0x3d7a28, c2: 0x5f9c3a },   // verano
-    { c: 0xb4702a, c2: 0xd39a3a },   // otoño
-    { c: 0x6b6f5e, c2: 0x8a8e7c }    // invierno (rama pelada)
+    { c: 0x4a6b30, c2: 0x6b8c42, hex: '#4a6b30', alt: '#93b262' },   // primavera
+    { c: 0x3f5f28, c2: 0x5c7d38, hex: '#3f5f28', alt: '#82a052' },   // verano
+    { c: 0x9a6530, c2: 0xba8a42, hex: '#9a6530', alt: '#d8ae5c' },   // otoño
+    { c: 0x5f6355, c2: 0x7b7f6f, hex: '#5f6355', alt: '#9aa08e' }    // invierno
   ];
+
+  // Material de copa: hoja pintada, con relieve y rugosidad, en vez del
+  // color plano de facetas que delataba el low-poly.
+  function leafMaterial(season, oscuro, repeat) {
+    var L = SEASON_LEAF[season];
+    var key = 'hoja_' + season + '_' + (oscuro ? 'd' : 'c') + '_' + (repeat || 2);
+    return TX.make(key, function () {
+      var col = oscuro ? TX.mix(L.hex, '#000000', 0.30) : L.hex;
+      var m = TX.matFrom(TX.leafCanvas(256, col, L.alt), {
+        repeat: repeat || 2, bump: 2.4, roughLo: 0.80, roughHi: 1
+      });
+      m.normalScale.set(1.5, 1.5);
+      return m;
+    });
+  }
 
   // Bosque instanciado: un solo par de mallas para cientos de árboles.
   function Forest(scene, terrain, list, season, quality) {
@@ -543,29 +761,26 @@
         trunkH = 2.2;
         trunkGeo = new THREE.CylinderGeometry(0.16, 0.34, 6.5, 8);
         trunkGeo.translate(0, 3.25, 0);
-        folGeo = new THREE.ConeGeometry(2.1, 6.4, 9);
+        folGeo = coneFoliage(2.1, 6.4, 13);
         folGeo.translate(0, 5.6, 0);
-        folMat = new THREE.MeshStandardMaterial({
-          color: season === 3 ? 0x2f5c46 : 0x2c6b3a, roughness: 0.95, flatShading: true
-        });
+        // la conífera tira a verde azulado, pero sin ennegrecerse
+        folMat = leafMaterial(season === 3 ? 1 : season, false, 3).clone();
+        folMat.color = new THREE.Color(0xa8c4a8);
       } else if (kind === 'chopo') {
         trunkGeo = new THREE.CylinderGeometry(0.14, 0.3, 8, 8);
         trunkGeo.translate(0, 4, 0);
-        folGeo = new THREE.SphereGeometry(1.5, 8, 8);
+        folGeo = foliageGeometry(1.5, 17, 2);
         folGeo.scale(1, 2.6, 1);
         folGeo.translate(0, 7.4, 0);
-        folMat = new THREE.MeshStandardMaterial({
-          color: leaf.c2, roughness: 0.92, flatShading: true, transparent: season === 3, opacity: season === 3 ? 0.35 : 1
-        });
+        folMat = leafMaterial(season, false, 3);
+        if (season === 3) { folMat = folMat.clone(); folMat.transparent = true; folMat.opacity = 0.4; }
       } else {
         trunkGeo = new THREE.CylinderGeometry(0.24, 0.55, 3.4, 9);
         trunkGeo.translate(0, 1.7, 0);
-        folGeo = foliageGeometry(2.5, 11);
+        folGeo = foliageGeometry(2.5, 11, 2);
         folGeo.translate(0, 4.6, 0);
-        folMat = new THREE.MeshStandardMaterial({
-          color: leaf.c, roughness: 0.94, flatShading: true,
-          transparent: season === 3, opacity: season === 3 ? 0.3 : 1
-        });
+        folMat = leafMaterial(season, false, 3);
+        if (season === 3) { folMat = folMat.clone(); folMat.transparent = true; folMat.opacity = 0.35; }
       }
       var tm = new THREE.InstancedMesh(trunkGeo, MAT.bark, items.length);
       var fm = new THREE.InstancedMesh(folGeo, folMat, items.length);
@@ -588,8 +803,8 @@
         fm.setMatrixAt(i, dummy.matrix);
         fm2.setMatrixAt(i, dummy.matrix);
         // cada árbol con su tono: un bosque monocromo canta muchísimo
-        var v = 0.78 + Math.random() * 0.42;
-        col.setRGB(v * (0.92 + Math.random() * 0.16), v, v * (0.85 + Math.random() * 0.2));
+        var v = 0.80 + Math.random() * 0.26;
+        col.setRGB(v * (0.94 + Math.random() * 0.11), v, v * (0.86 + Math.random() * 0.14));
         fm.setColorAt(i, col);
         col.multiplyScalar(0.88);
         fm2.setColorAt(i, col);
@@ -605,15 +820,39 @@
     this.roble = build(byType.roble, 'roble');
     this.pino = build(byType.pino, 'pino');
     this.chopo = build(byType.chopo, 'chopo');
+    this.season = season;
   }
+
+  // El arbolado cambia con la estación: flor, verde, hoja seca y rama pelada
+  Forest.prototype.setSeason = function (season) {
+    if (season === this.season) return;
+    this.season = season;
+    var self = this;
+    function vestir(grupo, kind) {
+      if (!grupo) return;
+      var m;
+      if (kind === 'pino') {
+        m = leafMaterial(season === 3 ? 1 : season, false, 3).clone();
+        m.color = new THREE.Color(0xa8c4a8);
+      } else {
+        m = leafMaterial(season, false, 3);
+        if (season === 3) { m = m.clone(); m.transparent = true; m.opacity = 0.35; }
+      }
+      grupo.foliage.material = m;
+      grupo.foliage2.material = m;
+    }
+    vestir(this.roble, 'roble');
+    vestir(this.pino, 'pino');
+    vestir(this.chopo, 'chopo');
+  };
 
   function bushClump(season) {
     var g = new THREE.Group();
     var leaf = SEASON_LEAF[season];
-    var mat = new THREE.MeshStandardMaterial({ color: leaf.c, roughness: 0.95, flatShading: true });
+    var mat = leafMaterial(season, false, 1);
     for (var i = 0; i < 3; i++) {
       var r = 0.5 + Math.random() * 0.4;
-      var m = new THREE.Mesh(foliageGeometry(r, 20 + i), mat);
+      var m = new THREE.Mesh(foliageGeometry(r, 20 + i, 2), mat);
       m.position.set((Math.random() - 0.5) * 0.9, r * 0.75, (Math.random() - 0.5) * 0.9);
       m.castShadow = true; m.receiveShadow = true;
       g.add(m);
@@ -640,8 +879,9 @@
   S.Models = {
     initMaterials: initMaterials, MAT: MAT,
     box: box, cyl: cyl, gableRoof: gableRoof, windowFrame: windowFrame, matScaled: matScaled,
-    house: house, barn: barn, coop: coop, silo: silo, shed: shed, shop: shop, church: church,
+    house: house, barn: barn, coop: coop, panera: panera, shed: shed, shop: shop, ermita: ermita,
     trough: trough, roundBale: roundBale, squareBale: squareBale, well: well,
+    yugo: yugo, arado: arado, carro: carro, grada: grada, ruedaCarro: ruedaCarro,
     streetLamp: streetLamp, fenceSection: fenceSection, FenceRun: FenceRun,
     Forest: Forest, bushClump: bushClump, rock: rock, foliageGeometry: foliageGeometry,
     SEASON_LEAF: SEASON_LEAF

@@ -33,19 +33,17 @@
   // Rutina por horas: a dónde va cada vecino a lo largo del día
   NPC.rutinaDe = function (id) {
     switch (id) {
-      case 'rosalia':  return [[6, 'tienda_comida'], [20, 'plaza'], [22, 'taberna'], [23.5, 'tienda_comida']];
-      case 'bernardo': return [[6, 'tienda_aperos'], [19, 'taberna'], [23, 'tienda_aperos']];
-      case 'marina':   return [[7, 'granja'], [11, 'prado'], [15, 'plaza'], [20, 'taberna'], [22.5, 'casa_marina']];
-      case 'aurora':   return [[8, 'escuela'], [16, 'plaza'], [18, 'rio'], [21, 'casa_aurora']];
-      case 'nieves':   return [[7, 'molino'], [13, 'plaza'], [16, 'molino'], [20, 'taberna'], [23, 'casa_nieves']];
-      case 'segundo':  return [[5, 'taberna']];
-      case 'casimiro': return [[7, 'iglesia'], [13, 'plaza'], [15, 'iglesia']];
-      case 'herminia': return [[9, 'plaza'], [13, 'casa_herminia'], [17, 'plaza'], [20, 'casa_herminia']];
-      case 'tino':     return [[6, 'prado'], [14, 'rio'], [19, 'taberna'], [23, 'casa_tino']];
-      case 'celso':    return [[8, 'plaza'], [14, 'ayuntamiento'], [19, 'taberna'], [23, 'casa_celso']];
-      case 'lucio':    return [[8, 'fragua'], [18, 'taberna'], [23, 'casa_lucio']];
-      case 'chelo':    return [[8, 'plaza'], [10, 'granja'], [13, 'puente'], [16, 'plaza'], [19, 'taberna'], [23, 'casa_chelo']];
-      default:         return [[8, 'plaza'], [21, 'plaza']];
+      case 'noemi':      return [[6, 'tienda_comida'], [20, 'plaza'], [22, 'taberna'], [23.5, 'tienda_comida']];
+      case 'jeremias':   return [[6, 'tienda_aperos'], [19, 'taberna'], [23, 'tienda_aperos']];
+      case 'marinieves': return [[7, 'granja'], [11, 'prado'], [15, 'plaza'], [20, 'taberna'], [22.5, 'casa_marinieves']];
+      case 'julita':     return [[8, 'escuela'], [16, 'plaza'], [18, 'rio'], [21, 'casa_julita']];
+      case 'nieves':     return [[7, 'molino'], [13, 'plaza'], [16, 'molino'], [20, 'taberna'], [23, 'casa_nieves']];
+      case 'arricio':    return [[5, 'taberna']];
+      case 'alfonso':    return [[6, 'prado'], [14, 'rio'], [19, 'taberna'], [23, 'casa_alfonso']];
+      case 'josep':      return [[7, 'huerta'], [12, 'concejo'], [16, 'plaza'], [20, 'taberna'], [23, 'casa_josep']];
+      case 'tornillos':  return [[8, 'fragua'], [18, 'taberna'], [23, 'fragua']];
+      case 'mario':      return [[8, 'plaza'], [11, 'puente'], [14, 'concejo'], [19, 'taberna'], [23, 'casa_mario']];
+      default:           return [[8, 'plaza'], [21, 'plaza']];
     }
   };
 
@@ -53,7 +51,7 @@
     // Si es tu pareja, vive en la granja
     if (this.casado) {
       var h = clock.hourF();
-      return (h >= 10 && h < 18) ? 'huerto' : 'casa_arricio';
+      return (h >= 10 && h < 18) ? 'huerta' : 'casa_nazario';
     }
     var hf = clock.hourF();
     var cur = this.rutina[0];
@@ -208,9 +206,10 @@
   Child.prototype.frases = function () {
     return this.etapa === 1
       ? ['¡Papá! ¿Puedo dar de comer a las gallinas?', '¿Cuándo me dejas ordeñar a mí?',
-         'He visto un corzo en el prado.', '¿Me llevas en el tractor?']
+         'He visto un corzo en el prado.', '¿Me dejas guiar la yunta?']
       : ['Padre, ya he regado el huerto.', 'He echado pienso al ganado, no te preocupes.',
-         'Cuando quieras me quedo yo con la cuadra.', 'Este año la cosecha viene buena.'];
+         'Cuando quieras me quedo yo con la cuadra.', 'Este año la cosecha viene buena.',
+         'He segado el prado de abajo con la guadaña.'];
   };
   Child.prototype.save = function () {
     return { nombre: this.nombre, nina: this.nina, edad: this.edad, etapa: this.etapa };

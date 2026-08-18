@@ -15,9 +15,23 @@
   }
   function ctx2(c) { return c.getContext('2d'); }
 
+  // Acepta '#rrggbb', '#rgb' y también el 'rgb(r,g,b)' que devuelve mix():
+  // sin esto, cualquier color pasado por mix() se leía como negro y las
+  // texturas salían sucias.
   function hex2rgb(h) {
+    if (h == null) return [0, 0, 0];
+    h = String(h).trim();
+    if (h.charAt(0) !== '#') {
+      var m = h.match(/rgba?\(([^)]+)\)/);
+      if (m) {
+        var q = m[1].split(',');
+        return [parseFloat(q[0]) | 0, parseFloat(q[1]) | 0, parseFloat(q[2]) | 0];
+      }
+    }
     h = h.replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
     var n = parseInt(h, 16);
+    if (isNaN(n)) return [0, 0, 0];
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
   function rgb(r, g, b) { return 'rgb(' + (r | 0) + ',' + (g | 0) + ',' + (b | 0) + ')'; }
@@ -72,6 +86,17 @@
     return out;
   }
 
+  // Color medio del canvas en espacio lineal: sirve para modular una
+  // textura con otra sin cambiarle el brillo general.
+  function avgLinear(canvas) {
+    var w = canvas.width, h = canvas.height;
+    var d = ctx2(canvas).getImageData(0, 0, w, h).data;
+    var r = 0, g = 0, b = 0, n = w * h;
+    function lin(v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+    for (var i = 0; i < n; i++) { r += lin(d[i * 4]); g += lin(d[i * 4 + 1]); b += lin(d[i * 4 + 2]); }
+    return new THREE.Vector3(Math.max(r / n, 1e-4), Math.max(g / n, 1e-4), Math.max(b / n, 1e-4));
+  }
+
   function tex(canvas, repeat, aniso) {
     var t = new THREE.CanvasTexture(canvas);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -111,12 +136,12 @@
   function grassCanvas(season, size) {
     var c = cv(size || 512), x = ctx2(c), w = c.width;
     var pal = [
-      { b: '#4a7a2e', d: '#2f5a1d', l: '#79a844' },   // primavera
-      { b: '#517f2c', d: '#33581b', l: '#86ad46' },   // verano
-      { b: '#6f7c30', d: '#4c5720', l: '#a9a44e' },
-      { b: '#7d8a76', d: '#5b6656', l: '#c8d2cc' }    // invierno (hierba helada)
+      { b: '#4e6b34', d: '#374f22', l: '#77914b' },   // primavera
+      { b: '#526e30', d: '#3a4f1f', l: '#7d954c' },   // verano
+      { b: '#6a7038', d: '#4b4f26', l: '#9a9558' },
+      { b: '#7d8479', d: '#5d6459', l: '#c2cac4' }    // invierno (hierba helada)
     ][season];
-    noiseFill(c, pal.b, pal.d, pal.l, 5, 5);
+    noiseFill(c, pal.b, pal.d, pal.l, 17, 4);
     // briznas
     var rnd = S.RNG(700 + season);
     for (var i = 0; i < w * 9; i++) {
@@ -143,9 +168,26 @@
     return c;
   }
 
+  // Manchas grandes del terreno (calvas, humedad, pasto más ralo). Se
+  // multiplica encima del suelo normalizada por su media, así rompe el
+  // patrón de baldosa sin cambiar el brillo del prado.
+  function macroCanvas(size, seed) {
+    var c = cv(size || 256), x = ctx2(c), w = c.width;
+    noiseFill(c, '#8a8a8a', '#5e6055', '#b6b2a6', 3.2, 5);
+    var rnd = S.RNG(seed || 61);
+    x.globalAlpha = 0.12;
+    for (var i = 0; i < 40; i++) {
+      x.fillStyle = rnd() < 0.5 ? '#3f4238' : '#cfcabb';
+      var r = w * (0.04 + rnd() * 0.14);
+      x.beginPath(); x.arc(rnd() * w, rnd() * w, r, 0, 6.284); x.fill();
+    }
+    x.globalAlpha = 1;
+    return c;
+  }
+
   function dirtCanvas(size, snowy) {
     var c = cv(size || 512), x = ctx2(c), w = c.width;
-    noiseFill(c, snowy ? '#8f8a80' : '#6b4f34', snowy ? '#6d6a63' : '#4a3623', snowy ? '#cfd6da' : '#8f6f4c', 6, 5);
+    noiseFill(c, snowy ? '#8f8a80' : '#6b4f34', snowy ? '#6d6a63' : '#4a3623', snowy ? '#cfd6da' : '#8f6f4c', 19, 4);
     var rnd = S.RNG(21);
     // gravilla y piedrecillas
     for (var i = 0; i < w * 2.2; i++) {
@@ -159,7 +201,7 @@
   // Tierra arada: surcos paralelos con terrones.
   function plowedCanvas(size) {
     var c = cv(size || 512), x = ctx2(c), w = c.width;
-    noiseFill(c, '#5a3f28', '#3b2817', '#7a583a', 7, 4);
+    noiseFill(c, '#5a3f28', '#3b2817', '#7a583a', 15, 4);
     var rnd = S.RNG(33);
     for (var r = 0; r < 16; r++) {
       var y = r * (w / 16);
@@ -305,12 +347,23 @@
   function plasterCanvas(size, color) {
     var c = cv(size || 512);
     var base = color || '#d8c9a8';
-    noiseFill(c, base, mix(base, '#000000', 0.22), mix(base, '#ffffff', 0.18), 4, 5);
+    // grano fino: la cal se ve a llana, no en nubarrones
+    noiseFill(c, base, mix(base, '#7a6d55', 0.16), mix(base, '#ffffff', 0.11), 22, 4);
     var x = ctx2(c), w = c.width, rnd = S.RNG(101);
-    x.globalAlpha = 0.10;
-    for (var i = 0; i < 200; i++) {
-      x.fillStyle = rnd() < 0.5 ? '#000000' : '#ffffff';
-      x.fillRect(rnd() * w, rnd() * w, 1 + rnd() * 3, 1 + rnd() * 3);
+    // llagas de la llana: trazos anchos y suavísimos
+    x.globalAlpha = 0.05;
+    for (var j = 0; j < 90; j++) {
+      x.strokeStyle = rnd() < 0.5 ? '#000000' : '#ffffff';
+      x.lineWidth = 6 + rnd() * 22;
+      var sy = rnd() * w, sx = rnd() * w, len = 40 + rnd() * 160, a = (rnd() - 0.5) * 0.7;
+      x.beginPath(); x.moveTo(sx, sy);
+      x.lineTo(sx + Math.cos(a) * len, sy + Math.sin(a) * len); x.stroke();
+    }
+    // poros del revoco: finos y discretos, que no parezca granito
+    x.globalAlpha = 0.055;
+    for (var i = 0; i < 900; i++) {
+      x.fillStyle = rnd() < 0.6 ? '#000000' : '#ffffff';
+      x.fillRect(rnd() * w, rnd() * w, 1, 1);
     }
     x.globalAlpha = 1;
     return c;
@@ -333,10 +386,10 @@
   // Piel de vaca frisona: manchas negras irregulares sobre blanco.
   function cowHideCanvas(size, spotColor, coverage) {
     var c = cv(size || 512), x = ctx2(c), w = c.width;
-    noiseFill(c, '#f2efe6', '#ddd8cc', '#ffffff', 5, 3);
+    noiseFill(c, '#ddd8ca', '#bdb7a7', '#f0ece0', 14, 4);
     var rnd = S.RNG(131);
     var n = coverage == null ? 16 : coverage;
-    x.fillStyle = spotColor || '#2b241e';
+    x.fillStyle = spotColor || '#372f27';
     for (var i = 0; i < n; i++) {
       var cx = rnd() * w, cy = rnd() * w, R = 22 + rnd() * 70;
       x.beginPath();
@@ -348,6 +401,12 @@
         if (s2 === 0) x.moveTo(px, py); else x.lineTo(px, py);
       }
       x.closePath(); x.fill();
+    }
+    // suciedad de la cuadra: ninguna vaca está blanca del todo
+    x.globalAlpha = 0.09;
+    for (var s3 = 0; s3 < 30; s3++) {
+      x.fillStyle = rnd() < 0.5 ? '#6b5a41' : '#8a7c63';
+      x.beginPath(); x.arc(rnd() * w, rnd() * w, 10 + rnd() * 42, 0, 6.284); x.fill();
     }
     // pelo
     x.globalAlpha = 0.12;
@@ -362,12 +421,12 @@
 
   function woolCanvas(size, color) {
     var c = cv(size || 512), x = ctx2(c), w = c.width;
-    var base = color || '#efe9dc';
-    noiseFill(c, base, mix(base, '#000000', 0.22), '#ffffff', 8, 3);
+    var base = color || '#ddd7c6';
+    noiseFill(c, base, mix(base, '#5a5040', 0.30), mix(base, '#ffffff', 0.16), 13, 4);
     var rnd = S.RNG(151);
     for (var i = 0; i < w * 3; i++) {
       var cx = rnd() * w, cy = rnd() * w, r = 4 + rnd() * 10;
-      x.strokeStyle = rnd() < 0.5 ? 'rgba(255,255,255,.55)' : 'rgba(150,140,125,.45)';
+      x.strokeStyle = rnd() < 0.5 ? 'rgba(248,244,232,.42)' : 'rgba(126,116,98,.45)';
       x.lineWidth = 1.4;
       x.beginPath(); x.arc(cx, cy, r, rnd() * 6, rnd() * 6 + 3); x.stroke();
     }
@@ -395,6 +454,35 @@
     return c;
   }
 
+  // Copa de árbol: masa de hojas con luz y sombra, para que el follaje no
+  // sea un plastón de color plano.
+  function leafCanvas(size, base, alt) {
+    var c = cv(size || 256), x = ctx2(c), w = c.width;
+    noiseFill(c, base, mix(base, '#000000', 0.45), mix(base, alt || '#ffffff', 0.30), 7, 4);
+    var rnd = S.RNG(181);
+    // hojas sueltas: elipses giradas, unas al sol y otras a la sombra
+    for (var i = 0; i < w * 7; i++) {
+      var lx = rnd() * w, ly = rnd() * w, r = 2 + rnd() * 5, a = rnd() * 6.284;
+      var t = rnd();
+      x.fillStyle = t < 0.36 ? mix(base, '#000000', 0.42)
+                  : (t < 0.72 ? mix(base, alt || '#c8e07a', 0.34) : base);
+      x.globalAlpha = 0.35 + rnd() * 0.5;
+      x.save(); x.translate(lx, ly); x.rotate(a);
+      x.beginPath(); x.ellipse(0, 0, r, r * 0.45, 0, 0, 6.284); x.fill();
+      x.restore();
+    }
+    // ramillas que asoman entre la hoja
+    x.globalAlpha = 0.22;
+    for (var b = 0; b < 90; b++) {
+      x.strokeStyle = '#3a2a1a'; x.lineWidth = 0.8 + rnd();
+      var bx = rnd() * w, by = rnd() * w, ba = rnd() * 6.284, bl = 6 + rnd() * 18;
+      x.beginPath(); x.moveTo(bx, by);
+      x.lineTo(bx + Math.cos(ba) * bl, by + Math.sin(ba) * bl); x.stroke();
+    }
+    x.globalAlpha = 1;
+    return c;
+  }
+
   function barkCanvas(size) {
     var c = cv(size || 256), x = ctx2(c), w = c.width;
     noiseFill(c, '#5f4630', '#3a2a1b', '#7d6144', 4, 5);
@@ -418,12 +506,19 @@
 
   function clothCanvas(size, color) {
     var c = cv(size || 256), x = ctx2(c), w = c.width;
-    noiseFill(c, color, mix(color, '#000000', 0.25), mix(color, '#ffffff', 0.18), 5, 3);
-    // trama del tejido
-    x.globalAlpha = 0.10;
-    for (var i = 0; i < w; i += 3) {
+    noiseFill(c, color, mix(color, '#000000', 0.13), mix(color, '#ffffff', 0.10), 16, 3);
+    // trama del tejido: hilo a hilo y muy tenue, si no salen rayas
+    x.globalAlpha = 0.045;
+    for (var i = 0; i < w; i += 2) {
       x.fillStyle = '#000000'; x.fillRect(i, 0, 1, w);
       x.fillStyle = '#ffffff'; x.fillRect(0, i, w, 1);
+    }
+    // pelusa y desgaste
+    x.globalAlpha = 0.06;
+    var rnd = S.RNG(303);
+    for (var k = 0; k < 900; k++) {
+      x.fillStyle = rnd() < 0.5 ? '#000000' : '#ffffff';
+      x.fillRect(rnd() * w, rnd() * w, 1, 1);
     }
     x.globalAlpha = 1;
     return c;
@@ -540,10 +635,13 @@
   var T = S.TX = {
     cv: cv, ctx2: ctx2, mix: mix, noiseFill: noiseFill,
     normalMapFrom: normalMapFrom, roughFrom: roughFrom, tex: tex, texLinear: texLinear,
+    avgLinear: avgLinear,
     grassCanvas: grassCanvas, dirtCanvas: dirtCanvas, plowedCanvas: plowedCanvas,
+    macroCanvas: macroCanvas,
     stoneWallCanvas: stoneWallCanvas, roofTilesCanvas: roofTilesCanvas, woodCanvas: woodCanvas,
     plasterCanvas: plasterCanvas, hayCanvas: hayCanvas, cowHideCanvas: cowHideCanvas,
     woolCanvas: woolCanvas, featherCanvas: featherCanvas, barkCanvas: barkCanvas,
+    leafCanvas: leafCanvas,
     skinCanvas: skinCanvas, clothCanvas: clothCanvas, metalCanvas: metalCanvas,
     tireCanvas: tireCanvas, waterNormalCanvas: waterNormalCanvas,
     facadeCanvas: facadeCanvas, doorCanvas: doorCanvas,

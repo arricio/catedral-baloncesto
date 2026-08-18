@@ -190,24 +190,55 @@
     });
     var dirtTex = TX.tex(dirtC, 60, 16);
     mat.onBeforeCompile = function (sh) {
+      mat.userData.sh = sh;
       sh.uniforms.map2 = { value: dirtTex };
-      sh.uniforms.map2Rep = { value: new THREE.Vector2(90, 90) };
+      var macroC = TX.macroCanvas(256, 61);
+      sh.uniforms.mapMacro = { value: TX.tex(macroC, 1, 8) };
+      sh.uniforms.macroAvg = { value: TX.avgLinear(macroC) };
+      sh.uniforms.map2Rep = { value: new THREE.Vector2(150, 150) };
       sh.vertexShader = 'attribute float aSplat;\nvarying float vSplat;\n' +
         sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vSplat = aSplat;');
-      sh.fragmentShader = 'uniform sampler2D map2;\nuniform vec2 map2Rep;\nvarying float vSplat;\n' +
+      sh.fragmentShader = 'uniform sampler2D map2;\nuniform sampler2D mapMacro;\nuniform vec3 macroAvg;\nuniform vec2 map2Rep;\nvarying float vSplat;\n' +
         sh.fragmentShader.replace('#include <map_fragment>',
           '#include <map_fragment>\n' +
           '  { vec4 c2 = texture2D(map2, vMapUv / 150.0 * map2Rep);\n' +
-          '    c2.rgb = pow(c2.rgb, vec3(2.2));\n' +
-          '    diffuseColor.rgb = mix(diffuseColor.rgb, c2.rgb, clamp(vSplat, 0.0, 1.0)); }');
+          '    diffuseColor.rgb = mix(diffuseColor.rgb, c2.rgb, clamp(vSplat, 0.0, 1.0));\n' +
+          // manchas grandes: dos frecuencias, normalizadas por su media,
+          // para que no se vea la baldosa de 2,8 m del suelo
+          '    vec3 m1 = texture2D(mapMacro, vMapUv * 0.021).rgb / macroAvg;\n' +
+          '    vec3 m2 = texture2D(mapMacro, vMapUv * 0.0067 + vec2(0.37)).rgb / macroAvg;\n' +
+          '    diffuseColor.rgb *= mix(vec3(1.0), m1, 0.34) * mix(vec3(1.0), m2, 0.30); }');
     };
     mat.customProgramCacheKey = function () { return 'terreno'; };
 
+    this.dirtTex = dirtTex;
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.receiveShadow = true;
     this.mesh.name = 'terreno';
     this.scene.add(this.mesh);
     this.material = mat;
+  };
+
+  // Cambia el manto del suelo al entrar la estación: el prado amarillea en
+  // otoño y en invierno se hiela, y los caminos se cubren de nieve.
+  Terrain.prototype.setSeason = function (season) {
+    if (season === this.season) return;
+    this.season = season;
+    var grassC = TX.grassCanvas(season, 512);
+    var dirtC = TX.dirtCanvas(512, season === 3);
+    this.grassCanvas = grassC;
+    var m = this.material;
+    if (m.map) m.map.dispose();
+    if (m.normalMap) m.normalMap.dispose();
+    m.map = TX.tex(grassC, 150, 16);
+    m.normalMap = TX.texLinear(TX.normalMapFrom(grassC, 1.6), 150);
+    m.needsUpdate = true;
+    if (this.dirtTex) {
+      var nuevo = TX.tex(dirtC, 60, 16);
+      this.dirtTex.dispose();
+      this.dirtTex = nuevo;
+      if (m.userData && m.userData.sh) m.userData.sh.uniforms.map2.value = nuevo;
+    }
   };
 
   /* --- textura de datos para la hierba (altura + máscara) --------------- */
@@ -282,6 +313,11 @@
     g.setIndex(new THREE.BufferAttribute(idx, 1));
     return g;
   }
+  function mergeAll(list) {
+    var g = list[0];
+    for (var i = 1; i < list.length; i++) g = mergeTwo(g, list[i]);
+    return g;
+  }
   /* ============================================================= HIERBA = */
   function Grass(scene, terrain, quality, season) {
     this.terrain = terrain;
@@ -290,11 +326,29 @@
 
     // Mata de hierba: dos planos cruzados en aspa, así tiene volumen desde
     // cualquier ángulo en vez de parecer una pegatina plana.
-    var pa = new THREE.PlaneGeometry(0.075, 0.27, 1, 3);
-    pa.translate(0, 0.135, 0);
-    var pb = pa.clone();
-    pb.rotateY(Math.PI / 2);
-    var g = mergeTwo(pa, pb);
+    // Mata de cuatro hojas cruzadas y algo abiertas: con el mismo número
+    // de instancias el prado se ve mucho más tupido que con briznas sueltas.
+    var hojas = [], hr = S.RNG(404);
+    for (var b = 0; b < 4; b++) {
+      var alto = 0.16 + hr() * 0.10;
+      var pl = new THREE.PlaneGeometry(0.032 + hr() * 0.014, alto, 1, 3);
+      // la brizna se estrecha hacia la punta y se arquea: un rectángulo
+      // recto se ve como una esquirla de cristal
+      var pp = pl.attributes.position, arco = 0.045 + hr() * 0.05;
+      for (var v = 0; v < pp.count; v++) {
+        var yy = pp.getY(v), tt = (yy + alto * 0.5) / alto;
+        pp.setX(v, pp.getX(v) * (1.0 - 0.78 * tt * tt));
+        pp.setZ(v, pp.getZ(v) + arco * tt * tt);
+        pp.setY(v, yy - arco * 0.35 * tt * tt);
+      }
+      pl.computeVertexNormals();
+      pl.translate(0, alto * 0.5, 0);
+      pl.rotateZ((hr() - 0.5) * 0.55);          // la mata se abre en abanico
+      pl.rotateY(b * 0.79 + hr() * 0.4);
+      pl.translate((hr() - 0.5) * 0.075, 0, (hr() - 0.5) * 0.075);
+      hojas.push(pl);
+    }
+    var g = mergeAll(hojas);
     var geo = new THREE.InstancedBufferGeometry();
     geo.index = g.index;
     geo.attributes.position = g.attributes.position;
@@ -305,11 +359,11 @@
     var rnd = S.RNG(99);
     for (var i = 0; i < N; i++) {
       // Distribución en disco con densidad mayor cerca
-      var a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 0.72) * R;
+      var a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 1.25) * R;
       off[i * 2] = Math.cos(a) * r;
       off[i * 2 + 1] = Math.sin(a) * r;
       rot[i] = rnd() * Math.PI;
-      sc[i] = 0.55 + rnd() * 0.75;
+      sc[i] = 0.70 + rnd() * 0.60;
       tint[i] = rnd();
     }
     geo.setAttribute('aOffset', new THREE.InstancedBufferAttribute(off, 2));
@@ -319,10 +373,10 @@
     geo.instanceCount = N;
 
     var cols = [
-      { a: 0x3f6f27, b: 0x7fae4a },
-      { a: 0x477420, b: 0x8cb84e },
-      { a: 0x6a7526, b: 0xa9a44e },
-      { a: 0x7f8c80, b: 0xcdd8d2 }
+      { a: 0x4c6b39, b: 0x86a35d },
+      { a: 0x506c33, b: 0x8ba758 },
+      { a: 0x6e7442, b: 0xa89f68 },
+      { a: 0x8b9490, b: 0xcdd6d2 }
     ][season];
 
     var mat = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, color: 0xffffff });
@@ -341,6 +395,8 @@
     this.uniforms = uniforms;
     mat.onBeforeCompile = function (sh) {
       for (var k in uniforms) sh.uniforms[k] = uniforms[k];
+      sh.vertexShader = sh.vertexShader.replace('#include <beginnormal_vertex>',
+        '#include <beginnormal_vertex>\n  objectNormal = normalize(vec3(objectNormal.x * 0.30, 1.0, objectNormal.z * 0.30));');
       sh.vertexShader = [
         'attribute vec2 aOffset;',
         'attribute float aRot;',
@@ -393,6 +449,8 @@
         '#include <project_vertex>',
         '  vec4 mvPosition = viewMatrix * vec4(transformed, 1.0);\n  gl_Position = projectionMatrix * mvPosition;'
       );
+      sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>',
+        '#include <normal_fragment_begin>\n  normal = normalize(vec3(normal.x, abs(normal.y) + 0.35, normal.z));');
       sh.fragmentShader = [
         'uniform vec3 uColA;',
         'uniform vec3 uColB;',
@@ -401,8 +459,8 @@
         'varying float vUp;'
       ].join('\n') + '\n' + sh.fragmentShader.replace('#include <color_fragment>',
         '#include <color_fragment>\n' +
-        '  vec3 gc = mix(uColA, uColB, vTint * 0.75 + vUp * 0.35);\n' +
-        '  diffuseColor.rgb *= gc * (0.78 + vUp * 0.42);');
+        '  vec3 gc = mix(uColA, uColB, vTint * 0.55 + vUp * 0.45);\n' +
+        '  diffuseColor.rgb *= gc * (0.66 + vUp * vUp * 0.46);');
     };
     mat.customProgramCacheKey = function () { return 'hierba'; };
 
@@ -420,8 +478,8 @@
   };
   Grass.prototype.setSeason = function (season) {
     var cols = [
-      { a: 0x3f6f27, b: 0x7fae4a }, { a: 0x477420, b: 0x8cb84e },
-      { a: 0x6a7526, b: 0xa9a44e }, { a: 0x7f8c80, b: 0xcdd8d2 }
+      { a: 0x4c6b39, b: 0x86a35d }, { a: 0x506c33, b: 0x8ba758 },
+      { a: 0x6e7442, b: 0xa89f68 }, { a: 0x8b9490, b: 0xcdd6d2 }
     ][season];
     this.uniforms.uColA.value.setHex(cols.a);
     this.uniforms.uColB.value.setHex(cols.b);

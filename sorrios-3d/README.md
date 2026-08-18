@@ -1,14 +1,15 @@
-# 🚜 Sorríos de Ordás 3D — Simulador de granja
+# 🐂 Sorríos de Ordás 3D — Simulador de granja de antes
 
-Simulador de granja **en 3D**, al estilo *Farming Simulator*, jugable en el
-navegador del ordenador y del **móvil Android**. Arricio tiene su finca en el
-pueblo leonés de **Sorríos de Ordás**: tractor con aperos, campos que se aran,
-siembran y cosechan, ganado que se ordeña **a mano**, huerto junto a la casa,
-un pueblo con vecinos, y ciclo real de día y noche con las cuatro estaciones.
+Simulador de granja **en 3D**, jugable en el navegador del ordenador y en el
+**móvil Android**. **Nazario** tiene su casa, su cuadra y su huerta en el pueblo
+leonés de **Sorríos de Ordás**, y trabaja la tierra **como se hacía antes**:
+**sin un solo tractor**. Se unce la yunta —dos vacas, o el burro **Carolo**—, se
+engancha el arado de madera, se siega con la guadaña, se acarrea en el carro del
+país y se ordeña a mano en el caldero.
 
-Está hecho con **three.js** (WebGL2) y **todo el arte se genera por código**:
-no hay ni un modelo ni una textura descargados. Terreno, casas, tractor, vacas,
-ovejas, gallinas, personas, cielo y meteorología se construyen al arrancar.
+Está hecho con **three.js** (WebGL2) y **todo el arte se genera por código**: no
+hay ni un modelo ni una textura descargados. Terreno, casas, ganado, personas,
+aperos, cielo y meteorología se construyen al arrancar el juego.
 
 ---
 
@@ -22,8 +23,9 @@ Haz clic para capturar el ratón y mirar alrededor.
 2. Menú de Chrome → **«Añadir a pantalla de inicio» / «Instalar aplicación»**.
 3. Se instala como app, a pantalla completa y **funciona sin conexión**.
 
-La calidad gráfica se ajusta sola según el aparato (sombras, densidad de hierba
-y distancia de visión), y se puede cambiar a mano en **Menú → Ajustes**.
+La calidad gráfica se ajusta sola según el aparato (sombras, oclusión ambiental,
+densidad de hierba y distancia de visión) y se puede cambiar a mano en
+**Menú → Ajustes**.
 
 ---
 
@@ -36,10 +38,9 @@ y distancia de visión), y se puede cambiar a mano en **Menú → Ajustes**.
 | Mirar | mover el ratón | arrastrar en la mitad derecha |
 | Acción, hablar, recoger | `E` | botón **A** |
 | Usar la herramienta / regalar | `F` | botón ✋ |
-| Subir o bajar del tractor | `T` | botón 🚜 |
-| Arrancar o parar el motor | `P` | botón **A** en el tractor |
-| Bajar o subir el apero | `H` | — |
-| Cambiar de apero | `C` | — |
+| Uncir la yunta / ponerse al arado | `T` | botón 🐂 |
+| Clavar o levantar el apero | `H` | — |
+| Cambiar de apero (arado, grada, carro) | `C` | — |
 | Cambiar de objeto en la mano | `Q` / `R` / teclas `1`-`9` | botones ◀ ▶ |
 | Cambiar de cámara | `V` | — |
 | Menú | `Esc` | botón ☰ |
@@ -49,52 +50,71 @@ y distancia de visión), y se puede cambiar a mano en **Menú → Ajustes**.
 
 ## 🌾 Qué se puede hacer
 
-### El tractor y los campos
-- **Tractor** con cabina, ruedas motrices, faros que se encienden de noche,
-  humo del escape, depósito de gasóleo y enganche de tres puntos.
-- **Cuatro aperos**: arado de vertedera, sembradora, segadora-cosechadora y
-  remolque. Se cambian con `C` y se bajan con `H`.
-- **Tres campos grandes** (más de 400 parcelas): se **aran**, se **siembran**
-  con la semilla que lleves en la mano y se **cosechan** cuando maduran.
-  Los campos son de **secano**, como en León: crecen con la lluvia.
-- Cultivos de campo: trigo, cebada, maíz y alfalfa.
+### La yunta y los campos — aquí no hay máquinas
+- **Yunta de dos vacas** al yugo, o el **burro Carolo** él solo. Se uncen con la
+  **aguijada** en la mano, y el ganadero va andando detrás, agarrado a la
+  mancera.
+- **Tres aperos de madera**: **arado**, **grada** de sembrar y **carro del
+  país**. El arado solo abre surco cuando va **clavado**; la grada tapa la
+  simiente; el carro acarrea hasta 40 cargas de hierba o de grano.
+- Las bestias se **cansan**: cuanto más rato tiran con el arado clavado, más
+  despacio van. Hay que darles descanso.
+- **Tres campos grandes** (más de 400 parcelas) que se aran, se siembran y se
+  siegan. Son de **secano**, como en León: crecen con la lluvia.
+- Cultivos de campo: trigo, centeno, cebada y alfalfa.
+- **La hierba del prado se siega con la guadaña** (o con la hoz en los ribazos)
+  y se carga en el carro con la horca.
 
-### La granja
-- **Huerto junto a la casa** que se trabaja a mano: azada, semilla y regadera.
+### La casa y la huerta
+- **Huerta junto a la casa, cavada a mano** con la **azada** o el **azadón**;
+  después se siembra y se riega con la regadera, que se llena en el pozo.
   Patata, lechuga, cebolla, ajo, zanahoria, garbanzo, alubia, tomate, pimiento,
   calabaza, berza y puerro, cada uno en su estación.
-- **Ganado en 3D con anatomía real**: vacas frisonas (con su ubre y sus pezones),
-  ovejas con vellón, corderos, gallinas, pollos y un burro. Pastan, andan,
-  mueven las orejas y el rabo, y hay que darles de comer todos los días.
-- **Ordeño a mano, como antiguamente**: te acercas con el cubo y vas alternando
-  la mano izquierda y la derecha siguiendo el compás. Si te precipitas o pierdes
-  el ritmo, la res se pone nerviosa. Se ordeñan vacas **y ovejas**.
-- **Esquileo** de las ovejas, recogida de huevos, leña y piedra.
-- Nave, silo, cobertizo del tractor, gallinero, pozo, comedero y balas de forraje.
+- **Ganado en 3D con anatomía**: vacas frisonas con su ubre, ovejas con vellón,
+  corderos, gallinas, pollos y el burro Carolo. Pastan, andan, mueven las orejas
+  y el rabo, y hay que echarles de comer todos los días.
+- **Ordeño a mano con el caldero**: te acercas a la vaca o a la oveja y vas
+  alternando la mano izquierda y la derecha siguiendo el compás. Si te
+  precipitas o pierdes el ritmo, la res se pone nerviosa.
+- **Esquileo** de las ovejas con las tijeras, recogida de huevos, leña con el
+  hacha y piedra con la pala.
+- **Cocina de casa**: queso de vaca y de oveja, manteca, tortilla, sopa de ajo,
+  empanada y cocido maragato.
+- La granja tiene cuadra, **tenada**, gallinero, **panera** sobre pegollos,
+  cobertizo de aperos, pozo, comedero y almiares de hierba. **No hay silos.**
 
 ### El pueblo
-- Plaza con farolas, iglesia con campanario, taberna, escuela, molino,
-  cooperativa con silos y una docena de casas de piedra con tejado de teja.
-- **Dos tiendas**: *Ultramarinos «La Reguera»* (comida para Arricio) y
-  *Piensos y Aperos «Bernardo»* (piensos, semillas de temporada, herramienta,
-  gasóleo y **ganado**).
-- **Cooperativa** donde vender toda la cosecha de una vez.
-- **12 vecinos** con rutina propia: abren su tienda, bajan a la taberna al
-  anochecer y vuelven a casa. Cada uno con sus gustos.
-- **Noviazgo, boda e hijos**: con 8 ♥ y un ramo de flores hay noviazgo; con
-  10 ♥ y el anillo, don Casimiro os casa. Tu mujer se viene a la finca y con el
-  tiempo nacen los hijos, que crecen (bebé → niño → mozo) y **ayudan**: riegan
-  el huerto y dan de comer al ganado.
+- Plaza con farolas, **ermita** (aquí no hay iglesia), taberna, escuela, molino,
+  la **panera del concejo** y una docena de casas de piedra con teja del país.
+- **Dos tiendas**:
+  - *Ultramarinos «La Reguera»*, de **Noemi**: la comida de Nazario.
+  - *Aperos y Piensos de **Jeremías***: piensos, abono, semillas de la estación,
+    la herramienta de siempre (azada, azadón, guadaña, hoz, caldero, horca,
+    rastrillo, regadera, tijeras, hacha, pala y aguijada), el ramo, el anillo
+    y **ganado**.
+- **La panera del concejo**, donde se vende toda la cosecha de una vez.
+- **Diez vecinos** con su rutina: **Noemi**, **Nieves** la molinera, **Julita**
+  la maestra, **Mari Nieves** la vaquera, **Arricio** —el dueño de la taberna—,
+  **Jeremías**, **Alfonso** el pastor, **Josep** el hortelano, **Tornillos** el
+  manitas y **Mario**, el alcalde pedáneo y cartero. Abren su negocio, bajan a
+  la taberna al anochecer y vuelven a casa. Cada uno con sus gustos.
+- **Noviazgo, boda e hijos**: con 8 ♥ y un ramo hay noviazgo; con 10 ♥ y el
+  anillo, boda en la ermita. Tu mujer se viene a la casa y con el tiempo nacen
+  los hijos, que crecen (bebé → niño → mozo) y **ayudan de verdad**: riegan la
+  huerta y echan de comer al ganado.
 
 ### El cielo
-- **Sol con posición astronómica real** para la latitud de León (42,6° N):
-  en verano amanece hacia las 5 y anochece pasadas las 19; en invierno el día
-  dura poco más de nueve horas y el sol no sube de 30°.
-- **Cuatro estaciones** de 28 días que cambian la hierba, los árboles y la luz.
+- **Sol con posición astronómica real** para la latitud de León (42,6° N): en
+  verano amanece hacia las 5 y anochece pasadas las 19; en invierno el día dura
+  poco más de nueve horas y el sol no sube de 30°.
+- **Cuatro estaciones** de 28 días que cambian la hierba, el arbolado y la luz.
 - **Meteorología**: sol, nublado, lluvia, tormenta con relámpagos y truenos, y
-  nieve. Cambia el cielo, la niebla, la luz y el sonido.
-- De noche se encienden las farolas del pueblo, los faros del tractor y el
-  farol de Arricio.
+  nieve. Cambian el cielo, la niebla, la luz y el sonido.
+- De noche se encienden las farolas del pueblo y el farol de Nazario.
+
+### Nazario
+Gafas cuadradas de pasta marrón de las de antes, **boina negra** siempre calada
+y la ropa remendada. Su burro se llama **Carolo**.
 
 ---
 
@@ -108,19 +128,22 @@ sorrios-3d/
 └── src/
     ├── util.js       Matemáticas, ruido, aleatorio con semilla, guardado
     ├── textures.js   Todas las texturas pintadas por código, con mapas de
-    │                 normales calculados con Sobel (piedra, teja, madera,
-    │                 piel de vaca frisona, lana, plumas, neumático…)
-    ├── data.js       Contenido: productos, cultivos, ganado, vecinos, tiendas
+    │                 normales calculados con Sobel y mapas de rugosidad
+    │                 (piedra, teja, cal, madera, hoja, piel de frisona,
+    │                 lana, plumas…)
+    ├── data.js       Aperos antiguos, cultivos, ganado, vecinos y tiendas
     ├── sky.js        Reloj, estaciones, posición real del sol, cúpula de cielo
     │                 con shader, luna, estrellas, nubes, lluvia y nieve
     ├── terrain.js    Terreno con relieve, mezcla de texturas para caminos,
     │                 río y manto de hierba instanciada con viento
-    ├── models.js     Casas, nave, silo, iglesia, tiendas, vallas y arbolado
+    ├── models.js     Casas, cuadra, tenada, panera, ermita, tiendas, vallas,
+    │                 arbolado y los aperos de madera (yugo, arado, grada, carro)
     ├── actors.js     Rig de personas y de animales, con marcha articulada
-    ├── vehicles.js   Tractor y aperos
+    ├── yunta.js      Uncir el ganado, tiro, fatiga y aperos enganchados
     ├── farm.js       Parcelas, labores, cultivos en 3D, ganado y ordeño
     ├── npcs.js       Vecinos, rutinas, amistad, pareja e hijos
-    ├── audio.js      Motor, animales, lluvia y avisos sintetizados
+    ├── post.js       Oclusión ambiental, resplandor, curva ACES y grano
+    ├── audio.js      Animales, lluvia, campana y avisos sintetizados
     ├── input.js      Teclado, ratón con bloqueo de puntero y táctil
     ├── ui.js         HUD, menús, tiendas, diálogos y minijuego de ordeño
     ├── game.js       Montaje del valle, jugador, cámara y partida
@@ -131,13 +154,27 @@ La partida se guarda sola al dormir y al salir del juego (`localStorage`).
 
 ## 🔧 Detalles técnicos
 
-- **three.js r160**, WebGL2, sombras PCF suaves, tonemapping ACES y espacio
-  de color sRGB.
+- **three.js r160**, WebGL2, sombras PCF suaves y espacio de color sRGB.
+- **Cadena de posprocesado propia** (`post.js`), porque la compilación UMD de
+  three.js no trae `EffectComposer`: búfer en coma flotante, **oclusión
+  ambiental** deducida de la profundidad, desenfoque separable, **resplandor**
+  de las luces, curva de tono **ACES**, ajuste de color, viñeteado, grano de
+  película y realce de nitidez.
 - **Mapa de entorno generado del propio cielo** (PMREM), que se refresca con la
-  hora: sin él los metales (silo, chapa, tractor) se verían negros.
-- **Hierba instanciada** con desplazamiento y viento resueltos en el vértice, y
-  la altura del suelo leída de una textura de datos: sigue al jugador sin coste
-  de CPU.
+  hora: sin él, los metales se verían negros.
+- **Hierba instanciada** con el viento y la altura del suelo resueltos en el
+  vértice, leyendo el relieve de una textura de datos: el manto sigue al
+  jugador sin coste de CPU.
 - **Terreno con dos texturas mezcladas** por atributo de vértice para los
-  caminos y las eras.
+  caminos y las eras, y una **segunda frecuencia normalizada** encima para que
+  no se vea el patrón de baldosa a lo lejos.
 - Ganado y vecinos se simulan con menos frecuencia cuando están lejos.
+
+### Hasta dónde llega
+
+El fotorrealismo se busca con lo que se puede tener sin descargar nada: PBR con
+mapas de normales y rugosidad, oclusión ambiental, iluminación solar física,
+posprocesado de cine y geometría con relieve. Aun así, un juego cuyo arte se
+pinta por código en el arranque no da el nivel de detalle de un motor con
+escaneados fotogramétricos de decenas de gigas; lo que sí da es que **todo
+funcione sin conexión, en el móvil y sin un solo fichero binario**.

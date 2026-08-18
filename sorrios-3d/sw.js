@@ -3,7 +3,7 @@ var CACHE = 'sorrios-3d-v1';
 var ASSETS = ['./', './index.html', './styles.css', './manifest.webmanifest',
   './vendor/three.min.js',
   './src/util.js', './src/textures.js', './src/data.js', './src/sky.js', './src/terrain.js',
-  './src/models.js', './src/actors.js', './src/vehicles.js', './src/farm.js', './src/npcs.js',
+  './src/models.js', './src/actors.js', './src/yunta.js', './src/post.js', './src/farm.js', './src/npcs.js',
   './src/audio.js', './src/input.js', './src/ui.js', './src/game.js', './src/main.js',
   './icons/icon-192.png', './icons/icon-512.png'];
 

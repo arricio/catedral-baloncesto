@@ -72,6 +72,23 @@
       vest.position.y = 0.28; vest.scale.set(1.14, 1, 0.8);
       hips.add(vest);
     }
+    // Ropa remendada: parches cosidos de otro color y otra tela
+    if (o.remiendos) {
+      var parches = o.remiendos.length ? o.remiendos : ['#6a5a3a', '#4a4a52', '#7a4a3a'];
+      var rp = S.RNG(21);
+      for (var pr = 0; pr < 5; pr++) {
+        var pm = new THREE.MeshStandardMaterial({
+          map: TX.tex(TX.clothCanvas(128, parches[pr % parches.length]), 1), roughness: 0.98
+        });
+        var ang = rp() * 6.283;
+        var alto = pr < 3 ? 0.18 + rp() * 0.34 : -0.12 - rp() * 0.22;
+        var parche = new THREE.Mesh(new THREE.PlaneGeometry(0.10 + rp() * 0.05, 0.09 + rp() * 0.05), pm);
+        var radio = pr < 3 ? 0.195 : 0.175;
+        parche.position.set(Math.sin(ang) * radio, alto, Math.cos(ang) * radio * 0.8);
+        parche.lookAt(parche.position.clone().multiplyScalar(3));
+        hips.add(parche);
+      }
+    }
 
     // --- cuello y cabeza ---
     var neck = new THREE.Group();
@@ -81,32 +98,78 @@
     var head = new THREE.Group();
     head.position.y = 0.09;
     neck.add(head);
-    var skull = sphere(0.113, skin);
+    var skull = sphere(0.113, skin, 18);
     skull.scale.set(0.94, 1.12, 1.0);
     skull.position.y = 0.10;
     head.add(skull);
+    // mandíbula y barbilla: sin esto la cabeza es una bola
+    var jaw = sphere(0.092, skin, 14);
+    jaw.scale.set(0.94, 0.62, 0.94);
+    jaw.position.set(0, 0.038, 0.016);
+    head.add(jaw);
+    var chin = sphere(0.042, skin, 10);
+    chin.scale.set(1.0, 0.78, 0.9);
+    chin.position.set(0, 0.026, 0.070);
+    head.add(chin);
     // nariz y orejas
     head.add(mesh(new THREE.ConeGeometry(0.022, 0.05, 6), skin, 0, 0.095, 0.108).rotateX(Math.PI / 2));
     head.add(mesh(new THREE.SphereGeometry(0.028, 8, 6), skin, 0.108, 0.10, 0));
     head.add(mesh(new THREE.SphereGeometry(0.028, 8, 6), skin, -0.108, 0.10, 0));
     // ojos
-    var eyeMat = new THREE.MeshStandardMaterial({ color: 0xf4f2ee, roughness: 0.25 });
-    var pupMat = new THREE.MeshStandardMaterial({ color: o.eyes || 0x3a2a18, roughness: 0.2 });
+    var eyeMat = new THREE.MeshStandardMaterial({ color: 0xe6e2da, roughness: 0.18 });
+    var pupMat = new THREE.MeshStandardMaterial({ color: o.eyes || 0x3a2a18, roughness: 0.15 });
+    var cejaMat = new THREE.MeshStandardMaterial({ color: o.hair || 0x3a2f22, roughness: 1 });
+    var lidMat = new THREE.MeshStandardMaterial({ color: TX.mix(o.skin || '#d8a97e', '#000000', 0.16), roughness: 0.9 });
     [-1, 1].forEach(function (s) {
-      var e = sphere(0.024, eyeMat, 10);
-      e.position.set(s * 0.044, 0.125, 0.093);
+      // cuenca: hueco oscuro para que el ojo no parezca pegado en la frente
+      var cu = sphere(0.030, lidMat, 10);
+      cu.scale.set(1.0, 0.72, 0.42);
+      cu.position.set(s * 0.042, 0.122, 0.083);
+      head.add(cu);
+      // globo ocular, casi todo dentro de la cabeza: sólo asoma la almendra
+      var e = sphere(0.0185, eyeMat, 12);
+      e.scale.set(1, 0.78, 0.7);
+      e.position.set(s * 0.042, 0.1225, 0.0885);
       head.add(e);
-      var p = sphere(0.012, pupMat, 8);
-      p.position.set(s * 0.046, 0.125, 0.109);
+      var p = sphere(0.0082, pupMat, 8);
+      p.scale.set(1, 1, 0.6);
+      p.position.set(s * 0.043, 0.1225, 0.0985);
       head.add(p);
+      // párpado superior
+      var pd = sphere(0.021, lidMat, 10);
+      pd.scale.set(1.05, 0.42, 0.6);
+      pd.position.set(s * 0.042, 0.1345, 0.086);
+      head.add(pd);
+      // ceja
+      var cj = mesh(new THREE.BoxGeometry(0.036, 0.008, 0.012), cejaMat, s * 0.043, 0.1475, 0.089);
+      cj.rotation.z = -s * 0.16;
+      head.add(cj);
     });
     // pelo / boina / pañuelo
+    if (o.hat && o.hat !== 'panuelo') {
+      // greñas que asoman por debajo de la boina o del sombrero
+      var gre = sphere(0.116, hair, 12);
+      gre.scale.set(1.02, 0.62, 1.02);
+      gre.position.y = 0.108;
+      head.add(gre);
+      var pat2 = sphere(0.05, hair, 8);
+      pat2.scale.set(0.5, 1.0, 0.7);
+      pat2.position.set(0, 0.085, -0.095);
+      head.add(pat2);
+    }
     if (o.hat === 'boina') {
-      var b = sphere(0.125, new THREE.MeshStandardMaterial({ color: o.hatColor || 0x22252b, roughness: 0.95 }));
-      b.scale.set(1.12, 0.42, 1.12); b.position.y = 0.185;
+      var boinaMat = TX.matFrom(TX.clothCanvas(128, o.hatColor || '#1b1b1f'),
+        { repeat: 3, bump: 1.6, roughness: 1 });
+      var b = sphere(0.128, boinaMat, 20);
+      b.scale.set(1.10, 0.46, 1.10); b.position.y = 0.186;
+      b.rotation.x = 0.10;
       head.add(b);
-      head.add(mesh(new THREE.SphereGeometry(0.018, 6, 6),
-        new THREE.MeshStandardMaterial({ color: o.hatColor || 0x22252b }), 0, 0.225, 0));
+      // cinta de cuero del borde
+      var cinta = mesh(new THREE.TorusGeometry(0.126, 0.011, 8, 22), boinaMat, 0, 0.160, 0.004);
+      cinta.rotation.x = Math.PI / 2 + 0.10;
+      head.add(cinta);
+      // el rabillo de la boina
+      head.add(mesh(new THREE.SphereGeometry(0.013, 6, 6), boinaMat, 0, 0.243, -0.008));
     } else if (o.hat === 'paja') {
       var pj = new THREE.MeshStandardMaterial({ color: 0xd9b45c, roughness: 0.95 });
       head.add(mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.015, 16), pj, 0, 0.175, 0));
@@ -129,11 +192,54 @@
         head.add(mesh(new THREE.SphereGeometry(0.055, 10, 8), hair, 0, 0.13, -0.115));
       }
     }
+    // --- gafas cuadradas de pasta, de las de antes ---
+    if (o.gafas) {
+      var pasta = new THREE.MeshStandardMaterial({
+        color: o.gafasColor || 0x5b3a1e, roughness: 0.35, metalness: 0.05
+      });
+      var cristal = new THREE.MeshPhysicalMaterial({
+        color: 0xcfe0e8, transparent: true, opacity: 0.22, roughness: 0.05,
+        metalness: 0, side: THREE.DoubleSide
+      });
+      var gaf = new THREE.Group();
+      gaf.position.set(0, 0.123, 0.103);
+      head.add(gaf);
+      [-1, 1].forEach(function (sg) {
+        var cx = sg * 0.050;
+        // marco cuadrado: cuatro varillas de pasta
+        gaf.add(mesh(new THREE.BoxGeometry(0.060, 0.011, 0.011), pasta, cx, 0.023, 0));
+        gaf.add(mesh(new THREE.BoxGeometry(0.060, 0.011, 0.011), pasta, cx, -0.023, 0));
+        gaf.add(mesh(new THREE.BoxGeometry(0.011, 0.057, 0.011), pasta, cx - 0.028, 0, 0));
+        gaf.add(mesh(new THREE.BoxGeometry(0.011, 0.057, 0.011), pasta, cx + 0.028, 0, 0));
+        var lente = mesh(new THREE.PlaneGeometry(0.054, 0.049), cristal, cx, 0, -0.002);
+        gaf.add(lente);
+        // patilla hasta la oreja
+        var pat = mesh(new THREE.BoxGeometry(0.008, 0.008, 0.075), pasta, sg * 0.070, 0.006, -0.038);
+        pat.rotation.y = sg * 0.22;
+        gaf.add(pat);
+      });
+      // puente sobre la nariz
+      gaf.add(mesh(new THREE.BoxGeometry(0.026, 0.009, 0.009), pasta, 0, 0.012, 0));
+    }
+
     if (o.beard) {
-      var bd = sphere(0.10, new THREE.MeshStandardMaterial({ color: o.beard, roughness: 0.98 }));
-      bd.scale.set(0.95, 0.72, 0.85);
-      bd.position.set(0, 0.055, 0.032);
+      var beardMat = new THREE.MeshStandardMaterial({ color: o.beard, roughness: 1 });
+      var bd = sphere(0.100, beardMat, 16);
+      bd.scale.set(0.95, 0.46, 0.86);
+      bd.position.set(0, 0.026, 0.012);
       head.add(bd);
+      // patillas hasta la oreja
+      [-1, 1].forEach(function (sb) {
+        var pt = sphere(0.030, beardMat, 8);
+        pt.scale.set(0.45, 1.5, 0.75);
+        pt.position.set(sb * 0.098, 0.072, 0.006);
+        head.add(pt);
+      });
+      // bigote: fino y justo bajo la nariz
+      var big = sphere(0.026, beardMat, 10);
+      big.scale.set(1.25, 0.30, 0.50);
+      big.position.set(0, 0.066, 0.095);
+      head.add(big);
     }
 
     // --- brazos ---
