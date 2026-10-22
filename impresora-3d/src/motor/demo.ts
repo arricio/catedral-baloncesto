@@ -3,7 +3,7 @@
  * Se activa abriendo la app con ?demo=1. No usa IA: crea una figura de colores
  * a partir de la imagen, para poder probar toda la interfaz sin gastar cupo.
  */
-import type { Motor, AlProgresar } from './tipos'
+import { ErrorMotor, MENSAJES, type Motor, type AlProgresar } from './tipos'
 
 const esperar = (ms: number, signal?: AbortSignal) =>
   new Promise<void>((ok, mal) => {
@@ -26,6 +26,8 @@ export const motorDemo: Motor = {
   id: 'demo',
   nombre: 'Demostración',
   async textoAImagen(prompt, alProgresar, signal) {
+    // Para probar la pantalla de cupo agotado: escribir «#cupo» en la descripción.
+    if (prompt.includes('#cupo')) throw new ErrorMotor('cupo', MENSAJES.cupo, 'FLUX.1 schnell: You have exceeded your free GPU quota (demostración)')
     await simular(alProgresar, [['imagen', 95]], signal)
     const c = document.createElement('canvas')
     c.width = c.height = 512

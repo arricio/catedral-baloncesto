@@ -245,6 +245,58 @@ function AprobarImagen() {
   )
 }
 
+/** Conectar la cuenta gratuita de Hugging Face en 2 pasos, sin salir de la pantalla. */
+function ConectarHF() {
+  const [clave, setClave] = useState('')
+  const [ocupado, setOcupado] = useState(false)
+  const conectar = async () => {
+    setOcupado(true)
+    try {
+      const { usarTokenManual } = await import('../lib/hfAuth')
+      const usuario = await usarTokenManual(clave)
+      avisar(`¡Cuenta conectada (${usuario})! Reintentando… 🚀`, 'exito')
+      reintentar()
+    } catch (e) {
+      avisar((e as Error).message, 'error', 6000)
+    } finally {
+      setOcupado(false)
+    }
+  }
+  return (
+    <div className="mb-5 rounded-2xl border border-cian/40 bg-cian/10 p-4 text-left">
+      <p className="mb-3 font-semibold">Conecta tu cuenta gratuita de Hugging Face para tener más cupo:</p>
+      <p className="mb-2 text-sm text-texto-2">
+        <b className="text-texto">Paso 1.</b> Pulsa el botón, entra con tu cuenta y pulsa <b className="text-texto">«Create token»</b>. Después pulsa <b className="text-texto">«Copy»</b>.
+      </p>
+      <a
+        href="https://huggingface.co/settings/tokens/new?tokenType=read&tokenName=impresora-3d"
+        target="_blank"
+        rel="noreferrer"
+        className="mb-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#ffd21e] px-4 font-semibold text-[#1a1300]"
+      >
+        🤗 Conseguir mi clave
+      </a>
+      <p className="mb-2 text-sm text-texto-2">
+        <b className="text-texto">Paso 2.</b> Vuelve aquí, mantén el dedo en la casilla y elige <b className="text-texto">«Pegar»</b>:
+      </p>
+      <div className="flex gap-2">
+        <input
+          value={clave}
+          onChange={(e) => setClave(e.target.value.trim())}
+          placeholder="hf_…"
+          autoComplete="off"
+          aria-label="Clave de Hugging Face"
+          className="cristal min-h-12 w-full rounded-2xl px-4 text-[16px]"
+        />
+        <Boton variante="principal" disabled={!clave.startsWith('hf_') || ocupado} onClick={conectar}>
+          {ocupado ? '…' : 'Conectar'}
+        </Boton>
+      </div>
+      <p className="mt-2 text-xs text-texto-2">La clave solo se guarda en este móvil.</p>
+    </div>
+  )
+}
+
 function ErrorImpresion() {
   const error = useImpresion((s) => s.error)!
   const hfUsuario = useAjustes((s) => s.hfUsuario)
@@ -253,10 +305,13 @@ function ErrorImpresion() {
       <div className="mx-auto mb-3 grid size-16 place-items-center rounded-full bg-error/15 text-3xl" aria-hidden>
         {error.tipo === 'cupo' ? '⏳' : error.tipo === 'red' ? '📶' : '🙈'}
       </div>
-      <h2 className="mb-2 font-titulo text-xl font-bold">{error.tipo === 'cupo' ? 'Cupo gratuito agotado' : '¡Vaya! Algo no ha ido bien'}</h2>
+      <h2 className="mb-2 font-titulo text-xl font-bold">{error.tipo === 'cupo' ? (hfUsuario ? 'Cupo gratuito agotado' : 'Falta conectar tu cuenta') : '¡Vaya! Algo no ha ido bien'}</h2>
       <p className="mb-5 text-texto-2" role="alert">
-        {error.message}
+        {error.tipo === 'cupo' && !hfUsuario
+          ? 'Sin cuenta, Hugging Face casi no regala tiempo de GPU. Conecta tu cuenta gratuita (2 pasos) y podrás crear varios modelos al día.'
+          : error.message}
       </p>
+      {error.tipo === 'cupo' && !hfUsuario && <ConectarHF />}
       {error.detalle && (
         <details className="mb-4 text-left text-xs text-texto-2">
           <summary className="min-h-11 cursor-pointer py-2 text-center">Detalles técnicos</summary>

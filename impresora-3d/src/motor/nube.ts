@@ -48,13 +48,36 @@ async function conectar(espacio: string, signal?: AbortSignal): Promise<{ client
   return { cliente, manejarArchivo: handle_file }
 }
 
+/** Descripción de la API de cada Space (se pide una vez por conexión). */
+const apis = new WeakMap<ClienteGradio, Promise<Awaited<ReturnType<ClienteGradio['view_api']>> | null>>()
+
+/**
+ * Convierte los argumentos con nombre en la lista exacta que espera el Space,
+ * según su propia descripción de la API. Así no falla si un parámetro no existe
+ * (p. ej. los gr.State, que no se exponen) o si falta alguno (se usa su valor por defecto).
+ */
+async function adaptarArgumentos(cliente: ClienteGradio, endpoint: string, datos: Record<string, unknown> | unknown[]): Promise<Record<string, unknown> | unknown[]> {
+  if (Array.isArray(datos)) return datos
+  if (!apis.has(cliente)) apis.set(cliente, cliente.view_api().catch(() => null))
+  const info = (await apis.get(cliente))?.named_endpoints?.[endpoint]
+  if (!info) return datos
+  const normal = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const porNombre = new Map(Object.entries(datos).map(([k, v]) => [normal(k), v]))
+  return info.parameters.map((p) => {
+    for (const clave of [p.parameter_name, p.label]) {
+      if (clave && porNombre.has(normal(clave))) return porNombre.get(normal(clave))
+    }
+    return p.parameter_has_default ? p.parameter_default : null
+  })
+}
+
 /**
  * Ejecuta un endpoint escuchando la cola y el progreso.
  * `desde`/`hasta` reparten el porcentaje global entre varias llamadas.
  */
 async function llamar(ctx: Contexto, endpoint: string, datos: Record<string, unknown> | unknown[], etapa: Etapa, desde: number, hasta: number): Promise<unknown[]> {
   if (ctx.signal?.aborted) throw new DOMException('cancelado', 'AbortError')
-  const trabajo = ctx.cliente.submit(endpoint, datos)
+  const trabajo = ctx.cliente.submit(endpoint, await adaptarArgumentos(ctx.cliente, endpoint, datos))
   const alAbortar = () => trabajo.cancel()
   ctx.signal?.addEventListener('abort', alAbortar, { once: true })
   try {
@@ -146,7 +169,7 @@ const trellis1: AdaptadorEspacio<Entrada3D, Blob> = {
       ctx,
       '/generate_and_extract_glb',
       {
-        image: pre, multiimages: [], is_multiimage: false, seed: semilla(),
+        image: pre, multiimages: [], seed: semilla(),
         ss_guidance_strength: 7.5, ss_sampling_steps: 12,
         slat_guidance_strength: 3, slat_sampling_steps: 12,
         multiimage_algo: 'stochastic',
@@ -159,16 +182,23 @@ const trellis1: AdaptadorEspacio<Entrada3D, Blob> = {
   },
 }
 
-/** Stable Fast 3D (Stability AI). Muy rápido; licencia comunitaria gratuita. */
+/**
+ * Stable Fast 3D (Stability AI). Muy rápido; licencia comunitaria gratuita.
+ * Su API pública no permite pedirle que quite el fondo, así que solo se usa
+ * con imágenes que ya lo traen quitado (opción «Quitar el fondo en mi dispositivo»).
+ */
 const sf3d: AdaptadorEspacio<Entrada3D, Blob> = {
   id: 'stabilityai/stable-fast-3d',
   nombre: 'Stable Fast 3D',
   async ejecutar(ctx, { imagen }) {
+    if (imagen.type !== 'image/png') throw new Error('Stable Fast 3D necesita una imagen sin fondo')
     const img = ctx.manejarArchivo(imagen)
     await llamar(ctx, '/requires_bg_remove', { image: img, fr: 0.85 }, 'analizando', 6, 15)
-    const comun = { input_image: img, foreground_ratio: 0.85, remesh_option: 'None', vertex_count: -1, texture_size: 1024 }
-    await llamar(ctx, '/run_button', { run_btn: 'Remove Background', ...comun }, 'analizando', 15, 35)
-    const salida = await llamar(ctx, '/run_button', { run_btn: 'Run', ...comun }, 'forma', 35, 96)
+    const salida = await llamar(
+      ctx, '/run_button',
+      { run_btn: 'Run', input_image: img, foreground_ratio: 0.85, remesh_option: 'None', vertex_count: -1, texture_size: 1024 },
+      'forma', 15, 96,
+    )
     return descargar(buscarArchivo(salida, ['.glb']), ctx.signal)
   },
 }
