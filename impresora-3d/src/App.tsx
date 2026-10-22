@@ -107,7 +107,7 @@ export default function App() {
           <p className="py-1.5">Sin conexión · tu biblioteca sigue disponible</p>
         </div>
       )}
-      <main className={`min-h-full px-4 pt-[calc(env(safe-area-inset-top)+1rem)] ${conNavegacion ? 'pb-32 lg:pb-10 lg:pl-64' : 'pb-10'}`}>
+      <main className={`min-h-full px-4 pt-[calc(env(safe-area-inset-top)+1rem)] ${conNavegacion ? 'pb-32 [@media(max-height:500px)]:pb-20 lg:pb-10 lg:pl-64' : 'pb-10'}`}>
         <Suspense fallback={<div className="mx-auto mt-20 size-10 animate-spin rounded-full border-4 border-cian border-t-transparent" aria-label="Cargando" />}>
           <div key={ruta.nombre} className="aparecer">
             {pantalla}
