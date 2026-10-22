@@ -1,0 +1,1 @@
+import{t as e}from"./browser-CoK8fKI9.js";var t=e(((e,t)=>{t.exports={}}))();export{t as default};

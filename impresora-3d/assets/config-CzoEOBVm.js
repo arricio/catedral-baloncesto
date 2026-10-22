@@ -1,0 +1,1 @@
+var e={urlApp:`https://arricio.github.io/catedral-baloncesto/impresora-3d/`.replace(/\/?$/,`/`),hfClientId:``,supabaseUrl:``,supabaseAnonKey:``,maxImagenMB:10,limiteSupabaseBytes:1073741824},t=[`image/png`,`image/jpeg`],n=[`.png`,`.jpg`,`.jpeg`];export{n,t as r,e as t};
