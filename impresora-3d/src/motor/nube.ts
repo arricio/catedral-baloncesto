@@ -174,6 +174,8 @@ const sf3d: AdaptadorEspacio<Entrada3D, Blob> = {
 }
 
 export const ESPACIOS_3D = [trellis2, trellis1, sf3d]
+/** Sin sesión el cupo es muy pequeño: primero el más ligero (Stable Fast 3D tarda segundos). */
+const ESPACIOS_3D_SIN_SESION = [sf3d, trellis1, trellis2]
 
 // ── Adaptadores texto → imagen ──────────────────────────────
 
@@ -203,7 +205,8 @@ const ordenar = <T extends { id: string }>(lista: T[]) =>
   [...lista].sort((a, b) => (fallosRecientes.get(a.id) ?? 0) - (fallosRecientes.get(b.id) ?? 0))
 
 async function conReserva<E, S>(lista: AdaptadorEspacio<E, S>[], entrada: E, alProgresar: AlProgresar, signal?: AbortSignal): Promise<{ salida: S; servicio: string }> {
-  let ultimo: ErrorMotor | undefined
+  const errores: ErrorMotor[] = []
+  const detalles: string[] = []
   for (const esp of ordenar(lista)) {
     const servicio = `${esp.nombre} · Nube`
     try {
@@ -219,13 +222,16 @@ async function conReserva<E, S>(lista: AdaptadorEspacio<E, S>[], entrada: E, alP
     } catch (e) {
       const err = normalizarError(e)
       console.warn(`[nube] ${esp.id} falló:`, e)
-      // El cupo de ZeroGPU es por usuario y común a todos los Spaces: no tiene sentido seguir.
-      if (err.tipo === 'cupo' || err.tipo === 'cancelado' || err.tipo === 'red') throw err
+      if (err.tipo === 'cancelado' || err.tipo === 'red') throw err
+      // Aunque un Space diga «cupo», seguimos: cada Space reserva un tiempo de GPU distinto
+      // y uno más ligero puede caber en el cupo que queda.
       fallosRecientes.set(esp.id, Date.now())
-      ultimo = err
+      errores.push(err)
+      detalles.push(`${esp.nombre}: ${err.detalle ?? err.message}`)
     }
   }
-  throw ultimo?.tipo === 'saturado' ? ultimo : new ErrorMotor('saturado', MENSAJES.saturado)
+  const tipo = errores.some((x) => x.tipo === 'cupo') ? 'cupo' : errores.some((x) => x.tipo === 'saturado') ? 'saturado' : 'desconocido'
+  throw new ErrorMotor(tipo, MENSAJES[tipo], detalles.join(' · '))
 }
 
 export const motorNube: Motor = {
@@ -236,7 +242,8 @@ export const motorNube: Motor = {
     return { imagen: salida, servicio }
   },
   async imagenA3D(imagen, opciones, alProgresar) {
-    const { salida, servicio } = await conReserva(ESPACIOS_3D, { imagen, opciones }, alProgresar, opciones.signal)
+    const lista = ajustes().hfToken ? ESPACIOS_3D : ESPACIOS_3D_SIN_SESION
+    const { salida, servicio } = await conReserva(lista, { imagen, opciones }, alProgresar, opciones.signal)
     return { glb: salida, servicio }
   },
 }

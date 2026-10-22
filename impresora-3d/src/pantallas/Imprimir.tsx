@@ -257,6 +257,12 @@ function ErrorImpresion() {
       <p className="mb-5 text-texto-2" role="alert">
         {error.message}
       </p>
+      {error.detalle && (
+        <details className="mb-4 text-left text-xs text-texto-2">
+          <summary className="min-h-11 cursor-pointer py-2 text-center">Detalles técnicos</summary>
+          <p className="break-words rounded-xl bg-panel p-3">{error.detalle}</p>
+        </details>
+      )}
       <div className="flex flex-col gap-3">
         <Boton variante="principal" grande icono="girar" onClick={reintentar}>
           Reintentar

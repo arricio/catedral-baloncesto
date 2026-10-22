@@ -76,6 +76,7 @@ function fallo(e: unknown) {
   }
   useImpresion.setState({ error: err })
   guardar({ estado: 'error', error: err.message })
+  if (err.detalle) console.warn('Detalle del error:', err.detalle)
   notificar('No se pudo imprimir 😕', err.message, '#/imprimir')
 }
 

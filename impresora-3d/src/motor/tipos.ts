@@ -45,9 +45,12 @@ export type TipoError = 'cupo' | 'saturado' | 'red' | 'clave' | 'entrada' | 'can
 /** Error con mensaje amable en español para mostrar al usuario. */
 export class ErrorMotor extends Error {
   tipo: TipoError
-  constructor(tipo: TipoError, mensaje: string) {
+  /** Mensaje técnico original (se muestra en pequeño para poder diagnosticar). */
+  detalle?: string
+  constructor(tipo: TipoError, mensaje: string, detalle?: string) {
     super(mensaje)
     this.tipo = tipo
+    this.detalle = detalle
   }
 }
 
@@ -65,12 +68,13 @@ export const MENSAJES: Record<TipoError, string> = {
 /** Convierte cualquier error en un ErrorMotor con mensaje amable. */
 export function normalizarError(e: unknown): ErrorMotor {
   if (e instanceof ErrorMotor) return e
-  const texto = String((e as { message?: string })?.message ?? e ?? '').toLowerCase()
-  if ((e as { name?: string })?.name === 'AbortError') return new ErrorMotor('cancelado', MENSAJES.cancelado)
-  if (/quota|cuota|cupo|exceeded|run out|zerogpu.*limit|gpu time/.test(texto)) return new ErrorMotor('cupo', MENSAJES.cupo)
-  if (/queue.*full|too many|429|busy|no gpu|aborted|timeout|sleeping|paused|building|503|502/.test(texto))
-    return new ErrorMotor('saturado', MENSAJES.saturado)
-  if (/failed to fetch|network|networkerror|offline|load failed/.test(texto)) return new ErrorMotor('red', MENSAJES.red)
-  if (/401|unauthori[sz]ed|contraseña/.test(texto)) return new ErrorMotor('clave', MENSAJES.clave)
-  return new ErrorMotor('desconocido', MENSAJES.desconocido)
+  const original = String((e as { message?: string })?.message ?? e ?? '')
+  const texto = original.toLowerCase()
+  const crear = (tipo: TipoError) => new ErrorMotor(tipo, MENSAJES[tipo], original.slice(0, 300))
+  if ((e as { name?: string })?.name === 'AbortError') return crear('cancelado')
+  if (/quota|cuota|cupo|exceeded|run out|zerogpu.*limit|gpu time/.test(texto)) return crear('cupo')
+  if (/queue.*full|too many|429|busy|no gpu|aborted|timeout|sleeping|paused|building|503|502/.test(texto)) return crear('saturado')
+  if (/failed to fetch|network|networkerror|offline|load failed/.test(texto)) return crear('red')
+  if (/401|unauthori[sz]ed|contraseña/.test(texto)) return crear('clave')
+  return crear('desconocido')
 }
