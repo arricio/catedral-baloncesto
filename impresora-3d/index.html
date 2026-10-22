@@ -31,7 +31,38 @@
     <meta name="twitter:image" content="%SITE_URL%og-image.png" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Se ve mientras arranca la app (React lo sustituye al cargar) -->
+      <div id="arranque" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:system-ui,sans-serif;color:#eef1ff;text-align:center;padding:24px">
+        <div style="font-size:56px">🖨️</div>
+        <div style="font-size:26px;font-weight:800"><span style="color:#22e3ff">IMPRESORA</span> 3D</div>
+        <div id="arranque-texto" style="color:#a9afcf;font-size:17px">Cargando…</div>
+      </div>
+    </div>
+    <script>
+      // Red de seguridad: si la app no arranca, explicamos qué pasa en vez de dejar la pantalla en negro.
+      ;(function () {
+        var errores = []
+        window.addEventListener('error', function (e) { errores.push(String((e.error && e.error.message) || e.message || 'error')) })
+        window.addEventListener('unhandledrejection', function (e) { errores.push(String((e.reason && e.reason.message) || e.reason)) })
+        function mostrar() {
+          var caja = document.getElementById('arranque-texto')
+          if (!caja) return // la app ya arrancó
+          var ua = navigator.userAgent
+          var internoApp = /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|; wv\)/.test(ua)
+          caja.innerHTML =
+            '<b style="color:#ff6b81">La app no ha podido arrancar en este navegador.</b><br><br>' +
+            (internoApp
+              ? 'Parece que la has abierto desde Facebook, WhatsApp o Instagram. Pulsa los <b>tres puntos ⋮</b> de arriba y elige <b>«Abrir en Chrome»</b>.<br><br>'
+              : 'Prueba a abrirla en <b>Google Chrome</b> actualizado.<br><br>') +
+            '<button onclick="location.reload()" style="min-height:48px;padding:0 24px;border-radius:16px;border:0;font-size:17px;font-weight:700;background:linear-gradient(90deg,#22e3ff,#ff3dd8);color:#04131a">Reintentar</button>' +
+            '<br><br><small style="color:#6f7699;word-break:break-all">Detalles (para el soporte): ' +
+            (errores.join(' | ') || 'sin errores registrados') + ' · ' + ua + '</small>'
+        }
+        setTimeout(mostrar, 12000)
+        window.addEventListener('error', function () { setTimeout(mostrar, 1500) })
+      })()
+    </script>
     <noscript>IMPRESORA 3D necesita JavaScript activado.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
