@@ -67,6 +67,7 @@ function useArranque() {
 export default function App() {
   const ruta = useRuta()
   const tema = useAjustes((s) => s.tema)
+  const letraGrande = useAjustes((s) => s.letraGrande)
   const red = useEstadoRed()
   useArranque()
 
@@ -74,6 +75,11 @@ export default function App() {
     document.documentElement.dataset.tema = tema
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', tema === 'claro' ? '#f4f6fb' : '#05060d')
   }, [tema])
+
+  // Letra grande: todo el diseño usa «rem», así que crece entero.
+  useEffect(() => {
+    document.documentElement.style.fontSize = letraGrande ? '125%' : ''
+  }, [letraGrande])
 
   // Al cambiar de pantalla, arriba del todo.
   useEffect(() => window.scrollTo({ top: 0 }), [ruta.nombre])

@@ -203,7 +203,11 @@ const sf3d: AdaptadorEspacio<Entrada3D, Blob> = {
   },
 }
 
-export const ESPACIOS_3D = [trellis2, trellis1, sf3d]
+/**
+ * Con cuenta: primero TRELLIS (una sola reserva de GPU de 120 s); TRELLIS.2 hace dos
+ * reservas (generar + extraer GLB = 240 s), que no siempre caben en el cupo gratuito.
+ */
+export const ESPACIOS_3D = [trellis1, trellis2, sf3d]
 /** Sin sesión el cupo es muy pequeño: primero el más ligero (Stable Fast 3D tarda segundos). */
 const ESPACIOS_3D_SIN_SESION = [sf3d, trellis1, trellis2]
 

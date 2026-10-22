@@ -313,10 +313,10 @@ function ErrorImpresion() {
       </p>
       {error.tipo === 'cupo' && !hfUsuario && <ConectarHF />}
       {error.detalle && (
-        <details className="mb-4 text-left text-xs text-texto-2">
-          <summary className="min-h-11 cursor-pointer py-2 text-center">Detalles técnicos</summary>
-          <p className="break-words rounded-xl bg-panel p-3">{error.detalle}</p>
-        </details>
+        <div className="mb-4 text-left">
+          <p className="mb-1 text-center text-sm font-semibold text-texto-2">Motivo (haz una captura si me lo quieres enviar):</p>
+          <p className="break-words rounded-xl bg-panel p-3 text-base leading-relaxed">{error.detalle}</p>
+        </div>
       )}
       <div className="flex flex-col gap-3">
         <Boton variante="principal" grande icono="girar" onClick={reintentar}>

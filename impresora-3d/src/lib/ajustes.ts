@@ -29,6 +29,8 @@ export interface Ajustes {
   /** Calidad de generación en la nube: rápida (menos cupo) o detallada. */
   detalleNube: 'rapido' | 'detallado'
   bienvenidaVista: boolean
+  /** Letra más grande para ver mejor. */
+  letraGrande: boolean
   notificaciones: boolean
   syncActiva: boolean
   set: (parcial: Partial<Omit<Ajustes, 'set'>>) => void
@@ -52,6 +54,7 @@ export const useAjustes = create<Ajustes>()(
       calidad: 'auto',
       detalleNube: 'rapido',
       bienvenidaVista: false,
+      letraGrande: false,
       notificaciones: false,
       syncActiva: false,
       set: (parcial) => set(parcial),
