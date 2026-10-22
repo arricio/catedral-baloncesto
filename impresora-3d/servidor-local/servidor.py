@@ -56,7 +56,7 @@ def cargar_config() -> dict[str, Any]:
         "modelo_3d": "trellis",  # "trellis" (≥16 GB) o "trellis2" (≥24 GB)
         "texto_imagen": "flux-schnell",  # "flux-schnell" o "sdxl-turbo"
         "descargar_a_cpu": True,  # FLUX con descarga a RAM si la VRAM no llega
-        "url_app": "https://arricio.github.io/impresora-3d/",
+        "url_app": "https://arricio.github.io/catedral-baloncesto/impresora-3d/",
         "puerto": 8188,
     }
     if ruta.exists():

@@ -14,7 +14,7 @@ export IMPRESORA_DATOS="$BASE/datos"
 cd "$DIR"
 
 PUERTO=$(python -c "import json;print(json.load(open('config.json')).get('puerto',8188))")
-URL_APP=$(python -c "import json;print(json.load(open('config.json')).get('url_app','https://arricio.github.io/impresora-3d/'))")
+URL_APP=$(python -c "import json;print(json.load(open('config.json')).get('url_app','https://arricio.github.io/catedral-baloncesto/impresora-3d/'))")
 CLAVE=$(python -c "import json;print(json.load(open('config.json'))['clave'])")
 TOKEN_TUNEL=$(python -c "import json;print(json.load(open('config.json')).get('tunel_token',''))")
 URL_FIJA=$(python -c "import json;print(json.load(open('config.json')).get('tunel_url',''))")

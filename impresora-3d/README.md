@@ -78,7 +78,7 @@ Lo haces una sola vez y tardas unos 10 minutos. No hace falta instalar nada.
 
    **`https://TU-USUARIO.github.io/impresora-3d/`**
 
-   (en tu caso, `https://arricio.github.io/impresora-3d/`)
+   (en tu caso, `https://arricio.github.io/catedral-baloncesto/impresora-3d/`)
 
 > **Netlify o Vercel en vez de GitHub Pages:** importa el repositorio y configura:
 > - Comando de compilación: `npm run build`
@@ -120,8 +120,8 @@ La app funciona sin iniciar sesión, pero entonces comparte un cupo anónimo peq
 1. Crea una cuenta gratis en <https://huggingface.co/join>.
 2. Entra en <https://huggingface.co/settings/applications/new> y rellena:
    - *Application name*: `IMPRESORA 3D`
-   - *Homepage URL*: `https://arricio.github.io/impresora-3d/`
-   - *Redirect URLs*: `https://arricio.github.io/impresora-3d/`
+   - *Homepage URL*: `https://arricio.github.io/catedral-baloncesto/impresora-3d/`
+   - *Redirect URLs*: `https://arricio.github.io/catedral-baloncesto/impresora-3d/`
    - *Scopes*: marca `openid`, `profile` e `inference-api`
 3. Copia el **Client ID**. Es público, no es secreto. Guárdalo como variable `VITE_HF_CLIENT_ID` (§2) y vuelve a publicar.
 
@@ -138,7 +138,7 @@ Por defecto, todo se guarda **en el propio dispositivo**. Si quieres ver tus mod
 1. Crea una cuenta gratis en <https://supabase.com> y pulsa **New project** (plan *Free*).
 2. Ve a **SQL Editor → New query**, pega el contenido de [`supabase/esquema.sql`](supabase/esquema.sql) y pulsa **Run**. Esto crea las tablas, el almacén privado y las reglas de seguridad: cada usuario solo ve lo suyo.
 3. Ve a **Authentication → URL Configuration**:
-   - *Site URL*: `https://arricio.github.io/impresora-3d/`
+   - *Site URL*: `https://arricio.github.io/catedral-baloncesto/impresora-3d/`
    - *Redirect URLs*: añade la misma dirección.
 4. (Opcional) Si quieres entrar con Google, ve a **Authentication → Providers → Google** y sigue sus instrucciones.
 5. Ve a **Project Settings → API**. Copia la *Project URL* y la clave *anon public* en las variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (§2). La clave *anon* es pública por diseño: la seguridad la dan las reglas del paso 2.
@@ -203,7 +203,7 @@ El script de inicio abre automáticamente un **túnel rápido de Cloudflare** (g
     Contraseña: tu-contraseña
 
  📲 ENLACE DE INVITACIÓN (envíalo por WhatsApp a tus amigos):
-    https://arricio.github.io/impresora-3d/#/conectar?url=...&clave=...
+    https://arricio.github.io/catedral-baloncesto/impresora-3d/#/conectar?url=...&clave=...
  [código QR]
 ```
 
@@ -244,7 +244,7 @@ La primera vez que abres la app aparece una **pantalla de bienvenida** con los p
 
 ## 8. El enlace para WhatsApp
 
-Tu enlace público es **`https://arricio.github.io/impresora-3d/`**.
+Tu enlace público es **`https://arricio.github.io/catedral-baloncesto/impresora-3d/`**.
 
 - Al pegarlo en WhatsApp se ve con título, descripción e imagen, gracias a las etiquetas Open Graph y a `public/og-image.png`.
 - Dentro de la app, ve a **Ajustes → Compartir e instalar**:

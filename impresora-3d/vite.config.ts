@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const base = env.BASE_PATH || '/'
-  const siteUrl = (env.VITE_SITE_URL || 'https://arricio.github.io/impresora-3d/').replace(/\/?$/, '/')
+  const siteUrl = (env.VITE_SITE_URL || 'https://arricio.github.io/catedral-baloncesto/impresora-3d/').replace(/\/?$/, '/')
 
   return {
     base,

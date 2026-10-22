@@ -74,8 +74,8 @@ Titulo 'Contraseña para tus amigos'
 Write-Host '  Elige una contraseña (mínimo 8 caracteres). Se la darás a quien quieras que use tu servidor.'
 do { $clave = Read-Host '  Contraseña' } while ($clave.Length -lt 8)
 
-$urlApp = Read-Host '  Dirección de tu app (Enter = https://arricio.github.io/impresora-3d/)'
-if (-not $urlApp) { $urlApp = 'https://arricio.github.io/impresora-3d/' }
+$urlApp = Read-Host '  Dirección de tu app (Enter = https://arricio.github.io/catedral-baloncesto/impresora-3d/)'
+if (-not $urlApp) { $urlApp = 'https://arricio.github.io/catedral-baloncesto/impresora-3d/' }
 
 $config = @{ clave = $clave; modelo_3d = $modelo3D; texto_imagen = $textoImagen; url_app = $urlApp; puerto = 8188; descargar_a_cpu = $true } | ConvertTo-Json
 $aqui = Split-Path -Parent $PSCommandPath
