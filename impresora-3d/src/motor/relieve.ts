@@ -42,7 +42,7 @@ const esperar = (ms: number) => new Promise((ok) => setTimeout(ok, ms))
 // ── 1. Silueta ──────────────────────────────────────────────
 
 /** Separa la figura del fondo. Devuelve 1 = figura, 0 = fondo. */
-function calcularMascara(px: Uint8ClampedArray, w: number, h: number): Uint8Array {
+export function calcularMascara(px: Uint8ClampedArray, w: number, h: number): Uint8Array {
   const n = w * h
   const mascara = new Uint8Array(n)
 

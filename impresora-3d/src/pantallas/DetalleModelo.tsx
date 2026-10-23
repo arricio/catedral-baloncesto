@@ -14,7 +14,7 @@ import { useAjustes, type FondoVisor } from '../lib/ajustes'
 import { CONFIG } from '../lib/config'
 import { enlaceWhatsApp } from '../lib/compartirApp'
 import { avisar } from '../lib/avisos'
-import { borrarModelo, db, moverModelo, renombrarModelo, type Modelo } from '../lib/db'
+import { borrarModelo, db, moverModelo, nuevoId, renombrarModelo, type Modelo } from '../lib/db'
 import { esIOS } from '../lib/plataforma'
 import { ir } from '../lib/ruta'
 import { apuntarBorrado } from '../sync/supabase'
@@ -308,6 +308,7 @@ export function DetalleModelo({ id }: { id: string }) {
   const [corte, setCorte] = useState(50)
   const [hoja, setHoja] = useState<'guardar' | 'enviar' | 'renombrar' | 'mover' | 'borrar' | null>(null)
   const [nombre, setNombre] = useState('')
+  const [mejorando, setMejorando] = useState(false)
   const urlOriginal = useUrl(modelo?.imagen)
 
   if (modelo === undefined) return <div className="mx-auto mt-20 size-10 animate-spin rounded-full border-4 border-cian border-t-transparent" aria-label="Cargando" />
@@ -414,6 +415,36 @@ export function DetalleModelo({ id }: { id: string }) {
           Eliminar
         </Boton>
       </div>
+      {modelo.origen !== 'archivo' && !modelo.servicio?.includes('relieve') && (
+        <Boton
+          icono="varita"
+          className="mt-3 w-full"
+          disabled={mejorando}
+          onClick={async () => {
+            setMejorando(true)
+            avisar('Poniendo tu foto por delante… (unos segundos)', 'info')
+            try {
+              const { proyectarFotoDelante } = await import('../motor/proyectar')
+              const glb = await proyectarFotoDelante(modelo.glb, modelo.imagen)
+              const { renderizarMiniatura } = await import('../lib/escena')
+              const { crearMiniatura } = await import('../lib/imagen')
+              const miniatura = await crearMiniatura(await renderizarMiniatura(glb))
+              const ahora = Date.now()
+              const id = nuevoId()
+              await db.modelos.add({ ...modelo, id, nombre: `${modelo.nombre} (con mi foto)`, glb, miniatura, creado: ahora, actualizado: ahora, bytes: glb.size + modelo.imagen.size + miniatura.size, sincronizado: undefined })
+              avisar('¡Hecho! Se ha guardado como un modelo nuevo ✨', 'exito')
+              ir(`/modelo/${id}`)
+            } catch (e) {
+              console.error(e)
+              avisar('No se pudo poner la foto en este modelo.', 'error')
+            } finally {
+              setMejorando(false)
+            }
+          }}
+        >
+          {mejorando ? 'Poniendo tu foto…' : '✨ Poner mi foto por delante'}
+        </Boton>
+      )}
       <p className="mt-4 text-center text-sm text-texto-2">
         ✅ Guardado en tu Biblioteca · {modelo.servicio ?? ''} · {formatoBytes(modelo.bytes)}
       </p>

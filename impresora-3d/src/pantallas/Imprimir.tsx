@@ -99,8 +99,8 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
       valor={modoFoto}
       onCambio={(v) => set({ modoFoto: v })}
       opciones={[
-        { id: 'relieve', texto: '🖼️ Igual que la foto' },
-        { id: 'ia', texto: '🤖 Figura con IA' },
+        { id: 'relieve', texto: '🖼️ Relieve' },
+        { id: 'ia', texto: '🧑 Figura completa 360°' },
       ]}
     />
   )
@@ -108,11 +108,11 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
     <p className="rounded-2xl bg-panel p-3 text-sm text-texto-2">
       {relieve ? (
         <>
-          <b className="text-texto">Retrato en relieve:</b> tu foto exacta (cara, letras y colores) sobre una figura con volumen por delante y por detrás. Se hace en tu móvil en segundos y no gasta cupo.
+          <b className="text-texto">Relieve:</b> tu foto exacta sobre una figura con volumen, como una medalla gruesa. Se hace en tu móvil en segundos y no gasta cupo. No tiene nuca ni espalda de verdad.
         </>
       ) : (
         <>
-          <b className="text-texto">Figura con IA:</b> la IA imagina la forma completa por todos los lados. Se parece menos a la foto y gasta cupo de Hugging Face.
+          <b className="text-texto">Figura completa 360°:</b> la IA crea la figura entera, con nuca, cuello y espalda, y después la app pega tu foto exacta por delante (cara y letras iguales). Tarda 1–3 minutos y gasta cupo de Hugging Face.
         </>
       )}
     </p>
