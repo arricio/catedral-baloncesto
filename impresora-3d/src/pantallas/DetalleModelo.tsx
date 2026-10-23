@@ -14,7 +14,7 @@ import { useAjustes, type FondoVisor } from '../lib/ajustes'
 import { CONFIG } from '../lib/config'
 import { enlaceWhatsApp } from '../lib/compartirApp'
 import { avisar } from '../lib/avisos'
-import { borrarModelo, db, moverModelo, nuevoId, renombrarModelo, type Modelo } from '../lib/db'
+import { borrarModelo, db, moverModelo, nombreUnico, nuevoId, renombrarModelo, tipoDeModelo, type Modelo } from '../lib/db'
 import { esIOS } from '../lib/plataforma'
 import { ir } from '../lib/ruta'
 import { apuntarBorrado } from '../sync/supabase'
@@ -333,7 +333,7 @@ export function DetalleModelo({ id }: { id: string }) {
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-titulo text-2xl font-bold">{modelo.nombre}</h1>
           <p className="truncate text-sm text-texto-2">
-            {modelo.origen === 'foto' ? '📷 Desde foto' : modelo.origen === 'archivo' ? '📦 Archivo 3D' : `✍️ «${modelo.prompt}»`} · {new Date(modelo.creado).toLocaleDateString('es-ES')}
+            {modelo.origen === 'texto' ? `✍️ «${modelo.prompt}»` : tipoDeModelo(modelo)} · {new Date(modelo.creado).toLocaleDateString('es-ES')}
           </p>
         </div>
       </header>
@@ -431,7 +431,7 @@ export function DetalleModelo({ id }: { id: string }) {
               const miniatura = await crearMiniatura(await renderizarMiniatura(glb))
               const ahora = Date.now()
               const id = nuevoId()
-              await db.modelos.add({ ...modelo, id, nombre: `${modelo.nombre} (con mi foto)`, glb, miniatura, creado: ahora, actualizado: ahora, bytes: glb.size + modelo.imagen.size + miniatura.size, sincronizado: undefined })
+              await db.modelos.add({ ...modelo, id, nombre: await nombreUnico(`${modelo.nombre} con mi foto`), glb, miniatura, creado: ahora, actualizado: ahora, bytes: glb.size + modelo.imagen.size + miniatura.size, sincronizado: undefined })
               avisar('¡Hecho! Se ha guardado como un modelo nuevo ✨', 'exito')
               ir(`/modelo/${id}`)
             } catch (e) {

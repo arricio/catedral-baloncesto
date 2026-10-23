@@ -10,7 +10,7 @@
  */
 import { create } from 'zustand'
 import { ajustes } from '../lib/ajustes'
-import { db, nuevoId, type Estilo, type Trabajo } from '../lib/db'
+import { db, nombreUnico, nuevoId, type Estilo, type Trabajo } from '../lib/db'
 import { comprimirImagen, crearMiniatura } from '../lib/imagen'
 import { notificar } from '../lib/notificaciones'
 import { avisar } from '../lib/avisos'
@@ -174,7 +174,7 @@ async function terminar(glb: Blob, servicio: string) {
   const modeloId = nuevoId()
   await db.modelos.add({
     id: modeloId,
-    nombre: t.nombre,
+    nombre: await nombreUnico(t.nombre),
     carpetaId: t.carpetaId,
     creado: ahora,
     actualizado: ahora,

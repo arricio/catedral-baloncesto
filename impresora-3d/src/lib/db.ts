@@ -168,7 +168,7 @@ export async function importarArchivo3D(archivo: File, carpetaId = ID_CARPETA_DE
   const id = nuevoId()
   await db.modelos.add({
     id,
-    nombre: archivo.name.replace(/\.glb$/i, '').replace(/[-_]+/g, ' ').trim() || 'Modelo recibido',
+    nombre: await nombreUnico(archivo.name.replace(/\.glb$/i, '').replace(/[-_]+/g, ' ').trim() || 'Modelo recibido'),
     carpetaId,
     creado: ahora,
     actualizado: ahora,
@@ -180,4 +180,22 @@ export async function importarArchivo3D(archivo: File, carpetaId = ID_CARPETA_DE
     bytes: glb.size + miniatura.size * 2,
   })
   return id
+}
+
+/** Nombre sin repetir en la biblioteca: «Foto», «Foto (2)», «Foto (3)»… */
+export async function nombreUnico(nombre: string): Promise<string> {
+  const base = nombre.trim() || 'Sin nombre'
+  const usados = new Set((await db.modelos.toArray()).map((m) => m.nombre))
+  if (!usados.has(base)) return base
+  let n = 2
+  while (usados.has(`${base} (${n})`)) n++
+  return `${base} (${n})`
+}
+
+/** Etiqueta corta del tipo de modelo (para las tarjetas). */
+export function tipoDeModelo(m: Pick<Modelo, 'origen' | 'servicio'>): string {
+  if (m.origen === 'archivo') return '📦 Archivo'
+  if (m.servicio?.includes('relieve')) return '🖼️ Relieve'
+  if (m.origen === 'texto') return '✍️ Texto'
+  return '🧑 Figura 360°'
 }

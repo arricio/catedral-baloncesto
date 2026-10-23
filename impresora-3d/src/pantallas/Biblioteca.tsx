@@ -9,7 +9,7 @@ import { Boton, Hoja, formatoBytes } from '../componentes/ui'
 import { guardarArchivo } from '../exportar/descargar'
 import { zipCarpeta } from '../exportar/zip'
 import { avisar } from '../lib/avisos'
-import { borrarCarpeta, borrarModelo, crearCarpeta, db, espacioUsado, ID_CARPETA_DEFECTO, importarArchivo3D, renombrarCarpeta, type Modelo } from '../lib/db'
+import { borrarCarpeta, borrarModelo, crearCarpeta, db, espacioUsado, ID_CARPETA_DEFECTO, importarArchivo3D, renombrarCarpeta, tipoDeModelo, type Modelo } from '../lib/db'
 import { ir } from '../lib/ruta'
 import { apuntarBorrado } from '../sync/supabase'
 
@@ -179,7 +179,7 @@ export function Biblioteca({ carpetaInicial }: { carpetaInicial?: string }) {
                 <div className="relative">
                   <Miniatura m={m} />
                   <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-xs text-white backdrop-blur">
-                    {m.origen === 'foto' ? '📷 Foto' : m.origen === 'archivo' ? '📦 Archivo' : '✍️ Texto'}
+                    {tipoDeModelo(m)}
                   </span>
                 </div>
                 <div className="p-3 pr-14">
