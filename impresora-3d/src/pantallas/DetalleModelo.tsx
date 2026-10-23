@@ -322,7 +322,7 @@ export function DetalleModelo({ id }: { id: string }) {
 
   const visor = (
     <Suspense fallback={<div className="aspect-square w-full animate-pulse rounded-3xl bg-panel" />}>
-      <Visor3D glb={modelo.glb} fondo={fondoVisor} giroAuto={giroAuto} registrar className="h-[min(62dvh,560px)] w-full touch-none lg:h-[640px]" />
+      <Visor3D glb={modelo.glb} fondo={fondoVisor} giroAuto={giroAuto} registrar className="h-[min(52dvh,560px)] w-full touch-none lg:h-[640px]" />
     </Suspense>
   )
 
@@ -372,33 +372,10 @@ export function DetalleModelo({ id }: { id: string }) {
         </div>
       )}
 
-      {/* Controles del visor */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <div className="flex gap-1 rounded-2xl p-1 cristal" role="radiogroup" aria-label="Fondo del visor">
-          {FONDOS.map((f) => (
-            <button key={f.id} role="radio" aria-checked={fondoVisor === f.id} onClick={() => set({ fondoVisor: f.id })} className={`min-h-10 rounded-xl px-3 text-sm ${fondoVisor === f.id ? 'bg-cian/20 text-texto ring-1 ring-cian/50' : 'text-texto-2'}`}>
-              {f.texto}
-            </button>
-          ))}
-        </div>
-        <Boton variante={giroAuto ? 'principal' : 'secundario'} icono="girar" aria-pressed={giroAuto} onClick={() => set({ giroAuto: !giroAuto })}>
-          Girar
-        </Boton>
-        <Boton
-          variante={comparar !== 'no' ? 'principal' : 'secundario'}
-          icono="comparar"
-          aria-pressed={comparar !== 'no'}
-          onClick={() => setComparar(comparar === 'no' ? 'deslizador' : comparar === 'deslizador' ? 'lado' : 'no')}
-        >
-          {comparar === 'no' ? 'Comparar' : comparar === 'deslizador' ? 'Deslizador' : 'Lado a lado'}
-        </Boton>
-      </div>
-      <p className="mt-2 text-xs text-texto-2">Un dedo: girar · Dos dedos: zoom y mover · «Comparar» alterna deslizador y lado a lado.</p>
-
       {modelo.origen !== 'archivo' && !modelo.servicio?.includes('relieve') && (
         <Boton
           grande
-          className="mt-4 w-full !bg-[#ffd21e] !font-bold !text-[#1a1300]"
+          className="mt-3 w-full !bg-[#ffd21e] !font-bold !text-[#1a1300]"
           disabled={mejorando}
           onClick={async () => {
             setMejorando(true)
@@ -425,6 +402,29 @@ export function DetalleModelo({ id }: { id: string }) {
           {mejorando ? 'Poniendo tu foto…' : '✨ Poner mi foto por delante'}
         </Boton>
       )}
+      {/* Controles del visor */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="flex gap-1 rounded-2xl p-1 cristal" role="radiogroup" aria-label="Fondo del visor">
+          {FONDOS.map((f) => (
+            <button key={f.id} role="radio" aria-checked={fondoVisor === f.id} onClick={() => set({ fondoVisor: f.id })} className={`min-h-10 rounded-xl px-3 text-sm ${fondoVisor === f.id ? 'bg-cian/20 text-texto ring-1 ring-cian/50' : 'text-texto-2'}`}>
+              {f.texto}
+            </button>
+          ))}
+        </div>
+        <Boton variante={giroAuto ? 'principal' : 'secundario'} icono="girar" aria-pressed={giroAuto} onClick={() => set({ giroAuto: !giroAuto })}>
+          Girar
+        </Boton>
+        <Boton
+          variante={comparar !== 'no' ? 'principal' : 'secundario'}
+          icono="comparar"
+          aria-pressed={comparar !== 'no'}
+          onClick={() => setComparar(comparar === 'no' ? 'deslizador' : comparar === 'deslizador' ? 'lado' : 'no')}
+        >
+          {comparar === 'no' ? 'Comparar' : comparar === 'deslizador' ? 'Deslizador' : 'Lado a lado'}
+        </Boton>
+      </div>
+      <p className="mt-2 text-xs text-texto-2">Un dedo: girar · Dos dedos: zoom y mover · «Comparar» alterna deslizador y lado a lado.</p>
+
       {/* Acciones */}
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Boton variante="principal" grande icono="whatsapp" onClick={() => setHoja('enviar')}>
