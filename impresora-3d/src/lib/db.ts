@@ -55,7 +55,7 @@ export interface Trabajo {
   estado: EstadoTrabajo
   motor: 'nube' | 'local' | 'demo' | 'relieve'
   /** Opciones del «Retrato en relieve» (si se eligió ese modo). */
-  relieve?: { volumen: number; peana: boolean; textoPeana?: string; fuente?: string }
+  relieve?: { volumen: number; peana: boolean; textoPeana?: string; fuente?: string; trasera?: 'espejo' | 'foto' | 'lisa'; espalda?: Blob }
   /** Tipo de letra para las palabras entre comillas (modo texto). */
   fuente?: string
   prompt?: string

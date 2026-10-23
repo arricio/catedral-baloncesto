@@ -16,9 +16,19 @@ import { cargarBitmap } from '../lib/imagen'
 import { cargarFuente, fuentePorId } from '../lib/fuentes'
 import type { AlProgresar } from './tipos'
 
+export type Trasera = 'espejo' | 'foto' | 'lisa'
+
 export interface OpcionesRelieve {
   /** 0 = casi plano, 1 = mucho volumen. */
   volumen: number
+  /**
+   * Qué se ve por detrás:
+   *  - «espejo»: la misma foto (la figura se ve igual por los dos lados; las letras de la ropa, al revés);
+   *  - «foto»: una segunda foto de la espalda;
+   *  - «lisa»: un solo color.
+   */
+  trasera?: Trasera
+  espalda?: Blob
   peana: boolean
   textoPeana?: string
   fuente?: string
@@ -189,18 +199,24 @@ function suavizar(a: Float32Array, m: Uint8Array, w: number, h: number, veces: n
 
 interface Piezas {
   frente: THREE.BufferGeometry
-  resto: THREE.BufferGeometry
+  trasera: THREE.BufferGeometry
+  paredes: THREE.BufferGeometry
   ancho: number
   alto: number
   fondoMax: number
+  /** Límites de la figura en la rejilla (para encajar la foto de la espalda). */
+  caja: { minX: number; maxX: number; minY: number; maxY: number }
 }
 
-function construirMalla(m: Uint8Array, alturas: Float32Array, w: number, h: number, escala: number): Piezas {
+/**
+ * Construye una pieza cerrada con volumen por delante (+z) y por detrás (−z).
+ * `uvTrasera` decide qué parte de la imagen va en cada punto de la espalda.
+ */
+function construirMalla(m: Uint8Array, alturas: Float32Array, w: number, h: number, escala: number, uvTrasera?: (x: number, y: number) => [number, number]): Piezas {
   // Vértices en las esquinas de las celdas; altura = media de las celdas vecinas de la figura.
   const W = w + 1
   const H = h + 1
   const zEsquina = new Float32Array(W * H)
-  const dentro = new Uint8Array(W * H)
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
       let s = 0
@@ -210,71 +226,86 @@ function construirMalla(m: Uint8Array, alturas: Float32Array, w: number, h: numb
         s += alturas[cy * w + cx]
         c++
       }
-      if (c) {
-        // En el borde exterior la pieza baja hacia el grosor mínimo.
-        zEsquina[y * W + x] = c < 4 ? (s / c) * 0.55 : s / c
-        dentro[y * W + x] = 1
-      }
+      // En el contorno la pieza se estrecha (borde redondeado).
+      if (c) zEsquina[y * W + x] = c < 4 ? (s / c) * 0.55 : s / c
     }
 
   // Límites de la figura para centrarla y apoyarla en y = 0
-  let minX = w, maxX = 0, maxY = 0
+  let minX = w, maxX = 0, minY = h, maxY = 0
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
       if (m[y * w + x]) {
         minX = Math.min(minX, x)
         maxX = Math.max(maxX, x + 1)
+        minY = Math.min(minY, y)
         maxY = Math.max(maxY, y + 1)
       }
   const cx = (minX + maxX) / 2
   const px = (x: number) => (x - cx) * escala
   const py = (y: number) => (maxY - y) * escala
 
-  // Frente (con la foto)
-  const posF: number[] = []
-  const uvF: number[] = []
-  const indiceF = new Int32Array(W * H).fill(-1)
-  const vF = (x: number, y: number) => {
-    const k = y * W + x
-    if (indiceF[k] < 0) {
-      indiceF[k] = posF.length / 3
-      posF.push(px(x), py(y), zEsquina[k])
-      uvF.push(x / w, y / h) // glTF: origen arriba a la izquierda (flipY = false)
+  /** Superficie (frente o espalda) indexada, con coordenadas de textura. */
+  function superficie(signo: 1 | -1, uv: (x: number, y: number) => [number, number]) {
+    const pos: number[] = []
+    const uvs: number[] = []
+    const indice = new Int32Array(W * H).fill(-1)
+    const v = (x: number, y: number) => {
+      const k = y * W + x
+      if (indice[k] < 0) {
+        indice[k] = pos.length / 3
+        pos.push(px(x), py(y), signo * zEsquina[k])
+        uvs.push(...uv(x, y))
+      }
+      return indice[k]
     }
-    return indiceF[k]
+    const idx: number[] = []
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (!m[y * w + x]) continue
+        const a = v(x, y), b = v(x + 1, y), c = v(x + 1, y + 1), d = v(x, y + 1)
+        if (signo > 0) idx.push(a, d, c, a, c, b)
+        else idx.push(a, b, c, a, c, d)
+      }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+    g.setIndex(idx)
+    g.computeVertexNormals()
+    return g
   }
-  const idxF: number[] = []
-  // Trasera y laterales (color liso)
-  const posR: number[] = []
-  const quad = (a: number[], b: number[], c: number[], d: number[]) => posR.push(...a, ...b, ...c, ...a, ...c, ...d)
 
+  // glTF: origen de la textura arriba a la izquierda (flipY = false)
+  const frente = superficie(1, (x, y) => [x / w, y / h])
+  const trasera = superficie(-1, uvTrasera ?? ((x, y) => [x / w, y / h]))
+
+  // Paredes del contorno (unen el borde de delante con el de detrás)
+  const posP: number[] = []
+  const uvP: number[] = []
+  // El canto se pinta con el color del borde de la foto (la celda de la que sale).
+  let uvCelda: [number, number] = [0, 0]
+  const quad = (a: number[], b: number[], c: number[], d: number[]) => {
+    posP.push(...a, ...b, ...c, ...a, ...c, ...d)
+    for (let i = 0; i < 6; i++) uvP.push(...uvCelda)
+  }
+  const z = (xx: number, yy: number) => zEsquina[yy * W + xx]
+  const fuera = (xx: number, yy: number) => xx < 0 || yy < 0 || xx >= w || yy >= h || !m[yy * w + xx]
   let fondoMax = 0
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (!m[y * w + x]) continue
-      const a = vF(x, y), b = vF(x + 1, y), c = vF(x + 1, y + 1), d = vF(x, y + 1)
-      idxF.push(a, d, c, a, c, b)
-      fondoMax = Math.max(fondoMax, zEsquina[y * W + x])
-      // trasera (z = 0), mirando hacia atrás
-      quad([px(x), py(y), 0], [px(x + 1), py(y), 0], [px(x + 1), py(y + 1), 0], [px(x), py(y + 1), 0])
-      // paredes donde la celda vecina es fondo
-      const z = (xx: number, yy: number) => zEsquina[yy * W + xx]
-      const fuera = (xx: number, yy: number) => xx < 0 || yy < 0 || xx >= w || yy >= h || !m[yy * w + xx]
-      if (fuera(x, y - 1)) quad([px(x), py(y), 0], [px(x), py(y), z(x, y)], [px(x + 1), py(y), z(x + 1, y)], [px(x + 1), py(y), 0])
-      if (fuera(x, y + 1)) quad([px(x + 1), py(y + 1), 0], [px(x + 1), py(y + 1), z(x + 1, y + 1)], [px(x), py(y + 1), z(x, y + 1)], [px(x), py(y + 1), 0])
-      if (fuera(x - 1, y)) quad([px(x), py(y + 1), 0], [px(x), py(y + 1), z(x, y + 1)], [px(x), py(y), z(x, y)], [px(x), py(y), 0])
-      if (fuera(x + 1, y)) quad([px(x + 1), py(y), 0], [px(x + 1), py(y), z(x + 1, y)], [px(x + 1), py(y + 1), z(x + 1, y + 1)], [px(x + 1), py(y + 1), 0])
+      fondoMax = Math.max(fondoMax, z(x, y))
+      uvCelda = [(x + 0.5) / w, (y + 0.5) / h]
+      const P = (xx: number, yy: number, s: number) => [px(xx), py(yy), s * z(xx, yy)]
+      if (fuera(x, y - 1)) quad(P(x, y, -1), P(x, y, 1), P(x + 1, y, 1), P(x + 1, y, -1))
+      if (fuera(x, y + 1)) quad(P(x + 1, y + 1, -1), P(x + 1, y + 1, 1), P(x, y + 1, 1), P(x, y + 1, -1))
+      if (fuera(x - 1, y)) quad(P(x, y + 1, -1), P(x, y + 1, 1), P(x, y, 1), P(x, y, -1))
+      if (fuera(x + 1, y)) quad(P(x + 1, y, -1), P(x + 1, y, 1), P(x + 1, y + 1, 1), P(x + 1, y + 1, -1))
     }
-
-  const frente = new THREE.BufferGeometry()
-  frente.setAttribute('position', new THREE.Float32BufferAttribute(posF, 3))
-  frente.setAttribute('uv', new THREE.Float32BufferAttribute(uvF, 2))
-  frente.setIndex(idxF)
-  frente.computeVertexNormals()
-  const resto = new THREE.BufferGeometry()
-  resto.setAttribute('position', new THREE.Float32BufferAttribute(posR, 3))
-  resto.computeVertexNormals()
-  return { frente, resto, ancho: (maxX - minX) * escala, alto: maxY * escala, fondoMax }
+  const paredes = new THREE.BufferGeometry()
+  paredes.setAttribute('position', new THREE.Float32BufferAttribute(posP, 3))
+  paredes.setAttribute('uv', new THREE.Float32BufferAttribute(uvP, 2))
+  paredes.computeVertexNormals()
+  return { frente, trasera, paredes, ancho: (maxX - minX) * escala, alto: maxY * escala, fondoMax, caja: { minX, maxX, minY, maxY } }
 }
 
 // ── 4. Peana con texto ──────────────────────────────────────
@@ -308,10 +339,12 @@ async function crearPeana(ancho: number, fondo: number, texto: string | undefine
     t.colorSpace = THREE.SRGBColorSpace
     t.flipY = false
     t.userData.mimeType = 'image/png'
-    // La cara frontal (+z) de BoxGeometry es la 5.ª; con flipY=false invertimos su V.
+    // Caras delantera (+z, la 5.ª) y trasera (−z, la 6.ª) de BoxGeometry; con flipY=false invertimos su V.
     const uv = geo.getAttribute('uv') as THREE.BufferAttribute
-    for (let i = 16; i < 20; i++) uv.setY(i, 1 - uv.getY(i))
-    materiales[4] = new THREE.MeshStandardMaterial({ map: t, roughness: 0.5 })
+    for (let i = 16; i < 24; i++) uv.setY(i, 1 - uv.getY(i))
+    const conTexto = new THREE.MeshStandardMaterial({ map: t, roughness: 0.5 })
+    materiales[4] = conTexto
+    materiales[5] = conTexto
   }
   const peana = new THREE.Mesh(geo, materiales)
   peana.name = 'peana'
@@ -344,8 +377,9 @@ export async function crearRelieve(imagen: Blob, op: OpcionesRelieve, alProgresa
   let dMax = 0
   for (let i = 0; i < d.length; i++) dMax = Math.max(dMax, d[i])
   const escala = 1 / Math.max(w, h) // la pieza mide 1 unidad en su lado largo
-  const grosorBase = 0.035
-  const relieve = 0.03 + 0.17 * Math.min(1, Math.max(0, op.volumen))
+  // Cada lado (delante y detrás) lleva este grosor: la pieza mide el doble.
+  const grosorBase = 0.02
+  const relieve = 0.025 + 0.13 * Math.min(1, Math.max(0, op.volumen))
   let alturas: Float32Array = new Float32Array(w * h)
   for (let i = 0; i < w * h; i++) {
     if (!mascara[i]) continue
@@ -357,38 +391,93 @@ export async function crearRelieve(imagen: Blob, op: OpcionesRelieve, alProgresa
   alturas = suavizar(alturas, mascara, w, h, 2)
   await esperar(250)
 
-  const piezas = construirMalla(mascara, alturas, w, h, escala)
+  // Espalda con su propia foto: se encaja su silueta en la de delante (vista desde atrás, izquierda y derecha se invierten).
+  const trasera: Trasera = op.trasera ?? 'espejo'
+  let bmpEspalda: ImageBitmap | null = null
+  let uvTrasera: ((x: number, y: number) => [number, number]) | undefined
+  const caja0 = (() => {
+    let minX = w, maxX = 0, minY = h, maxY = 0
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++)
+        if (mascara[y * w + x]) {
+          minX = Math.min(minX, x)
+          maxX = Math.max(maxX, x + 1)
+          minY = Math.min(minY, y)
+          maxY = Math.max(maxY, y + 1)
+        }
+    return { minX, maxX, minY, maxY }
+  })()
+  if (trasera === 'foto' && op.espalda) {
+    bmpEspalda = await cargarBitmap(op.espalda)
+    const we = Math.round((bmpEspalda.width / bmpEspalda.height) * h) || w
+    const c2 = document.createElement('canvas')
+    c2.width = we
+    c2.height = h
+    const g2 = c2.getContext('2d', { willReadFrequently: true })!
+    g2.drawImage(bmpEspalda, 0, 0, we, h)
+    const m2 = calcularMascara(g2.getImageData(0, 0, we, h).data, we, h)
+    let bx0 = we, bx1 = 0, by0 = h, by1 = 0
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < we; x++)
+        if (m2[y * we + x]) {
+          bx0 = Math.min(bx0, x)
+          bx1 = Math.max(bx1, x + 1)
+          by0 = Math.min(by0, y)
+          by1 = Math.max(by1, y + 1)
+        }
+    const { minX, maxX, minY, maxY } = caja0
+    uvTrasera = (x, y) => {
+      const fx = (maxX - x) / (maxX - minX || 1) // invertido: vista desde atrás
+      const fy = (y - minY) / (maxY - minY || 1)
+      return [(bx0 + fx * (bx1 - bx0)) / we, (by0 + fy * (by1 - by0)) / h]
+    }
+  }
+
+  const piezas = construirMalla(mascara, alturas, w, h, escala, uvTrasera)
   alProgresar({ etapa: 'texturas', porcentaje: 70, servicio, detalle: 'Pintando la foto' })
 
-  // Foto a buena resolución para el frente
-  const lienzo = document.createElement('canvas')
-  const k = Math.min(1, LADO_TEXTURA / Math.max(bmp.width, bmp.height))
-  lienzo.width = Math.round(bmp.width * k)
-  lienzo.height = Math.round(bmp.height * k)
-  const gl = lienzo.getContext('2d')!
-  gl.fillStyle = '#ffffff'
-  gl.fillRect(0, 0, lienzo.width, lienzo.height)
-  gl.drawImage(bmp, 0, 0, lienzo.width, lienzo.height)
+  const aTextura = (fuente: ImageBitmap) => {
+    const lienzo = document.createElement('canvas')
+    const k = Math.min(1, LADO_TEXTURA / Math.max(fuente.width, fuente.height))
+    lienzo.width = Math.round(fuente.width * k)
+    lienzo.height = Math.round(fuente.height * k)
+    const g = lienzo.getContext('2d')!
+    g.fillStyle = '#ffffff'
+    g.fillRect(0, 0, lienzo.width, lienzo.height)
+    g.drawImage(fuente, 0, 0, lienzo.width, lienzo.height)
+    const t = new THREE.CanvasTexture(lienzo)
+    t.colorSpace = THREE.SRGBColorSpace
+    t.flipY = false
+    t.userData.mimeType = 'image/jpeg'
+    return t
+  }
+  const foto = aTextura(bmp)
   bmp.close()
-  const foto = new THREE.CanvasTexture(lienzo)
-  foto.colorSpace = THREE.SRGBColorSpace
-  foto.flipY = false
-  foto.userData.mimeType = 'image/jpeg'
+  const fotoEspalda = bmpEspalda ? aTextura(bmpEspalda) : null
+  bmpEspalda?.close()
 
+  const liso = new THREE.MeshStandardMaterial({ color: '#2a2d3d', roughness: 0.7 })
+  const conFoto = new THREE.MeshStandardMaterial({ map: foto, roughness: 0.6 })
   const grupo = new THREE.Group()
   grupo.name = 'retrato-en-relieve'
-  grupo.add(new THREE.Mesh(piezas.frente, new THREE.MeshStandardMaterial({ map: foto, roughness: 0.6 })))
-  grupo.add(new THREE.Mesh(piezas.resto, new THREE.MeshStandardMaterial({ color: '#2a2d3d', roughness: 0.7 })))
+  grupo.add(new THREE.Mesh(piezas.frente, conFoto))
+  grupo.add(
+    new THREE.Mesh(
+      piezas.trasera,
+      trasera === 'lisa' ? liso : fotoEspalda ? new THREE.MeshStandardMaterial({ map: fotoEspalda, roughness: 0.6 }) : conFoto,
+    ),
+  )
+  grupo.add(new THREE.Mesh(piezas.paredes, trasera === 'lisa' ? liso : conFoto))
   if (op.peana) {
-    const fondoPeana = Math.max(0.22, piezas.fondoMax + 0.12)
-    const peana = await crearPeana(piezas.ancho * 1.08 + 0.04, fondoPeana, op.textoPeana, op.fuente)
-    peana.position.z = piezas.fondoMax / 2
-    grupo.add(peana)
+    // La figura va centrada en z = 0 (volumen hacia delante y hacia atrás).
+    const fondoPeana = Math.max(0.24, piezas.fondoMax * 2 + 0.12)
+    grupo.add(await crearPeana(piezas.ancho * 1.08 + 0.04, fondoPeana, op.textoPeana, op.fuente))
   }
   await esperar(200)
 
   alProgresar({ etapa: 'texturas', porcentaje: 92, servicio, detalle: 'Guardando' })
   const glb = (await new GLTFExporter().parseAsync(grupo, { binary: true })) as ArrayBuffer
   foto.dispose()
+  fotoEspalda?.dispose()
   return new Blob([glb], { type: 'model/gltf-binary' })
 }

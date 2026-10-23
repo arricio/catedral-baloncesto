@@ -3,7 +3,7 @@
  * la barra de progreso, la aprobación de la imagen intermedia y los errores amables.
  */
 import { useLiveQuery } from 'dexie-react-hooks'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { BarraProgreso } from '../componentes/BarraProgreso'
 import { ChipMotor } from '../componentes/ChipMotor'
 import { ConectarHF } from '../componentes/ConectarHF'
@@ -16,7 +16,7 @@ import { useAjustes } from '../lib/ajustes'
 import { avisar } from '../lib/avisos'
 import { db, ID_CARPETA_DEFECTO, type Estilo } from '../lib/db'
 import { iniciarSesionHF, oauthDisponible } from '../lib/hfAuth'
-import { urlDeBlob } from '../lib/imagen'
+import { urlDeBlob, validarImagen } from '../lib/imagen'
 import { pedirPermisoNotificaciones } from '../lib/notificaciones'
 import { useEstadoRed } from '../lib/red'
 import { ir } from '../lib/ruta'
@@ -74,9 +74,24 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
   const [peana, setPeana] = useState(true)
   const [textoPeana, setTextoPeana] = useState('')
   const [fuente, setFuente] = useState('cartel')
+  const [trasera, setTrasera] = useState<'espejo' | 'foto' | 'lisa'>('espejo')
+  const [espalda, setEspalda] = useState<File | null>(null)
+  const urlEspalda = useUrlBlob(espalda)
+  const camaraEspalda = useRef<HTMLInputElement>(null)
+  const galeriaEspalda = useRef<HTMLInputElement>(null)
+  const maxMB = useAjustes((s) => s.maxMB)
   const url = useUrlBlob(foto)
   const red = useEstadoRed()
   const relieve = modoFoto === 'relieve'
+  const elegirEspalda = (f?: File | null) => {
+    if (!f) return
+    try {
+      validarImagen(f, maxMB)
+      setEspalda(f)
+    } catch (e) {
+      avisar((e as Error).message, 'error', 6000)
+    }
+  }
 
   const pestañas = (
     <Segmentado
@@ -93,7 +108,7 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
     <p className="rounded-2xl bg-panel p-3 text-sm text-texto-2">
       {relieve ? (
         <>
-          <b className="text-texto">Retrato en relieve:</b> tu foto exacta (cara, letras y colores) sobre una figura con volumen. Se hace en tu móvil en segundos y no gasta cupo. Por detrás es lisa.
+          <b className="text-texto">Retrato en relieve:</b> tu foto exacta (cara, letras y colores) sobre una figura con volumen por delante y por detrás. Se hace en tu móvil en segundos y no gasta cupo.
         </>
       ) : (
         <>
@@ -146,6 +161,47 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
               ]}
             />
           </div>
+          <div>
+            <p className="mb-2 text-sm font-medium text-texto-2">Por detrás</p>
+            <Segmentado
+              etiqueta="Por detrás"
+              valor={trasera}
+              onCambio={setTrasera}
+              opciones={[
+                { id: 'espejo', texto: 'Igual que delante' },
+                { id: 'foto', texto: 'Foto de espalda' },
+                { id: 'lisa', texto: 'Lisa' },
+              ]}
+            />
+            <p className="mt-2 text-sm text-texto-2">
+              {trasera === 'espejo'
+                ? 'Por detrás se verá la misma foto. Las letras de la ropa saldrán al revés por detrás, como en un espejo (el texto de la peana sí se lee bien).'
+                : trasera === 'foto'
+                  ? 'Haz o elige una foto de la persona u objeto por detrás: así queda en 3D de verdad por los dos lados.'
+                  : 'Por detrás será de un solo color.'}
+            </p>
+            {trasera === 'foto' && (
+              <div className="mt-3">
+                {espalda ? (
+                  <div className="relative overflow-hidden rounded-2xl border border-borde bg-panel">
+                    <img src={urlEspalda} alt="Foto de la espalda" className="mx-auto max-h-48 object-contain" />
+                    <Boton variante="secundario" icono="cerrar" className="absolute right-2 top-2 !rounded-full" aria-label="Quitar foto de la espalda" onClick={() => setEspalda(null)} />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Boton variante="principal" icono="camara" onClick={() => camaraEspalda.current?.click()}>
+                      Foto espalda
+                    </Boton>
+                    <Boton icono="galeria" onClick={() => galeriaEspalda.current?.click()}>
+                      Galería
+                    </Boton>
+                  </div>
+                )}
+                <input ref={camaraEspalda} type="file" accept="image/png,image/jpeg" capture="environment" hidden onChange={(e) => (elegirEspalda(e.target.files?.[0]), (e.target.value = ''))} />
+                <input ref={galeriaEspalda} type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" hidden onChange={(e) => (elegirEspalda(e.target.files?.[0]), (e.target.value = ''))} />
+              </div>
+            )}
+          </div>
           <Interruptor activo={peana} onCambio={setPeana} etiqueta="Con peana" descripcion="Una base para que la figura se sostenga de pie." />
           {peana && (
             <>
@@ -189,7 +245,16 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
             nombre: nombre.trim() || 'Mi foto',
             carpetaId,
             fondoEnNavegador: quitarFondo === 'navegador',
-            relieve: relieve ? { volumen: volumen === 'poco' ? 0.15 : volumen === 'medio' ? 0.5 : 1, peana, textoPeana: peana ? textoPeana.trim() : undefined, fuente } : undefined,
+            relieve: relieve
+              ? {
+                  volumen: volumen === 'poco' ? 0.15 : volumen === 'medio' ? 0.5 : 1,
+                  peana,
+                  textoPeana: peana ? textoPeana.trim() : undefined,
+                  fuente,
+                  trasera: trasera === 'foto' && !espalda ? 'espejo' : trasera,
+                  espalda: trasera === 'foto' && espalda ? espalda : undefined,
+                }
+              : undefined,
           }).catch((e) => avisar(String(e.message ?? e), 'error'))
         }}
       >
