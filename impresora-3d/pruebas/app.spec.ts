@@ -55,7 +55,7 @@ test('foto → retrato en relieve (igual que la foto) con texto en la peana', as
   await page.getByRole('button', { name: 'Imprimir en 3D' }).click()
   await page.getByRole('button', { name: 'Ver modelo' }).click({ timeout: 60_000 })
   await expect(page.getByText(/Retrato en relieve ·/)).toBeVisible()
-  await page.getByRole('button', { name: 'Descargar' }).click()
+  await page.getByRole('button', { name: 'Guardar en el móvil' }).click()
   const descarga = page.waitForEvent('download')
   await page.getByRole('button', { name: 'STL' }).click()
   expect(readFileSync((await (await descarga).path())!).length).toBeGreaterThan(10_000)
@@ -92,8 +92,8 @@ test('texto → imagen intermedia (regenerar/aceptar) → 3D, y exportaciones', 
   await page.getByRole('button', { name: 'Ver modelo' }).click({ timeout: 60_000 })
 
   // Descargas 3D
-  await page.getByRole('button', { name: 'Descargar' }).click()
-  for (const [formato, extension] of [['GLB', '.glb'], ['STL', '.stl'], ['3MF a color', '.3mf'], ['OBJ + MTL', '.zip']] as const) {
+  await page.getByRole('button', { name: 'Guardar en el móvil' }).click()
+  for (const [formato, extension] of [['Modelo 3D (GLB)', '.glb'], ['STL', '.stl'], ['3MF a color', '.3mf'], ['Modelo 3D (OBJ con texturas)', '.zip']] as const) {
     const descarga = page.waitForEvent('download')
     await page.getByRole('button', { name: formato }).click()
     const d = await descarga
@@ -107,7 +107,7 @@ test('texto → imagen intermedia (regenerar/aceptar) → 3D, y exportaciones', 
       expect(modelo).toContain('<basematerials')
       expect(modelo).toContain('unit="millimeter"')
     }
-    if (formato === 'OBJ + MTL') {
+    if (extension === '.zip') {
       const zip = await JSZip.loadAsync(datos)
       expect(Object.keys(zip.files).some((n) => n.endsWith('.obj'))).toBe(true)
       expect(Object.keys(zip.files).some((n) => n.endsWith('.mtl'))).toBe(true)
@@ -116,14 +116,24 @@ test('texto → imagen intermedia (regenerar/aceptar) → 3D, y exportaciones', 
   }
   await page.getByRole('button', { name: 'Cerrar' }).click()
 
-  // Captura PNG para redes
-  await page.getByRole('button', { name: 'Redes' }).click()
-  await page.getByRole('radio', { name: /1:1/ }).click()
-  await page.getByRole('button', { name: 'Imagen', exact: true }).click()
-  await expect(page.getByRole('img', { name: 'Vista previa' })).toBeVisible({ timeout: 30_000 })
+  // Foto del modelo para la Galería
+  await page.getByRole('button', { name: 'Guardar en el móvil' }).click()
   const descarga = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Guardar' }).click()
-  expect((await descarga).suggestedFilename()).toMatch(/1x1\.png$/)
+  await page.getByRole('button', { name: /Foto del modelo/ }).click()
+  expect((await descarga).suggestedFilename()).toMatch(/-foto\.png$/)
+  await page.getByRole('button', { name: 'Cerrar' }).click()
+
+  // Enviar a un amigo: vídeo preparado y botón de WhatsApp
+  await page.getByRole('button', { name: 'Enviar a un amigo' }).click()
+  await page.getByRole('button', { name: /Foto del modelo/ }).click()
+  await page.getByRole('button', { name: 'Preparar la foto' }).click()
+  await expect(page.getByRole('img', { name: 'Vista previa' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('button', { name: 'Enviar por WhatsApp' })).toBeVisible()
+  await page.getByRole('button', { name: /Archivo 3D/ }).click()
+  const glb = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Enviar archivo 3D' }).click()
+  expect((await glb).suggestedFilename()).toMatch(/\.glb$/)
+  await expect(page.getByText(/Documento/)).toBeVisible()
 })
 
 test('vídeo del modelo girando (9:16)', async ({ page }, info) => {
@@ -131,8 +141,8 @@ test('vídeo del modelo girando (9:16)', async ({ page }, info) => {
   test.setTimeout(180_000)
   await abrir(page)
   await crearModeloDesdeTexto(page, 'una taza azul')
-  await page.getByRole('button', { name: 'Redes' }).click()
-  await page.getByRole('button', { name: 'Vídeo' }).click()
+  await page.getByRole('button', { name: 'Enviar a un amigo' }).click()
+  await page.getByRole('button', { name: 'Preparar el vídeo' }).click()
   await expect(page.locator('dialog video')).toBeVisible({ timeout: 150_000 })
   await expect(page.getByText(/\d+ (KB|MB)/).last()).toBeVisible()
 })
@@ -179,10 +189,16 @@ test('carpetas: crear, mover, renombrar, filtrar, buscar y borrar', async ({ pag
   expect(Object.keys(zip.files).some((n) => n.endsWith('.glb'))).toBe(true)
 
   // Borrar la carpeta: el modelo vuelve a «Mis impresiones»
-  await page.getByRole('button', { name: 'Borrar' }).click()
+  await page.getByRole('button', { name: 'Borrar', exact: true }).click()
   await page.getByRole('button', { name: /mover modelos a «Mis impresiones»/ }).click()
   await page.getByRole('tab', { name: /Mis impresiones/ }).click()
   await expect(page.getByText('Un dragón verde')).toBeVisible()
+
+  // Eliminar un modelo desde su papelera en la Biblioteca
+  await page.getByRole('button', { name: 'Eliminar Un dragón verde' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Eliminar' }).click()
+  await expect(page.getByText('Modelo eliminado.')).toBeVisible()
+  await expect(page.getByRole('link', { name: /Un dragón verde/ })).toHaveCount(0)
 })
 
 test('copia de seguridad: exportar e importar la biblioteca en ZIP', async ({ page, browser }, info) => {

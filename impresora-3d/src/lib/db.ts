@@ -6,7 +6,7 @@ import Dexie, { type EntityTable } from 'dexie'
 
 export const ID_CARPETA_DEFECTO = 'mis-impresiones'
 
-export type Origen = 'texto' | 'foto'
+export type Origen = 'texto' | 'foto' | 'archivo'
 export type Estilo = 'realista' | 'dibujos' | 'lowpoly' | 'juguete' | 'escultura'
 
 export interface Carpeta {
@@ -152,4 +152,30 @@ export async function pedirAlmacenamientoPersistente() {
   } catch {
     /* no es crítico */
   }
+}
+
+/** Abre un archivo 3D (GLB) recibido, por ejemplo, por WhatsApp y lo añade a la biblioteca. */
+export async function importarArchivo3D(archivo: File, carpetaId = ID_CARPETA_DEFECTO): Promise<string> {
+  const cabecera = new TextDecoder().decode(await archivo.slice(0, 4).arrayBuffer())
+  if (cabecera !== 'glTF') throw new Error('Ese archivo no es un modelo 3D GLB. Pide que te lo envíen desde IMPRESORA 3D.')
+  const glb = new Blob([archivo], { type: 'model/gltf-binary' })
+  const { renderizarMiniatura } = await import('./escena')
+  const { crearMiniatura } = await import('./imagen')
+  const miniatura = await crearMiniatura(await renderizarMiniatura(glb))
+  const ahora = Date.now()
+  const id = nuevoId()
+  await db.modelos.add({
+    id,
+    nombre: archivo.name.replace(/\.glb$/i, '').replace(/[-_]+/g, ' ').trim() || 'Modelo recibido',
+    carpetaId,
+    creado: ahora,
+    actualizado: ahora,
+    origen: 'archivo',
+    imagen: miniatura,
+    glb,
+    miniatura,
+    servicio: 'Archivo recibido',
+    bytes: glb.size + miniatura.size * 2,
+  })
+  return id
 }

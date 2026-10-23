@@ -3,18 +3,18 @@
  * Todo sale de IndexedDB, así que funciona sin conexión.
  */
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icono } from '../componentes/Icono'
 import { Boton, Hoja, formatoBytes } from '../componentes/ui'
 import { guardarArchivo } from '../exportar/descargar'
 import { zipCarpeta } from '../exportar/zip'
 import { avisar } from '../lib/avisos'
-import { borrarCarpeta, crearCarpeta, db, espacioUsado, ID_CARPETA_DEFECTO, renombrarCarpeta, type Modelo } from '../lib/db'
+import { borrarCarpeta, borrarModelo, crearCarpeta, db, espacioUsado, ID_CARPETA_DEFECTO, importarArchivo3D, renombrarCarpeta, type Modelo } from '../lib/db'
 import { ir } from '../lib/ruta'
 import { apuntarBorrado } from '../sync/supabase'
 
 type FiltroFecha = 'todas' | 'hoy' | 'semana' | 'mes'
-type FiltroTipo = 'todos' | 'foto' | 'texto'
+type FiltroTipo = 'todos' | 'foto' | 'texto' | 'archivo'
 
 const LIMITES: Record<FiltroFecha, number> = { todas: 0, hoy: 1, semana: 7, mes: 31 }
 
@@ -37,6 +37,8 @@ export function Biblioteca({ carpetaInicial }: { carpetaInicial?: string }) {
   const [fechaF, setFechaF] = useState<FiltroFecha>('todas')
   const [hoja, setHoja] = useState<'nueva' | 'renombrar' | 'borrar' | null>(null)
   const [nombreCarpeta, setNombreCarpeta] = useState('')
+  const [aEliminar, setAEliminar] = useState<Modelo | null>(null)
+  const archivo3D = useRef<HTMLInputElement>(null)
 
   const carpetas = useLiveQuery(() => db.carpetas.orderBy('creado').toArray(), []) ?? []
   const modelos = useLiveQuery(() => db.modelos.orderBy('creado').reverse().toArray(), [])
@@ -66,9 +68,32 @@ export function Biblioteca({ carpetaInicial }: { carpetaInicial?: string }) {
             {modelos?.length ?? 0} {modelos?.length === 1 ? 'modelo' : 'modelos'} · {carpetas.length} {carpetas.length === 1 ? 'carpeta' : 'carpetas'}
           </p>
         </div>
-        <Boton icono="mas" onClick={() => (setNombreCarpeta(''), setHoja('nueva'))}>
-          Carpeta
-        </Boton>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Boton icono="instalar" onClick={() => archivo3D.current?.click()}>
+            Abrir archivo 3D
+          </Boton>
+          <Boton icono="mas" onClick={() => (setNombreCarpeta(''), setHoja('nueva'))}>
+            Carpeta
+          </Boton>
+        </div>
+        <input
+          ref={archivo3D}
+          type="file"
+          accept=".glb,model/gltf-binary,application/octet-stream"
+          hidden
+          onChange={async (e) => {
+            const f = e.target.files?.[0]
+            e.target.value = ''
+            if (!f) return
+            try {
+              const id = await importarArchivo3D(f, carpeta !== 'todas' ? carpeta : undefined)
+              avisar('Modelo 3D añadido a tu Biblioteca ✅', 'exito')
+              ir(`/modelo/${id}`)
+            } catch (err) {
+              avisar((err as Error).message, 'error', 7000)
+            }
+          }}
+        />
       </header>
 
       {/* Carpetas */}
@@ -123,6 +148,7 @@ export function Biblioteca({ carpetaInicial }: { carpetaInicial?: string }) {
           <option value="todos" className="bg-fondo-2">Todos los tipos</option>
           <option value="foto" className="bg-fondo-2">📷 Desde foto</option>
           <option value="texto" className="bg-fondo-2">✍️ Desde texto</option>
+          <option value="archivo" className="bg-fondo-2">📦 Archivos recibidos</option>
         </select>
         <select aria-label="Filtrar por fecha" value={fechaF} onChange={(e) => setFechaF(e.target.value as FiltroFecha)} className="cristal min-h-12 rounded-2xl px-3 text-[15px]">
           <option value="todas" className="bg-fondo-2">Cualquier fecha</option>
@@ -148,17 +174,27 @@ export function Biblioteca({ carpetaInicial }: { carpetaInicial?: string }) {
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {filtrados.map((m) => (
-            <li key={m.id}>
+            <li key={m.id} className="relative">
               <a href={`#/modelo/${m.id}`} className="cristal group block overflow-hidden rounded-3xl transition hover:-translate-y-0.5 hover:shadow-[var(--sombra-neon)]">
                 <div className="relative">
                   <Miniatura m={m} />
-                  <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-xs text-white backdrop-blur">{m.origen === 'foto' ? '📷 Foto' : '✍️ Texto'}</span>
+                  <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-xs text-white backdrop-blur">
+                    {m.origen === 'foto' ? '📷 Foto' : m.origen === 'archivo' ? '📦 Archivo' : '✍️ Texto'}
+                  </span>
                 </div>
-                <div className="p-3">
+                <div className="p-3 pr-14">
                   <p className="truncate font-medium">{m.nombre}</p>
                   <p className="text-xs text-texto-2">{fecha(m.creado)}</p>
                 </div>
               </a>
+              <button
+                type="button"
+                onClick={() => setAEliminar(m)}
+                aria-label={`Eliminar ${m.nombre}`}
+                className="absolute bottom-2 right-2 grid size-11 place-items-center rounded-2xl text-texto-2 hover:bg-error/15 hover:text-error"
+              >
+                <Icono nombre="borrar" className="size-5" />
+              </button>
             </li>
           ))}
         </ul>
@@ -215,6 +251,34 @@ export function Biblioteca({ carpetaInicial }: { carpetaInicial?: string }) {
             Borrar carpeta y sus modelos
           </Boton>
         </div>
+      </Hoja>
+      <Hoja abierta={!!aEliminar} onCerrar={() => setAEliminar(null)} titulo="¿Eliminar este modelo?">
+        {aEliminar && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-20 shrink-0 overflow-hidden rounded-2xl">
+                <Miniatura m={aEliminar} />
+              </div>
+              <p className="font-semibold">{aEliminar.nombre}</p>
+            </div>
+            <p className="text-texto-2">Se borrará de este móvil. No se puede deshacer.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Boton onClick={() => setAEliminar(null)}>Cancelar</Boton>
+              <Boton
+                variante="peligro"
+                icono="borrar"
+                onClick={async () => {
+                  apuntarBorrado(aEliminar.id)
+                  await borrarModelo(aEliminar.id)
+                  setAEliminar(null)
+                  avisar('Modelo eliminado.', 'exito')
+                }}
+              >
+                Eliminar
+              </Boton>
+            </div>
+          </div>
+        )}
       </Hoja>
     </div>
   )

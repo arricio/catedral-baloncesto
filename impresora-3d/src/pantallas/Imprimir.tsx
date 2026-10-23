@@ -360,6 +360,17 @@ function AprobarImagen() {
           Crear 3D
         </Boton>
       </div>
+      <Boton
+        icono="descargar"
+        className="w-full"
+        onClick={async () => {
+          const { guardarArchivo, nombreArchivo } = await import('../exportar/descargar')
+          await guardarArchivo(trabajo.imagen!, nombreArchivo(`${trabajo.nombre}-imagen`, trabajo.imagen!.type.includes('png') ? 'png' : 'jpg'))
+          avisar('Imagen guardada ✅ La verás en Galería y Google Fotos (carpeta «Download»).', 'exito', 7000)
+        }}
+      >
+        Guardar esta imagen en el móvil
+      </Boton>
       <Boton variante="fantasma" className="w-full" onClick={cancelar}>
         Cancelar
       </Boton>
@@ -441,7 +452,9 @@ function Terminado() {
         <p className="font-titulo text-2xl font-bold">
           <span className="texto-neon">¡Listo!</span> 🎉
         </p>
-        <p className="text-texto-2">«{modelo.nombre}» se ha guardado en tu biblioteca.</p>
+        <p className="text-texto-2">
+          ✅ «{modelo.nombre}» está guardado en tu <b className="text-texto">Biblioteca</b>. Desde allí puedes enviarlo, descargarlo o eliminarlo.
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <Boton icono="mas" grande onClick={descartar}>
             Otro
