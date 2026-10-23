@@ -29,6 +29,8 @@ export interface Ajustes {
   /** Calidad de generación en la nube: rápida (menos cupo) o detallada. */
   detalleNube: 'rapido' | 'detallado'
   bienvenidaVista: boolean
+  /** Sonido de la impresora mientras trabaja. */
+  sonido: boolean
   /** Letra más grande para ver mejor. */
   letraGrande: boolean
   notificaciones: boolean
@@ -52,14 +54,24 @@ export const useAjustes = create<Ajustes>()(
       quitarFondo: 'servidor',
       maxMB: CONFIG.maxImagenMB,
       calidad: 'auto',
-      detalleNube: 'rapido',
+      detalleNube: 'detallado',
       bienvenidaVista: false,
       letraGrande: false,
+      sonido: true,
       notificaciones: false,
       syncActiva: false,
       set: (parcial) => set(parcial),
     }),
-    { name: 'impresora3d-ajustes', version: 1 },
+    {
+      name: 'impresora3d-ajustes',
+      version: 2,
+      // v2: la calidad «Detallada» pasa a ser la de serie (los modelos se parecen más a la foto).
+      migrate: (estado, version) => {
+        const e = (estado ?? {}) as Partial<Ajustes>
+        if (version < 2) e.detalleNube = 'detallado'
+        return e as Ajustes
+      },
+    },
   ),
 )
 

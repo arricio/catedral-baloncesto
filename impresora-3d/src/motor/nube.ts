@@ -170,10 +170,11 @@ const trellis1: AdaptadorEspacio<Entrada3D, Blob> = {
       '/generate_and_extract_glb',
       {
         image: pre, multiimages: [], seed: semilla(),
-        ss_guidance_strength: 7.5, ss_sampling_steps: 12,
-        slat_guidance_strength: 3, slat_sampling_steps: 12,
+        // Más pasos en modo detallado = más fiel a la foto (cara, letras).
+        ss_guidance_strength: 7.5, ss_sampling_steps: rapido ? 12 : 20,
+        slat_guidance_strength: 3, slat_sampling_steps: rapido ? 12 : 20,
         multiimage_algo: 'stochastic',
-        mesh_simplify: rapido ? 0.96 : 0.95,
+        mesh_simplify: rapido ? 0.96 : 0.9,
         texture_size: rapido ? 1024 : 2048,
       },
       'forma', 18, 96,
@@ -204,11 +205,11 @@ const sf3d: AdaptadorEspacio<Entrada3D, Blob> = {
 }
 
 /**
- * Con cuenta: primero TRELLIS (una sola reserva de GPU de 120 s); TRELLIS.2 hace dos
- * reservas (generar + extraer GLB = 240 s), que no siempre caben en el cupo gratuito.
+ * Con cuenta y calidad «Detallada»: primero TRELLIS.2 (el más fiel a la foto).
+ * Con calidad «Rápida»: primero TRELLIS, que hace una sola reserva de GPU y gasta menos cupo.
  */
-export const ESPACIOS_3D = [trellis1, trellis2, sf3d]
-/** Sin sesión el cupo es muy pequeño: primero el más ligero (Stable Fast 3D tarda segundos). */
+export const ESPACIOS_3D = [trellis2, trellis1, sf3d]
+const ESPACIOS_3D_RAPIDO = [trellis1, trellis2, sf3d]
 const ESPACIOS_3D_SIN_SESION = [sf3d, trellis1, trellis2]
 
 // ── Adaptadores texto → imagen ──────────────────────────────
@@ -276,7 +277,7 @@ export const motorNube: Motor = {
     return { imagen: salida, servicio }
   },
   async imagenA3D(imagen, opciones, alProgresar) {
-    const lista = ajustes().hfToken ? ESPACIOS_3D : ESPACIOS_3D_SIN_SESION
+    const lista = !ajustes().hfToken ? ESPACIOS_3D_SIN_SESION : opciones.detalle === 'rapido' ? ESPACIOS_3D_RAPIDO : ESPACIOS_3D
     const { salida, servicio } = await conReserva(lista, { imagen, opciones }, alProgresar, opciones.signal)
     return { glb: salida, servicio }
   },

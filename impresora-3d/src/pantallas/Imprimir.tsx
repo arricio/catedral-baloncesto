@@ -21,6 +21,7 @@ import { useEstadoRed } from '../lib/red'
 import { ir } from '../lib/ruta'
 import { modoDemo } from '../motor'
 import { ESTILOS } from '../motor/prompts'
+import { desbloquearSonido, iniciarSonidoImpresora, pararSonidoImpresora, sonidoListo } from '../lib/sonido'
 import { aceptarImagen, cancelar, descartar, imprimirFoto, imprimirTexto, regenerarImagen, reintentar, useImpresion } from '../motor/trabajo'
 
 // three.js solo se descarga cuando empieza una impresión (arranque más rápido).
@@ -110,6 +111,7 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
         className="w-full"
         disabled={!red.enLinea}
         onClick={() => {
+          desbloquearSonido()
           pedirPermisoNotificaciones()
           imprimirFoto(foto, { nombre: nombre.trim() || 'Mi foto', carpetaId, fondoEnNavegador: quitarFondo === 'navegador' }).catch((e) => avisar(String(e.message ?? e), 'error'))
         }}
@@ -134,6 +136,7 @@ function FormularioTexto({ carpetaId, setCarpetaId }: { carpetaId: string; setCa
       onSubmit={(e) => {
         e.preventDefault()
         if (!valido) return
+        desbloquearSonido()
         pedirPermisoNotificaciones()
         imprimirTexto({ texto, estilo, colores, carpetaId })
       }}
@@ -151,6 +154,9 @@ function FormularioTexto({ carpetaId, setCarpetaId }: { carpetaId: string; setCa
           placeholder="Ej.: un tractor rojo con ruedas negras"
           className="cristal w-full resize-none rounded-2xl p-4 text-[16px] leading-relaxed placeholder:text-texto-2/70"
         />
+        <p className="mt-1.5 text-sm text-texto-2">
+          ✍️ Si quieres letras, ponlas entre comillas: <span className="text-texto">una camiseta negra que pone "HOLA"</span>
+        </p>
       </div>
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-texto-2">Estilo</legend>
@@ -197,13 +203,42 @@ function FormularioTexto({ carpetaId, setCarpetaId }: { carpetaId: string; setCa
 
 // ── Estados del trabajo ─────────────────────────────────────
 
+function BotonSonido() {
+  const { sonido, set } = useAjustes()
+  return (
+    <Boton
+      variante="secundario"
+      aria-pressed={sonido}
+      onClick={() => {
+        desbloquearSonido()
+        set({ sonido: !sonido })
+      }}
+      className="absolute right-3 top-3 !rounded-full"
+      aria-label={sonido ? 'Quitar el sonido' : 'Poner el sonido'}
+    >
+      <span className="text-xl" aria-hidden>
+        {sonido ? '🔊' : '🔇'}
+      </span>
+    </Boton>
+  )
+}
+
 function Imprimiendo() {
   const { trabajo, progreso } = useImpresion()
+  const sonido = useAjustes((s) => s.sonido)
+  useEffect(() => {
+    if (sonido) iniciarSonidoImpresora()
+    else pararSonidoImpresora()
+    return pararSonidoImpresora
+  }, [sonido])
   const p = progreso ?? { etapa: 'conectando' as const, porcentaje: 1 }
   const esImagen = trabajo?.estado === 'imagen'
   return (
     <div className="aparecer space-y-4">
-      <ImpresoraAnimada progreso={p.porcentaje / 100} className="aspect-square w-full sm:aspect-[4/3]" />
+      <div className="relative">
+        <ImpresoraAnimada progreso={p.porcentaje / 100} className="aspect-square w-full sm:aspect-[4/3]" />
+        <BotonSonido />
+      </div>
       <Tarjeta>
         <BarraProgreso progreso={p} soloImagen={esImagen} />
         <p className="mt-4 text-sm text-texto-2">
@@ -236,7 +271,7 @@ function AprobarImagen() {
         <Boton icono="girar" grande onClick={regenerarImagen}>
           Otra imagen
         </Boton>
-        <Boton variante="principal" icono="impresora" grande onClick={aceptarImagen}>
+        <Boton variante="principal" icono="impresora" grande onClick={() => (desbloquearSonido(), aceptarImagen())}>
           Crear 3D
         </Boton>
       </div>
@@ -273,7 +308,7 @@ function ErrorImpresion() {
         </div>
       )}
       <div className="flex flex-col gap-3">
-        <Boton variante="principal" grande icono="girar" onClick={reintentar}>
+        <Boton variante="principal" grande icono="girar" onClick={() => (desbloquearSonido(), reintentar())}>
           Reintentar
         </Boton>
         {error.tipo === 'cupo' && !hfUsuario && oauthDisponible() && (
@@ -298,6 +333,16 @@ function Terminado() {
   const trabajo = useImpresion((s) => s.trabajo)!
   const modelo = useLiveQuery(() => (trabajo.modeloId ? db.modelos.get(trabajo.modeloId) : undefined), [trabajo.modeloId])
   const [revelado, setRevelado] = useState(false)
+  const sonido = useAjustes((s) => s.sonido)
+  useEffect(() => {
+    if (sonido) iniciarSonidoImpresora()
+    return pararSonidoImpresora
+  }, [sonido])
+  useEffect(() => {
+    if (!revelado) return
+    pararSonidoImpresora()
+    sonidoListo()
+  }, [revelado])
   // Por si el móvil va muy lento: el resultado se muestra como mucho a los 5 s.
   useEffect(() => {
     const t = setTimeout(() => setRevelado(true), 5000)

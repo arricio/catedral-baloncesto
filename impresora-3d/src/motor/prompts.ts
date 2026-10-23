@@ -14,11 +14,18 @@ export const ESTILOS: { id: Estilo; nombre: string; emoji: string; prompt: strin
   { id: 'escultura', nombre: 'Escultura', emoji: '🗿', prompt: 'sculpture, hand sculpted statue, artistic carved details, museum piece on a small base' },
 ]
 
+/** Palabras entre comillas en la descripción: deben salir escritas tal cual. */
+export function textosEntreComillas(texto: string): string[] {
+  return [...texto.matchAll(/["«“']([^"»”']{1,40})["»”']/g)].map((m) => m[1].trim()).filter(Boolean)
+}
+
 export function construirPrompt(texto: string, estilo: Estilo, colores?: string): string {
   const e = ESTILOS.find((x) => x.id === estilo) ?? ESTILOS[0]
   const col = colores?.trim()
+  const letras = textosEntreComillas(texto)
   const partes = [
     `A single ${texto.trim()}`,
+    ...letras.map((l) => `with the exact text "${l}" written clearly in large bold capital letters, perfectly spelled, high contrast`),
     col ? `colors: ${col}` : '',
     e.prompt,
     'one isolated object, entire object fully visible and centered, three-quarter front view',

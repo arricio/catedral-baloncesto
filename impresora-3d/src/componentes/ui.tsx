@@ -28,7 +28,7 @@ export function Boton({
         grande ? 'min-h-14 px-6 text-lg' : 'text-[15px]'
       } ${ESTILOS[variante]} ${className}`}
     >
-      {icono && <Icono nombre={icono} className={grande ? 'size-6' : 'size-5'} />}
+      {icono && <Icono nombre={icono} className={`shrink-0 ${grande ? 'size-6' : 'size-5'}`} />}
       {children}
     </button>
   )

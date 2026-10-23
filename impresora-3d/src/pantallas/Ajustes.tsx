@@ -294,6 +294,7 @@ export function Ajustes() {
 
       <Seccion titulo="Apariencia" icono={a.tema === 'oscuro' ? 'luna' : 'sol'}>
         <div className="space-y-3">
+          <Interruptor activo={a.sonido} onCambio={(v) => a.set({ sonido: v })} etiqueta="Sonido de la impresora" descripcion="Motores mientras se crea el modelo y un «ding» al terminar." />
           <Interruptor activo={a.letraGrande} onCambio={(v) => a.set({ letraGrande: v })} etiqueta="Letra grande" descripcion="Todo se ve más grande y fácil de leer." />
           <Segmentado
             etiqueta="Tema"
