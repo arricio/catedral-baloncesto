@@ -126,6 +126,7 @@ async function paso3D() {
       alProgresar,
     )
     let final = glb
+    let servicioFinal = servicio
     // La IA hace la figura entera; encima se pega la foto exacta por delante.
     if (t.imagen && t.fotoDelante !== false) {
       try {
@@ -133,11 +134,12 @@ async function paso3D() {
         final = await proyectarFotoDelante(glb, t.imagen, (p) =>
           alProgresar({ etapa: 'texturas', porcentaje: 96 + p * 3, servicio, detalle: 'Poniendo tu foto por delante' }),
         )
+        servicioFinal = `${servicio} · con tu foto`
       } catch (e) {
         console.warn('No se pudo poner la foto por delante; se guarda la figura de la IA', e)
       }
     }
-    await terminar(final, servicio)
+    await terminar(final, servicioFinal)
   } catch (e) {
     fallo(e)
   }

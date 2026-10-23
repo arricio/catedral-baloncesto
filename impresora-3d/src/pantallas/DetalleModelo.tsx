@@ -372,7 +372,7 @@ export function DetalleModelo({ id }: { id: string }) {
         </div>
       )}
 
-      {modelo.origen !== 'archivo' && !modelo.servicio?.includes('relieve') && (
+      {modelo.origen !== 'archivo' && !modelo.servicio?.includes('relieve') && !modelo.servicio?.includes('con tu foto') && (
         <Boton
           grande
           className="mt-3 w-full !bg-[#ffd21e] !font-bold !text-[#1a1300]"
@@ -388,7 +388,7 @@ export function DetalleModelo({ id }: { id: string }) {
               const miniatura = await crearMiniatura(await renderizarMiniatura(glb))
               const ahora = Date.now()
               const id = nuevoId()
-              await db.modelos.add({ ...modelo, id, nombre: await nombreUnico(`${modelo.nombre} con mi foto`), glb, miniatura, creado: ahora, actualizado: ahora, bytes: glb.size + modelo.imagen.size + miniatura.size, sincronizado: undefined })
+              await db.modelos.add({ ...modelo, id, nombre: await nombreUnico(`${modelo.nombre} con mi foto`), servicio: `${modelo.servicio ?? 'IA'} · con tu foto`, glb, miniatura, creado: ahora, actualizado: ahora, bytes: glb.size + modelo.imagen.size + miniatura.size, sincronizado: undefined })
               avisar('¡Hecho! Se ha guardado como un modelo nuevo ✨', 'exito')
               ir(`/modelo/${id}`)
             } catch (e) {

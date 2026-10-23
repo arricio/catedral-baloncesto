@@ -264,6 +264,34 @@ export async function proyectarFotoDelante(glb: Blob, foto: Blob, alProgresar?: 
   const dx = vista.d.x, dy = vista.d.y, dz = vista.d.z
   const rx = vista.derecha.x, ry = vista.derecha.y, rz = vista.derecha.z
 
+  // Qué píxeles de cada textura pertenecen a algún triángulo (el resto es «relleno» entre piezas)
+  const marcas = new Map<ImageData, { pintado: Uint8Array; cubierto: Uint8Array }>()
+  for (let mi = 0; mi < mallas.length; mi++) {
+    const tex = texturas[mi]
+    if (!marcas.has(tex)) marcas.set(tex, { pintado: new Uint8Array(tex.width * tex.height), cubierto: new Uint8Array(tex.width * tex.height) })
+    const { cubierto } = marcas.get(tex)!
+    const m = mallas[mi]
+    for (let t = 0; t < m.indice.length; t += 3) {
+      const ia = m.indice[t], ib = m.indice[t + 1], ic = m.indice[t + 2]
+      const ua = m.uv[ia * 2] * tex.width, va = m.uv[ia * 2 + 1] * tex.height
+      const ub = m.uv[ib * 2] * tex.width, vb = m.uv[ib * 2 + 1] * tex.height
+      const uc = m.uv[ic * 2] * tex.width, vc = m.uv[ic * 2 + 1] * tex.height
+      const area = (ub - ua) * (vc - va) - (uc - ua) * (vb - va)
+      if (Math.abs(area) < 1e-9) continue
+      const x0 = Math.max(0, Math.floor(Math.min(ua, ub, uc)))
+      const x1 = Math.min(tex.width - 1, Math.ceil(Math.max(ua, ub, uc)))
+      const y0 = Math.max(0, Math.floor(Math.min(va, vb, vc)))
+      const y1 = Math.min(tex.height - 1, Math.ceil(Math.max(va, vb, vc)))
+      for (let y = y0; y <= y1; y++)
+        for (let x = x0; x <= x1; x++) {
+          const w0 = ((ub - x - 0.5) * (vc - y - 0.5) - (uc - x - 0.5) * (vb - y - 0.5)) / area
+          const w1 = ((uc - x - 0.5) * (va - y - 0.5) - (ua - x - 0.5) * (vc - y - 0.5)) / area
+          if (w0 >= -0.01 && w1 >= -0.01 && 1 - w0 - w1 >= -0.01) cubierto[y * tex.width + x] = 1
+        }
+    }
+  }
+  await esperar()
+
   // Repintar la textura de cada malla
   for (let mi = 0; mi < mallas.length; mi++) {
     const m = mallas[mi]
@@ -271,6 +299,7 @@ export async function proyectarFotoDelante(glb: Blob, foto: Blob, alProgresar?: 
     const TW = tex.width
     const TH = tex.height
     const d = tex.data
+    const pintado = marcas.get(tex)!.pintado
     for (let t = 0; t < m.indice.length; t += 3) {
       const ia = m.indice[t], ib = m.indice[t + 1], ic = m.indice[t + 2]
       // Si el triángulo entero mira hacia atrás, se salta (rápido).
@@ -316,6 +345,7 @@ export async function proyectarFotoDelante(glb: Blob, foto: Blob, alProgresar?: 
           const peso = Math.min(1, (orient - 0.08) / 0.32)
           const j = (fy * datosFoto.ancho + fx) * 4
           const i = (y * TW + x) * 4
+          pintado[y * TW + x] = 1
           d[i] = d[i] + (datosFoto.px[j] - d[i]) * peso
           d[i + 1] = d[i + 1] + (datosFoto.px[j + 1] - d[i + 1]) * peso
           d[i + 2] = d[i + 2] + (datosFoto.px[j + 2] - d[i + 2]) * peso
@@ -324,6 +354,43 @@ export async function proyectarFotoDelante(glb: Blob, foto: Blob, alProgresar?: 
         alProgresar?.(0.5 + 0.4 * (t / m.indice.length))
         await esperar()
       }
+    }
+  }
+
+  // Costuras: el relleno entre piezas de la textura junto a zonas con foto toma el color de la foto
+  // (si no, al mostrarlo se cuelan rayas oscuras del color antiguo).
+  for (const [tex, { pintado, cubierto }] of marcas) {
+    const W = tex.width
+    const H = tex.height
+    const d = tex.data
+    for (let paso = 0; paso < 4; paso++) {
+      const nuevos: number[] = []
+      for (let y = 0; y < H; y++)
+        for (let x = 0; x < W; x++) {
+          const k = y * W + x
+          if (cubierto[k] || pintado[k]) continue
+          let r = 0, g = 0, b = 0, n = 0
+          for (let dy = -1; dy <= 1; dy++)
+            for (let dx = -1; dx <= 1; dx++) {
+              const xx = x + dx, yy = y + dy
+              if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue
+              const kk = yy * W + xx
+              if (!pintado[kk]) continue
+              r += d[kk * 4]
+              g += d[kk * 4 + 1]
+              b += d[kk * 4 + 2]
+              n++
+            }
+          if (n) nuevos.push(k, r / n, g / n, b / n)
+        }
+      for (let i = 0; i < nuevos.length; i += 4) {
+        const k = nuevos[i]
+        d[k * 4] = nuevos[i + 1]
+        d[k * 4 + 1] = nuevos[i + 2]
+        d[k * 4 + 2] = nuevos[i + 3]
+        pintado[k] = 1
+      }
+      await esperar()
     }
   }
 
@@ -341,7 +408,17 @@ export async function proyectarFotoDelante(glb: Blob, foto: Blob, alProgresar?: 
   }
   for (const m of mallas) {
     const mats = Array.isArray(m.mesh.material) ? m.mesh.material : [m.mesh.material]
-    for (const mat of mats as THREE.MeshStandardMaterial[]) if (mat.map && nuevas.has(mat.map)) mat.map = nuevas.get(mat.map)!
+    for (const mat of mats as THREE.MeshStandardMaterial[]) {
+      if (!mat.map || !nuevas.has(mat.map)) continue
+      const t = nuevas.get(mat.map)!
+      mat.map = t
+      mat.metalness = 0
+      mat.metalnessMap = null
+      mat.roughness = 0.85
+      mat.emissiveMap = t
+      mat.emissive = new THREE.Color(0xffffff)
+      mat.emissiveIntensity = 0.18
+    }
   }
   alProgresar?.(0.95)
   const salida = (await new GLTFExporter().parseAsync(escena, { binary: true })) as ArrayBuffer
