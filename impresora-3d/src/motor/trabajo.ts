@@ -238,11 +238,13 @@ export async function retomarPendiente() {
   // Limpieza de trabajos antiguos ya terminados.
   await db.trabajos.where('estado').equals('listo').delete()
   if (!t) return
-  useImpresion.setState({ trabajo: t })
-  if (t.estado === 'aprobar' || t.estado === 'error') {
-    if (t.estado === 'error') useImpresion.setState({ error: new ErrorMotor('desconocido', t.error ?? 'La impresión anterior falló.') })
+  // Un error de otra sesión no se vuelve a enseñar: se empieza limpio.
+  if (t.estado === 'error') {
+    await db.trabajos.delete(t.id)
     return
   }
+  useImpresion.setState({ trabajo: t })
+  if (t.estado === 'aprobar') return
   if (t.estado === 'modelo' && t.motor === 'local' && t.idRemoto) {
     controlador = new AbortController()
     avisar('Recuperando tu impresión del servidor…', 'info')
