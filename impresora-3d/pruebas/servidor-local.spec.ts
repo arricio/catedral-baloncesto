@@ -13,7 +13,7 @@ async function preparar(page: import('@playwright/test').Page, clave: string, mo
   await page.addInitScript(
     ([url, clave, motor]) => {
       if (!localStorage.getItem('impresora3d-ajustes'))
-        localStorage.setItem('impresora3d-ajustes', JSON.stringify({ state: { bienvenidaVista: true, motor, localUrl: url, localClave: clave }, version: 1 }))
+        localStorage.setItem('impresora3d-ajustes', JSON.stringify({ state: { bienvenidaVista: true, motor, localUrl: url, localClave: clave, modoFoto: 'ia' }, version: 2 }))
     },
     [URL_SERVIDOR!, clave, motor],
   )
@@ -58,7 +58,7 @@ test('contraseña incorrecta: mensaje claro', async ({ page }, info) => {
 test('servidor apagado: cambia solo a la nube', async ({ page }, info) => {
   test.skip(info.project.name !== 'android-pixel7')
   await page.addInitScript(() => {
-    localStorage.setItem('impresora3d-ajustes', JSON.stringify({ state: { bienvenidaVista: true, motor: 'local', localUrl: 'http://127.0.0.1:9', localClave: 'x' }, version: 1 }))
+    localStorage.setItem('impresora3d-ajustes', JSON.stringify({ state: { bienvenidaVista: true, motor: 'local', localUrl: 'http://127.0.0.1:9', localClave: 'x', modoFoto: 'ia' }, version: 2 }))
   })
   await page.goto('./#/imprimir')
   await expect(page.getByText('Servidor apagado → usando la nube')).toBeVisible()

@@ -53,7 +53,11 @@ export interface Trabajo {
   creado: number
   origen: Origen
   estado: EstadoTrabajo
-  motor: 'nube' | 'local' | 'demo'
+  motor: 'nube' | 'local' | 'demo' | 'relieve'
+  /** Opciones del «Retrato en relieve» (si se eligió ese modo). */
+  relieve?: { volumen: number; peana: boolean; textoPeana?: string; fuente?: string }
+  /** Tipo de letra para las palabras entre comillas (modo texto). */
+  fuente?: string
   prompt?: string
   estilo?: Estilo
   colores?: string

@@ -6,7 +6,7 @@ export async function abrir(page: Page, ruta = '#/imprimir', { bienvenida = fals
   if (!bienvenida) {
     await page.addInitScript(() => {
       if (!localStorage.getItem('impresora3d-ajustes'))
-        localStorage.setItem('impresora3d-ajustes', JSON.stringify({ state: { bienvenidaVista: true }, version: 1 }))
+        localStorage.setItem('impresora3d-ajustes', JSON.stringify({ state: { bienvenidaVista: true, sonido: false }, version: 2 }))
     })
   }
   await page.goto(`./?demo=1${ruta}`)

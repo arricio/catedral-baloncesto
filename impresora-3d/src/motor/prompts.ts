@@ -5,6 +5,7 @@
  * para que el modelo los respete.
  */
 import type { Estilo } from '../lib/db'
+import { fuentePorId } from '../lib/fuentes'
 
 export const ESTILOS: { id: Estilo; nombre: string; emoji: string; prompt: string }[] = [
   { id: 'realista', nombre: 'Realista', emoji: '📷', prompt: 'photorealistic, physically based materials, detailed product photography' },
@@ -19,13 +20,13 @@ export function textosEntreComillas(texto: string): string[] {
   return [...texto.matchAll(/["«“']([^"»”']{1,40})["»”']/g)].map((m) => m[1].trim()).filter(Boolean)
 }
 
-export function construirPrompt(texto: string, estilo: Estilo, colores?: string): string {
+export function construirPrompt(texto: string, estilo: Estilo, colores?: string, fuente?: string): string {
   const e = ESTILOS.find((x) => x.id === estilo) ?? ESTILOS[0]
   const col = colores?.trim()
   const letras = textosEntreComillas(texto)
   const partes = [
     `A single ${texto.trim()}`,
-    ...letras.map((l) => `with the exact text "${l}" written clearly in large bold capital letters, perfectly spelled, high contrast`),
+    ...letras.map((l) => `with the exact text "${l}" written clearly in large letters using a ${fuentePorId(fuente).prompt}, perfectly spelled, high contrast`),
     col ? `colors: ${col}` : '',
     e.prompt,
     'one isolated object, entire object fully visible and centered, three-quarter front view',

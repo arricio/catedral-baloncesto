@@ -31,6 +31,8 @@ export interface Ajustes {
   bienvenidaVista: boolean
   /** Sonido de la impresora mientras trabaja. */
   sonido: boolean
+  /** Desde foto: «Retrato en relieve» (igual que la foto) o «Figura 3D con IA». */
+  modoFoto: 'relieve' | 'ia'
   /** Letra más grande para ver mejor. */
   letraGrande: boolean
   notificaciones: boolean
@@ -58,6 +60,7 @@ export const useAjustes = create<Ajustes>()(
       bienvenidaVista: false,
       letraGrande: false,
       sonido: true,
+      modoFoto: 'relieve',
       notificaciones: false,
       syncActiva: false,
       set: (parcial) => set(parcial),

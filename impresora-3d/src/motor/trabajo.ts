@@ -92,7 +92,7 @@ async function pasoImagenDesdeTexto() {
     const { motor, aviso } = await elegirMotor()
     if (aviso) avisar(aviso, 'info')
     await guardar({ motor: motor.id })
-    const prompt = construirPrompt(t.prompt!, t.estilo ?? 'realista', t.colores)
+    const prompt = construirPrompt(t.prompt!, t.estilo ?? 'realista', t.colores, t.fuente)
     const { imagen } = await motor.textoAImagen(prompt, alProgresar, controlador.signal)
     await guardar({ estado: 'aprobar', imagen })
     useImpresion.setState({ progreso: null })
@@ -105,6 +105,7 @@ async function pasoImagenDesdeTexto() {
 
 async function paso3D() {
   const t = useImpresion.getState().trabajo!
+  if (t.relieve) return pasoRelieve()
   controlador = new AbortController()
   const signal = controlador.signal
   useImpresion.setState({ error: null, reintentarAlVolver: false, progreso: { etapa: 'conectando', porcentaje: 1 } })
@@ -127,6 +128,26 @@ async function paso3D() {
     await terminar(glb, servicio)
   } catch (e) {
     fallo(e)
+  }
+}
+
+/** «Retrato en relieve»: se calcula en el propio móvil, sin IA en la nube. */
+async function pasoRelieve() {
+  const t = useImpresion.getState().trabajo!
+  useImpresion.setState({ error: null, progreso: { etapa: 'analizando', porcentaje: 2 } })
+  await guardar({ estado: 'modelo', error: undefined, motor: 'relieve' })
+  try {
+    const { crearRelieve } = await import('./relieve')
+    const inicio = Date.now()
+    const glb = await crearRelieve(t.imagen!, t.relieve!, alProgresar)
+    // Un mínimo de tiempo para que se vea (y se oiga) la impresora trabajar.
+    const resto = 3500 - (Date.now() - inicio)
+    if (resto > 0) await new Promise((ok) => setTimeout(ok, resto))
+    await terminar(glb, 'Retrato en relieve')
+  } catch (e) {
+    console.error(e)
+    useImpresion.setState({ error: new ErrorMotor('entrada', 'No se ha podido hacer el relieve con esta foto. Prueba con otra, mejor con fondo liso.', String((e as Error)?.message ?? e)) })
+    guardar({ estado: 'error' })
   }
 }
 
@@ -167,7 +188,10 @@ function nuevoTrabajo(datos: Omit<Trabajo, 'id' | 'creado' | 'estado' | 'motor'>
   return { id: nuevoId(), creado: Date.now(), estado: 'modelo', motor: 'nube', ...datos }
 }
 
-export async function imprimirFoto(foto: Blob, opciones: { nombre: string; carpetaId: string; fondoEnNavegador: boolean }) {
+export async function imprimirFoto(
+  foto: Blob,
+  opciones: { nombre: string; carpetaId: string; fondoEnNavegador: boolean; relieve?: Trabajo['relieve'] },
+) {
   const { ahorroDatos } = ajustes()
   useImpresion.setState({ error: null, progreso: { etapa: 'analizando', porcentaje: 1, detalle: 'Preparando la foto' } })
   let imagen = await comprimirImagen(foto, ahorroDatos)
@@ -182,14 +206,15 @@ export async function imprimirFoto(foto: Blob, opciones: { nombre: string; carpe
       avisar('No se pudo quitar el fondo en el móvil; lo hará el servidor.', 'info')
     }
   }
-  const t = nuevoTrabajo({ origen: 'foto', nombre: opciones.nombre, carpetaId: opciones.carpetaId, imagen })
+  const t = nuevoTrabajo({ origen: 'foto', nombre: opciones.nombre, carpetaId: opciones.carpetaId, imagen, relieve: opciones.relieve })
   useImpresion.setState({ trabajo: t })
   await db.trabajos.put(t)
   await paso3D()
 }
 
-export async function imprimirTexto(opciones: { texto: string; estilo: Estilo; colores?: string; carpetaId: string }) {
+export async function imprimirTexto(opciones: { texto: string; estilo: Estilo; colores?: string; carpetaId: string; fuente?: string }) {
   const t = nuevoTrabajo({
+    fuente: opciones.fuente,
     origen: 'texto',
     prompt: opciones.texto.trim(),
     estilo: opciones.estilo,

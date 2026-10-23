@@ -10,6 +10,7 @@ import { ConectarHF } from '../componentes/ConectarHF'
 import { Icono } from '../componentes/Icono'
 import { SelectorCarpeta } from '../componentes/SelectorCarpeta'
 import { SelectorImagen } from '../componentes/SelectorImagen'
+import { SelectorFuente } from '../componentes/SelectorFuente'
 import { Boton, Interruptor, Segmentado, Tarjeta } from '../componentes/ui'
 import { useAjustes } from '../lib/ajustes'
 import { avisar } from '../lib/avisos'
@@ -20,7 +21,7 @@ import { pedirPermisoNotificaciones } from '../lib/notificaciones'
 import { useEstadoRed } from '../lib/red'
 import { ir } from '../lib/ruta'
 import { modoDemo } from '../motor'
-import { ESTILOS } from '../motor/prompts'
+import { ESTILOS, textosEntreComillas } from '../motor/prompts'
 import { desbloquearSonido, iniciarSonidoImpresora, pararSonidoImpresora, sonidoListo } from '../lib/sonido'
 import { aceptarImagen, cancelar, descartar, imprimirFoto, imprimirTexto, regenerarImagen, reintentar, useImpresion } from '../motor/trabajo'
 
@@ -68,21 +69,57 @@ function AvisoRed() {
 function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCarpetaId: (v: string) => void }) {
   const [foto, setFoto] = useState<File | null>(null)
   const [nombre, setNombre] = useState('')
-  const { quitarFondo, set } = useAjustes()
+  const { quitarFondo, modoFoto, set } = useAjustes()
+  const [volumen, setVolumen] = useState<'poco' | 'medio' | 'mucho'>('medio')
+  const [peana, setPeana] = useState(true)
+  const [textoPeana, setTextoPeana] = useState('')
+  const [fuente, setFuente] = useState('cartel')
   const url = useUrlBlob(foto)
   const red = useEstadoRed()
+  const relieve = modoFoto === 'relieve'
+
+  const pestañas = (
+    <Segmentado
+      etiqueta="Tipo de figura"
+      valor={modoFoto}
+      onCambio={(v) => set({ modoFoto: v })}
+      opciones={[
+        { id: 'relieve', texto: '🖼️ Igual que la foto' },
+        { id: 'ia', texto: '🤖 Figura con IA' },
+      ]}
+    />
+  )
+  const explicacion = (
+    <p className="rounded-2xl bg-panel p-3 text-sm text-texto-2">
+      {relieve ? (
+        <>
+          <b className="text-texto">Retrato en relieve:</b> tu foto exacta (cara, letras y colores) sobre una figura con volumen. Se hace en tu móvil en segundos y no gasta cupo. Por detrás es lisa.
+        </>
+      ) : (
+        <>
+          <b className="text-texto">Figura con IA:</b> la IA imagina la forma completa por todos los lados. Se parece menos a la foto y gasta cupo de Hugging Face.
+        </>
+      )}
+    </p>
+  )
 
   if (!foto)
     return (
-      <SelectorImagen
-        alElegir={(f) => {
-          setFoto(f)
-          setNombre(f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 40) || 'Mi foto')
-        }}
-      />
+      <div className="space-y-4">
+        {pestañas}
+        {explicacion}
+        <SelectorImagen
+          alElegir={(f) => {
+            setFoto(f)
+            setNombre(f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 40) || 'Mi foto')
+          }}
+        />
+      </div>
     )
   return (
     <div className="aparecer space-y-4">
+      {pestañas}
+      {explicacion}
       <div className="relative overflow-hidden rounded-3xl border border-borde bg-panel">
         <img src={url} alt="Foto elegida" className="mx-auto max-h-[42dvh] w-full object-contain" />
         <Boton variante="secundario" icono="cerrar" className="absolute right-2 top-2 !rounded-full" aria-label="Quitar foto" onClick={() => setFoto(null)} />
@@ -93,27 +130,67 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
         </label>
         <input id="nombre-foto" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={60} className="cristal min-h-12 w-full rounded-2xl px-4 text-[16px]" />
       </div>
+
+      {relieve && (
+        <>
+          <div>
+            <p className="mb-2 text-sm font-medium text-texto-2">Volumen</p>
+            <Segmentado
+              etiqueta="Volumen"
+              valor={volumen}
+              onCambio={setVolumen}
+              opciones={[
+                { id: 'poco', texto: 'Poco' },
+                { id: 'medio', texto: 'Medio' },
+                { id: 'mucho', texto: 'Mucho' },
+              ]}
+            />
+          </div>
+          <Interruptor activo={peana} onCambio={setPeana} etiqueta="Con peana" descripcion="Una base para que la figura se sostenga de pie." />
+          {peana && (
+            <>
+              <div>
+                <label htmlFor="texto-peana" className="mb-1.5 block text-sm font-medium text-texto-2">
+                  Texto en la peana <span className="font-normal">(opcional)</span>
+                </label>
+                <input
+                  id="texto-peana"
+                  value={textoPeana}
+                  onChange={(e) => setTextoPeana(e.target.value)}
+                  maxLength={40}
+                  placeholder="Ej.: Feliz cumpleaños"
+                  className="cristal min-h-12 w-full rounded-2xl px-4 text-[16px] placeholder:text-texto-2/70"
+                />
+              </div>
+              {textoPeana.trim() && <SelectorFuente valor={fuente} onCambio={setFuente} muestra={textoPeana} />}
+            </>
+          )}
+          <p className="text-sm text-texto-2">💡 Sale mejor si el fondo de la foto es liso (blanco, una pared…). Si no, activa «Quitar el fondo en mi dispositivo».</p>
+        </>
+      )}
+
       <SelectorCarpeta valor={carpetaId} onCambio={setCarpetaId} />
       <Interruptor
         activo={quitarFondo === 'navegador'}
         onCambio={(v) => set({ quitarFondo: v ? 'navegador' : 'servidor' })}
         etiqueta="Quitar el fondo en mi dispositivo"
-        descripcion="Más privado. La primera vez descarga ~45 MB. Si no, lo hace el servidor."
+        descripcion="Más privado. La primera vez descarga ~45 MB."
       />
-      <p className="flex items-start gap-2 text-sm text-texto-2">
-        <Icono nombre="varita" className="mt-0.5 size-4 shrink-0 text-cian" />
-        Los colores del modelo salen de tu foto: cuanto más nítida y mejor iluminada, más fieles.
-      </p>
       <Boton
         variante="principal"
         grande
         icono="impresora"
         className="w-full"
-        disabled={!red.enLinea}
+        disabled={!relieve && !red.enLinea}
         onClick={() => {
           desbloquearSonido()
           pedirPermisoNotificaciones()
-          imprimirFoto(foto, { nombre: nombre.trim() || 'Mi foto', carpetaId, fondoEnNavegador: quitarFondo === 'navegador' }).catch((e) => avisar(String(e.message ?? e), 'error'))
+          imprimirFoto(foto, {
+            nombre: nombre.trim() || 'Mi foto',
+            carpetaId,
+            fondoEnNavegador: quitarFondo === 'navegador',
+            relieve: relieve ? { volumen: volumen === 'poco' ? 0.15 : volumen === 'medio' ? 0.5 : 1, peana, textoPeana: peana ? textoPeana.trim() : undefined, fuente } : undefined,
+          }).catch((e) => avisar(String(e.message ?? e), 'error'))
         }}
       >
         Imprimir en 3D
@@ -128,8 +205,10 @@ function FormularioTexto({ carpetaId, setCarpetaId }: { carpetaId: string; setCa
   const [texto, setTexto] = useState(() => new URLSearchParams(location.hash.split('?')[1] ?? '').get('text') ?? '')
   const [estilo, setEstilo] = useState<Estilo>('realista')
   const [colores, setColores] = useState('')
+  const [fuente, setFuente] = useState('cartel')
   const red = useEstadoRed()
   const valido = texto.trim().length >= 3
+  const letras = textosEntreComillas(texto)
   return (
     <form
       className="aparecer space-y-4"
@@ -138,7 +217,7 @@ function FormularioTexto({ carpetaId, setCarpetaId }: { carpetaId: string; setCa
         if (!valido) return
         desbloquearSonido()
         pedirPermisoNotificaciones()
-        imprimirTexto({ texto, estilo, colores, carpetaId })
+        imprimirTexto({ texto, estilo, colores, carpetaId, fuente })
       }}
     >
       <div>
@@ -158,6 +237,12 @@ function FormularioTexto({ carpetaId, setCarpetaId }: { carpetaId: string; setCa
           ✍️ Si quieres letras, ponlas entre comillas: <span className="text-texto">una camiseta negra que pone "HOLA"</span>
         </p>
       </div>
+      {letras.length > 0 && (
+        <div>
+          <SelectorFuente valor={fuente} onCambio={setFuente} muestra={letras[0]} />
+          <p className="mt-1.5 text-xs text-texto-2">La IA imita el tipo de letra; puede que no sea idéntico.</p>
+        </div>
+      )}
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-texto-2">Estilo</legend>
         <div className="flex flex-wrap gap-2">
@@ -384,6 +469,7 @@ export function Imprimir() {
   const { trabajo, error } = useImpresion()
   const hfUsuario = useAjustes((s) => s.hfUsuario)
   const motorElegido = useAjustes((s) => s.motor)
+  const modoFoto = useAjustes((s) => s.modoFoto)
   const [modo, setModo] = useState<'foto' | 'texto'>(() => (location.hash.includes('text=') ? 'texto' : 'foto'))
   const [carpetaId, setCarpetaId] = useState(ID_CARPETA_DEFECTO)
 
@@ -395,7 +481,7 @@ export function Imprimir() {
   else
     contenido = (
       <div className="space-y-4">
-        {!hfUsuario && !modoDemo && motorElegido !== 'local' && <ConectarHF />}
+        {!hfUsuario && !modoDemo && motorElegido !== 'local' && (modo === 'texto' || modoFoto === 'ia') && <ConectarHF />}
         <Segmentado
           etiqueta="Qué quieres convertir en 3D"
           valor={modo}

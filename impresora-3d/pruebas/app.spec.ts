@@ -45,8 +45,25 @@ test('«Hacer foto» abre la cámara y «Galería» acepta solo PNG/JPG', async 
   await expect(page.getByText(/el máximo es 10 MB/)).toBeVisible()
 })
 
+test('foto → retrato en relieve (igual que la foto) con texto en la peana', async ({ page }, info) => {
+  soloCompletos(info.project.name)
+  await abrir(page)
+  await expect(page.getByRole('radio', { name: /Igual que la foto/ })).toHaveAttribute('aria-checked', 'true')
+  await page.locator('input[type=file]:not([capture])').setInputFiles({ name: 'retrato.png', mimeType: 'image/png', buffer: pngDePrueba() })
+  await page.getByLabel(/Texto en la peana/).fill('HOLA')
+  await page.getByRole('button', { name: /Cómic/ }).click()
+  await page.getByRole('button', { name: 'Imprimir en 3D' }).click()
+  await page.getByRole('button', { name: 'Ver modelo' }).click({ timeout: 60_000 })
+  await expect(page.getByText(/Retrato en relieve ·/)).toBeVisible()
+  await page.getByRole('button', { name: 'Descargar' }).click()
+  const descarga = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'STL' }).click()
+  expect(readFileSync((await (await descarga).path())!).length).toBeGreaterThan(10_000)
+})
+
 test('foto → modelo 3D a color → biblioteca', async ({ page }) => {
   await abrir(page)
+  await page.getByRole('radio', { name: /Figura con IA/ }).click()
   await page.locator('input[type=file]:not([capture])').setInputFiles({ name: 'coche_rojo.png', mimeType: 'image/png', buffer: pngDePrueba() })
   await expect(page.getByLabel('Nombre del modelo')).toHaveValue('coche rojo')
   await page.getByRole('button', { name: 'Imprimir en 3D' }).click()
