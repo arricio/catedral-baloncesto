@@ -6,6 +6,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { BarraProgreso } from '../componentes/BarraProgreso'
 import { ChipMotor } from '../componentes/ChipMotor'
+import { ConectarHF } from '../componentes/ConectarHF'
 import { Icono } from '../componentes/Icono'
 import { SelectorCarpeta } from '../componentes/SelectorCarpeta'
 import { SelectorImagen } from '../componentes/SelectorImagen'
@@ -18,6 +19,7 @@ import { urlDeBlob } from '../lib/imagen'
 import { pedirPermisoNotificaciones } from '../lib/notificaciones'
 import { useEstadoRed } from '../lib/red'
 import { ir } from '../lib/ruta'
+import { modoDemo } from '../motor'
 import { ESTILOS } from '../motor/prompts'
 import { aceptarImagen, cancelar, descartar, imprimirFoto, imprimirTexto, regenerarImagen, reintentar, useImpresion } from '../motor/trabajo'
 
@@ -245,58 +247,6 @@ function AprobarImagen() {
   )
 }
 
-/** Conectar la cuenta gratuita de Hugging Face en 2 pasos, sin salir de la pantalla. */
-function ConectarHF() {
-  const [clave, setClave] = useState('')
-  const [ocupado, setOcupado] = useState(false)
-  const conectar = async () => {
-    setOcupado(true)
-    try {
-      const { usarTokenManual } = await import('../lib/hfAuth')
-      const usuario = await usarTokenManual(clave)
-      avisar(`¡Cuenta conectada (${usuario})! Reintentando… 🚀`, 'exito')
-      reintentar()
-    } catch (e) {
-      avisar((e as Error).message, 'error', 6000)
-    } finally {
-      setOcupado(false)
-    }
-  }
-  return (
-    <div className="mb-5 rounded-2xl border border-cian/40 bg-cian/10 p-4 text-left">
-      <p className="mb-3 font-semibold">Conecta tu cuenta gratuita de Hugging Face para tener más cupo:</p>
-      <p className="mb-2 text-sm text-texto-2">
-        <b className="text-texto">Paso 1.</b> Pulsa el botón, entra con tu cuenta y pulsa <b className="text-texto">«Create token»</b>. Después pulsa <b className="text-texto">«Copy»</b>.
-      </p>
-      <a
-        href="https://huggingface.co/settings/tokens/new?tokenType=read&tokenName=impresora-3d"
-        target="_blank"
-        rel="noreferrer"
-        className="mb-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#ffd21e] px-4 font-semibold text-[#1a1300]"
-      >
-        🤗 Conseguir mi clave
-      </a>
-      <p className="mb-2 text-sm text-texto-2">
-        <b className="text-texto">Paso 2.</b> Vuelve aquí, mantén el dedo en la casilla y elige <b className="text-texto">«Pegar»</b>:
-      </p>
-      <div className="flex gap-2">
-        <input
-          value={clave}
-          onChange={(e) => setClave(e.target.value.trim())}
-          placeholder="hf_…"
-          autoComplete="off"
-          aria-label="Clave de Hugging Face"
-          className="cristal min-h-12 w-full rounded-2xl px-4 text-[16px]"
-        />
-        <Boton variante="principal" disabled={!clave.startsWith('hf_') || ocupado} onClick={conectar}>
-          {ocupado ? '…' : 'Conectar'}
-        </Boton>
-      </div>
-      <p className="mt-2 text-xs text-texto-2">La clave solo se guarda en este móvil.</p>
-    </div>
-  )
-}
-
 function ErrorImpresion() {
   const error = useImpresion((s) => s.error)!
   const hfUsuario = useAjustes((s) => s.hfUsuario)
@@ -311,7 +261,11 @@ function ErrorImpresion() {
           ? 'Sin cuenta, Hugging Face casi no regala tiempo de GPU. Conecta tu cuenta gratuita (2 pasos) y podrás crear varios modelos al día.'
           : error.message}
       </p>
-      {error.tipo === 'cupo' && !hfUsuario && <ConectarHF />}
+      {error.tipo === 'cupo' && !hfUsuario && (
+        <div className="mb-5">
+          <ConectarHF alConectar={reintentar} />
+        </div>
+      )}
       {error.detalle && (
         <div className="mb-4 text-left">
           <p className="mb-1 text-center text-sm font-semibold text-texto-2">Motivo (haz una captura si me lo quieres enviar):</p>
@@ -383,6 +337,8 @@ function Terminado() {
 
 export function Imprimir() {
   const { trabajo, error } = useImpresion()
+  const hfUsuario = useAjustes((s) => s.hfUsuario)
+  const motorElegido = useAjustes((s) => s.motor)
   const [modo, setModo] = useState<'foto' | 'texto'>(() => (location.hash.includes('text=') ? 'texto' : 'foto'))
   const [carpetaId, setCarpetaId] = useState(ID_CARPETA_DEFECTO)
 
@@ -394,6 +350,7 @@ export function Imprimir() {
   else
     contenido = (
       <div className="space-y-4">
+        {!hfUsuario && !modoDemo && motorElegido !== 'local' && <ConectarHF />}
         <Segmentado
           etiqueta="Qué quieres convertir en 3D"
           valor={modo}

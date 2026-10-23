@@ -1,6 +1,7 @@
 /** Ajustes: motor 3D, cuenta de Hugging Face, servidor local, datos, apariencia, sincronización y copias. */
 import { useRef, useState } from 'react'
 import { Icono } from '../componentes/Icono'
+import { ConectarHF } from '../componentes/ConectarHF'
 import { InstruccionesInstalar } from '../componentes/Instalar'
 import { Boton, Interruptor, Segmentado, Tarjeta, formatoBytes } from '../componentes/ui'
 import { guardarArchivo } from '../exportar/descargar'
@@ -9,7 +10,7 @@ import { useAjustes, type Calidad, type ModoMotor } from '../lib/ajustes'
 import { avisar } from '../lib/avisos'
 import { CONFIG } from '../lib/config'
 import { compartirApp, enlaceWhatsApp } from '../lib/compartirApp'
-import { cerrarSesionHF, iniciarSesionHF, oauthDisponible, usarTokenManual } from '../lib/hfAuth'
+import { cerrarSesionHF, iniciarSesionHF, oauthDisponible } from '../lib/hfAuth'
 import { pedirPermisoNotificaciones } from '../lib/notificaciones'
 import { soportaNotificaciones } from '../lib/plataforma'
 import { comprobarLocal, useEstadoMotor } from '../motor'
@@ -31,7 +32,6 @@ const entrada = 'cristal min-h-12 w-full rounded-2xl px-4 text-[16px] placeholde
 
 function SeccionHF() {
   const { hfUsuario, hfAvatar, detalleNube, set } = useAjustes()
-  const [token, setToken] = useState('')
   return (
     <Seccion titulo="Cuenta de Hugging Face" icono="usuario">
       {hfUsuario ? (
@@ -53,30 +53,7 @@ function SeccionHF() {
               🤗 Iniciar sesión con Hugging Face
             </Boton>
           )}
-          <details className="text-sm">
-            <summary className="min-h-11 cursor-pointer py-2 text-texto-2">{oauthDisponible() ? 'O pega un token de acceso' : 'Pega tu token de acceso (gratis)'}</summary>
-            <form
-              className="mt-2 flex gap-2"
-              onSubmit={async (e) => {
-                e.preventDefault()
-                try {
-                  const u = await usarTokenManual(token)
-                  setToken('')
-                  avisar(`Conectado como ${u}`, 'exito')
-                } catch (err) {
-                  avisar((err as Error).message, 'error')
-                }
-              }}
-            >
-              <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="hf_…" autoComplete="off" aria-label="Token de Hugging Face" className={entrada} />
-              <Boton type="submit" disabled={!token}>
-                Usar
-              </Boton>
-            </form>
-            <p className="mt-2 text-texto-2">
-              Créalo en <a className="text-cian underline" href="https://huggingface.co/settings/tokens" target="_blank" rel="noreferrer">huggingface.co/settings/tokens</a> (tipo «Read»). Solo se guarda en este dispositivo.
-            </p>
-          </details>
+          <ConectarHF />
         </div>
       )}
       <div className="mt-3">
