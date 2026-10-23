@@ -395,30 +395,10 @@ export function DetalleModelo({ id }: { id: string }) {
       </div>
       <p className="mt-2 text-xs text-texto-2">Un dedo: girar · Dos dedos: zoom y mover · «Comparar» alterna deslizador y lado a lado.</p>
 
-      {/* Acciones */}
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Boton variante="principal" grande icono="whatsapp" onClick={() => setHoja('enviar')}>
-          Enviar a un amigo
-        </Boton>
-        <Boton grande icono="descargar" onClick={() => setHoja('guardar')}>
-          Guardar en el móvil
-        </Boton>
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <Boton icono="editar" onClick={() => (setNombre(modelo.nombre), setHoja('renombrar'))}>
-          Nombre
-        </Boton>
-        <Boton icono="mover" onClick={() => setHoja('mover')}>
-          Mover
-        </Boton>
-        <Boton variante="peligro" icono="borrar" onClick={() => setHoja('borrar')}>
-          Eliminar
-        </Boton>
-      </div>
       {modelo.origen !== 'archivo' && !modelo.servicio?.includes('relieve') && (
         <Boton
-          icono="varita"
-          className="mt-3 w-full"
+          grande
+          className="mt-4 w-full !bg-[#ffd21e] !font-bold !text-[#1a1300]"
           disabled={mejorando}
           onClick={async () => {
             setMejorando(true)
@@ -445,6 +425,26 @@ export function DetalleModelo({ id }: { id: string }) {
           {mejorando ? 'Poniendo tu foto…' : '✨ Poner mi foto por delante'}
         </Boton>
       )}
+      {/* Acciones */}
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Boton variante="principal" grande icono="whatsapp" onClick={() => setHoja('enviar')}>
+          Enviar a un amigo
+        </Boton>
+        <Boton grande icono="descargar" onClick={() => setHoja('guardar')}>
+          Guardar en el móvil
+        </Boton>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <Boton icono="editar" onClick={() => (setNombre(modelo.nombre), setHoja('renombrar'))}>
+          Nombre
+        </Boton>
+        <Boton icono="mover" onClick={() => setHoja('mover')}>
+          Mover
+        </Boton>
+        <Boton variante="peligro" icono="borrar" onClick={() => setHoja('borrar')}>
+          Eliminar
+        </Boton>
+      </div>
       <p className="mt-4 text-center text-sm text-texto-2">
         ✅ Guardado en tu Biblioteca · {modelo.servicio ?? ''} · {formatoBytes(modelo.bytes)}
       </p>
