@@ -259,3 +259,17 @@ export async function exportarModelo(glb: Blob, formato: Formato, nombre: string
       return exportar3MF(modelo, op.alturaMM ?? 80, op.colores3MF ?? 8)
   }
 }
+
+/** Convierte un OBJ (con colores por vértice, si los trae) en un GLB. */
+export async function objAGlb(texto: string): Promise<Blob> {
+  const { OBJLoader } = await import('three/examples/jsm/loaders/OBJLoader.js')
+  const grupo = new OBJLoader().parse(texto)
+  grupo.traverse((o) => {
+    const m = o as THREE.Mesh
+    if (!m.isMesh) return
+    if (!m.geometry.attributes.normal) m.geometry.computeVertexNormals()
+    m.material = new THREE.MeshStandardMaterial({ vertexColors: !!m.geometry.attributes.color, roughness: 0.75, metalness: 0 })
+  })
+  const glb = (await new GLTFExporter().parseAsync(grupo, { binary: true })) as ArrayBuffer
+  return new Blob([glb], { type: 'model/gltf-binary' })
+}

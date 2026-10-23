@@ -69,7 +69,7 @@ function AvisoRed() {
 function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCarpetaId: (v: string) => void }) {
   const [foto, setFoto] = useState<File | null>(null)
   const [nombre, setNombre] = useState('')
-  const { quitarFondo, modoFoto, set } = useAjustes()
+  const { quitarFondo, modoFoto, tipoFigura, set } = useAjustes()
   const [volumen, setVolumen] = useState<'poco' | 'medio' | 'mucho'>('medio')
   const [peana, setPeana] = useState(true)
   const [textoPeana, setTextoPeana] = useState('')
@@ -112,7 +112,7 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
         </>
       ) : (
         <>
-          <b className="text-texto">Figura completa 360°:</b> la IA crea la figura entera, con nuca, cuello y espalda, y después la app pega tu foto exacta por delante (cara y letras iguales). Tarda 1–3 minutos y gasta cupo de Hugging Face.
+          <b className="text-texto">Figura completa 360°:</b> la IA crea la figura entera, con nuca, cuello y espalda. Tarda 1–3 minutos y gasta cupo de Hugging Face. La cara la imagina la IA, así que se parece menos que en el relieve.
         </>
       )}
     </p>
@@ -146,6 +146,25 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
         <input id="nombre-foto" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={60} className="cristal min-h-12 w-full rounded-2xl px-4 text-[16px]" />
       </div>
 
+      {!relieve && (
+        <div>
+          <p className="mb-2 text-sm font-medium text-texto-2">¿Qué hay en la foto?</p>
+          <Segmentado
+            etiqueta="Qué hay en la foto"
+            valor={tipoFigura}
+            onCambio={(v) => set({ tipoFigura: v })}
+            opciones={[
+              { id: 'persona', texto: '🧑 Persona' },
+              { id: 'objeto', texto: '📦 Objeto o animal' },
+            ]}
+          />
+          <p className="mt-2 text-sm text-texto-2">
+            {tipoFigura === 'persona'
+              ? 'Usa una IA especializada en personas (PSHuman). Sale mejor con fotos de cuerpo entero. Experimental: si falla, se usa la IA general.'
+              : 'Usa la IA general y pega tu foto por delante.'}
+          </p>
+        </div>
+      )}
       {relieve && (
         <>
           <div>
@@ -245,6 +264,7 @@ function FormularioFoto({ carpetaId, setCarpetaId }: { carpetaId: string; setCar
             nombre: nombre.trim() || 'Mi foto',
             carpetaId,
             fondoEnNavegador: quitarFondo === 'navegador',
+            tipoFigura: relieve ? undefined : tipoFigura,
             relieve: relieve
               ? {
                   volumen: volumen === 'poco' ? 0.15 : volumen === 'medio' ? 0.5 : 1,

@@ -33,6 +33,8 @@ export interface Ajustes {
   sonido: boolean
   /** Desde foto: «Retrato en relieve» (igual que la foto) o «Figura 3D con IA». */
   modoFoto: 'relieve' | 'ia'
+  /** Figura completa: ¿es una persona (IA especializada) o un objeto/animal? */
+  tipoFigura: 'persona' | 'objeto'
   /** Letra más grande para ver mejor. */
   letraGrande: boolean
   notificaciones: boolean
@@ -61,6 +63,7 @@ export const useAjustes = create<Ajustes>()(
       letraGrande: false,
       sonido: true,
       modoFoto: 'relieve',
+      tipoFigura: 'persona',
       notificaciones: false,
       syncActiva: false,
       set: (parcial) => set(parcial),

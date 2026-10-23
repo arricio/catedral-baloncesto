@@ -58,6 +58,8 @@ export interface Trabajo {
   relieve?: { volumen: number; peana: boolean; textoPeana?: string; fuente?: string; trasera?: 'espejo' | 'foto' | 'lisa'; espalda?: Blob }
   /** Pegar la foto exacta por delante de la figura de la IA (por defecto, sí). */
   fotoDelante?: boolean
+  /** Figura completa de una persona (IA especializada) o de un objeto. */
+  tipoFigura?: 'persona' | 'objeto'
   /** Tipo de letra para las palabras entre comillas (modo texto). */
   fuente?: string
   prompt?: string

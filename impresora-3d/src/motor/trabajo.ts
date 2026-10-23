@@ -120,6 +120,7 @@ async function paso3D() {
       {
         quitarFondo: true,
         detalle: motor.id === 'local' ? 'detallado' : ajustes().detalleNube,
+        tipo: t.tipoFigura,
         signal,
         alCrearTrabajo: (idRemoto) => guardar({ idRemoto }),
       },
@@ -128,7 +129,8 @@ async function paso3D() {
     let final = glb
     let servicioFinal = servicio
     // La IA hace la figura entera; encima se pega la foto exacta por delante.
-    if (t.imagen && t.fotoDelante !== false) {
+    // (En personas no: la IA especializada ya cuida la cara y pegar la foto la deformaría.)
+    if (t.imagen && t.fotoDelante !== false && !servicio.startsWith('PSHuman')) {
       try {
         const { proyectarFotoDelante } = await import('./proyectar')
         final = await proyectarFotoDelante(glb, t.imagen, (p) =>
@@ -204,7 +206,7 @@ function nuevoTrabajo(datos: Omit<Trabajo, 'id' | 'creado' | 'estado' | 'motor'>
 
 export async function imprimirFoto(
   foto: Blob,
-  opciones: { nombre: string; carpetaId: string; fondoEnNavegador: boolean; relieve?: Trabajo['relieve'] },
+  opciones: { nombre: string; carpetaId: string; fondoEnNavegador: boolean; relieve?: Trabajo['relieve']; tipoFigura?: Trabajo['tipoFigura'] },
 ) {
   const { ahorroDatos } = ajustes()
   useImpresion.setState({ error: null, progreso: { etapa: 'analizando', porcentaje: 1, detalle: 'Preparando la foto' } })
@@ -220,7 +222,7 @@ export async function imprimirFoto(
       avisar('No se pudo quitar el fondo en el móvil; lo hará el servidor.', 'info')
     }
   }
-  const t = nuevoTrabajo({ origen: 'foto', nombre: opciones.nombre, carpetaId: opciones.carpetaId, imagen, relieve: opciones.relieve })
+  const t = nuevoTrabajo({ origen: 'foto', nombre: opciones.nombre, carpetaId: opciones.carpetaId, imagen, relieve: opciones.relieve, tipoFigura: opciones.tipoFigura, fotoDelante: opciones.tipoFigura !== 'persona' })
   useImpresion.setState({ trabajo: t })
   await db.trabajos.put(t)
   await paso3D()

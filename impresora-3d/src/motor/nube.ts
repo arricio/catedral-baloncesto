@@ -56,8 +56,8 @@ const apis = new WeakMap<ClienteGradio, Promise<Awaited<ReturnType<ClienteGradio
  * según su propia descripción de la API. Así no falla si un parámetro no existe
  * (p. ej. los gr.State, que no se exponen) o si falta alguno (se usa su valor por defecto).
  */
-async function adaptarArgumentos(cliente: ClienteGradio, endpoint: string, datos: Record<string, unknown> | unknown[]): Promise<Record<string, unknown> | unknown[]> {
-  if (Array.isArray(datos)) return datos
+async function adaptarArgumentos(cliente: ClienteGradio, endpoint: string | number, datos: Record<string, unknown> | unknown[]): Promise<Record<string, unknown> | unknown[]> {
+  if (Array.isArray(datos) || typeof endpoint === 'number') return datos
   if (!apis.has(cliente)) apis.set(cliente, cliente.view_api().catch(() => null))
   const info = (await apis.get(cliente))?.named_endpoints?.[endpoint]
   if (!info) return datos
@@ -75,7 +75,7 @@ async function adaptarArgumentos(cliente: ClienteGradio, endpoint: string, datos
  * Ejecuta un endpoint escuchando la cola y el progreso.
  * `desde`/`hasta` reparten el porcentaje global entre varias llamadas.
  */
-async function llamar(ctx: Contexto, endpoint: string, datos: Record<string, unknown> | unknown[], etapa: Etapa, desde: number, hasta: number): Promise<unknown[]> {
+async function llamar(ctx: Contexto, endpoint: string | number, datos: Record<string, unknown> | unknown[], etapa: Etapa, desde: number, hasta: number): Promise<unknown[]> {
   if (ctx.signal?.aborted) throw new DOMException('cancelado', 'AbortError')
   const trabajo = ctx.cliente.submit(endpoint, await adaptarArgumentos(ctx.cliente, endpoint, datos))
   const alAbortar = () => trabajo.cancel()
@@ -208,7 +208,52 @@ const sf3d: AdaptadorEspacio<Entrada3D, Blob> = {
  * Con cuenta y calidad «Detallada»: primero TRELLIS.2 (el más fiel a la foto).
  * Con calidad «Rápida»: primero TRELLIS, que hace una sola reserva de GPU y gasta menos cupo.
  */
+/**
+ * PSHuman (Universidad de Fudan, licencia MIT): especializada en PERSONAS. Reconstruye la
+ * figura entera (cara, nuca, espalda) a partir de una sola foto, cuidando sobre todo la cara.
+ * Devuelve un OBJ con colores por vértice, que aquí se convierte a GLB.
+ * El autor del Space ocultó la API (show_api=False): se prueba por nombre y, si no, por posición.
+ */
+const pshuman: AdaptadorEspacio<Entrada3D, Blob> = {
+  id: 'fffiloni/PSHuman',
+  nombre: 'PSHuman (personas)',
+  async ejecutar(ctx, { imagen }) {
+    ctx.alProgresar({ etapa: 'analizando', porcentaje: 6, servicio: ctx.servicio, detalle: 'Analizando a la persona' })
+    const datos = [ctx.manejarArchivo(imagen), true]
+    let salida: unknown[]
+    try {
+      salida = await llamar(ctx, '/process_image', datos, 'forma', 8, 90)
+    } catch (e) {
+      if (normalizarError(e).tipo === 'cupo') throw e
+      salida = await llamar(ctx, 0, datos, 'forma', 8, 90)
+    }
+    ctx.alProgresar({ etapa: 'texturas', porcentaje: 92, servicio: ctx.servicio, detalle: 'Preparando la figura' })
+    // Dos OBJ: uno solo forma y otro con color. Nos quedamos con el que trae colores.
+    const objs: Archivo[] = []
+    const pila: unknown[] = [salida]
+    while (pila.length) {
+      const x = pila.pop()
+      if (!x || typeof x !== 'object') continue
+      const a = x as Archivo
+      if ((a.url ?? a.path ?? '').toLowerCase().split('?')[0].endsWith('.obj')) objs.push(a)
+      else pila.push(...Object.values(x as Record<string, unknown>))
+    }
+    if (!objs.length) throw new Error('PSHuman no devolvió la figura')
+    let mejor = ''
+    for (const a of objs) {
+      const texto = await (await descargar(a, ctx.signal)).text()
+      const conColor = /^v\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+/m.test(texto)
+      if (conColor || !mejor) mejor = texto
+      if (conColor) break
+    }
+    const { objAGlb } = await import('../exportar/formatos')
+    return objAGlb(mejor)
+  },
+}
+
 export const ESPACIOS_3D = [trellis2, trellis1, sf3d]
+/** Para personas: primero la IA especializada; si falla, las generales. */
+const ESPACIOS_PERSONA = [pshuman, trellis2, trellis1]
 const ESPACIOS_3D_RAPIDO = [trellis1, trellis2, sf3d]
 const ESPACIOS_3D_SIN_SESION = [sf3d, trellis1, trellis2]
 
@@ -277,7 +322,13 @@ export const motorNube: Motor = {
     return { imagen: salida, servicio }
   },
   async imagenA3D(imagen, opciones, alProgresar) {
-    const lista = !ajustes().hfToken ? ESPACIOS_3D_SIN_SESION : opciones.detalle === 'rapido' ? ESPACIOS_3D_RAPIDO : ESPACIOS_3D
+    const lista = !ajustes().hfToken
+      ? ESPACIOS_3D_SIN_SESION
+      : opciones.tipo === 'persona'
+        ? ESPACIOS_PERSONA
+        : opciones.detalle === 'rapido'
+          ? ESPACIOS_3D_RAPIDO
+          : ESPACIOS_3D
     const { salida, servicio } = await conReserva(lista, { imagen, opciones }, alProgresar, opciones.signal)
     return { glb: salida, servicio }
   },

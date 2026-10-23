@@ -23,6 +23,8 @@ export interface OpcionesImagen3D {
   /** El servicio quita el fondo (si la imagen no trae transparencia). */
   quitarFondo: boolean
   detalle: 'rapido' | 'detallado'
+  /** Qué hay en la foto: una persona (IA especializada en personas) o cualquier otra cosa. */
+  tipo?: 'persona' | 'objeto'
   signal?: AbortSignal
   /** Se llama en cuanto el servidor asigna un ID (para retomar el trabajo). */
   alCrearTrabajo?: (idRemoto: string) => void
