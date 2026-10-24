@@ -57,6 +57,9 @@ button{cursor:pointer}
 .brand b{font-family:var(--font-d);font-weight:700;font-size:26px;letter-spacing:.06em;line-height:1;text-transform:uppercase}
 .brand b span{color:var(--accent)}
 .brand small{font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+#installTop{position:fixed;z-index:11;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:7px;background:var(--accent);color:#1a1205;border:0;border-radius:4px;padding:9px 12px;font-family:var(--font-d);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase}
+#installTop svg{width:16px;height:16px;fill:currentColor}
+@media (min-width:761px){#installTop{right:calc(var(--panel-w) + 28px);top:calc(env(safe-area-inset-top,0px) + 56px)}}
 .chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border:1px solid var(--line);background:var(--panel);border-radius:3px;width:max-content;margin-top:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .chip[data-s="on"] .dot{background:var(--hot);box-shadow:0 0 10px var(--hot)}
@@ -207,6 +210,7 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
   .cams{order:4}
   .cams button{padding:8px 7px;font-size:12px}
   .brand b{font-size:21px}
+  .brand small{max-width:calc(100vw - 210px);line-height:1.5}
   .readout,.hint{display:none}
 }
 @media (min-width:761px) and (max-width:1240px){ :root{--bar-h:116px} #bar{padding-block:8px} }
@@ -222,6 +226,8 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
   <small>Láser de fibra 50 W · 1064 nm · área 200 × 140 mm</small>
   <div class="chip" id="chip" data-s="idle"><span class="dot"></span><span id="chipTxt">En espera</span></div>
 </div>
+
+<button id="installTop" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg>Instalar app</button>
 
 <div class="readout" aria-live="off">
   <span>X</span><i id="rX">0.00 mm</i>
@@ -323,7 +329,7 @@ vita brevis</textarea></div>
   <div class="group">
     <button class="ib save" id="saveBtn" aria-label="Guardar y compartir"><svg viewBox="0 0 24 24"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg><span>Guardar</span></button>
     <button class="ib rec" id="recBtn" aria-label="Grabar vídeo de lo que se ve"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg></button>
-    <button class="ib" id="snd" aria-label="Activar sonido" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm12.5 3a4 4 0 0 0-2-3.5v7a4 4 0 0 0 2-3.5zm-2-7.7v2.1a7 7 0 0 1 0 11.2v2.1a9 9 0 0 0 0-15.4z"/></svg></button>
+    <button class="ib" id="snd" aria-label="Activar sonido" aria-pressed="false"><svg viewBox="0 0 24 24" id="sndIco"><path d="M4 9h4l5-4v14l-5-4H4zm11.6.4l1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1-1.4 1.4-2.1-2.1-2.1 2.1-1.4-1.4 2.1-2.1z"/></svg></button>
   </div>
 </footer>
 
@@ -1259,7 +1265,8 @@ function initAudio() {
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return null;
   const ctx = new AC();
-  const mix = ctx.createGain(); mix.gain.value = .9;
+  ctx.onstatechange = refreshSndUI;
+  const mix = ctx.createGain(); mix.gain.value = 1.8;
   const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
   const out = ctx.createGain(); out.gain.value = soundOn ? 1 : 0;
   mix.connect(comp); comp.connect(out); out.connect(ctx.destination);
@@ -1305,9 +1312,17 @@ function crackle(t, amt) {
 function setSound(on) {
   soundOn = on;
   try { localStorage.setItem('lm-sound', on ? 'on' : 'off'); } catch (e) {}
-  if (on) { initAudio(); audio?.ctx.resume(); }
+  if (on) { initAudio(); audio?.ctx.resume().then(refreshSndUI, () => {}); }
   if (audio) audio.out.gain.setTargetAtTime(on ? 1 : 0, audio.ctx.currentTime, .05);
-  $('#snd').setAttribute('aria-pressed', on); $('#snd').setAttribute('aria-label', on ? 'Silenciar' : 'Activar sonido');
+  refreshSndUI();
+}
+// el botón muestra si de verdad suena (el navegador lo bloquea hasta que se toca la pantalla)
+function refreshSndUI() {
+  const live = soundOn && audio?.ctx.state === 'running';
+  $('#snd').setAttribute('aria-pressed', live); $('#snd').setAttribute('aria-label', live ? 'Silenciar' : 'Activar sonido');
+  $('#sndIco').innerHTML = live
+    ? '<path d="M4 9h4l5-4v14l-5-4H4zm12.5 3a4 4 0 0 0-2-3.5v7a4 4 0 0 0 2-3.5zm-2-7.7v2.1a7 7 0 0 1 0 11.2v2.1a9 9 0 0 0 0-15.4z"/>'
+    : '<path d="M4 9h4l5-4v14l-5-4H4zm11.6.4l1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1-1.4 1.4-2.1-2.1-2.1 2.1-1.4-1.4 2.1-2.1z"/>';
 }
 let lastHX = 0, lastHZ = 0;
 function updateAudio(dt) {
@@ -1335,12 +1350,14 @@ function updateAudio(dt) {
   a.airG.gain.setTargetAtTime(playing && !done && job.state !== 'idle' ? .022 : 0, t, .2);
 }
 // el navegador sólo deja sonar el audio después de un toque: se enciende con la primera interacción
+// (en móviles sólo cuentan el final del toque o el clic, no el inicio)
+const UNLOCK_EVENTS = ['pointerup', 'touchend', 'click', 'keydown'];
 function unlockAudio(e) {
   if (e.target.closest?.('#snd')) return;
-  removeEventListener('pointerdown', unlockAudio, true); removeEventListener('keydown', unlockAudio, true);
+  if (audio?.ctx.state === 'running') { UNLOCK_EVENTS.forEach(n => removeEventListener(n, unlockAudio, true)); return; }
   if (soundOn) setSound(true);
 }
-addEventListener('pointerdown', unlockAudio, true); addEventListener('keydown', unlockAudio, true);
+UNLOCK_EVENTS.forEach(n => addEventListener(n, unlockAudio, true));
 
 /* ───────────── Cámara ───────────── */
 let camMode = 'orbit';
@@ -1828,16 +1845,26 @@ document.querySelectorAll('[data-out]').forEach(b => b.onclick = async () => {
 // app instalable (PWA), invitación por WhatsApp y fotos compartidas desde la galería
 $('#inviteWa').href = 'https://wa.me/?text=' + encodeURIComponent('Mirá esta simulación: un láser talla tus fotos y textos en mármol, en 3D. ' + APP_URL);
 let installEvt = null;
-addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
-$('#installBtn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; $('#installBtn').hidden = true; };
-{
-  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  $('#installNote').textContent = inViewer ? `Para instalarla como app, abrí ${APP_URL} en Chrome o Safari.`
-    : standalone ? 'Ya la estás usando como app. Desde la galería del móvil también podés compartir una foto con «Láser Mármol».'
-    : ios ? 'En iPhone: botón Compartir → «Añadir a pantalla de inicio».'
-    : 'En Chrome: menú ⋮ → «Instalar app» (o «Añadir a pantalla de inicio»).';
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const iosDevice = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const installHelp = iosDevice ? 'En iPhone o iPad: abrila en Safari, tocá el botón Compartir (cuadrado con flecha) y elegí «Añadir a pantalla de inicio».'
+  : 'En Chrome: tocá el menú ⋮ de arriba a la derecha y elegí «Instalar app» o «Añadir a pantalla de inicio» → «Instalar».';
+$('#installNote').textContent = inViewer ? `Para instalarla como app, abrí ${APP_URL} en Chrome o Safari.`
+  : standalone ? 'Ya la estás usando como app. Desde la galería del móvil también podés compartir una foto con «Láser Mármol».' : installHelp;
+async function doInstall() {
+  if (installEvt) {
+    installEvt.prompt();
+    let out = null; try { out = (await installEvt.userChoice).outcome; } catch (e) {}
+    installEvt = null;
+    if (out === 'accepted') $('#installTop').hidden = true;
+    return;
+  }
+  toast(installHelp);
 }
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
+addEventListener('appinstalled', () => { $('#installTop').hidden = true; $('#installBtn').hidden = true; toast('App instalada. Ya la tenés en la pantalla de inicio.'); });
+$('#installBtn').onclick = doInstall; $('#installTop').onclick = doInstall;
+if (!inViewer && !standalone) { $('#installTop').hidden = false; $('#installBtn').hidden = false; }
 try { if ('serviceWorker' in navigator && !inViewer && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
 async function loadSharedImage() {
   if (!new URLSearchParams(location.search).has('shared')) return;
@@ -1922,7 +1949,7 @@ setTimeout(async () => {
   startJob();
   refreshPreview();
   setCam('orbit');
-  $('#snd').setAttribute('aria-pressed', soundOn);
+  refreshSndUI();
   frame();
   hideLoader();
   loadSharedImage();
