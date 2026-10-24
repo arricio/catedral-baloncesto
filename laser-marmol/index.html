@@ -75,14 +75,10 @@ button{cursor:pointer}
 #panel .scroll{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px;flex:1;min-height:0}
 #panel h2{margin:0 0 8px;font-family:var(--font-d);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
 #panel h2 em{font-style:normal;font-family:var(--font-m);font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:none}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:12px}
 .tabs button{background:transparent;border:0;padding:9px 4px;font-family:var(--font-d);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .tabs button+button{border-left:1px solid var(--line)}
 .tabs button[aria-selected="true"]{background:var(--accent);color:#1a1205;font-weight:600}
-.presets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.presets button{background:#0c0d10;border:1px solid var(--line);border-radius:4px;padding:6px;display:flex;flex-direction:column;gap:6px;text-align:left;font-size:12px;color:var(--muted)}
-.presets button canvas{width:100%;aspect-ratio:3/2;display:block;border-radius:2px;max-width:100%}
-.presets button[aria-pressed="true"]{border-color:var(--accent);color:var(--fg)}
 .pick{position:relative;overflow:hidden}
 .pick input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:200px;z-index:2}
 .paste{border:1px dashed #4a4c52;border-radius:4px;padding:12px;min-height:52px;background:#0c0d10;color:var(--muted);font-size:13px;text-align:center;-webkit-user-select:text;user-select:text}
@@ -106,6 +102,10 @@ textarea{resize:vertical;min-height:64px;font-size:15px}
 figure{margin:0;display:flex;flex-direction:column;gap:6px}
 #preview{width:100%;max-width:100%;aspect-ratio:440/308;display:block;border-radius:3px;border:1px solid var(--line);background:#000;image-rendering:auto}
 figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatches button,.swatches label{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);padding:0;position:relative;overflow:hidden;cursor:pointer;flex:none}
+.swatches [aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--panel-solid),0 0 0 4px var(--accent)}
+.swatches label input{position:absolute;inset:-8px;width:50px;height:50px;opacity:0;cursor:pointer}
 .marbles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .marbles button{display:flex;align-items:center;gap:8px;background:#0c0d10;border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:12px;text-align:left}
 .marbles button canvas{width:30px;height:30px;border-radius:2px;flex:none}
@@ -240,14 +240,10 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
 <aside id="panel">
   <div class="scroll">
     <section>
-      <h2>Diseño <em id="srcName">Mandala</em></h2>
+      <h2>Diseño <em id="srcName">Texto</em></h2>
       <div class="tabs" role="tablist">
-        <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometría</button>
+        <button role="tab" id="tab-texto" aria-selected="true" data-tab="texto">Texto</button>
         <button role="tab" id="tab-foto" aria-selected="false" data-tab="foto">Foto</button>
-        <button role="tab" id="tab-texto" aria-selected="false" data-tab="texto">Texto</button>
-      </div>
-      <div data-pane="geo" class="stack">
-        <div class="presets" id="presets"></div>
       </div>
       <div data-pane="foto" class="stack" hidden>
         <div class="drop pick" id="drop">
@@ -259,12 +255,24 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
           <div class="btn pick">Sacar foto con la cámara<input type="file" id="cam" accept="image/*" capture="environment" aria-label="Sacar foto con la cámara"></div>
         </div>
         <div class="paste" id="pasteZone" contenteditable="true" role="textbox" aria-label="Zona para pegar una foto" inputmode="none">Otra opción: copiá una foto (en Google Fotos o la galería: Compartir → Copiar), mantené pulsado aquí y elegí «Pegar».</div>
+        <div class="field"><label for="pStyle">Estilo de grabado</label>
+          <select id="pStyle">
+            <option value="relief">Relieve 3D profundo (recomendado)</option>
+            <option value="flat">Grabado fotográfico plano</option>
+          </select>
+        </div>
         <div class="field"><label for="pContrast">Contraste <output id="oContrast">1.20</output></label><input type="range" id="pContrast" min="0.5" max="2.5" step="0.05" value="1.2"></div>
         <div class="field"><label for="pBright">Brillo <output id="oBright">0.00</output></label><input type="range" id="pBright" min="-0.4" max="0.4" step="0.02" value="0"></div>
-        <label class="check"><input type="checkbox" id="pDither"> Tramado Floyd–Steinberg (como en un láser real)</label>
+        <label class="check"><input type="checkbox" id="pDither"> Tramado Floyd–Steinberg (sólo en grabado plano)</label>
         <label class="check"><input type="checkbox" id="pInvert"> Invertir tonos</label>
+        <div class="field"><label for="pColor">Color del tallado</label>
+          <select id="pColor">
+            <option value="orig">Colores originales de la foto</option>
+            <option value="natural">Esmerilado natural de la piedra</option>
+          </select>
+        </div>
       </div>
-      <div data-pane="texto" class="stack" hidden>
+      <div data-pane="texto" class="stack">
         <div class="field"><label for="tText">Texto a tallar</label><textarea id="tText" rows="3">Ars longa
 vita brevis</textarea></div>
         <div class="field"><label for="tFont">Tipografía</label>
@@ -278,6 +286,9 @@ vita brevis</textarea></div>
           </select>
         </div>
         <label class="check"><input type="checkbox" id="tRelief"> Letras en relieve (se talla el fondo)</label>
+        <div class="field"><span class="lbl">Color del tallado <output id="oTColor">Oro</output></span>
+          <div class="swatches" id="swatches" role="radiogroup" aria-label="Color del tallado"></div>
+        </div>
       </div>
       <label class="check" style="margin-top:12px"><input type="checkbox" id="pFrame"> Marco decorativo</label>
       <figure style="margin-top:12px">
@@ -293,8 +304,8 @@ vita brevis</textarea></div>
 
     <section class="stack">
       <h2>Parámetros de grabado</h2>
-      <div class="field"><label for="pDepth">Profundidad máxima <output id="oDepth">4.5 mm</output></label><input type="range" id="pDepth" min="0.5" max="8" step="0.1" value="4.5"></div>
-      <div class="field"><label for="pPasses">Capas (pasadas) <output id="oPasses">6</output></label><input type="range" id="pPasses" min="1" max="12" step="1" value="6"></div>
+      <div class="field"><label for="pDepth">Profundidad máxima <output id="oDepth">6.0 mm</output></label><input type="range" id="pDepth" min="0.5" max="15" step="0.1" value="6"></div>
+      <div class="field"><label for="pPasses">Capas (pasadas) <output id="oPasses">8</output></label><input type="range" id="pPasses" min="1" max="16" step="1" value="8"></div>
       <div class="field"><label for="pRaster">Velocidad del cabezal <output id="oRaster">800 mm/s</output></label><input type="range" id="pRaster" min="200" max="1600" step="50" value="800"></div>
       <p class="note">Profundidad y capas se aplican al pulsar «Tallar». La velocidad del cabezal cambia en vivo.</p>
     </section>
@@ -529,11 +540,22 @@ function vnoise(x, y) {
 }
 function fbm(x, y, o) { let s = 0, a = .5, f = 1; for (let i = 0; i < o; i++) { s += a * vnoise(x * f, y * f); f *= 2.03; a *= .5; } return s; }
 
+// frost = color del tallado (esmerilado); dark = en fotos se talla lo claro
 const MARBLES = {
-  negro:    { name: 'Negro Marquina', base: [12, 12, 14], base2: [30, 29, 32], vein: [196, 192, 184], vein2: [92, 90, 88], frost: [.80, .79, .76], dark: true,  vf: 2.1, sharp: 26 },
-  carrara:  { name: 'Blanco Carrara', base: [236, 235, 231], base2: [208, 209, 210], vein: [112, 117, 126], vein2: [160, 164, 170], frost: [.46, .43, .40], dark: false, vf: 1.6, sharp: 9 },
-  calacatta:{ name: 'Calacatta Oro',  base: [244, 240, 232], base2: [226, 219, 206], vein: [150, 112, 62], vein2: [120, 118, 116], frost: [.50, .44, .36], dark: false, vf: 1.2, sharp: 14 },
-  verde:    { name: 'Verde Guatemala',base: [10, 42, 31], base2: [28, 76, 55], vein: [196, 224, 206], vein2: [92, 140, 115], frost: [.70, .80, .73], dark: true, vf: 2.6, sharp: 16 },
+  negro:     { name: 'Negro Marquina',     base: [12, 12, 14],    base2: [30, 29, 32],    vein: [196, 192, 184], vein2: [92, 90, 88],    frost: [.78, .77, .74], dark: true,  vf: 2.1, sharp: 26 },
+  portoro:   { name: 'Nero Portoro',       base: [14, 13, 12],    base2: [34, 29, 22],    vein: [214, 168, 86],  vein2: [140, 108, 60],  frost: [.82, .75, .60], dark: true,  vf: 1.8, sharp: 16 },
+  carrara:   { name: 'Blanco Carrara',     base: [236, 235, 231], base2: [208, 209, 210], vein: [112, 117, 126], vein2: [160, 164, 170], frost: [.46, .43, .40], dark: false, vf: 1.6, sharp: 9 },
+  thassos:   { name: 'Blanco Thassos',     base: [247, 247, 245], base2: [234, 235, 236], vein: [200, 203, 208], vein2: [222, 224, 226], frost: [.50, .50, .52], dark: false, vf: 1.2, sharp: 30 },
+  calacatta: { name: 'Calacatta Oro',      base: [244, 240, 232], base2: [226, 219, 206], vein: [150, 112, 62],  vein2: [120, 118, 116], frost: [.50, .44, .36], dark: false, vf: 1.2, sharp: 14 },
+  macael:    { name: 'Amarillo Macael',    base: [228, 204, 142], base2: [206, 178, 112], vein: [150, 112, 60],  vein2: [240, 224, 180], frost: [.54, .44, .28], dark: false, vf: 1.6, sharp: 10 },
+  rosa:      { name: 'Rosa Portugués',     base: [228, 186, 174], base2: [208, 158, 146], vein: [168, 108, 98],  vein2: [240, 214, 204], frost: [.60, .46, .43], dark: false, vf: 1.4, sharp: 8 },
+  emperador: { name: 'Emperador Oscuro',   base: [60, 40, 28],    base2: [92, 64, 44],    vein: [222, 198, 168], vein2: [140, 104, 76],  frost: [.86, .78, .68], dark: true,  vf: 3.2, sharp: 12 },
+  rojo:      { name: 'Rojo Alicante',      base: [126, 44, 36],   base2: [156, 66, 52],   vein: [236, 214, 200], vein2: [98, 32, 28],    frost: [.90, .78, .72], dark: true,  vf: 2.4, sharp: 14 },
+  verde:     { name: 'Verde Guatemala',    base: [10, 42, 31],    base2: [28, 76, 55],    vein: [196, 224, 206], vein2: [92, 140, 115],  frost: [.70, .80, .73], dark: true,  vf: 2.6, sharp: 16 },
+  azul:      { name: 'Azul Macaubas',      base: [36, 82, 138],   base2: [70, 128, 180],  vein: [206, 224, 238], vein2: [22, 52, 100],   frost: [.84, .90, .95], dark: true,  vf: 3.0, sharp: 6,  bands: 9,  bandAmt: .35 },
+  gris:      { name: 'Gris Pulpis',        base: [118, 110, 102], base2: [94, 88, 82],    vein: [212, 202, 190], vein2: [150, 140, 130], frost: [.88, .86, .83], dark: true,  vf: 2.0, sharp: 20 },
+  onix:      { name: 'Ónix Miel',          base: [206, 140, 52],  base2: [240, 194, 108], vein: [255, 236, 190], vein2: [160, 92, 28],   frost: [.96, .90, .76], dark: true,  vf: 1.4, sharp: 6,  bands: 14, bandAmt: .6 },
+  travertino:{ name: 'Travertino Romano',  base: [222, 204, 172], base2: [196, 174, 138], vein: [176, 150, 112], vein2: [236, 222, 196], frost: [.52, .44, .34], dark: false, vf: 1.0, sharp: 4,  bands: 22, bandAmt: .5, pores: true },
 };
 function marbleCanvas(m, S, seed) {
   SEED = seed;
@@ -549,9 +571,13 @@ function marbleCanvas(m, S, seed) {
     const vein2 = Math.pow(1 - Math.abs(w2), 34) * .55;
     const cl = fbm(u * .7 + 11, v * .7 + 2, 3);
     const grain = (hash(x, y + 999) - .5) * 7;
+    const band = m.bands ? (Math.sin(v * m.bands + fbm(u * 1.4, v * 1.4, 3) * 5) * .5 + .5) * m.bandAmt : 0;
+    const pore = m.pores && vnoise(u * 34, v * 9) > .8 ? .68 : 1;
     const i = (y * S + x) * 4;
     for (let ch = 0; ch < 3; ch++) {
       let col = lerp(m.base[ch], m.base2[ch], clamp(cl * 1.5 - .3, 0, 1));
+      if (band) col = lerp(col, m.vein2[ch], band);
+      col *= pore;
       col = lerp(col, m.vein2[ch], clamp(vein2, 0, 1));
       col = lerp(col, m.vein[ch], clamp(vein1 * .92, 0, 1));
       d[i + ch] = clamp(col + grain, 0, 255);
@@ -568,6 +594,7 @@ const target = new Float32Array(NX * NZ);
 const U = {
   uBeam: { value: new THREE.Vector3(0, TOP, 0) }, uOn: { value: 0 }, uDir: { value: 1 },
   uFrost: { value: new THREE.Color() }, uTop: { value: TOP }, uMaxD: { value: .45 },
+  uColorMap: { value: null }, uUseColor: { value: 0 }, uMetal: { value: 0 },
 };
 const topGeo = new THREE.BufferGeometry();
 const posArr = new Float32Array(NX * NZ * 3), norArr = new Float32Array(NX * NZ * 3), uvArr = new Float32Array(NX * NZ * 2), carveArr = new Float32Array(NX * NZ);
@@ -592,23 +619,35 @@ topGeo.setIndex(new THREE.BufferAttribute(idx, 1));
 topGeo.computeBoundingSphere();
 
 const marbleTex = new THREE.CanvasTexture(cnv(4, 4));
+// colores con los que se rellena lo tallado (pintura o pan de oro, como en las lápidas y placas reales)
+const colorC = cnv(NX, NZ), colorG = colorC.getContext('2d');
+colorG.fillStyle = '#ffffff'; colorG.fillRect(0, 0, NX, NZ);
+const colorTex = new THREE.CanvasTexture(colorC); colorTex.colorSpace = THREE.SRGBColorSpace;
+U.uColorMap.value = colorTex;
 const topMat = new THREE.MeshPhysicalMaterial({ map: marbleTex, roughness: .2, metalness: 0, clearcoat: .5, clearcoatRoughness: .14, envMapIntensity: .9 });
-topMat.customProgramCacheKey = () => 'carve-v1';
+topMat.customProgramCacheKey = () => 'carve-v2';
 topMat.onBeforeCompile = sh => {
   Object.assign(sh.uniforms, U);
-  sh.vertexShader = 'attribute float aCarve;\nvarying float vCarve;\nvarying vec3 vWP;\n' + sh.vertexShader.replace('#include <begin_vertex>',
-    '#include <begin_vertex>\nvCarve = aCarve;\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+  sh.vertexShader = 'attribute float aCarve;\nvarying float vCarve;\nvarying float vSlope;\nvarying vec3 vWP;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+    '#include <begin_vertex>\nvCarve = aCarve;\nvSlope = 1.0 - normalize(objectNormal).y;\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
   sh.fragmentShader = `uniform vec3 uBeam; uniform float uOn; uniform float uDir; uniform vec3 uFrost; uniform float uTop; uniform float uMaxD;
-varying float vCarve; varying vec3 vWP;
+uniform sampler2D uColorMap; uniform float uUseColor; uniform float uMetal;
+varying float vCarve; varying float vSlope; varying vec3 vWP;
 float hash2(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
 ` + sh.fragmentShader
     .replace('#include <map_fragment>', `#include <map_fragment>
       float gr = hash2(floor(vWP.xz * 220.0));
       float dn = clamp((uTop - vWP.y) / max(uMaxD, 0.001), 0.0, 1.0);
-      vec3 fr = uFrost * (0.84 + 0.16 * gr) * (1.0 - 0.3 * dn);
+      vec3 paint = texture2D(uColorMap, vMapUv).rgb;
+      vec3 tint = mix(uFrost * (0.84 + 0.16 * gr), paint * (0.9 + 0.1 * gr), uUseColor);
+      vec3 fr = tint * (1.0 - 0.5 * dn * (1.0 - uMetal * uUseColor)) * (1.0 - 0.6 * smoothstep(0.04, 0.55, vSlope));
       diffuseColor.rgb = mix(diffuseColor.rgb, fr, vCarve);`)
     .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
       roughnessFactor = mix(roughnessFactor, 0.93, smoothstep(0.0, 0.25, vCarve));`)
+    .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+      float paintOn = smoothstep(0.0, 0.25, vCarve) * uUseColor * uMetal;
+      metalnessFactor = mix(metalnessFactor, 1.0, paintOn);
+      roughnessFactor = mix(roughnessFactor, 0.3, paintOn);`)
     .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
       #ifdef USE_CLEARCOAT
         material.clearcoat *= 1.0 - smoothstep(0.0, 0.2, vCarve);
@@ -662,19 +701,21 @@ function updateNormals(r0, r1) {
     }
   }
 }
-let dirty0 = Infinity, dirty1 = -1;
+let dirty0 = Infinity, dirty1 = -1, fullUpload = false;
 function flushSurface() {
   if (dirty1 < 0) return;
   const r0 = Math.max(0, dirty0 - 1), r1 = Math.min(GZ, dirty1 + 1);
   updateNormals(r0, r1);
+  dirty0 = Infinity; dirty1 = -1;
+  if (fullUpload) return; // ya se sube la malla entera en este cuadro
   const s = r0 * NX, n = (r1 - r0 + 1) * NX;
   for (const [a, comp] of [[posAttr, 3], [norAttr, 3], [carveAttr, 1]]) { a.addUpdateRange(s * comp, n * comp); a.needsUpdate = true; } // three.js vacía los rangos tras subirlos
-  dirty0 = Infinity; dirty1 = -1;
 }
+function uploadAll() { fullUpload = true; for (const a of [posAttr, norAttr, carveAttr]) { a.clearUpdateRanges(); a.needsUpdate = true; } }
 function resetSurface() {
   depth.fill(0); carveArr.fill(0);
   for (let i = 0; i < NX * NZ; i++) { posArr[i * 3 + 1] = TOP; norArr[i * 3] = 0; norArr[i * 3 + 1] = 1; norArr[i * 3 + 2] = 0; }
-  for (const a of [posAttr, norAttr, carveAttr]) { a.clearUpdateRanges(); a.needsUpdate = true; }
+  uploadAll();
 }
 
 /* ───────────── Materiales de la máquina ───────────── */
@@ -985,84 +1026,12 @@ function radialFill(g, x, y, r, inner = 1, outer = .35) {
   gr.addColorStop(0, `rgb(${a},${a},${a})`); gr.addColorStop(1, `rgb(${b},${b},${b})`);
   return gr;
 }
-const PRESETS = {
-  mandala: { name: 'Mandala', depth: 4.5, passes: 6, draw(g) {
-    const cx = DW / 2, cy = DH / 2;
-    g.fillStyle = radialFill(g, cx, cy, 70, 1, .45); g.beginPath(); g.arc(cx, cy, 62, 0, 7); g.fill();
-    let p = new Path2D(); p.arc(cx, cy, 82, 0, 7); vstroke(g, p, 12);
-    for (let i = 0; i < 12; i++) {
-      g.save(); g.translate(cx, cy); g.rotate(i * Math.PI / 6);
-      const pt = new Path2D(); pt.moveTo(96, 0); pt.quadraticCurveTo(160, 52, 232, 0); pt.quadraticCurveTo(160, -52, 96, 0);
-      g.fillStyle = radialFill(g, 165, 0, 70, .95, .4); g.fill(pt); vstroke(g, pt, 6, .6);
-      const pt2 = new Path2D(); pt2.moveTo(120, 0); pt2.lineTo(205, 0); vstroke(g, pt2, 5, .2);
-      g.restore();
-    }
-    p = new Path2D(); p.arc(cx, cy, 248, 0, 7); vstroke(g, p, 9);
-    for (let i = 0; i < 24; i++) {
-      const a = i * Math.PI / 12 + Math.PI / 24, x = cx + Math.cos(a) * 274, y = cy + Math.sin(a) * 274;
-      g.fillStyle = radialFill(g, x, y, 16, 1, .4); g.beginPath(); g.arc(x, y, 14, 0, 7); g.fill();
-    }
-    p = new Path2D();
-    for (let i = 0; i < 24; i++) {
-      const a0 = i * Math.PI / 12, a1 = a0 + Math.PI / 12, am = (a0 + a1) / 2;
-      p.moveTo(cx + Math.cos(a0) * 300, cy + Math.sin(a0) * 300);
-      p.quadraticCurveTo(cx + Math.cos(am) * 330, cy + Math.sin(am) * 330, cx + Math.cos(am) * 368, cy + Math.sin(am) * 368);
-      p.quadraticCurveTo(cx + Math.cos(am) * 330, cy + Math.sin(am) * 330, cx + Math.cos(a1) * 300, cy + Math.sin(a1) * 300);
-    }
-    vstroke(g, p, 7);
-    p = new Path2D(); p.arc(cx, cy, 300, 0, 7); vstroke(g, p, 6);
-    p = new Path2D(); p.arc(cx, cy, 382, 0, 7); vstroke(g, p, 10);
-    for (const [x, y, s] of [[0, 0, 1], [DW, 0, 1], [0, DH, 1], [DW, DH, 1]]) {
-      for (let r = 60; r <= 180; r += 40) { const q = new Path2D(); q.arc(x, y, r, 0, 7); vstroke(g, q, 6); }
-    }
-  } },
-  flor: { name: 'Flor de la vida', depth: 3.5, passes: 5, draw(g) {
-    const cx = DW / 2, cy = DH / 2, r = 112;
-    g.save(); g.beginPath(); g.arc(cx, cy, r * 3, 0, 7); g.clip();
-    for (let j = -4; j <= 4; j++) for (let i = -5; i <= 5; i++) {
-      const x = cx + r * (i + j / 2), y = cy + r * j * Math.sqrt(3) / 2;
-      if (Math.hypot(x - cx, y - cy) > r * 2.02) continue;
-      const p = new Path2D(); p.arc(x, y, r, 0, 7); vstroke(g, p, 9);
-    }
-    g.restore();
-    let p = new Path2D(); p.arc(cx, cy, r * 3, 0, 7); vstroke(g, p, 12);
-    p = new Path2D(); p.arc(cx, cy, r * 3 + 24, 0, 7); vstroke(g, p, 6);
-    for (let i = 0; i < 6; i++) {
-      const a = i * Math.PI / 3 - Math.PI / 6, x = cx + Math.cos(a) * (r * 3 + 24), y = cy + Math.sin(a) * (r * 3 + 24);
-      g.fillStyle = radialFill(g, x, y, 18, 1, .5); g.beginPath(); g.arc(x, y, 15, 0, 7); g.fill();
-    }
-  } },
-  estrella: { name: 'Estrella andalusí', depth: 3.0, passes: 4, draw(g) {
-    const s = 160, R = s * .62;
-    for (let gy = -1; gy <= DH / s + 1; gy++) for (let gx = -1; gx <= DW / s + 1; gx++) {
-      const cx = gx * s + (DW % s) / 2, cy = gy * s + (DH % s) / 2 + s / 2;
-      const pts = []; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + Math.PI / 8; pts.push([cx + Math.cos(a) * R, cy + Math.sin(a) * R]); }
-      const p = new Path2D(); p.moveTo(...pts[0]); for (let k = 1; k <= 8; k++) p.lineTo(...pts[(k * 3) % 8]); p.closePath();
-      vstroke(g, p, 10);
-      const o = new Path2D(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; const x = cx + Math.cos(a) * R * .42, y = cy + Math.sin(a) * R * .42; k ? o.lineTo(x, y) : o.moveTo(x, y); } o.closePath();
-      g.fillStyle = radialFill(g, cx, cy, R * .45, .9, .55); g.fill(o);
-    }
-  } },
-  ondas: { name: 'Relieve de ondas', depth: 6, passes: 8, draw(g) {
-    const img = g.createImageData(DW, DH), d = img.data;
-    const f1 = [DW * .3, DH * .38], f2 = [DW * .72, DH * .62];
-    for (let y = 0; y < DH; y++) for (let x = 0; x < DW; x++) {
-      const r1 = Math.hypot(x - f1[0], y - f1[1]), r2 = Math.hypot(x - f2[0], y - f2[1]);
-      let v = .5 + .25 * Math.cos(r1 * .045) * Math.exp(-r1 * .0016) + .25 * Math.cos(r2 * .05) * Math.exp(-r2 * .0016);
-      const ex = Math.min(x, DW - x, y, DH - y); v *= clamp(ex / 30, 0, 1);
-      const i = (y * DW + x) * 4, c = clamp(v * 255, 0, 255); d[i] = d[i + 1] = d[i + 2] = c; d[i + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-  } },
-};
-
-let design = { type: 'geo', preset: 'mandala' };
+let design = { type: 'texto' };
 let photoImg = null, photoName = '';
 function sourceCanvas() {
   const c = cnv(DW, DH), g = c.getContext('2d');
   g.fillStyle = '#000'; g.fillRect(0, 0, DW, DH);
-  if (design.type === 'geo') PRESETS[design.preset].draw(g);
-  else if (design.type === 'texto') drawText(g);
+  if (design.type === 'texto') drawText(g);
   else if (design.type === 'foto' && photoImg) {
     const s = Math.max(DW / photoImg.width, DH / photoImg.height), w = photoImg.width * s, h = photoImg.height * s;
     g.drawImage(photoImg, (DW - w) / 2, (DH - h) / 2, w, h);
@@ -1117,7 +1086,10 @@ function buildTarget(maxD, write = true) {
     }
     val[i] = v;
   }
-  if (photo && $('#pDither').checked) {
+  if (photo && photoRelief()) {
+    for (let i = 0; i < NX * NZ; i++) val[i] = Math.max(0, (val[i] - .08) / .92);
+    blur(val, 2); // superficies continuas: el relieve se lee por luces y sombras
+  } else if (photo && $('#pDither').checked) {
     for (let iz = IZ0; iz < IZ0 + IH; iz++) for (let ix = IX0; ix < IX0 + IW; ix++) {
       const i = iz * NX + ix, o = val[i], n = o > .5 ? 1 : 0, e = o - n; val[i] = n;
       if (ix + 1 < IX0 + IW) val[i + 1] += e * 7 / 16;
@@ -1136,11 +1108,22 @@ function buildTarget(maxD, write = true) {
     fr(0, 5, 1); fr(8, 2, .8);
   }
   if (write) for (let i = 0; i < NX * NZ; i++) target[i] = clamp(val[i], 0, 1) * maxD;
-  // vista previa
+  // color del relleno
+  const paint = currentPaint();
+  if (write) {
+    if (paint.photo) colorG.drawImage(gridC, 0, 0);
+    else { colorG.fillStyle = paint.hex || '#ffffff'; colorG.fillRect(0, 0, NX, NZ); }
+    colorTex.needsUpdate = true;
+    U.uUseColor.value = paint.use; U.uMetal.value = paint.metal;
+  }
+  // vista previa: profundidad, teñida con el color del tallado
   const pg = $('#preview').getContext('2d'), im = pg.createImageData(440, 308);
+  const pc = paint.hex ? [1, 3, 5].map(k => parseInt(paint.hex.slice(k, k + 2), 16) / 255) : [1, .93, .84];
   for (let iz = 0; iz < 308; iz++) for (let ix = 0; ix < 440; ix++) {
-    const v = clamp(val[iz * NX + ix], 0, 1) * 255, o = (iz * 440 + ix) * 4;
-    im.data[o] = v; im.data[o + 1] = v * .93; im.data[o + 2] = v * .84; im.data[o + 3] = 255;
+    const i = iz * NX + ix, v = clamp(val[i], 0, 1), o = (iz * 440 + ix) * 4;
+    if (paint.photo) { const sh = v > .02 ? .45 + .55 * v : 0; im.data[o] = data[i * 4] * sh; im.data[o + 1] = data[i * 4 + 1] * sh; im.data[o + 2] = data[i * 4 + 2] * sh; }
+    else { im.data[o] = v * 255 * pc[0]; im.data[o + 1] = v * 255 * pc[1]; im.data[o + 2] = v * 255 * pc[2]; }
+    im.data[o + 3] = 255;
   }
   pg.putImageData(im, 0, 0);
 }
@@ -1156,9 +1139,12 @@ function blur(a, it) {
 const head = { x: HOME.x, z: HOME.z };
 const job = { state: 'idle', pass: 0, P: 6, maxD: .45, step: .075, passRows: [], rows: [], ri: 0, dir: 1, iz: 0, ex: 0, tx: 0, tz: 0, after: '', lastIx: 0, elapsed: 0, total: 1, floor: 0, beam: false, power: 0 };
 let vRaster = 80;
+// relieve: todo lo tallado queda esmerilado y el volumen lo dan las sombras; grabado plano: el tono depende de la profundidad
+const frostOf = d => { if (!job.relief) return Math.pow(d / job.maxD, .55); const t = clamp((d / job.maxD - .015) / .1, 0, 1); return t * t * (3 - 2 * t); };
 function startJob(reuse = false) {
   let maxD = +$('#pDepth').value / 10, P = +$('#pPasses').value;
-  if (reuse && job.state !== 'idle') { maxD = job.maxD; P = job.P; } else buildTarget(maxD);
+  if (reuse && job.state !== 'idle') { maxD = job.maxD; P = job.P; }
+  else { buildTarget(maxD); job.relief = !(design.type === 'foto' && !photoRelief()); job.fresh = true; job.name = srcLabel(); }
   resetSurface();
   for (const s of smoke) s.visible = false;
   spLife.fill(0);
@@ -1214,7 +1200,7 @@ function carveTo(nx) {
     if (fire) {
       const nd = Math.min(target[i], lim);
       if (nd > depth[i]) {
-        depth[i] = nd; posArr[i * 3 + 1] = TOP - nd; carveArr[i] = Math.pow(nd / job.maxD, .55);
+        depth[i] = nd; posArr[i * 3 + 1] = TOP - nd; carveArr[i] = frostOf(nd);
         carvedFrame++; on = true;
       }
     }
@@ -1250,9 +1236,10 @@ function simulate(dt) {
 }
 function onDone() {
   done = true;
-  toast(`Tallado completado · ${job.P} capas · ${fmtTime(job.elapsed)} de máquina`);
   if (camMode === 'head' || camMode === 'macro') setCam('cine');
   if (rec && rec.auto) setTimeout(() => stopRecording(), 3500);
+  if (job.fresh) { job.fresh = false; setTimeout(() => keepPiece(true), rec ? 5000 : 400); }
+  else toast(`Tallado completado · ${job.P} capas · ${fmtTime(job.elapsed)} de máquina`);
 }
 
 /* ───────────── Sonido (Web Audio) ───────────── */
@@ -1430,19 +1417,6 @@ function fmtTime(s) { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 6
 let toastT = 0;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 4200); }
 
-// presets
-for (const [k, p] of Object.entries(PRESETS)) {
-  const b = document.createElement('button'); b.dataset.preset = k; b.setAttribute('aria-pressed', k === 'mandala');
-  const c = cnv(180, 120), g = c.getContext('2d'), big = cnv(DW, DH), bg = big.getContext('2d');
-  bg.fillStyle = '#000'; bg.fillRect(0, 0, DW, DH); p.draw(bg); g.drawImage(big, 0, 0, 180, 120);
-  b.append(c, document.createTextNode(p.name));
-  b.onclick = () => {
-    design = { type: 'geo', preset: k };
-    document.querySelectorAll('#presets button').forEach(x => x.setAttribute('aria-pressed', x === b));
-    setParams(p.depth, p.passes); refreshPreview();
-  };
-  $('#presets').append(b);
-}
 // mármoles
 for (const [k, m] of Object.entries(MARBLES)) {
   const b = document.createElement('button'); b.dataset.k = k; b.setAttribute('aria-pressed', k === marbleKey);
@@ -1454,6 +1428,40 @@ for (const [k, m] of Object.entries(MARBLES)) {
   };
   $('#marbles').append(b);
 }
+const photoRelief = () => $('#pStyle').value === 'relief';
+const SWATCHES = [
+  ['natural', 'Esmerilado natural', null, 0], ['oro', 'Oro', '#d4a640', 1], ['plata', 'Plata', '#d9dce1', 1], ['cobre', 'Cobre', '#c27a45', 1],
+  ['blanco', 'Blanco', '#f3f0e8', 0], ['negro', 'Negro', '#161616', 0], ['rojo', 'Rojo', '#b3221c', 0], ['azul', 'Azul', '#1f4fa3', 0],
+  ['verde', 'Verde', '#1f7a45', 0], ['rosa', 'Rosa', '#d9638f', 0],
+];
+let textPaint = { key: 'oro', hex: '#d4a640', metal: 1, name: 'Oro' };
+function currentPaint() {
+  if (design.type === 'foto') return $('#pColor').value === 'orig' ? { use: 1, metal: 0, photo: true } : { use: 0, metal: 0 };
+  return textPaint.key === 'natural' ? { use: 0, metal: 0 } : { use: 1, metal: textPaint.metal, hex: textPaint.hex };
+}
+function pickSwatch(el, paint) {
+  textPaint = paint;
+  document.querySelectorAll('#swatches [role="radio"]').forEach(x => x.setAttribute('aria-checked', x === el));
+  $('#oTColor').textContent = paint.name;
+  refreshPreview();
+}
+for (const [key, name, hex, metal] of SWATCHES) {
+  const b = document.createElement('button'); b.setAttribute('role', 'radio'); b.setAttribute('aria-label', name); b.title = name;
+  b.setAttribute('aria-checked', key === textPaint.key);
+  b.style.background = hex ? (metal ? `radial-gradient(circle at 35% 30%, #fff8 0, ${hex} 45%, #0006 100%)` : hex) : 'repeating-linear-gradient(45deg,#cfccc4 0 4px,#9c9890 4px 8px)';
+  b.onclick = () => pickSwatch(b, { key, hex, metal, name });
+  $('#swatches').append(b);
+}
+{
+  const l = document.createElement('label'); l.setAttribute('role', 'radio'); l.setAttribute('aria-checked', 'false'); l.title = 'Otro color';
+  l.style.background = 'conic-gradient(#e33,#ec3,#3c5,#3ae,#a3e,#e33)';
+  const inp = document.createElement('input'); inp.type = 'color'; inp.id = 'tColorCustom'; inp.value = '#7a3fd0'; inp.setAttribute('aria-label', 'Elegir otro color');
+  inp.addEventListener('input', () => { l.style.background = inp.value; pickSwatch(l, { key: 'custom', hex: inp.value, metal: 0, name: inp.value.toUpperCase() }); });
+  l.append(inp); $('#swatches').append(l);
+}
+$('#pColor').addEventListener('change', () => refreshPreview());
+function applyPhotoStyle() { photoRelief() ? setParams(5, 8) : setParams(1.2, 2); }
+$('#pStyle').addEventListener('change', () => { applyPhotoStyle(); refreshPreview(); });
 function setParams(d, p) {
   $('#pDepth').value = d; $('#pPasses').value = p;
   $('#oDepth').textContent = (+d).toFixed(1) + ' mm'; $('#oPasses').textContent = p;
@@ -1463,13 +1471,12 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
   document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
   const t = b.dataset.tab;
-  if (t === 'geo') { const k = document.querySelector('#presets [aria-pressed="true"]')?.dataset.preset || 'mandala'; design = { type: 'geo', preset: k }; setParams(PRESETS[k].depth, PRESETS[k].passes); }
-  if (t === 'foto') { design = { type: 'foto' }; setParams(1.2, 2); }
-  if (t === 'texto') { design = { type: 'texto' }; setParams(5, 6); }
+  if (t === 'foto') { design = { type: 'foto' }; applyPhotoStyle(); }
+  if (t === 'texto') { design = { type: 'texto' }; setParams(6, 8); }
   refreshPreview();
 });
 let prevT = 0;
-const srcLabel = () => design.type === 'geo' ? PRESETS[design.preset].name : design.type === 'texto' ? 'Texto' : (photoName || 'Sin foto');
+const srcLabel = () => design.type === 'texto' ? (($('#tText').value.trim().split('\n')[0] || 'Texto').slice(0, 22)) : (photoName || 'Sin foto');
 async function refreshPreview() {
   clearTimeout(prevT);
   prevT = setTimeout(async () => {
@@ -1601,10 +1608,10 @@ async function shareBlob(blob, name) {
 // superficie completa a partir de un mapa de profundidad (para fotos de la pieza terminada y piezas guardadas)
 function setSurfaceFrom(src) {
   for (let i = 0; i < NX * NZ; i++) {
-    const d = src[i]; depth[i] = d; posArr[i * 3 + 1] = TOP - d; carveArr[i] = d > 0 ? Math.pow(d / job.maxD, .55) : 0;
+    const d = src[i]; depth[i] = d; posArr[i * 3 + 1] = TOP - d; carveArr[i] = d > 0 ? frostOf(d) : 0;
   }
   updateNormals(0, GZ);
-  for (const a of [posAttr, norAttr, carveAttr]) { a.clearUpdateRanges(); a.needsUpdate = true; }
+  uploadAll();
 }
 const studioFloor = (() => {
   const c = cnv(512, 512), g = c.getContext('2d'), gr = g.createRadialGradient(256, 256, 10, 256, 256, 256);
@@ -1709,14 +1716,15 @@ const idb = {
   put(v) { return this.run('readwrite', s => s.put(v)); },
   del(id) { return this.run('readwrite', s => s.delete(id)); },
 };
-async function keepPiece() {
+async function keepPiece(auto = false) {
   if (job.state === 'idle') { toast('Todavía no hay ninguna pieza.'); return; }
   const q = new Uint16Array(NX * NZ);
   for (let i = 0; i < NX * NZ; i++) q[i] = Math.round(clamp(target[i] / job.maxD, 0, 1) * 65535);
   const thumb = renderStill({ studio: true, final: true, w: 480, h: 360, type: 'image/jpeg' });
   try {
-    await idb.put({ id: Date.now(), name: srcLabel(), marble: marbleKey, maxD: job.maxD, P: job.P, target: q.buffer, thumb });
-    toast('Guardada en «Mis piezas».'); renderGallery();
+    const colors = dataURLtoBlob(colorC.toDataURL('image/png'));
+    await idb.put({ id: Date.now(), name: job.name || srcLabel(), marble: marbleKey, maxD: job.maxD, P: job.P, relief: job.relief, target: q.buffer, thumb, colors, useColor: U.uUseColor.value, metal: U.uMetal.value });
+    toast(auto ? `Tallado completado y guardado en «Mis piezas» (botón Guardar).` : 'Guardada en «Mis piezas».'); renderGallery();
   } catch (e) { toast('No se pudo guardar en este dispositivo. En navegación privada no se guardan piezas.'); }
 }
 async function openPiece(pc) {
@@ -1728,8 +1736,12 @@ async function openPiece(pc) {
   }
   const q = new Uint16Array(pc.target);
   for (let i = 0; i < NX * NZ; i++) target[i] = q[i] / 65535 * pc.maxD;
-  Object.assign(job, { maxD: pc.maxD, P: pc.P, step: pc.maxD / pc.P, pass: pc.P, state: 'done', rows: [], ri: 0, beam: false });
+  Object.assign(job, { maxD: pc.maxD, P: pc.P, step: pc.maxD / pc.P, pass: pc.P, state: 'done', rows: [], ri: 0, beam: false, relief: pc.relief ?? false, fresh: false, name: pc.name });
   U.uMaxD.value = pc.maxD;
+  U.uUseColor.value = pc.useColor || 0; U.uMetal.value = pc.metal || 0;
+  if (pc.colors) {
+    try { const bm = await createImageBitmap(pc.colors); colorG.drawImage(bm, 0, 0, NX, NZ); colorTex.needsUpdate = true; } catch (e) {}
+  }
   buildPassRows(); job.total = estimate(); job.elapsed = job.total;
   head.x = HOME.x; head.z = HOME.z; done = true;
   setSurfaceFrom(target);
@@ -1920,6 +1932,7 @@ function frame() {
   updateCamera(dt);
 
   composer.render();
+  fullUpload = false;
 
   hudT -= dt; lcdT -= dt;
   if (hudT <= 0) { hudT = .1; updateHUD(); }
@@ -1947,6 +1960,7 @@ setTimeout(async () => {
   applyMarble('negro');
   setSpeedLog(0);
   startJob();
+  job.fresh = false; // la demostración inicial no se guarda en «Mis piezas»
   refreshPreview();
   setCam('orbit');
   refreshSndUI();
