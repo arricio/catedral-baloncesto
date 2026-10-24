@@ -222,8 +222,8 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
 <canvas id="stage" tabindex="0" aria-label="Vista 3D de la máquina láser"></canvas>
 
 <div class="brand">
-  <b>Lumen <span>F50</span></b>
-  <small>Láser de fibra 50 W · 1064 nm · área 200 × 140 mm</small>
+  <b>Arricio <span>TG-1972</span></b>
+  <small>Tallar y grabar · láser de fibra 50 W</small>
   <div class="chip" id="chip" data-s="idle"><span class="dot"></span><span id="chipTxt">En espera</span></div>
 </div>
 
@@ -450,7 +450,7 @@ const ANISO = renderer.capabilities.getMaxAnisotropy();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x08090b);
-scene.fog = new THREE.Fog(0x08090b, 70, 160);
+scene.fog = new THREE.Fog(0x08090b, 110, 260);
 const pmrem = new THREE.PMREMGenerator(renderer);
 // estudio oscuro con tres cajas de luz: reflejos nítidos sin lavar el mármol negro
 {
@@ -465,13 +465,13 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 }
 
 const camera = new THREE.PerspectiveCamera(isPhone ? 52 : 38, innerWidth / innerHeight, 0.1, 400);
-camera.position.set(isPhone ? 30 : 26, isPhone ? 26 : 19, isPhone ? 42 : 31);
+camera.position.set(isPhone ? 38 : 34, isPhone ? 26 : 20, isPhone ? 54 : 42);
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 2.5, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.07;
 controls.minDistance = 3;
-controls.maxDistance = 110;
+controls.maxDistance = 160;
 controls.maxPolarAngle = Math.PI * 0.49;
 controls.update();
 
@@ -487,10 +487,10 @@ composer.setSize(innerWidth, innerHeight);
 /* ───────────── Luces ───────────── */
 scene.add(new THREE.HemisphereLight(0xc6d6ff, 0x1a120a, 0.4));
 const key = new THREE.DirectionalLight(0xfff1de, 2.8);
-key.position.set(24, 20, 12);
+key.position.set(28, 30, 16);
 key.castShadow = true;
 key.shadow.mapSize.set(isPhone ? 2048 : 4096, isPhone ? 2048 : 4096);
-Object.assign(key.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 90 });
+Object.assign(key.shadow.camera, { left: -34, right: 34, top: 34, bottom: -34, near: 1, far: 120 });
 key.shadow.bias = -0.0003;
 key.shadow.normalBias = 0.025;
 scene.add(key);
@@ -764,7 +764,7 @@ function motor(x, y, z, rotY = 0, parent = scene) {
   rbox(1.1, 1.1, 1.3, .08, M.aluD, 0, 0, 0, g);
   box(1.12, 1.12, .12, M.alu, 0, 0, .5, g); box(1.12, 1.12, .12, M.alu, 0, 0, -.5, g);
   const c = cyl(.12, .12, .4, M.steel, 0, 0, .8, g, 16); c.rotation.x = Math.PI / 2;
-  const lb = new THREE.Mesh(new THREE.PlaneGeometry(.8, .5), new THREE.MeshStandardMaterial({ map: labelTexture(160, 100, (g2, w, h) => { g2.fillStyle = '#c9ccd1'; g2.fillRect(0, 0, w, h); g2.fillStyle = '#222'; g2.font = 'bold 22px IBM Plex Mono, monospace'; g2.fillText('NEMA 23', 12, 36); g2.font = '16px IBM Plex Mono, monospace'; g2.fillText('2.8 A · 1.8°', 12, 64); g2.fillText('LUMEN', 12, 88); }), roughness: .6 }));
+  const lb = new THREE.Mesh(new THREE.PlaneGeometry(.8, .5), new THREE.MeshStandardMaterial({ map: labelTexture(160, 100, (g2, w, h) => { g2.fillStyle = '#c9ccd1'; g2.fillRect(0, 0, w, h); g2.fillStyle = '#222'; g2.font = 'bold 22px IBM Plex Mono, monospace'; g2.fillText('NEMA 23', 12, 36); g2.font = '16px IBM Plex Mono, monospace'; g2.fillText('2.8 A · 1.8°', 12, 64); g2.fillText('ARRICIO', 12, 88); }), roughness: .6 }));
   lb.position.set(.56, 0, 0); lb.rotation.y = Math.PI / 2; g.add(lb);
   return g;
 }
@@ -772,43 +772,66 @@ function motor(x, y, z, rotY = 0, parent = scene) {
 /* ───────────── Mueble, mesa y estructura ───────────── */
 const BED_Y = -0.6;
 const MACHINE_FROM = scene.children.length; // todo lo que sigue es la máquina (se oculta en la foto de estudio)
-// suelo de taller
+// suelo de taller con cinta de seguridad amarilla y negra
+const FLOOR_Y = -22.6;
 {
   const fc = cnv(512, 512), g = fc.getContext('2d');
   const gr = g.createRadialGradient(256, 256, 20, 256, 256, 256);
-  gr.addColorStop(0, '#2a2b2e'); gr.addColorStop(.6, '#141518'); gr.addColorStop(1, '#08090b');
+  gr.addColorStop(0, '#26272a'); gr.addColorStop(.6, '#131417'); gr.addColorStop(1, '#08090b');
   g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * .03})`; g.fillRect(Math.random() * 512, Math.random() * 512, 1, 1); }
   const t = new THREE.CanvasTexture(fc); t.colorSpace = THREE.SRGBColorSpace;
-  const floor = new THREE.Mesh(new THREE.CircleGeometry(120, 64), new THREE.MeshStandardMaterial({ map: t, roughness: .62, metalness: .1 }));
-  floor.rotation.x = -Math.PI / 2; floor.position.y = -8.3; floor.receiveShadow = true; scene.add(floor);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(160, 64), new THREE.MeshStandardMaterial({ map: t, roughness: .6, metalness: .1 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR_Y; floor.receiveShadow = true; scene.add(floor);
+  const tc = cnv(256, 32), tg = tc.getContext('2d');
+  tg.fillStyle = '#f2c418'; tg.fillRect(0, 0, 256, 32); tg.fillStyle = '#121212';
+  for (let x = -32; x < 256 + 32; x += 32) { tg.beginPath(); tg.moveTo(x, 32); tg.lineTo(x + 16, 32); tg.lineTo(x + 32, 0); tg.lineTo(x + 16, 0); tg.fill(); }
+  const tapeTex = len => { const tt = new THREE.CanvasTexture(tc); tt.colorSpace = THREE.SRGBColorSpace; tt.wrapS = THREE.RepeatWrapping; tt.repeat.set(len / 8, 1); return tt; };
+  const W0 = 58, D0 = 52, TW = 1.3;
+  for (const [w, d, x, z, rot] of [[W0, TW, 0, -D0 / 2, 0], [W0, TW, 0, D0 / 2, 0], [D0, TW, -W0 / 2, 0, 1], [D0, TW, W0 / 2, 0, 1]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: tapeTex(w), roughness: .7 }));
+    m.rotation.x = -Math.PI / 2; if (rot) m.rotation.z = Math.PI / 2; m.position.set(x, FLOOR_Y + .02, z); m.receiveShadow = true; scene.add(m);
+  }
 }
-// mueble
-rbox(32, 7, 26, .25, M.paint, 0, BED_Y - 3.5, 0);
-box(32.06, .5, 26.06, M.accent, 0, BED_Y - 6.3, 0);
+// mueble: dos puertas, rejillas, franja naranja, placa de marca y pegatina de peligro
+const CAB_H = BED_Y - FLOOR_Y - 1.2;
+rbox(33, CAB_H, 27, .35, M.paint, 0, BED_Y - CAB_H / 2, 0);
+box(33.08, .9, 27.08, M.accent, 0, BED_Y - 1.1, 0);
+box(33.1, .35, 27.1, M.paintL, 0, BED_Y - .3, 0);
 box(28.6, .1, 22.6, M.aluD, 0, BED_Y + .02, 0);
+box(28.8, .4, .5, M.accent, 0, BED_Y + .2, 12.6); box(28.8, .4, .5, M.accent, 0, BED_Y + .2, -12.6);
 for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-  cyl(.5, .6, .35, M.rubber, sx * 15, -8.12, sz * 12);
-  cyl(.12, .12, 1.2, M.steel, sx * 15, -7.5, sz * 12, scene, 12);
+  cyl(.7, .8, .4, M.rubber, sx * 15.5, FLOOR_Y + .2, sz * 12.5);
+  cyl(.16, .16, 1.2, M.steel, sx * 15.5, FLOOR_Y + .8, sz * 12.5, scene, 12);
 }
-// puerta frontal, rejillas y placa de marca
-box(13, 4.6, .06, M.paintL, -8, BED_Y - 3.6, 13.02);
-box(.6, .18, .12, M.alu, -2.4, BED_Y - 3.6, 13.1);
 {
-  const vents = new THREE.InstancedMesh(new THREE.BoxGeometry(.18, 3.2, .05), M.rubber, 18);
-  const mm = new THREE.Matrix4();
-  for (let i = 0; i < 18; i++) { mm.makeTranslation(1.6 + i * .42, BED_Y - 4.2, 13.03); vents.setMatrixAt(i, mm); }
+  const doorH = CAB_H - 5.2, doorY = BED_Y - 2.4 - doorH / 2;
+  for (const sx of [-1, 1]) {
+    box(15.6, doorH, .1, M.paintL, sx * 8, doorY, 13.53);
+    box(.3, 3.6, .3, M.steel, sx * 1.1, doorY + 1.5, 13.75);
+  }
+  box(.08, doorH, .14, M.rubber, 0, doorY, 13.56);
+  const vents = new THREE.InstancedMesh(new THREE.BoxGeometry(5.6, .16, .06), M.rubber, 12), mm = new THREE.Matrix4();
+  for (let i = 0; i < 12; i++) { mm.makeTranslation(i < 6 ? -8 : 8, doorY - doorH / 2 + 1.2 + (i % 6) * .42, 13.6); vents.setMatrixAt(i, mm); }
   scene.add(vents);
-  const brand = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.2), new THREE.MeshStandardMaterial({ transparent: true, roughness: .4, metalness: .6, map: labelTexture(700, 120, (g, w, h) => {
-    g.fillStyle = '#e9e5dc'; g.font = '700 74px "Barlow Condensed", Arial Narrow, sans-serif'; g.fillText('LUMEN', 6, 84);
-    g.fillStyle = '#ffad33'; g.fillText('F50', 230, 84);
-    g.fillStyle = '#8e8a81'; g.font = '500 26px "IBM Plex Mono", monospace'; g.fillText('FIBER LASER MARKING SYSTEM', 360, 74);
+  const brand = new THREE.Mesh(new THREE.PlaneGeometry(10, 2.2), new THREE.MeshStandardMaterial({ transparent: true, roughness: .4, metalness: .5, map: labelTexture(1000, 220, (g, w, h) => {
+    g.fillStyle = '#ece8df'; g.font = '700 110px "Barlow Condensed", Arial Narrow, sans-serif'; g.fillText('ARRICIO', 8, 112);
+    g.fillStyle = '#ff7a1a'; g.fillText('TG-1972', 8 + g.measureText('ARRICIO ').width + 10, 112);
+    g.fillStyle = '#ff7a1a'; g.fillRect(8, 136, 984, 6);
+    g.fillStyle = '#a9a59c'; g.font = '600 46px "Barlow Condensed", sans-serif'; g.fillText('TALLAR  Y  GRABAR  ·  FIBER LASER 50 W', 8, 200);
   }) }));
-  brand.position.set(-8, BED_Y - 1.1, 13.04); scene.add(brand);
+  brand.position.set(-8, doorY + doorH / 2 - 2.2, 13.6); scene.add(brand);
+  const warn = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshStandardMaterial({ roughness: .5, map: labelTexture(200, 200, (g, w, h) => {
+    g.fillStyle = '#f2c418'; g.fillRect(0, 0, w, h); g.strokeStyle = '#111'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12);
+    g.fillStyle = '#111'; g.beginPath(); g.moveTo(100, 30); g.lineTo(175, 165); g.lineTo(25, 165); g.closePath(); g.fill();
+    g.fillStyle = '#f2c418'; g.beginPath(); g.moveTo(100, 62); g.lineTo(150, 150); g.lineTo(50, 150); g.closePath(); g.fill();
+    g.strokeStyle = '#111'; g.lineWidth = 6; g.beginPath(); for (let k = 0; k < 8; k++) { const an = k * Math.PI / 4; g.moveTo(100, 122); g.lineTo(100 + Math.cos(an) * 22, 122 + Math.sin(an) * 22); } g.stroke();
+  }) }));
+  warn.position.set(8, doorY + doorH / 2 - 2.6, 13.6); scene.add(warn);
 }
 // listones de la mesa (lamas)
 {
-  const n = 34, slats = new THREE.InstancedMesh(new THREE.BoxGeometry(.08, .6, 22), M.steel, n);
+  const n = 34, slats = new THREE.InstancedMesh(new THREE.BoxGeometry(.1, .6, 22), M.alu, n);
   const mm = new THREE.Matrix4();
   for (let i = 0; i < n; i++) { mm.makeTranslation(-13.2 + i * .8, BED_Y + .3, 0); slats.setMatrixAt(i, mm); }
   slats.castShadow = slats.receiveShadow = true; scene.add(slats);
@@ -825,31 +848,71 @@ for (const sx of [-1, 1]) {
   box(.5, .3, 24.4, M.steel, sx * 14.5, RAIL_Y + .75, 0);             // guía lineal
   box(.08, .22, 23.6, M.belt, sx * 13.86, RAIL_Y + .1, 0);            // correa Y
   for (const sz of [-1, 1]) box(1.3, .35, 1.3, M.aluD, sx * 14.5, RAIL_Y + .78, sz * 12.25);  // finales de carrera
+  box(.12, .5, 25, M.accent, sx * 15.16, RAIL_Y - .2, 0);             // filete naranja
 }
 extrusion(27.8, 'x', 0, RAIL_Y, -12);
 motor(-15.75, RAIL_Y, -11, Math.PI);
 motor(15.75, RAIL_Y, -11, Math.PI);
 box(.6, .1, 24, M.alu, -15.55, RAIL_Y - .45, 0);                       // bandeja de la cadena Y
-// mamparas de protección (acrílico ámbar OD5+)
+// campana trasera de vidrio con la salida de humos
 {
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(29, 4.2), M.glass); back.position.set(0, BED_Y + 2.1, -12.65); scene.add(back);
-  for (const sx of [-1, 1]) { const s = new THREE.Mesh(new THREE.PlaneGeometry(24, 2.6), M.glass); s.rotation.y = Math.PI / 2; s.position.set(sx * 15.25, BED_Y + 1.3, 0); scene.add(s); }
+  const hood = new THREE.Group(); hood.position.set(0, RAIL_Y + 3.2, -12.4); scene.add(hood);
+  const W = 30, H = 5.2, D = 3.2;
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0xdfe8ee, metalness: 0, roughness: .04, transparent: true, opacity: .18, side: THREE.DoubleSide, depthWrite: false, envMapIntensity: 1.4 });
+  for (const [w, h, x, y, z, ry, rx] of [[W, H, 0, 0, D / 2, 0, 0], [D, H, -W / 2, 0, 0, Math.PI / 2, 0], [D, H, W / 2, 0, 0, Math.PI / 2, 0], [W, D, 0, H / 2, 0, 0, Math.PI / 2]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), glass); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); hood.add(m);
+  }
+  box(W, H, .2, M.paint, 0, 0, -D / 2, hood);
+  for (const [x, z] of [[-W / 2, D / 2], [W / 2, D / 2], [-W / 2, -D / 2], [W / 2, -D / 2]]) box(.3, H, .3, M.alu, x, 0, z, hood);
+  box(W + .3, .3, .3, M.accent, 0, H / 2, D / 2, hood); box(W + .3, .3, .3, M.alu, 0, -H / 2, D / 2, hood);
+  box(.3, .3, D, M.accent, -W / 2, H / 2, 0, hood); box(.3, .3, D, M.accent, W / 2, H / 2, 0, hood);
+  for (const x of [-9, 0, 9]) { const tl = box(6, .25, .25, new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 2.3, 2.4), toneMapped: false }), x, H / 2 - .4, D / 2 - .5, hood, false); }
+  // conducto flexible corrugado hasta el techo
+  const sc = cnv(64, 256), sg = sc.getContext('2d');
+  for (let y = 0; y < 256; y++) { const v = 128 + 127 * Math.sin(y / 256 * Math.PI * 2 * 16); sg.fillStyle = `rgb(${v},${v},${v})`; sg.fillRect(0, y, 64, 1); }
+  const bump = new THREE.CanvasTexture(sc); bump.wrapS = bump.wrapT = THREE.RepeatWrapping; bump.repeat.set(1, 30);
+  const path = new THREE.CatmullRomCurve3([new THREE.Vector3(0, H / 2, 0), new THREE.Vector3(0, H / 2 + 6, -.5), new THREE.Vector3(-1, H / 2 + 22, -2.5), new THREE.Vector3(-2, H / 2 + 60, -3)]);
+  const ringMap = new THREE.CanvasTexture(sc); ringMap.wrapS = ringMap.wrapT = THREE.RepeatWrapping; ringMap.repeat.set(1, 60); ringMap.colorSpace = THREE.SRGBColorSpace;
+  bump.repeat.set(1, 60);
+  const duct = new THREE.Mesh(new THREE.TubeGeometry(path, 160, 1.25, 24), new THREE.MeshStandardMaterial({ color: 0xe6e9ee, map: ringMap, metalness: .9, roughness: .3, bumpMap: bump, bumpScale: 6 }));
+  duct.castShadow = true; hood.add(duct);
+  cyl(1.6, 1.6, .8, M.alu, 0, H / 2 + .4, 0, hood);
 }
-// consola de control con pantalla
-const lcdC = cnv(512, 300), lcdG = lcdC.getContext('2d');
+// baliza de estado (rojo, ámbar, verde)
+const beacon = { g: null, r: null, a: null };
+{
+  const bg = new THREE.Group(); bg.position.set(15.2, RAIL_Y + 3.2, -13.4); scene.add(bg);
+  cyl(.12, .12, 3.5, M.steel, 0, 1.6, 0, bg, 10);
+  const lamp = (c, y) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .75, 20), new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(.25), toneMapped: false })); m.position.y = y; bg.add(m); return { m, c }; };
+  beacon.g = lamp(new THREE.Color(.3, 3.2, .8), 3.6); beacon.a = lamp(new THREE.Color(3.2, 1.6, .2), 4.4); beacon.r = lamp(new THREE.Color(3.4, .3, .2), 5.2);
+  cyl(.44, .44, .2, M.aluD, 0, 5.7, 0, bg, 20);
+}
+// consola de mando en pedestal, a la derecha
+const lcdC = cnv(640, 400), lcdG = lcdC.getContext('2d');
 const lcdTex = new THREE.CanvasTexture(lcdC); lcdTex.colorSpace = THREE.SRGBColorSpace;
+const panelBtns = [];
+let estopGlow;
 {
-  const con = new THREE.Group(); con.position.set(9.2, BED_Y - 1.7, 13.4); con.rotation.x = -.55; scene.add(con);
-  rbox(9, 3.6, .7, .12, M.paintL, 0, 0, 0, con);
-  const scr = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.7), new THREE.MeshBasicMaterial({ map: lcdTex, toneMapped: false }));
-  scr.position.set(-1.6, 0, .36); con.add(scr);
-  box(4.8, 2.9, .05, M.rubber, -1.6, 0, .34, con, false);
-  const es = cyl(.55, .55, .3, M.red, 2.7, .2, .5, con); es.rotation.x = Math.PI / 2;
-  const esb = cyl(.75, .75, .12, M.yellow, 2.7, .2, .38, con); esb.rotation.x = Math.PI / 2;
-  for (let i = 0; i < 3; i++) { const b = cyl(.2, .2, .14, i === 0 ? M.accent : M.aluD, 1.6 + i * .55, -1.15, .42, con, 16); b.rotation.x = Math.PI / 2; }
-  const key2 = cyl(.18, .18, .2, M.steel, 3.6, -1.15, .42, con, 16); key2.rotation.x = Math.PI / 2;
+  const ped = new THREE.Group(); ped.position.set(26, 0, -1); ped.rotation.y = -1.0; scene.add(ped);
+  cyl(1.6, 1.8, .4, M.paint, 0, FLOOR_Y + .2, 0, ped);
+  cyl(.35, .35, 24, M.paintL, 0, FLOOR_Y + 12, 0, ped, 16);
+  const con = new THREE.Group(); con.position.set(0, 2.6, .4); con.rotation.x = -.42; ped.add(con);
+  rbox(9.6, 7.2, 1.6, .3, M.paint, 0, 0, 0, con);
+  box(9.7, .3, 1.7, M.accent, 0, 3.55, 0, con);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 4), new THREE.MeshBasicMaterial({ map: lcdTex, toneMapped: false }));
+  scr.position.set(-1.1, 1.05, .86); con.add(scr);
+  box(6.7, 4.3, .05, M.rubber, -1.1, 1.05, .8, con, false);
+  const cols = [new THREE.Color(.3, 2.6, .6), new THREE.Color(2.6, 1.7, .4), new THREE.Color(2.4, 2.4, 2.3), new THREE.Color(.5, .5, .5)];
+  cols.forEach((c, i) => {
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .3, 24), new THREE.MeshBasicMaterial({ color: c, toneMapped: false }));
+    b.rotation.x = Math.PI / 2; b.position.set(-3.6 + i * 1.35, -2.2, .9); con.add(b); panelBtns.push({ m: b, c });
+    const ring = cyl(.55, .55, .12, M.alu, -3.6 + i * 1.35, -2.2, .82, con, 24); ring.rotation.x = Math.PI / 2;
+  });
+  const esb = cyl(1.1, 1.1, .3, M.yellow, 3.3, 1.2, .9, con); esb.rotation.x = Math.PI / 2;
+  const es = new THREE.Mesh(new THREE.SphereGeometry(.95, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xff4a12, emissive: 0xff3a0a, emissiveIntensity: .6, roughness: .3 }));
+  es.rotation.x = Math.PI / 2; es.position.set(3.3, 1.2, 1.05); con.add(es); estopGlow = es;
+  const key2 = cyl(.28, .28, .3, M.steel, 3.3, -2.2, .9, con, 16); key2.rotation.x = Math.PI / 2;
 }
-
 /* ───────────── Pórtico (eje Y) y cabezal (eje X) ───────────── */
 const gantry = new THREE.Group(); scene.add(gantry);
 const BEAM_Y = 7.8;
@@ -893,8 +956,8 @@ const statusLed = new THREE.Mesh(new THREE.SphereGeometry(.06, 12, 8), new THREE
 statusLed.position.set(0, 6.9, HZ + .64); headG.add(statusLed);
 {
   const hl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .55), new THREE.MeshStandardMaterial({ transparent: true, roughness: .5, map: labelTexture(220, 110, (g, w, h) => {
-    g.fillStyle = '#ffad33'; g.font = '700 46px "Barlow Condensed", sans-serif'; g.fillText('F50', 8, 50);
-    g.fillStyle = '#c9c5bc'; g.font = '500 20px "IBM Plex Mono", monospace'; g.fillText('FIBER 50W', 8, 82); g.fillText('JPT·MOPA', 120, 50);
+    g.fillStyle = '#ffad33'; g.font = '700 40px "Barlow Condensed", sans-serif'; g.fillText('TG-1972', 8, 46);
+    g.fillStyle = '#c9c5bc'; g.font = '500 20px "IBM Plex Mono", monospace'; g.fillText('ARRICIO · 50W', 8, 82);
   }) }));
   hl.position.set(0, 6.45, HZ + .63); headG.add(hl);
 }
@@ -1254,7 +1317,7 @@ function initAudio() {
   if (!AC) return null;
   const ctx = new AC();
   ctx.onstatechange = refreshSndUI;
-  const mix = ctx.createGain(); mix.gain.value = 1.8;
+  const mix = ctx.createGain(); mix.gain.value = 1.3;
   const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
   const out = ctx.createGain(); out.gain.value = soundOn ? 1 : 0;
   mix.connect(comp); comp.connect(out); out.connect(ctx.destination);
@@ -1266,9 +1329,20 @@ function initAudio() {
   const filt = (type, f, q = .7) => { const x = ctx.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = q; return x; };
   const gain = v => { const g = ctx.createGain(); g.gain.value = v; return g; };
   const osc = (type, f) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.start(); return o; };
-  // ventilador de la fuente y extractor de humos
-  noise().connect(filt('lowpass', 520)).connect(gain(.05)).connect(mix);
-  osc('sawtooth', 100).connect(filt('lowpass', 240)).connect(gain(.012)).connect(mix);
+  // zumbido grave de la máquina (fuente, extractor y motores en reposo): ~48 Hz con armónicos
+  const droneG = gain(0);
+  osc('sawtooth', 48).connect(filt('lowpass', 260)).connect(gain(.24)).connect(droneG);
+  osc('sine', 96).connect(gain(.05)).connect(droneG);
+  noise().connect(filt('lowpass', 420)).connect(gain(.05)).connect(droneG);
+  droneG.connect(mix);
+  // tono de la fuente láser en espera (~250 Hz) y siseo de fondo
+  const idleG = gain(0); osc('sawtooth', 250).connect(filt('bandpass', 750, 2)).connect(idleG).connect(mix);
+  const hissG = gain(0); noise().connect(filt('highpass', 2500)).connect(hissG).connect(mix);
+  // tono del láser al tallar: ~460 Hz con el 3.er armónico (1380 Hz) marcado
+  const laserG = gain(0), lz = osc('sawtooth', 460), vib = osc('sine', 5.5), vibD = gain(3);
+  vib.connect(vibD).connect(lz.frequency);
+  const pk = filt('peaking', 1380, 1.6); pk.gain.value = 12;
+  lz.connect(filt('highpass', 650)).connect(pk).connect(filt('lowpass', 2600)).connect(laserG).connect(mix);
   // aire asistido por la boquilla
   const airG = gain(0); noise().connect(filt('bandpass', 5200, .6)).connect(airG).connect(mix);
   // motores paso a paso (silbido que sube con la velocidad)
@@ -1280,7 +1354,7 @@ function initAudio() {
   noise().connect(filt('highpass', 1400)).connect(filt('peaking', 4300, 1.2)).connect(sizG).connect(mix);
   // zumbido del raster: modula el siseo al ritmo de los encendidos del haz
   const buzz = osc('square', 120), buzzD = gain(0); buzz.connect(buzzD).connect(sizG.gain);
-  const whineG = gain(0); osc('triangle', 1180).connect(whineG).connect(mix);
+  const whineG = gain(0); osc('triangle', 921).connect(whineG).connect(mix);
   // chasquidos de la piedra
   const crackBus = filt('highpass', 900); crackBus.connect(mix);
   const clicks = [];
@@ -1289,7 +1363,7 @@ function initAudio() {
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3 + k);
     clicks.push(b);
   }
-  audio = { ctx, out, recDest, airG, motG, motF, m1, m2, sizG, buzz, buzzD, whineG, crackBus, clicks };
+  audio = { ctx, out, recDest, airG, motG, motF, m1, m2, sizG, buzz, buzzD, whineG, crackBus, clicks, droneG, idleG, hissG, laserG };
   return audio;
 }
 function crackle(t, amt) {
@@ -1321,7 +1395,12 @@ function updateAudio(dt) {
   const t = a.ctx.currentTime;
   const firing = job.beam && playing;
   const frac = cells ? on / cells : (firing ? 1 : 0);
-  const level = firing ? .05 + .16 * frac : 0;
+  const level = firing ? .03 + .07 * frac : 0;
+  const running = playing && !done && job.state !== 'idle';
+  a.droneG.gain.setTargetAtTime(running ? 1 : .55, t, .3);
+  a.idleG.gain.setTargetAtTime(firing ? 0 : .012, t, .1);
+  a.hissG.gain.setTargetAtTime(running ? .014 : .005, t, .2);
+  a.laserG.gain.setTargetAtTime(firing ? .04 + .04 * frac : 0, t, .015);
   a.sizG.gain.setTargetAtTime(level, t, .012);
   const rate = dt > 0 ? toggles / 2 / dt : 0;
   if (firing && rate > 6) { a.buzz.frequency.setTargetAtTime(clamp(rate, 6, 1600), t, .03); a.buzzD.gain.setTargetAtTime(level * .85, t, .02); }
@@ -1356,7 +1435,7 @@ function setCam(m) {
   controls.autoRotate = m === 'cine';
   controls.autoRotateSpeed = .55;
   if (m === 'top') { camGoal.pos.set(0, isPhone ? 46 : 36, .01); camGoal.tgt.set(0, TOP, 0); camGoal.t = 0; }
-  if (m === 'cine') { camGoal.pos.set(isPhone ? 30 : 24, 15, isPhone ? 34 : 26); camGoal.tgt.set(0, 2.5, 0); camGoal.t = 0; }
+  if (m === 'cine') { camGoal.pos.set(isPhone ? 40 : 36, 18, isPhone ? 50 : 40); camGoal.tgt.set(0, 0, 0); camGoal.t = 0; }
   if (m === 'orbit') camGoal.t = 1;
 }
 const tmpV = new THREE.Vector3(), tmpT = new THREE.Vector3();
@@ -1379,28 +1458,40 @@ function updateCamera(dt) {
 
 /* ───────────── Pantalla de la consola ───────────── */
 function drawLCD() {
-  const g = lcdG, W = 512, H = 300;
-  g.fillStyle = '#05080a'; g.fillRect(0, 0, W, H);
-  g.fillStyle = '#0d1a14'; g.fillRect(0, 0, W, 44);
-  g.font = '600 26px "Barlow Condensed", sans-serif'; g.fillStyle = '#ffad33'; g.fillText('LUMEN F50', 14, 31);
-  g.font = '18px "IBM Plex Mono", monospace'; g.fillStyle = '#7fe0a8';
-  const st = job.state === 'raster' ? (job.beam ? 'GRABANDO' : 'RASTER') : job.state === 'travel' ? 'POSICIONANDO' : done ? 'COMPLETADO' : 'EN ESPERA';
-  g.fillText(playing ? st : 'PAUSA', 300, 30);
-  if (job.beam && playing) { g.fillStyle = '#ff5f1f'; g.beginPath(); g.arc(490, 23, 9, 0, 7); g.fill(); }
-  g.fillStyle = '#b8e8cc'; g.font = '19px "IBM Plex Mono", monospace';
-  const L = [
-    `CAPA   ${Math.min(job.pass, job.P)}/${job.P}   FILA ${job.rows.length ? Math.min(job.ri + 1, job.rows.length) : 0}/${job.rows.length}`,
-    `X ${(head.x * 10 + 100).toFixed(1).padStart(6)}  Y ${(head.z * 10 + 70).toFixed(1).padStart(6)}`,
-    `Z ${(-job.maxD * 10).toFixed(2)} mm   F 30 kHz`,
-    `VEL ${Math.round(vRaster * 10)} mm/s  POT ${job.beam ? '85' : ' 0'} %`,
-  ];
-  L.forEach((l, i) => g.fillText(l, 14, 82 + i * 34));
-  const p = clamp(job.elapsed / job.total, 0, 1);
-  g.strokeStyle = '#2c4a3a'; g.strokeRect(14, 232, W - 28, 22);
-  g.fillStyle = done ? '#62d18f' : '#ffad33'; g.fillRect(16, 234, (W - 32) * (done ? 1 : p), 18);
-  g.fillStyle = '#7fe0a8'; g.font = '16px "IBM Plex Mono", monospace';
-  g.fillText(`${Math.round((done ? 1 : p) * 100)} %   ${MARBLES[marbleKey].name.toUpperCase()}`, 14, 284);
+  const g = lcdG, W = 640, H = 400;
+  const bgr = g.createLinearGradient(0, 0, 0, H); bgr.addColorStop(0, '#0b1a24'); bgr.addColorStop(1, '#06101a');
+  g.fillStyle = bgr; g.fillRect(0, 0, W, H);
+  const running = playing && !done && job.state !== 'idle';
+  const st = !playing ? 'PAUSA' : done ? 'COMPLETADO' : job.state === 'raster' ? 'TALLANDO' : job.state === 'travel' ? 'POSICIONANDO' : 'EN ESPERA';
+  g.font = '600 34px "IBM Plex Mono", monospace'; g.fillStyle = '#dfe9ee'; g.fillText('ARRICIO TG-1972', 22, 50);
+  g.fillStyle = !playing ? '#ffb347' : '#5fe08d'; g.font = '700 32px "Barlow Condensed", sans-serif';
+  g.textAlign = 'right'; g.fillText('● ' + st, W - 22, 50); g.textAlign = 'left';
+  g.fillStyle = '#2b4a5a'; g.fillRect(22, 66, W - 44, 2);
+  const mm = v => v.toFixed(2);
+  g.font = '500 40px "IBM Plex Mono", monospace'; g.fillStyle = '#e8f1f4';
+  g.fillText('X ' + mm(head.x * 10 + 100), 22, 122); g.fillText('Y ' + mm(head.z * 10 + 70), 340, 122);
+  g.font = '500 34px "IBM Plex Mono", monospace';
+  g.fillText('S ' + (job.beam && playing ? String(Math.round(820 + Math.random() * 40)) : '0'), 22, 172);
+  g.fillText('F ' + Math.round(vRaster * 600), 340, 172);
+  g.fillStyle = '#ffad33'; g.font = '600 26px "IBM Plex Mono", monospace';
+  g.fillText(`RASTER 0° · CAPA ${Math.max(1, Math.min(job.pass, job.P))}/${job.P}`, 22, 222);
+  const p = done ? 1 : clamp(job.elapsed / job.total, 0, 1);
+  g.strokeStyle = '#7fb8d0'; g.lineWidth = 3; g.strokeRect(22, 248, W - 44, 40);
+  g.fillStyle = '#6cc4e8'; g.fillRect(28, 254, (W - 56) * p, 28);
+  g.fillStyle = '#cfe4ec'; g.font = '500 24px "IBM Plex Mono", monospace';
+  g.fillText((p * 100).toFixed(1) + '%', 22, 322);
+  g.textAlign = 'right';
+  g.fillText(`PWR ${job.beam && playing ? '85' : (running ? '41' : '0')}%   ${simSpeed.toFixed(2)}x`, W - 22, 372);
+  g.textAlign = 'left';
+  g.fillStyle = '#7d93a0'; g.font = '500 20px "IBM Plex Mono", monospace'; g.fillText(MARBLES[marbleKey].name.toUpperCase(), 22, 372);
   lcdTex.needsUpdate = true;
+}
+function updateLamps(t) {
+  const running = playing && !done && job.state !== 'idle';
+  const set = (l, on) => l.m.material.color.copy(l.c).multiplyScalar(on ? 1 : .18);
+  set(beacon.g, running || done); set(beacon.a, !playing); set(beacon.r, false);
+  set(panelBtns[0], running); set(panelBtns[1], !playing); set(panelBtns[2], job.beam && playing && Math.sin(t * 40) > -.3); set(panelBtns[3], false);
+  estopGlow.material.emissiveIntensity = .45 + .25 * Math.sin(t * 2.2);
 }
 
 /* ───────────── UI ───────────── */
@@ -1921,6 +2012,7 @@ function frame() {
   aim.visible = !on && job.state !== 'idle' && !done; aim.position.set(head.x, surfY + .01, head.z);
   U.uBeam.value.set(head.x, surfY, head.z); U.uOn.value = on ? flick : 0; U.uDir.value = job.dir;
   statusLed.material.color.setHex(on ? 0xff3311 : done ? 0x33ff88 : playing ? 0xffaa22 : 0x3388ff);
+  updateLamps(performance.now() / 1000);
 
   // partículas (en tiempo de simulación: a 0.1× se ven en cámara lenta)
   if (on && sdt > 0) {
