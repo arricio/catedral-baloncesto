@@ -333,8 +333,8 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         </div>
       </div>
       <div data-pane="texto" class="stack">
-        <div class="field"><label for="tText">Texto a tallar</label><textarea id="tText" rows="3">Ars longa
-vita brevis</textarea></div>
+        <div class="field"><label for="tText">Texto a tallar</label><textarea id="tText" rows="3">ARRICIO
+TG-1972</textarea></div>
         <div class="field"><label for="tFont">Tipografía</label>
           <select id="tFont">
             <option value="Cinzel|700">Cinzel · romana lapidaria</option>
@@ -534,7 +534,7 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 }
 
 const camera = new THREE.PerspectiveCamera(isPhone ? 52 : 38, innerWidth / innerHeight, 0.1, 400);
-camera.position.set(isPhone ? 38 : 34, isPhone ? 26 : 20, isPhone ? 54 : 42);
+camera.position.set(isPhone ? 26 : 26, isPhone ? 44 : 34, isPhone ? 46 : 40);
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0, 2.5, 0);
 controls.enableDamping = true;
@@ -1281,13 +1281,28 @@ function startJob(reuse = false) {
   resetSurface();
   for (const s of smoke) s.visible = false;
   spLife.fill(0);
-  Object.assign(job, { maxD, P, step: maxD / P, pass: 0, elapsed: 0 });
+  Object.assign(job, { maxD, P, step: maxD / P, pass: 0, elapsed: 0, showcase: false });
   U.uMaxD.value = maxD;
   buildPassRows();
   job.total = estimate();
   done = false;
   nextPass();
   setPlaying(true);
+}
+// pieza ya terminada, sin tallar nada: portada de la app y cambio de mármol
+function showFinished(rebuild = true) {
+  if (rebuild && !(design.type === 'foto' && !photoImg)) {
+    const maxD = +$('#pDepth').value / 10, P = +$('#pPasses').value;
+    buildTarget(maxD);
+    Object.assign(job, { maxD, P, step: maxD / P, relief: !(design.type === 'foto' && !photoRelief()), name: srcLabel() });
+  }
+  Object.assign(job, { pass: job.P, state: 'done', rows: [], ri: 0, beam: false, fresh: false, showcase: true });
+  U.uMaxD.value = job.maxD;
+  buildPassRows(); job.total = estimate(); job.elapsed = job.total;
+  head.x = HOME.x; head.z = HOME.z; done = true;
+  for (const sm of smoke) sm.visible = false;
+  spLife.fill(0);
+  setSurfaceFrom(target);
 }
 function buildPassRows() {
   job.passRows = [];
@@ -1531,7 +1546,7 @@ function drawLCD() {
   g.fillStyle = '#071019'; g.fillRect(0, 0, W, H);
   const glow = g.createRadialGradient(W * .4, H * .35, 20, W * .4, H * .35, W * .7);
   glow.addColorStop(0, 'rgba(40,90,110,.35)'); glow.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = glow; g.fillRect(0, 0, W, H);
-  const st = !playing ? 'PAUSA' : done ? 'COMPLETADO' : job.state === 'travel' ? 'POSICIONANDO' : job.state === 'idle' ? 'EN ESPERA' : 'TALLANDO';
+  const st = !playing ? 'PAUSA' : job.showcase ? 'EN ESPERA' : done ? 'COMPLETADO' : job.state === 'travel' ? 'POSICIONANDO' : job.state === 'idle' ? 'EN ESPERA' : 'TALLANDO';
   const M = (w, px) => `italic ${w} ${px}px "IBM Plex Mono", ui-monospace, monospace`;
   g.textBaseline = 'alphabetic';
   g.font = M(500, 32); g.fillStyle = '#d6e6ec'; g.fillText('ARRICIO TG-1972', 24, 52);
@@ -1584,7 +1599,7 @@ for (const [k, m] of Object.entries(MARBLES)) {
   b.onclick = () => {
     document.querySelectorAll('#marbles button').forEach(x => x.setAttribute('aria-pressed', x === b));
     showLoader('Cambiando el bloque…');
-    setTimeout(() => { applyMarble(k); hideLoader(); startJob(); }, 30);
+    setTimeout(() => { applyMarble(k); hideLoader(); showFinished(true); }, 30);
   };
   $('#marbles').append(b);
 }
@@ -2126,14 +2141,14 @@ function frame() {
 function updateHUD() {
   const p = done ? 1 : clamp(job.elapsed / job.total, 0, 1);
   $('#pgBar').style.width = (p * 100).toFixed(1) + '%';
-  $('#pgL').innerHTML = done ? '<b>Completado</b>' : `Capa <b>${Math.max(1, Math.min(job.pass, job.P))}/${job.P}</b> · ${Math.round(p * 100)} %`;
-  $('#pgR').textContent = done ? fmtTime(job.elapsed) + ' de máquina' : 'Restan ' + fmtTime((job.total - job.elapsed) / Math.max(simSpeed, .01)) + ' reales';
+  $('#pgL').innerHTML = job.showcase ? '<b>Pieza de muestra</b> · elegí tu diseño y tocá Tallar' : done ? '<b>Completado</b>' : `Capa <b>${Math.max(1, Math.min(job.pass, job.P))}/${job.P}</b> · ${Math.round(p * 100)} %`;
+  $('#pgR').textContent = job.showcase ? '' : done ? fmtTime(job.elapsed) + ' de máquina' : 'Restan ' + fmtTime((job.total - job.elapsed) / Math.max(simSpeed, .01)) + ' reales';
   const chip = $('#chip'), s = !playing ? 'idle' : done ? 'done' : job.beam ? 'on' : 'run';
   chip.dataset.s = s;
-  $('#chipTxt').textContent = !playing ? 'En pausa' : done ? 'Tallado completado' : job.beam ? 'Láser emitiendo' : job.state === 'travel' ? 'Posicionando' : 'Barrido raster';
+  $('#chipTxt').textContent = !playing ? 'En pausa' : job.showcase ? 'Lista para tallar' : done ? 'Tallado completado' : job.beam ? 'Láser emitiendo' : job.state === 'travel' ? 'Posicionando' : 'Barrido raster';
   const capa = Math.max(1, Math.min(job.pass, job.P));
   $('#hud').dataset.s = s;
-  $('#hSt').textContent = !playing ? 'En pausa' : done ? 'Completado' : job.state === 'travel' ? 'Posicionando' : 'Tallando';
+  $('#hSt').textContent = !playing ? 'En pausa' : job.showcase ? 'Lista' : done ? 'Completado' : job.state === 'travel' ? 'Posicionando' : 'Tallando';
   $('#hName').textContent = job.name || srcLabel();
   $('#hBar').style.width = (p * 100).toFixed(1) + '%';
   $('#hSub').textContent = `Raster 0° · capa ${capa}/${job.P}`;
@@ -2154,8 +2169,9 @@ setTimeout(async () => {
   try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
   applyMarble('negro');
   setSpeedLog(0);
-  startJob();
-  job.fresh = false; // la demostración inicial no se guarda en «Mis piezas»
+  $('#pFrame').checked = true;
+  try { await document.fonts.load('700 100px "Cinzel"'); } catch (e) {}
+  showFinished(true);   // al abrir se muestra una pieza ya tallada; no se talla nada hasta pulsar «Tallar»
   refreshPreview();
   setCam('orbit');
   refreshSndUI();
