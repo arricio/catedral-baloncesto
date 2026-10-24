@@ -58,6 +58,7 @@ button{cursor:pointer}
 .brand b span{color:var(--accent)}
 .brand small{font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .topActions{position:fixed;z-index:11;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--accent);color:#1a1205;font-family:var(--font-m);font-size:11px;letter-spacing:0;margin-left:2px}
 .tbtn.ghost{background:var(--panel-solid);color:var(--accent);border:1px solid var(--accent)}
 .tbtn{display:flex;align-items:center;gap:7px;background:var(--accent);color:#1a1205;border:0;border-radius:4px;padding:9px 12px;font-family:var(--font-d);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase}
 #installTop svg,.tbtn svg{width:16px;height:16px;fill:currentColor}
@@ -208,7 +209,16 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
 .act{text-decoration:none;color:inherit}
 .act.wa{background:#103b26;border-color:#1f6b45;color:#c9f2da}
 .act svg{width:15px;height:15px;fill:currentColor}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.howto{background:#101a14;border:1px solid #23412f;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.5;color:#c9d8cf;display:flex;flex-direction:column;gap:6px}
+.howto p{margin:0}
+.howto b{color:#e9f3ec}
+.pieces{display:flex;flex-direction:column;gap:10px}
+.pc{display:grid;grid-template-columns:118px 1fr;gap:10px;border:1px solid var(--line);border-radius:6px;padding:8px;background:#0f1013}
+.pc img{width:118px;height:88px;object-fit:cover;border-radius:3px;background:#000}
+.pc .meta{min-width:0;display:flex;flex-direction:column;gap:2px}
+.pc .meta b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .meta span{font-size:11px;color:var(--muted)}
+.pc .acts{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px}
 .piece{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#000}
 .piece button.open{display:block;width:100%;padding:0;border:0;background:none;text-align:left}
 .piece img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
@@ -273,6 +283,7 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
 
 <div class="topActions">
 <button id="helpBtn" class="tbtn ghost" aria-label="Manual de usuario: vídeo con las instrucciones de la máquina"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5a.5.5 0 0 0 0 1H20v3H6.5A2.5 2.5 0 0 1 4 19.5zM8 6v2h8V6zm0 4v2h6v-2z"/></svg>Manual de usuario</button>
+<button id="piecesBtn" class="tbtn ghost" aria-label="Mis piezas: lo que ya tallaste"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Mis piezas <span class="badge" id="piecesBadge">0</span></button>
 <button id="installTop" class="tbtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg>Instalar app</button>
 </div>
 
@@ -414,8 +425,7 @@ TG-1972</textarea></div>
     <section>
       <h4>Mis piezas</h4>
       <div class="row" style="margin-bottom:10px"><button class="primary" id="keepBtn" style="font-size:16px;padding:11px">Guardar esta pieza en la app</button></div>
-      <div class="gallery" id="gallery"></div>
-      <p class="empty" id="galleryEmpty">Todavía no guardaste ninguna pieza. Las piezas quedan en este dispositivo y podés volver a abrirlas, retallarlas o exportarlas cuando quieras.</p>
+      <div class="row"><button class="act" id="openPieces">Ver «Mis piezas»</button></div>
     </section>
 
     <section>
@@ -443,6 +453,18 @@ TG-1972</textarea></div>
       </div>
       <p class="note" id="installNote"></p>
     </section>
+  </div>
+</div>
+
+<div class="modal" id="piecesModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="piecesTitle">
+    <header><h3 id="piecesTitle">Mis piezas</h3><button class="x" data-close aria-label="Cerrar">✕</button></header>
+    <div class="howto">
+      <p><b>Dónde están:</b> cada tallado terminado se guarda solo aquí, dentro de la app, en este móvil u ordenador. No es una carpeta del teléfono.</p>
+      <p><b>Para tenerlas en la galería:</b> tocá <b>Descargar</b> en una pieza. La imagen va a la carpeta <b>Descargas</b> («Download»): la ves en la app <b>Archivos</b> o en <b>Google Fotos → Biblioteca → Download</b>. En iPhone, elegí «Guardar imagen».</p>
+    </div>
+    <div class="pieces" id="gallery"></div>
+    <p class="empty" id="galleryEmpty">Todavía no hay piezas. Cuando termine tu primer tallado, aparecerá aquí.</p>
   </div>
 </div>
 
@@ -1491,9 +1513,10 @@ function updateAudio(dt) {
   const frac = cells ? on / cells : (firing ? 1 : 0);
   const level = firing ? .03 + .07 * frac : 0;
   const running = playing && !done && job.state !== 'idle';
-  a.droneG.gain.setTargetAtTime(running ? 1 : .55, t, .3);
-  a.idleG.gain.setTargetAtTime(firing ? 0 : .012, t, .1);
-  a.hissG.gain.setTargetAtTime(running ? .014 : .005, t, .2);
+  // sólo suena mientras trabaja: al terminar, en pausa o en espera, silencio total
+  a.droneG.gain.setTargetAtTime(running ? 1 : 0, t, .25);
+  a.idleG.gain.setTargetAtTime(running && !firing ? .012 : 0, t, .1);
+  a.hissG.gain.setTargetAtTime(running ? .014 : 0, t, .2);
   a.laserG.gain.setTargetAtTime(firing ? .04 + .04 * frac : 0, t, .015);
   a.sizG.gain.setTargetAtTime(level, t, .012);
   const rate = dt > 0 ? toggles / 2 / dt : 0;
@@ -1916,11 +1939,11 @@ async function keepPiece(auto = false) {
   try {
     const colors = dataURLtoBlob(colorC.toDataURL('image/png'));
     await idb.put({ id: Date.now(), name: job.name || srcLabel(), marble: marbleKey, maxD: job.maxD, P: job.P, relief: job.relief, target: q.buffer, thumb, colors, useColor: U.uUseColor.value, metal: U.uMetal.value });
-    toast(auto ? `Tallado completado y guardado en «Mis piezas» (botón Guardar).` : 'Guardada en «Mis piezas».'); renderGallery();
+    toast(auto ? 'Tallado terminado y guardado en «MIS PIEZAS» (botón de arriba).' : 'Guardada en «MIS PIEZAS» (botón de arriba).'); renderGallery();
   } catch (e) { toast('No se pudo guardar en este dispositivo. En navegación privada no se guardan piezas.'); }
 }
-async function openPiece(pc) {
-  closeModals();
+async function openPiece(pc, quiet = false) {
+  if (!quiet) closeModals();
   if (pc.marble !== marbleKey && MARBLES[pc.marble]) {
     showLoader('Cambiando el bloque…'); await new Promise(r => setTimeout(r, 40));
     applyMarble(pc.marble); hideLoader();
@@ -1937,31 +1960,49 @@ async function openPiece(pc) {
   buildPassRows(); job.total = estimate(); job.elapsed = job.total;
   head.x = HOME.x; head.z = HOME.z; done = true;
   setSurfaceFrom(target);
-  toast(`«${pc.name}» abierta. Tocá ↺ para verla tallarse otra vez.`);
+  if (!quiet) toast(`«${pc.name}» abierta. Tocá la flecha circular para verla tallarse otra vez.`);
 }
 let galleryURLs = [];
+const slug = t => (t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'pieza');
+const fecha = id => new Date(id).toLocaleString('es', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+async function exportPiece(pc, mode) {
+  await openPiece(pc, true);
+  const blob = renderStill({ studio: true, final: true, w: 1600, h: 1200 });
+  const d = new Date(pc.id), z = n => String(n).padStart(2, '0');
+  const name = `marmol-${slug(pc.name)}-${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}.png`;
+  if (mode === 'share') await shareBlob(blob, name); else await saveBlob(blob, name);
+}
 async function renderGallery() {
   let list = [];
   try { list = await idb.all(); } catch (e) {}
   list.sort((a, b) => b.id - a.id);
+  $('#piecesBadge').textContent = list.length;
   galleryURLs.forEach(u => URL.revokeObjectURL(u)); galleryURLs = [];
   const g = $('#gallery'); g.replaceChildren();
   $('#galleryEmpty').hidden = list.length > 0;
+  $('#piecesTitle').textContent = list.length ? `Mis piezas (${list.length})` : 'Mis piezas';
   for (const pc of list) {
-    const d = document.createElement('div'); d.className = 'piece';
-    const ob = document.createElement('button'); ob.className = 'open';
+    const d = document.createElement('div'); d.className = 'pc';
     const img = new Image(); img.alt = pc.name; img.src = URL.createObjectURL(pc.thumb); galleryURLs.push(img.src);
-    const sp = document.createElement('span'); sp.textContent = `${pc.name} · ${MARBLES[pc.marble]?.name || ''}`;
-    ob.append(img, sp); ob.onclick = () => openPiece(pc);
-    const del = document.createElement('button'); del.className = 'del'; del.textContent = '✕'; del.setAttribute('aria-label', 'Borrar pieza');
-    del.onclick = async () => {
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const b = document.createElement('b'); b.textContent = pc.name;
+    const s1 = document.createElement('span'); s1.textContent = fecha(pc.id);
+    const s2 = document.createElement('span'); s2.textContent = MARBLES[pc.marble]?.name || '';
+    meta.append(b, s1, s2);
+    const acts = document.createElement('div'); acts.className = 'acts';
+    const mk = (txt, cls, fn) => { const x = document.createElement('button'); x.className = 'act' + (cls ? ' ' + cls : ''); x.textContent = txt; x.onclick = fn; acts.append(x); return x; };
+    mk('Ver en la máquina', '', () => openPiece(pc));
+    mk('Descargar', '', () => exportPiece(pc, 'save'));
+    mk('Enviar', 'wa', () => exportPiece(pc, 'share'));
+    const del = mk('Borrar', '', async () => {
       if (del.dataset.sure) { await idb.del(pc.id).catch(() => {}); renderGallery(); return; }
-      del.dataset.sure = '1'; del.textContent = '¿Borrar?'; del.style.width = 'auto'; del.style.padding = '0 8px';
-      setTimeout(() => { delete del.dataset.sure; del.textContent = '✕'; del.style.width = ''; del.style.padding = ''; }, 3000);
-    };
-    d.append(ob, del); g.append(d);
+      del.dataset.sure = '1'; del.textContent = '¿Seguro? Tocá otra vez';
+      setTimeout(() => { delete del.dataset.sure; del.textContent = 'Borrar'; }, 3000);
+    });
+    d.append(img, meta, acts); g.append(d);
   }
 }
+function openPiecesModal() { closeModals(); renderGallery(); $('#piecesModal').hidden = false; }
 
 // vídeo con sonido (MediaRecorder sobre el lienzo 3D + la mezcla de audio)
 let rec = null;
@@ -2045,7 +2086,10 @@ function updateVidDur() {
   $('#vidDur').textContent = fmtTime(job.total / sp + 4).replace(/^0/, '');
 }
 $('#vidSpeed').oninput = updateVidDur;
-$('#saveBtn').onclick = () => { updateVidDur(); renderGallery(); $('#saveModal').hidden = false; };
+$('#saveBtn').onclick = () => { updateVidDur(); $('#saveModal').hidden = false; };
+$('#piecesBtn').onclick = openPiecesModal;
+$('#openPieces').onclick = openPiecesModal;
+renderGallery();
 $('#keepBtn').onclick = () => keepPiece();
 document.querySelectorAll('[data-out]').forEach(b => b.onclick = async () => {
   const out = b.dataset.out, mode = b.dataset.mode;
