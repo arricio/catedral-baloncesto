@@ -333,6 +333,13 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
           </select>
         </div>
         <label class="check"><input type="checkbox" id="pBg" checked> Quitar el fondo liso (blanco o de un solo color)</label>
+        <div class="field"><label for="pFrameStyle">Marco</label>
+          <select id="pFrameStyle">
+            <option value="photo">Con marco alrededor de la foto, como un cuadro</option>
+            <option value="block">Con marco en el borde del bloque</option>
+            <option value="none">Sin marco</option>
+          </select>
+        </div>
         <div class="field"><label for="pStyle">Estilo de grabado</label>
           <select id="pStyle">
             <option value="relief">Relieve 3D profundo (recomendado)</option>
@@ -368,7 +375,10 @@ TG-1972</textarea></div>
           <div class="swatches" id="swatches" role="radiogroup" aria-label="Color del tallado"></div>
         </div>
       </div>
-      <label class="check" style="margin-top:12px"><input type="checkbox" id="pFrame"> Marco decorativo</label>
+      <label class="check" id="pFrameRow" style="margin-top:12px"><input type="checkbox" id="pFrame"> Marco decorativo</label>
+      <div class="field" id="frameColorRow" style="margin-top:12px" hidden><span class="lbl">Color del marco <output id="oFColor">Igual que el tallado</output></span>
+        <div class="swatches" id="frameSwatches" role="radiogroup" aria-label="Color del marco"></div>
+      </div>
       <figure style="margin-top:12px">
         <canvas id="preview" width="440" height="308"></canvas>
         <figcaption>Mapa de profundidad · blanco = más profundo</figcaption>
@@ -693,7 +703,7 @@ const target = new Float32Array(NX * NZ);
 const U = {
   uBeam: { value: new THREE.Vector3(0, TOP, 0) }, uOn: { value: 0 }, uDir: { value: 1 },
   uFrost: { value: new THREE.Color() }, uTop: { value: TOP }, uMaxD: { value: .45 },
-  uColorMap: { value: null }, uUseColor: { value: 0 }, uMetal: { value: 0 },
+  uColorMap: { value: null }, uMask: { value: null }, uUseColor: { value: 0 }, uMetal: { value: 0 },
 };
 const topGeo = new THREE.BufferGeometry();
 const posArr = new Float32Array(NX * NZ * 3), norArr = new Float32Array(NX * NZ * 3), uvArr = new Float32Array(NX * NZ * 2), carveArr = new Float32Array(NX * NZ);
@@ -723,14 +733,19 @@ const colorC = cnv(NX, NZ), colorG = colorC.getContext('2d');
 colorG.fillStyle = '#ffffff'; colorG.fillRect(0, 0, NX, NZ);
 const colorTex = new THREE.CanvasTexture(colorC); colorTex.colorSpace = THREE.SRGBColorSpace;
 U.uColorMap.value = colorTex;
+// máscara por píxel del relleno: verde = lleva color, rojo = metálico (así el marco puede ser oro y la foto a color)
+const maskC = cnv(NX, NZ), maskG = maskC.getContext('2d', { willReadFrequently: true });
+maskG.fillStyle = '#000'; maskG.fillRect(0, 0, NX, NZ);
+const maskTex = new THREE.CanvasTexture(maskC); maskTex.colorSpace = THREE.NoColorSpace;
+U.uMask.value = maskTex;
 const topMat = new THREE.MeshPhysicalMaterial({ map: marbleTex, roughness: .2, metalness: 0, clearcoat: .5, clearcoatRoughness: .14, envMapIntensity: .9 });
-topMat.customProgramCacheKey = () => 'carve-v2';
+topMat.customProgramCacheKey = () => 'carve-v3';
 topMat.onBeforeCompile = sh => {
   Object.assign(sh.uniforms, U);
   sh.vertexShader = 'attribute float aCarve;\nvarying float vCarve;\nvarying float vSlope;\nvarying vec3 vWP;\n' + sh.vertexShader.replace('#include <begin_vertex>',
     '#include <begin_vertex>\nvCarve = aCarve;\nvSlope = 1.0 - normalize(objectNormal).y;\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
   sh.fragmentShader = `uniform vec3 uBeam; uniform float uOn; uniform float uDir; uniform vec3 uFrost; uniform float uTop; uniform float uMaxD;
-uniform sampler2D uColorMap; uniform float uUseColor; uniform float uMetal;
+uniform sampler2D uColorMap; uniform sampler2D uMask;
 varying float vCarve; varying float vSlope; varying vec3 vWP;
 float hash2(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
 ` + sh.fragmentShader
@@ -738,13 +753,14 @@ float hash2(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453
       float gr = hash2(floor(vWP.xz * 220.0));
       float dn = clamp((uTop - vWP.y) / max(uMaxD, 0.001), 0.0, 1.0);
       vec3 paint = texture2D(uColorMap, vMapUv).rgb;
-      vec3 tint = mix(uFrost * (0.84 + 0.16 * gr), paint * (0.9 + 0.1 * gr), uUseColor);
-      vec3 fr = tint * (1.0 - 0.5 * dn * (1.0 - uMetal * uUseColor)) * (1.0 - 0.6 * smoothstep(0.04, 0.55, vSlope));
+      vec2 mk = texture2D(uMask, vMapUv).rg; float useC = step(0.5, mk.y), metalC = step(0.5, mk.x);
+      vec3 tint = mix(uFrost * (0.84 + 0.16 * gr), paint * (0.9 + 0.1 * gr), useC);
+      vec3 fr = tint * (1.0 - 0.5 * dn * (1.0 - metalC * useC)) * (1.0 - 0.6 * smoothstep(0.04, 0.55, vSlope));
       diffuseColor.rgb = mix(diffuseColor.rgb, fr, vCarve);`)
     .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
       roughnessFactor = mix(roughnessFactor, 0.93, smoothstep(0.0, 0.25, vCarve));`)
     .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
-      float paintOn = smoothstep(0.0, 0.25, vCarve) * uUseColor * uMetal;
+      float paintOn = smoothstep(0.0, 0.25, vCarve) * useC * metalC;
       metalnessFactor = mix(metalnessFactor, 1.0, paintOn);
       roughnessFactor = mix(roughnessFactor, 0.3, paintOn);`)
     .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
@@ -1266,14 +1282,25 @@ function buildTarget(maxD, write = true) {
   } else if (!photo) {
     blur(val, 1); // paredes con la leve conicidad del haz
   }
-  if ($('#pFrame').checked) {
+  const frameMode = photo ? $('#pFrameStyle').value : ($('#pFrame').checked ? 'block' : 'none');
+  const frameIdx = [];
+  if (frameMode !== 'none') {
+    // rectángulo del marco: el área útil del bloque o, como un cuadro, alrededor de la foto
+    let fx0 = IX0, fx1 = IX0 + IW, fz0 = IZ0, fz1 = IZ0 + IH;
+    if (frameMode === 'photo') {
+      const pad = 12;
+      fx0 = Math.max(IX0, Math.floor(IX0 + photoRect.x / DW * IW) - pad); fx1 = Math.min(IX0 + IW, Math.ceil(IX0 + (photoRect.x + photoRect.w) / DW * IW) + pad);
+      fz0 = Math.max(IZ0, Math.floor(IZ0 + photoRect.y / DH * IH) - pad); fz1 = Math.min(IZ0 + IH, Math.ceil(IZ0 + (photoRect.y + photoRect.h) / DH * IH) + pad);
+    }
     const fr = (inset, w, lv) => {
-      for (let iz = IZ0 + inset; iz < IZ0 + IH - inset; iz++) for (let ix = IX0 + inset; ix < IX0 + IW - inset; ix++) {
-        const e = Math.min(ix - IX0 - inset, IX0 + IW - inset - 1 - ix, iz - IZ0 - inset, IZ0 + IH - inset - 1 - iz);
-        if (e < w) { const i = iz * NX + ix; val[i] = Math.max(val[i], lv * (1 - Math.abs(e - (w - 1) / 2) / w)); }
+      for (let iz = fz0 + inset; iz < fz1 - inset; iz++) for (let ix = fx0 + inset; ix < fx1 - inset; ix++) {
+        const e = Math.min(ix - fx0 - inset, fx1 - inset - 1 - ix, iz - fz0 - inset, fz1 - inset - 1 - iz);
+        if (e < w) { const i = iz * NX + ix; val[i] = Math.max(val[i], lv * (1 - Math.abs(e - (w - 1) / 2) / w)); frameIdx.push(i); }
       }
     };
     fr(0, 5, 1); fr(8, 2, .8);
+    // un poco de margen para que el color cubra también la pendiente del surco
+    for (const i of frameIdx.slice()) for (const j of [i - 1, i + 1, i - NX, i + NX]) frameIdx.push(j);
   }
   if (write) for (let i = 0; i < NX * NZ; i++) target[i] = clamp(val[i], 0, 1) * maxD;
   // color del relleno
@@ -1281,7 +1308,19 @@ function buildTarget(maxD, write = true) {
   if (write) {
     if (paint.photo) { colorG.fillStyle = '#ffffff'; colorG.fillRect(0, 0, NX, NZ); colorG.drawImage(gridC, 0, 0); }
     else { colorG.fillStyle = paint.hex || '#ffffff'; colorG.fillRect(0, 0, NX, NZ); }
-    colorTex.needsUpdate = true;
+    maskG.fillStyle = `rgb(${paint.metal ? 255 : 0},${paint.use ? 255 : 0},0)`; maskG.fillRect(0, 0, NX, NZ);
+    const fp = framePaintFor(paint);
+    if (frameIdx.length && fp) {
+      const ci = colorG.getImageData(0, 0, NX, NZ), mi = maskG.getImageData(0, 0, NX, NZ);
+      const rgb = fp.hex ? [1, 3, 5].map(k => parseInt(fp.hex.slice(k, k + 2), 16)) : [255, 255, 255];
+      for (const i of frameIdx) {
+        if (i < 0 || i >= NX * NZ) continue;
+        ci.data[i * 4] = rgb[0]; ci.data[i * 4 + 1] = rgb[1]; ci.data[i * 4 + 2] = rgb[2]; ci.data[i * 4 + 3] = 255;
+        mi.data[i * 4] = fp.metal ? 255 : 0; mi.data[i * 4 + 1] = fp.use ? 255 : 0;
+      }
+      colorG.putImageData(ci, 0, 0); maskG.putImageData(mi, 0, 0);
+    }
+    colorTex.needsUpdate = true; maskTex.needsUpdate = true;
     U.uUseColor.value = paint.use; U.uMetal.value = paint.metal;
   }
   // vista previa: profundidad, teñida con el color del tallado
@@ -1293,6 +1332,11 @@ function buildTarget(maxD, write = true) {
     else if (paint.photo) { im.data[o] = im.data[o + 1] = im.data[o + 2] = v * 235; }
     else { im.data[o] = v * 255 * pc[0]; im.data[o + 1] = v * 255 * pc[1]; im.data[o + 2] = v * 255 * pc[2]; }
     im.data[o + 3] = 255;
+  }
+  const fpv = framePaintFor(paint);
+  if (fpv && fpv.hex) {
+    const rgb = [1, 3, 5].map(k => parseInt(fpv.hex.slice(k, k + 2), 16));
+    for (const i of frameIdx) { const ix = i % NX, iz = (i / NX) | 0; if (ix >= 440 || iz >= 308) continue; const o = (iz * 440 + ix) * 4, v = clamp(val[i], 0, 1); im.data[o] = rgb[0] * v; im.data[o + 1] = rgb[1] * v; im.data[o + 2] = rgb[2] * v; }
   }
   pg.putImageData(im, 0, 0);
 }
@@ -1723,6 +1767,34 @@ function pickSwatch(el, paint) {
   $('#oTColor').textContent = paint.name;
   refreshPreview();
 }
+// color del marco: «igual que el tallado» o uno propio
+let framePaint = { key: 'igual', name: 'Igual que el tallado' };
+function framePaintFor(paint) {
+  if (framePaint.key === 'igual') return paint.photo ? { use: 0, metal: 0 } : null;  // en fotos, «igual» = esmerilado natural
+  if (framePaint.key === 'natural') return { use: 0, metal: 0 };
+  return { use: 1, metal: framePaint.metal, hex: framePaint.hex };
+}
+function frameActive() { return design.type === 'foto' ? $('#pFrameStyle').value !== 'none' : $('#pFrame').checked; }
+function updateFrameColorRow() { $('#frameColorRow').hidden = !frameActive(); }
+{
+  const row = $('#frameSwatches');
+  const pick = (el, fp) => { framePaint = fp; row.querySelectorAll('[role="radio"]').forEach(x => x.setAttribute('aria-checked', x === el)); $('#oFColor').textContent = fp.name; refreshPreview(); };
+  const same = document.createElement('button'); same.setAttribute('role', 'radio'); same.setAttribute('aria-checked', 'true'); same.title = same.ariaLabel = 'Igual que el tallado';
+  same.style.background = 'conic-gradient(#d4a640 0 50%, #555 50% 100%)'; same.onclick = () => pick(same, { key: 'igual', name: 'Igual que el tallado' });
+  row.append(same);
+  for (const [key, name, hex, metal] of SWATCHES) {
+    const b = document.createElement('button'); b.setAttribute('role', 'radio'); b.setAttribute('aria-label', name); b.title = name; b.setAttribute('aria-checked', 'false');
+    b.style.background = hex ? (metal ? `radial-gradient(circle at 35% 30%, #fff8 0, ${hex} 45%, #0006 100%)` : hex) : 'repeating-linear-gradient(45deg,#cfccc4 0 4px,#9c9890 4px 8px)';
+    b.onclick = () => pick(b, { key, hex, metal, name });
+    row.append(b);
+  }
+  const l = document.createElement('label'); l.setAttribute('role', 'radio'); l.setAttribute('aria-checked', 'false'); l.title = 'Otro color';
+  l.style.background = 'conic-gradient(#e33,#ec3,#3c5,#3ae,#a3e,#e33)';
+  const inp = document.createElement('input'); inp.type = 'color'; inp.id = 'fColorCustom'; inp.value = '#c0392b'; inp.setAttribute('aria-label', 'Elegir otro color para el marco');
+  inp.addEventListener('input', () => { l.style.background = inp.value; pick(l, { key: 'custom', hex: inp.value, metal: 0, name: inp.value.toUpperCase() }); });
+  l.append(inp); row.append(l);
+  ['#pFrame', '#pFrameStyle'].forEach(id => $(id).addEventListener('change', updateFrameColorRow));
+}
 for (const [key, name, hex, metal] of SWATCHES) {
   const b = document.createElement('button'); b.setAttribute('role', 'radio'); b.setAttribute('aria-label', name); b.title = name;
   b.setAttribute('aria-checked', key === textPaint.key);
@@ -1750,6 +1822,8 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
   const t = b.dataset.tab;
   if (t === 'foto') { design = { type: 'foto' }; applyPhotoStyle(); }
+  $('#pFrameRow').hidden = t === 'foto';  // en fotos el marco se elige en su propia lista
+  updateFrameColorRow();
   if (t === 'texto') { design = { type: 'texto' }; setParams(6, 4); }
   refreshPreview();
 });
@@ -1768,7 +1842,7 @@ async function refreshPreview() {
     buildTarget(1, false);
   }, 120);
 }
-['#tText', '#tFont', '#tRelief', '#pFrame', '#pContrast', '#pBright', '#pDither', '#pInvert', '#pFit', '#pBg'].forEach(s => $(s).addEventListener('input', () => {
+['#tText', '#tFont', '#tRelief', '#pFrame', '#pContrast', '#pBright', '#pDither', '#pInvert', '#pFit', '#pBg', '#pFrameStyle'].forEach(s => $(s).addEventListener('input', () => {
   $('#oContrast').textContent = (+$('#pContrast').value).toFixed(2); $('#oBright').textContent = (+$('#pBright').value).toFixed(2);
   refreshPreview();
 }));
@@ -2008,7 +2082,7 @@ async function keepPiece(auto = false) {
   const thumb = renderStill({ studio: true, final: true, w: 480, h: 360, type: 'image/jpeg' });
   try {
     const colors = dataURLtoBlob(colorC.toDataURL('image/png'));
-    await idb.put({ id: Date.now(), name: job.name || srcLabel(), marble: marbleKey, maxD: job.maxD, P: job.P, relief: job.relief, target: q.buffer, thumb, colors, useColor: U.uUseColor.value, metal: U.uMetal.value });
+    await idb.put({ id: Date.now(), name: job.name || srcLabel(), marble: marbleKey, maxD: job.maxD, P: job.P, relief: job.relief, target: q.buffer, thumb, colors, mask: dataURLtoBlob(maskC.toDataURL('image/png')), useColor: U.uUseColor.value, metal: U.uMetal.value });
     toast(auto ? 'Tallado terminado y guardado en «MIS PIEZAS» (botón de arriba).' : 'Guardada en «MIS PIEZAS» (botón de arriba).'); renderGallery();
   } catch (e) { toast('No se pudo guardar en este dispositivo. En navegación privada no se guardan piezas.'); }
 }
@@ -2027,6 +2101,9 @@ async function openPiece(pc, quiet = false) {
   if (pc.colors) {
     try { const bm = await createImageBitmap(pc.colors); colorG.drawImage(bm, 0, 0, NX, NZ); colorTex.needsUpdate = true; } catch (e) {}
   }
+  maskG.fillStyle = `rgb(${pc.metal ? 255 : 0},${pc.useColor ? 255 : 0},0)`; maskG.fillRect(0, 0, NX, NZ);
+  if (pc.mask) { try { const bm = await createImageBitmap(pc.mask); maskG.drawImage(bm, 0, 0, NX, NZ); } catch (e) {} }
+  maskTex.needsUpdate = true;
   buildPassRows(); job.total = estimate(); job.elapsed = job.total;
   head.x = HOME.x; head.z = HOME.z; done = true;
   setSurfaceFrom(target);
@@ -2294,7 +2371,7 @@ setTimeout(async () => {
   try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
   applyMarble('negro');
   setSpeedLog(0);
-  $('#pFrame').checked = true;
+  $('#pFrame').checked = true; updateFrameColorRow();
   try { await document.fonts.load('700 100px "Cinzel"'); } catch (e) {}
   showFinished(true);   // al abrir se muestra una pieza ya tallada; no se talla nada hasta pulsar «Tallar»
   refreshPreview();
