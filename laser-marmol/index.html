@@ -17,7 +17,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Láser sobre Mármol">
-<meta property="og:description" content="Mirá cómo un láser de fibra talla tus fotos y textos en mármol, en 3D.">
+<meta property="og:description" content="Mira cómo un láser de fibra talla tus fotos y textos en mármol, en 3D.">
 <meta property="og:image" content="https://arricio.github.io/catedral-baloncesto/laser-marmol/og-image.jpg">
 <meta property="og:url" content="https://arricio.github.io/catedral-baloncesto/laser-marmol/">
 <meta name="twitter:card" content="summary_large_image">
@@ -330,13 +330,13 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         <div id="frameColorSlotFoto"></div>
         <div class="drop pick" id="drop">
           <strong id="dropTitle">Elegir foto</strong>
-          <span>Galería del móvil o archivos del ordenador.<br>También podés arrastrarla o pegarla (Ctrl+V).</span>
+          <span>Galería del móvil o archivos del ordenador.<br>También puedes arrastrarla o pegarla (Ctrl+V).</span>
           <input type="file" id="file" accept="image/*" aria-label="Elegir foto de la galería o de los archivos">
         </div>
         <div class="row">
           <div class="btn pick">Sacar foto con la cámara<input type="file" id="cam" accept="image/*" capture="environment" aria-label="Sacar foto con la cámara"></div>
         </div>
-        <div class="paste" id="pasteZone" contenteditable="true" role="textbox" aria-label="Zona para pegar una foto" inputmode="none">Otra opción: copiá una foto (en Google Fotos o la galería: Compartir → Copiar), mantené pulsado aquí y elegí «Pegar».</div>
+        <div class="paste" id="pasteZone" contenteditable="true" role="textbox" aria-label="Zona para pegar una foto" inputmode="none">Otra opción: copia una foto (en Google Fotos o la galería: Compartir → Copiar), mantén pulsado aquí y elige «Pegar».</div>
         <div class="field"><label for="pFit">Encuadre</label>
           <select id="pFit">
             <option value="contain">Foto completa, sin recortar (recomendado)</option>
@@ -403,10 +403,10 @@ TG-1972</textarea></div>
       <p class="note">Profundidad y capas se aplican al pulsar «Tallar». La velocidad del cabezal cambia en vivo.</p>
     </section>
   </div>
-  <button class="morehint" id="moreHint" type="button">Deslizá para ver más opciones ▾</button>
+  <button class="morehint" id="moreHint" type="button">Desliza para ver más opciones ▾</button>
   <div class="go"><button class="primary" id="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.8H21l-5.5 4 2.1 6.7L12 15.4l-5.6 4.1 2.1-6.7L3 8.8h6.8z"/></svg>Tallar diseño</button></div>
 </aside>
-<div class="hint">Arrastrá para orbitar · rueda o pellizco para zoom<br>Espacio: pausa · ← → : velocidad</div>
+<div class="hint">Arrastra para orbitar · rueda o pellizco para zoom<br>Espacio: pausa · ← → : velocidad</div>
 
 <footer id="bar">
   <div class="group">
@@ -484,7 +484,7 @@ TG-1972</textarea></div>
     <header><h3 id="piecesTitle">Mis piezas</h3><button class="x" data-close aria-label="Cerrar">✕</button></header>
     <div class="howto">
       <p><b>Dónde están:</b> cada tallado terminado se guarda solo aquí, dentro de la app, en este móvil u ordenador. No es una carpeta del teléfono.</p>
-      <p><b>Para tenerlas en la galería:</b> tocá <b>Descargar</b> en una pieza. La imagen va a la carpeta <b>Descargas</b> («Download»): la ves en la app <b>Archivos</b> o en <b>Google Fotos → Biblioteca → Download</b>. En iPhone, elegí «Guardar imagen».</p>
+      <p><b>Para tenerlas en la galería:</b> toca <b>Descargar</b> en una pieza. La imagen va a la carpeta <b>Descargas</b> («Download»): la ves en la app <b>Archivos</b> o en <b>Google Fotos → Biblioteca → Download</b>. En iPhone, elige «Guardar imagen».</p>
     </div>
     <div class="pieces" id="gallery"></div>
     <p class="empty" id="galleryEmpty">Todavía no hay piezas. Cuando termine tu primer tallado, aparecerá aquí.</p>
@@ -495,7 +495,7 @@ TG-1972</textarea></div>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <header><h3 id="helpTitle">Manual de usuario</h3><button class="x" data-close aria-label="Cerrar">✕</button></header>
     <video id="helpVideo" src="tutorial.mp4" poster="tutorial-poster.jpg" controls playsinline preload="none"></video>
-    <p class="note" style="margin:0">Tocá un paso para ir directo a esa parte del vídeo.</p>
+    <p class="note" style="margin:0">Toca un paso para ir directo a esa parte del vídeo.</p>
     <ol class="chapters" id="chapters"></ol>
   </div>
 </div>
@@ -549,7 +549,7 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 } catch (e) {
-  document.body.insertAdjacentHTML('beforeend', '<div id="err"><p>Este navegador no tiene WebGL activado. Probá con Chrome, Edge, Firefox o Safari actualizados.</p></div>');
+  document.body.insertAdjacentHTML('beforeend', '<div id="err"><p>Este navegador no tiene WebGL activado. Prueba con Chrome, Edge, Firefox o Safari actualizados.</p></div>');
   throw e;
 }
 const DPR = Math.min(window.devicePixelRatio || 1, isPhone ? 1.5 : 1.75);
@@ -1864,7 +1864,7 @@ async function refreshPreview() {
     $('#srcName').textContent = srcLabel();
     if (design.type === 'foto' && !photoImg) {
       const g = $('#preview').getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, 440, 308);
-      g.fillStyle = '#8e8a81'; g.font = '16px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillText('Elegí una foto para ver el mapa', 220, 158); g.textAlign = 'start';
+      g.fillStyle = '#8e8a81'; g.font = '16px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillText('Elige una foto para ver el mapa', 220, 158); g.textAlign = 'start';
       return;
     }
     buildTarget(1, false);
@@ -1882,7 +1882,7 @@ $('#pRaster').oninput = e => {
 };
 // fotos
 function loadFile(f) {
-  if (!f || !f.type.startsWith('image/')) { toast('Ese archivo no es una imagen. Probá con JPG, PNG, WEBP o HEIC.'); return; }
+  if (!f || !f.type.startsWith('image/')) { toast('Ese archivo no es una imagen. Prueba con JPG, PNG, WEBP o HEIC.'); return; }
   const url = URL.createObjectURL(f), img = new Image();
   img.onload = () => {
     if (photoImg?.src && photoImg.src !== url) URL.revokeObjectURL(photoImg.src);
@@ -1894,9 +1894,9 @@ function loadFile(f) {
     $('#dropTitle').textContent = 'Cambiar foto';
     document.querySelector('#tab-foto').click();
     $('#panel .scroll').scrollTop = 0;
-    toast('Foto lista. Pulsá «Tallar diseño» para grabarla.');
+    toast('Foto lista. Pulsa «Tallar diseño» para grabarla.');
   };
-  img.onerror = () => toast('No se pudo leer la imagen. Si es HEIC, exportala como JPG.');
+  img.onerror = () => toast('No se pudo leer la imagen. Si es HEIC, expórtala como JPG.');
   img.src = url;
 }
 for (const id of ['#file', '#cam']) $(id).addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
@@ -1915,13 +1915,13 @@ function pastedImage(e) {
 window.addEventListener('paste', e => {
   const zone = e.target.closest?.('#pasteZone');
   if (pastedImage(e)) { e.preventDefault(); return; }
-  if (zone) { e.preventDefault(); toast('Lo que pegaste no es una imagen. Copiá la foto en sí, no su enlace.'); }
+  if (zone) { e.preventDefault(); toast('Lo que pegaste no es una imagen. Copia la foto en sí, no su enlace.'); }
 });
 $('#pasteZone').addEventListener('beforeinput', e => { if (e.inputType !== 'insertFromPaste') e.preventDefault(); });
 $('#pasteZone').addEventListener('drop', e => e.preventDefault());
 
 $('#go').onclick = async () => {
-  if (design.type === 'foto' && !photoImg) { toast('Elegí una foto primero.'); return; }
+  if (design.type === 'foto' && !photoImg) { toast('Elige una foto primero.'); return; }
   if (design.type === 'texto') { const [fam, wt] = $('#tFont').value.split('|'); try { await document.fonts.load(`${wt} 100px "${fam}"`); } catch (e) {} }
   startJob();
   if (isPhone) togglePanel(false);
@@ -1952,7 +1952,7 @@ addEventListener('resize', () => {
 
 /* ───────────── Guardar, exportar y compartir ───────────── */
 const APP_URL = 'https://arricio.github.io/catedral-baloncesto/laser-marmol/';
-const SHARE_TEXT = 'Lo talló un láser de fibra en mármol. Hacé el tuyo: ' + APP_URL;
+const SHARE_TEXT = 'Lo talló un láser de fibra en mármol. Haz el tuyo: ' + APP_URL;
 const inViewer = !!window.claude;            // abierto dentro del visor de Claude
 let dlCap = null;
 if (inViewer) Promise.resolve(window.claude.use?.('downloads')).then(d => { dlCap = d || null; }).catch(() => {});
@@ -1969,12 +1969,12 @@ async function saveBlob(blob, name) {
     catch (e) {
       const c = e?.code;
       if (c === 'declined') return false;
-      if (c === 'rate_limited') { toast('Ya hay una descarga esperando tu confirmación. Probá de nuevo en un momento.'); return false; }
-      if (c === 'too_large') { toast('El archivo es demasiado grande para este visor. Abrí la app en el navegador.'); return false; }
-      toast('Este visor no deja descargar ese archivo. Abrí la app en el navegador: ' + APP_URL); return false;
+      if (c === 'rate_limited') { toast('Ya hay una descarga esperando tu confirmación. Prueba de nuevo en un momento.'); return false; }
+      if (c === 'too_large') { toast('El archivo es demasiado grande para este visor. Abre la app en el navegador.'); return false; }
+      toast('Este visor no deja descargar ese archivo. Abre la app en el navegador: ' + APP_URL); return false;
     }
   }
-  if (inViewer) { toast('Para descargar, abrí la app en el navegador: ' + APP_URL); return false; }
+  if (inViewer) { toast('Para descargar, abre la app en el navegador: ' + APP_URL); return false; }
   const url = URL.createObjectURL(blob), a = document.createElement('a');
   a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
@@ -1988,8 +1988,8 @@ async function shareBlob(blob, name) {
     catch (e) { if (e.name === 'AbortError') return; }
   }
   if (await saveBlob(blob, name)) setTimeout(() => toast(isTouch
-    ? 'Archivo guardado. Abrí WhatsApp, tocá el clip y adjuntalo desde la galería o Archivos.'
-    : 'Archivo descargado. Arrastralo a WhatsApp Web o a WhatsApp de escritorio para enviarlo.'), 1800);
+    ? 'Archivo guardado. Abre WhatsApp, toca el clip y adjúntalo desde la galería o Archivos.'
+    : 'Archivo descargado. Arrástralo a WhatsApp Web o a WhatsApp de escritorio para enviarlo.'), 1800);
 }
 
 // superficie completa a partir de un mapa de profundidad (para fotos de la pieza terminada y piezas guardadas)
@@ -2135,7 +2135,7 @@ async function openPiece(pc, quiet = false) {
   buildPassRows(); job.total = estimate(); job.elapsed = job.total;
   head.x = HOME.x; head.z = HOME.z; done = true;
   setSurfaceFrom(target);
-  if (!quiet) toast(`«${pc.name}» abierta. Tocá la flecha circular para verla tallarse otra vez.`);
+  if (!quiet) toast(`«${pc.name}» abierta. Toca la flecha circular para verla tallarse otra vez.`);
 }
 let galleryURLs = [];
 const slug = t => (t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'pieza');
@@ -2171,7 +2171,7 @@ async function renderGallery() {
     mk('Enviar', 'wa', () => exportPiece(pc, 'share'));
     const del = mk('Borrar', '', async () => {
       if (del.dataset.sure) { await idb.del(pc.id).catch(() => {}); renderGallery(); return; }
-      del.dataset.sure = '1'; del.textContent = '¿Seguro? Tocá otra vez';
+      del.dataset.sure = '1'; del.textContent = '¿Seguro? Toca otra vez';
       setTimeout(() => { delete del.dataset.sure; del.textContent = 'Borrar'; }, 3000);
     });
     d.append(img, meta, acts); g.append(d);
@@ -2188,7 +2188,7 @@ function pickMime() {
 }
 function startRecording(auto = false) {
   if (rec) return;
-  if (!window.MediaRecorder || !canvas.captureStream) { toast('Este navegador no puede grabar vídeo. Probá con Chrome, Edge o Safari actualizados.'); return; }
+  if (!window.MediaRecorder || !canvas.captureStream) { toast('Este navegador no puede grabar vídeo. Prueba con Chrome, Edge o Safari actualizados.'); return; }
   const a = initAudio(); a?.ctx.resume();
   const stream = canvas.captureStream(30);
   a?.recDest?.stream.getAudioTracks().forEach(t => stream.addTrack(t));
@@ -2238,7 +2238,7 @@ $('#recStop').onclick = () => stopRecording();
 function closeModals() { document.querySelectorAll('.modal').forEach(m => { m.hidden = true; }); $('#resBody video')?.pause(); $('#helpVideo').pause(); }
 
 // tutorial en vídeo con capítulos
-const CHAPTERS = [{"t": 5, "title": "1. Instalá la app", "text": "Lo primero: tocá INSTALAR APP y queda en la pantalla de inicio como cualquier app. En iPhone: en Safari tocá Compartir y elegí «Añadir a pantalla de inicio»."}, {"t": 10, "title": "2. Abrí el panel de diseño", "text": "Tocá el botón de las tres rayitas, abajo a la izquierda, para abrir y cerrar el panel."}, {"t": 15, "title": "3. Escribí tu texto", "text": "En la pestaña TEXTO, escribí lo que quieras tallar. Cada renglón es una línea."}, {"t": 20, "title": "4. Tipografía y color", "text": "Elegí la letra y el color del tallado: oro, plata, cobre, colores o el círculo multicolor."}, {"t": 25, "title": "5. Elegí el mármol", "text": "En BLOQUE tocá el mármol que más te guste: hay 15 tipos y colores."}, {"t": 30, "title": "6. Profundidad y capas", "text": "Más profundidad y más capas = relieve más marcado. La velocidad del cabezal cambia en vivo."}, {"t": 35, "title": "7. Tocá TALLAR DISEÑO", "text": "La máquina empieza a tallar. Al terminar, la pieza se guarda sola en «Mis piezas»."}, {"t": 40, "title": "Mirá cómo talla", "text": "El cabezal barre línea por línea y capa por capa, con chispas y humo."}, {"t": 45, "title": "8. Tallar una foto", "text": "En la pestaña FOTO tocá «Elegir foto»: se abre la galería del móvil o los archivos del ordenador."}, {"t": 50, "title": "9. Comprobá la foto elegida", "text": "Arriba aparece la foto que elegiste. Si no es esa, tocá «Cambiar foto»."}, {"t": 55, "title": "10. Estilo y colores de la foto", "text": "«Relieve 3D profundo» y «Colores originales» la tallan con volumen y con sus colores."}, {"t": 60, "title": "11. Pausa, reinicio y velocidad", "text": "El botón de pausa detiene la máquina y la flecha circular vuelve a tallar. Con TIEMPO vas de 0.1× (cámara lenta) a 10× (rápido)."}, {"t": 65, "title": "12. Cámaras", "text": "LIBRE para girar con el dedo, CABEZAL y MACRO de cerca, CENITAL desde arriba y CINE en vuelta."}, {"t": 70, "title": "13. Sonido", "text": "Tocá el altavoz para activar o silenciar el sonido de la máquina."}, {"t": 75, "title": "14. Guardar y enviar", "text": "Botón GUARDAR (flecha hacia abajo): vídeo del tallado con sonido, foto de la pieza, modelo 3D y ENVIAR por WhatsApp."}, {"t": 80, "title": "¡A tallar!", "text": "Tocá «MANUAL DE USUARIO» cuando quieras volver a ver estas instrucciones."}];
+const CHAPTERS = [{"t": 5, "title": "1. Instala la app", "text": "Lo primero: toca INSTALAR APP y queda en la pantalla de inicio como cualquier app. En iPhone: en Safari toca Compartir y elige «Añadir a pantalla de inicio»."}, {"t": 10, "title": "2. Abre el panel de diseño", "text": "Toca el botón de las tres rayitas, abajo a la izquierda, para abrir y cerrar el panel."}, {"t": 15, "title": "3. Escribe tu texto", "text": "En la pestaña TEXTO, escribe lo que quieras tallar. Cada renglón es una línea."}, {"t": 20, "title": "4. Tipografía y color", "text": "Elige la letra y el color del tallado: oro, plata, cobre, colores o el círculo multicolor."}, {"t": 25, "title": "5. Elige el mármol", "text": "En BLOQUE toca el mármol que más te guste: hay 15 tipos y colores."}, {"t": 30, "title": "6. Profundidad y capas", "text": "Más profundidad y más capas = relieve más marcado. La velocidad del cabezal cambia en vivo."}, {"t": 35, "title": "7. Toca TALLAR DISEÑO", "text": "La máquina empieza a tallar. Al terminar, la pieza se guarda sola en «Mis piezas»."}, {"t": 40, "title": "Mira cómo talla", "text": "El cabezal barre línea por línea y capa por capa, con chispas y humo."}, {"t": 45, "title": "8. Tallar una foto", "text": "En la pestaña FOTO toca «Elegir foto»: se abre la galería del móvil o los archivos del ordenador."}, {"t": 50, "title": "9. Comprueba la foto elegida", "text": "Arriba aparece la foto que elegiste. Si no es esa, toca «Cambiar foto»."}, {"t": 55, "title": "10. Estilo y colores de la foto", "text": "«Relieve 3D profundo» y «Colores originales» la tallan con volumen y con sus colores."}, {"t": 60, "title": "11. Pausa, reinicio y velocidad", "text": "El botón de pausa detiene la máquina y la flecha circular vuelve a tallar. Con TIEMPO vas de 0.1× (cámara lenta) a 10× (rápido)."}, {"t": 65, "title": "12. Cámaras", "text": "LIBRE para girar con el dedo, CABEZAL y MACRO de cerca, CENITAL desde arriba y CINE en vuelta."}, {"t": 70, "title": "13. Sonido", "text": "Toca el altavoz para activar o silenciar el sonido de la máquina."}, {"t": 75, "title": "14. Guardar y enviar", "text": "Botón GUARDAR (flecha hacia abajo): vídeo del tallado con sonido, foto de la pieza, modelo 3D y ENVIAR por WhatsApp."}, {"t": 80, "title": "¡A tallar!", "text": "Toca «MANUAL DE USUARIO» cuando quieras volver a ver estas instrucciones."}];
 for (const c of CHAPTERS) {
   const li = document.createElement('li'), b = document.createElement('button'), tm = document.createElement('time'), ti = document.createElement('b'), tx = document.createElement('span');
   tm.textContent = fmtTime(c.t).replace(/^0/, ''); ti.textContent = c.title; tx.textContent = c.text;
@@ -2252,7 +2252,7 @@ for (const c of CHAPTERS) {
   li.append(b); $('#chapters').append(li);
 }
 $('#helpBtn').onclick = () => { closeModals(); $('#helpModal').hidden = false; };
-try { if (!localStorage.getItem('lm-help-seen')) { localStorage.setItem('lm-help-seen', '1'); setTimeout(() => toast('¿Primera vez? Tocá «MANUAL DE USUARIO» (arriba) para ver el vídeo con las instrucciones.'), 6000); } } catch (e) {}
+try { if (!localStorage.getItem('lm-help-seen')) { localStorage.setItem('lm-help-seen', '1'); setTimeout(() => toast('¿Primera vez? Toca «MANUAL DE USUARIO» (arriba) para ver el vídeo con las instrucciones.'), 6000); } } catch (e) {}
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) closeModals(); }));
 addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
 function updateVidDur() {
@@ -2283,14 +2283,14 @@ document.querySelectorAll('[data-out]').forEach(b => b.onclick = async () => {
 });
 
 // app instalable (PWA), invitación por WhatsApp y fotos compartidas desde la galería
-$('#inviteWa').href = 'https://wa.me/?text=' + encodeURIComponent('Mirá esta simulación: un láser talla tus fotos y textos en mármol, en 3D. ' + APP_URL);
+$('#inviteWa').href = 'https://wa.me/?text=' + encodeURIComponent('Mira esta simulación: un láser talla tus fotos y textos en mármol, en 3D. ' + APP_URL);
 let installEvt = null;
 const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 const iosDevice = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const installHelp = iosDevice ? 'En iPhone o iPad: abrila en Safari, tocá el botón Compartir (cuadrado con flecha) y elegí «Añadir a pantalla de inicio».'
-  : 'En Chrome: tocá el menú ⋮ de arriba a la derecha y elegí «Instalar app» o «Añadir a pantalla de inicio» → «Instalar».';
-$('#installNote').textContent = inViewer ? `Para instalarla como app, abrí ${APP_URL} en Chrome o Safari.`
-  : standalone ? 'Ya la estás usando como app. Desde la galería del móvil también podés compartir una foto con «Láser Mármol».' : installHelp;
+const installHelp = iosDevice ? 'En iPhone o iPad: ábrela en Safari, toca el botón Compartir (cuadrado con flecha) y elige «Añadir a pantalla de inicio».'
+  : 'En Chrome: toca el menú ⋮ de arriba a la derecha y elige «Instalar app» o «Añadir a pantalla de inicio» → «Instalar».';
+$('#installNote').textContent = inViewer ? `Para instalarla como app, abre ${APP_URL} en Chrome o Safari.`
+  : standalone ? 'Ya la estás usando como app. Desde la galería del móvil también puedes compartir una foto con «Láser Mármol».' : installHelp;
 async function doInstall() {
   if (installEvt) {
     installEvt.prompt();
@@ -2302,7 +2302,7 @@ async function doInstall() {
   toast(installHelp);
 }
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
-addEventListener('appinstalled', () => { $('#installTop').hidden = true; $('#installBtn').hidden = true; toast('App instalada. Ya la tenés en la pantalla de inicio.'); });
+addEventListener('appinstalled', () => { $('#installTop').hidden = true; $('#installBtn').hidden = true; toast('App instalada. Ya la tienes en la pantalla de inicio.'); });
 $('#installBtn').onclick = doInstall; $('#installTop').onclick = doInstall;
 if (!inViewer && !standalone) { $('#installTop').hidden = false; $('#installBtn').hidden = false; }
 try { if ('serviceWorker' in navigator && !inViewer && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
@@ -2371,7 +2371,7 @@ function frame() {
 function updateHUD() {
   const p = done ? 1 : clamp(job.elapsed / job.total, 0, 1);
   $('#pgBar').style.width = (p * 100).toFixed(1) + '%';
-  $('#pgL').innerHTML = job.showcase ? '<b>Pieza de muestra</b> · elegí tu diseño y tocá Tallar' : done ? '<b>Completado</b>' : `Capa <b>${Math.max(1, Math.min(job.pass, job.P))}/${job.P}</b> · ${Math.round(p * 100)} %`;
+  $('#pgL').innerHTML = job.showcase ? '<b>Pieza de muestra</b> · elige tu diseño y toca Tallar' : done ? '<b>Completado</b>' : `Capa <b>${Math.max(1, Math.min(job.pass, job.P))}/${job.P}</b> · ${Math.round(p * 100)} %`;
   $('#pgR').textContent = job.showcase ? '' : done ? fmtTime(job.elapsed) + ' de máquina' : 'Restan ' + fmtTime((job.total - job.elapsed) / Math.max(simSpeed, .01)) + ' reales';
   const chip = $('#chip'), s = !playing ? 'idle' : done ? 'done' : job.beam ? 'on' : 'run';
   chip.dataset.s = s;
