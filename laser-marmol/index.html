@@ -321,6 +321,7 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         </figure>
         <div class="field framePick" id="pFrameField"><label for="pFrameStyle">Marco de la foto</label>
           <select id="pFrameStyle">
+            <option value="open">Marco abierto: la persona sale del marco</option>
             <option value="photo">Con marco alrededor de la foto, como un cuadro</option>
             <option value="block">Con marco en el borde del bloque</option>
             <option value="none">Sin marco</option>
@@ -1297,15 +1298,24 @@ function buildTarget(maxD, write = true) {
       fx0 = Math.max(IX0, Math.floor(IX0 + photoRect.x / DW * IW) - pad); fx1 = Math.min(IX0 + IW, Math.ceil(IX0 + (photoRect.x + photoRect.w) / DW * IW) + pad);
       fz0 = Math.max(IZ0, Math.floor(IZ0 + photoRect.y / DH * IH) - pad); fz1 = Math.min(IZ0 + IH, Math.ceil(IZ0 + (photoRect.y + photoRect.h) / DH * IH) + pad);
     }
+    // marco abierto: en el borde del bloque, cortado donde lo toca la persona (con 4 px de aire)
+    let near = null;
+    if (frameMode === 'open' && bg) {
+      near = new Uint8Array(NX * NZ);
+      for (let iz = IZ0; iz < IZ0 + IH; iz++) for (let ix = IX0; ix < IX0 + IW; ix++) {
+        const i = iz * NX + ix; if (bg[i]) continue;
+        for (let dz = -4; dz <= 4; dz++) for (let dx = -4; dx <= 4; dx++) { const j = i + dz * NX + dx; if (j >= 0 && j < NX * NZ) near[j] = 1; }
+      }
+    }
     const fr = (inset, w, lv) => {
       for (let iz = fz0 + inset; iz < fz1 - inset; iz++) for (let ix = fx0 + inset; ix < fx1 - inset; ix++) {
         const e = Math.min(ix - fx0 - inset, fx1 - inset - 1 - ix, iz - fz0 - inset, fz1 - inset - 1 - iz);
-        if (e < w) { const i = iz * NX + ix; val[i] = Math.max(val[i], lv * (1 - Math.abs(e - (w - 1) / 2) / w)); frameIdx.push(i); }
+        if (e < w && !(near && near[iz * NX + ix])) { const i = iz * NX + ix; val[i] = Math.max(val[i], lv * (1 - Math.abs(e - (w - 1) / 2) / w)); frameIdx.push(i); }
       }
     };
     fr(0, 5, 1); fr(8, 2, .8);
     // un poco de margen para que el color cubra también la pendiente del surco
-    for (const i of frameIdx.slice()) for (const j of [i - 1, i + 1, i - NX, i + NX]) frameIdx.push(j);
+    for (const i of frameIdx.slice()) for (const j of [i - 1, i + 1, i - NX, i + NX]) if (!(near && near[j])) frameIdx.push(j);
   }
   if (write) for (let i = 0; i < NX * NZ; i++) target[i] = clamp(val[i], 0, 1) * maxD;
   // color del relleno
