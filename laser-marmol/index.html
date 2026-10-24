@@ -64,6 +64,8 @@ button{cursor:pointer}
 .presets button{background:#0c0d10;border:1px solid var(--line);border-radius:4px;padding:6px;display:flex;flex-direction:column;gap:6px;text-align:left;font-size:12px;color:var(--muted)}
 .presets button canvas{width:100%;aspect-ratio:3/2;display:block;border-radius:2px;max-width:100%}
 .presets button[aria-pressed="true"]{border-color:var(--accent);color:var(--fg)}
+.pick{position:relative;overflow:hidden}
+.pick input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:200px;z-index:2}
 .drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px dashed #4a4c52;border-radius:4px;padding:16px 10px;text-align:center;cursor:pointer;background:#0c0d10}
 .drop strong{font-family:var(--font-d);font-size:17px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .drop span{font-size:12px;color:var(--muted)}
@@ -182,15 +184,15 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         <div class="presets" id="presets"></div>
       </div>
       <div data-pane="foto" class="stack" hidden>
-        <label class="drop" id="drop" for="file">
+        <div class="drop pick" id="drop">
           <strong>Elegir foto</strong>
           <span>Galería del móvil o archivos del ordenador.<br>También podés arrastrarla o pegarla (Ctrl+V).</span>
-        </label>
-        <input type="file" id="file" accept="image/*" hidden>
-        <div class="row">
-          <label class="btn" for="cam">Sacar foto con la cámara</label>
-          <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+          <input type="file" id="file" accept="image/*" aria-label="Elegir foto de la galería o de los archivos">
         </div>
+        <div class="row">
+          <div class="btn pick">Sacar foto con la cámara<input type="file" id="cam" accept="image/*" capture="environment" aria-label="Sacar foto con la cámara"></div>
+        </div>
+        <p class="note">Si al tocar no se abre la galería, la app desde la que estás viendo la página no permite elegir archivos: abrí el enlace en Chrome o Safari.</p>
         <div class="field"><label for="pContrast">Contraste <output id="oContrast">1.20</output></label><input type="range" id="pContrast" min="0.5" max="2.5" step="0.05" value="1.2"></div>
         <div class="field"><label for="pBright">Brillo <output id="oBright">0.00</output></label><input type="range" id="pBright" min="-0.4" max="0.4" step="0.02" value="0"></div>
         <label class="check"><input type="checkbox" id="pDither"> Tramado Floyd–Steinberg (como en un láser real)</label>
@@ -1309,8 +1311,7 @@ function loadFile(f) {
   img.onerror = () => toast('No se pudo leer la imagen. Si es HEIC, exportala como JPG.');
   img.src = url;
 }
-$('#file').onchange = e => loadFile(e.target.files[0]);
-$('#cam').onchange = e => loadFile(e.target.files[0]);
+for (const id of ['#file', '#cam']) $(id).addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach(ev => window.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => window.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
