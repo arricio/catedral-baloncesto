@@ -315,6 +315,13 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         <button role="tab" id="tab-foto" aria-selected="false" data-tab="foto">Foto</button>
         <button role="tab" id="tab-combo" aria-selected="false" data-tab="combo">Foto + texto</button>
       </div>
+        <div class="field comboOnly framePick" hidden style="margin-bottom:12px"><label for="cTextPos">Dónde va el texto</label>
+          <select id="cTextPos">
+            <option value="bottom">Debajo de la foto</option>
+            <option value="top">Encima de la foto</option>
+            <option value="over">Sobre la foto, en la parte de abajo</option>
+          </select>
+        </div>
       <div data-pane="foto" class="stack" hidden>
         <figure class="chosen" id="chosen" hidden>
           <img id="chosenImg" alt="Foto elegida para tallar">
@@ -363,13 +370,6 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         </div>
       </div>
       <div data-pane="texto" class="stack">
-        <div class="field comboOnly" hidden><label for="cTextPos">Dónde va el texto</label>
-          <select id="cTextPos">
-            <option value="bottom">Debajo de la foto</option>
-            <option value="top">Encima de la foto</option>
-            <option value="over">Sobre la foto, en la parte de abajo</option>
-          </select>
-        </div>
         <div class="field"><label for="tText">Texto a tallar</label><textarea id="tText" rows="3">ARRICIO
 TG-1972</textarea></div>
         <div class="field"><label for="tFont">Tipografía</label>
@@ -2298,7 +2298,7 @@ $('#recStop').onclick = () => stopRecording();
 function closeModals() { document.querySelectorAll('.modal').forEach(m => { m.hidden = true; }); $('#resBody video')?.pause(); $('#helpVideo').pause(); }
 
 // tutorial en vídeo con capítulos
-const CHAPTERS = [{"t": 5, "title": "1. Instala la app", "text": "Lo primero: toca INSTALAR APP y queda en la pantalla de inicio como cualquier app. En iPhone: en Safari toca Compartir y elige «Añadir a pantalla de inicio»."}, {"t": 10, "title": "2. Abre el panel de diseño", "text": "Toca el botón de las tres rayitas, abajo a la izquierda, para abrir y cerrar el panel."}, {"t": 15, "title": "3. Escribe tu texto", "text": "En la pestaña TEXTO, escribe lo que quieras tallar. Cada renglón es una línea."}, {"t": 20, "title": "4. Tipografía y color", "text": "Elige la letra y el color del tallado: oro, plata, cobre, colores o el círculo multicolor."}, {"t": 25, "title": "5. Elige el mármol", "text": "En BLOQUE toca el mármol que más te guste: hay 15 tipos y colores."}, {"t": 30, "title": "6. Profundidad y capas", "text": "Más profundidad y más capas = relieve más marcado. La velocidad del cabezal cambia en vivo."}, {"t": 35, "title": "7. Toca TALLAR DISEÑO", "text": "La máquina empieza a tallar. Al terminar, la pieza se guarda sola en «Mis piezas»."}, {"t": 40, "title": "Mira cómo talla", "text": "El cabezal barre línea por línea y capa por capa, con chispas y humo."}, {"t": 45, "title": "8. Tallar una foto", "text": "En la pestaña FOTO toca «Elegir foto»: se abre la galería del móvil o los archivos del ordenador."}, {"t": 50, "title": "9. Comprueba la foto elegida", "text": "Arriba aparece la foto que elegiste. Si no es esa, toca «Cambiar foto»."}, {"t": 55, "title": "10. Estilo y colores de la foto", "text": "«Relieve 3D profundo» y «Colores originales» la tallan con volumen y con sus colores."}, {"t": 60, "title": "11. Pausa, reinicio y velocidad", "text": "El botón de pausa detiene la máquina y la flecha circular vuelve a tallar. Con TIEMPO vas de 0.1× (cámara lenta) a 10× (rápido)."}, {"t": 65, "title": "12. Cámaras", "text": "LIBRE para girar con el dedo, CABEZAL y MACRO de cerca, CENITAL desde arriba y CINE en vuelta."}, {"t": 70, "title": "13. Sonido", "text": "Toca el altavoz para activar o silenciar el sonido de la máquina."}, {"t": 75, "title": "14. Guardar y enviar", "text": "Botón GUARDAR (flecha hacia abajo): vídeo del tallado con sonido, foto de la pieza, modelo 3D y ENVIAR por WhatsApp."}, {"t": 80, "title": "¡A tallar!", "text": "Toca «MANUAL DE USUARIO» cuando quieras volver a ver estas instrucciones."}];
+const CHAPTERS = [{"t": 5, "title": "1. Instala la app", "text": "Lo primero: toca INSTALAR APP y queda en la pantalla de inicio como cualquier app. En iPhone: en Safari toca Compartir y elige «Añadir a pantalla de inicio»."}, {"t": 10, "title": "2. Abre el panel de diseño", "text": "Toca el botón de las tres rayitas, abajo a la izquierda, para abrir y cerrar el panel."}, {"t": 15, "title": "3. Escribe tu texto", "text": "En la pestaña TEXTO, escribe lo que quieras tallar. Cada renglón es una línea."}, {"t": 20, "title": "4. Tipografía y color", "text": "Elige la letra y el color del tallado: oro, plata, cobre, colores o el círculo multicolor."}, {"t": 25, "title": "5. Elige el mármol", "text": "En BLOQUE toca el mármol que más te guste: hay 15 tipos y colores."}, {"t": 30, "title": "6. Profundidad y capas", "text": "Más profundidad y más capas = relieve más marcado. La velocidad del cabezal cambia en vivo."}, {"t": 35, "title": "7. Toca TALLAR DISEÑO", "text": "La máquina empieza a tallar. Al terminar, la pieza se guarda sola en «Mis piezas»."}, {"t": 40, "title": "Mira cómo talla", "text": "El cabezal barre línea por línea y capa por capa, con chispas y humo."}, {"t": 45, "title": "8. Tallar una foto", "text": "En la pestaña FOTO toca «Elegir foto»: se abre la galería del móvil o los archivos del ordenador."}, {"t": 50, "title": "9. Comprueba la foto elegida", "text": "Arriba aparece la foto que elegiste. Si no es esa, toca «Cambiar foto»."}, {"t": 55, "title": "10. Estilo y colores de la foto", "text": "«Relieve 3D profundo» y «Colores originales» la tallan con volumen y con sus colores."}, {"t": 60, "title": "11. Marco de la foto", "text": "Elige marco abierto (la persona sale del marco), como un cuadro, en el borde del bloque o sin marco, y su color."}, {"t": 65, "title": "12. Foto + texto", "text": "En la pestaña FOTO + TEXTO añades un nombre o una dedicatoria: debajo, encima o sobre la foto, con su letra y su color."}, {"t": 70, "title": "13. Pausa, reinicio y velocidad", "text": "El botón de pausa detiene la máquina y la flecha circular vuelve a tallar. Con TIEMPO vas de 0.1× (cámara lenta) a 10× (rápido)."}, {"t": 75, "title": "14. Cámaras", "text": "LIBRE para girar con el dedo, CABEZAL y MACRO de cerca, CENITAL desde arriba y CINE en vuelta."}, {"t": 80, "title": "15. Sonido", "text": "Toca el altavoz para activar o silenciar el sonido de la máquina."}, {"t": 85, "title": "16. Guardar y enviar", "text": "Botón GUARDAR (flecha hacia abajo): vídeo del tallado con sonido, foto de la pieza, modelo 3D y ENVIAR por WhatsApp."}, {"t": 90, "title": "¡A tallar!", "text": "Toca «MANUAL DE USUARIO» cuando quieras volver a ver estas instrucciones."}];
 for (const c of CHAPTERS) {
   const li = document.createElement('li'), b = document.createElement('button'), tm = document.createElement('time'), ti = document.createElement('b'), tx = document.createElement('span');
   tm.textContent = fmtTime(c.t).replace(/^0/, ''); ti.textContent = c.title; tx.textContent = c.text;

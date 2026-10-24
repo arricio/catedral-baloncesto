@@ -1,5 +1,5 @@
 // Láser sobre Mármol: funciona sin conexión tras la primera visita y recibe fotos compartidas desde la galería.
-const VERSION = 'lm-v22';
+const VERSION = 'lm-v23';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './pwa-192.png', './pwa-512.png', './apple-touch-icon.png', './tutorial-poster.jpg'];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
