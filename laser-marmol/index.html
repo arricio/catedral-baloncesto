@@ -6,6 +6,22 @@
 <title>Láser sobre Mármol</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Simulación 3D de una máquina láser de fibra tallando un bloque de mármol: fotos, textos y diseños geométricos.">
+<!--APP-HEAD-->
+<meta name="theme-color" content="#090a0c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Láser Mármol">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Láser sobre Mármol">
+<meta property="og:description" content="Mirá cómo un láser de fibra talla tus fotos y textos en mármol, en 3D.">
+<meta property="og:image" content="https://arricio.github.io/catedral-baloncesto/laser-marmol/og-image.jpg">
+<meta property="og:url" content="https://arricio.github.io/catedral-baloncesto/laser-marmol/">
+<meta name="twitter:card" content="summary_large_image">
+<!--/APP-HEAD-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Cinzel:wght@500;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,700;1,500&family=Bebas+Neue&family=UnifrakturMaguntia&family=Pacifico&display=swap">
@@ -133,13 +149,55 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
 .hint{position:fixed;z-index:4;right:calc(var(--panel-w) + 28px);top:calc(env(safe-area-inset-top,0px) + 16px);font-family:var(--font-m);font-size:11px;color:var(--muted);pointer-events:none;text-align:right}
 #err{position:fixed;inset:0;display:grid;place-items:center;z-index:70;background:var(--bg);padding:20px;text-align:center}
 
+/* hoja «Guardar y compartir» */
+.ib.rec{color:#ff4a3a}
+.ib.save{width:auto;padding:0 12px;gap:8px;display:flex;align-items:center;font-family:var(--font-d);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border-color:#5a4318}
+#recBadge{position:fixed;z-index:20;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:var(--panel-solid);border:1px solid #ff4a3a;border-radius:3px;padding:6px 10px;font-family:var(--font-m);font-size:12px;letter-spacing:.06em}
+#recBadge .dot{background:#ff4a3a;animation:blink 1s infinite}
+#recBadge button{background:#ff4a3a;color:#fff;border:0;border-radius:2px;padding:3px 8px;font-size:11px;font-family:var(--font-m)}
+@keyframes blink{50%{opacity:.25}}
+.modal{position:fixed;inset:0;z-index:55;background:rgba(4,5,6,.78);display:flex;align-items:flex-end;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+@media (min-width:761px){.modal{align-items:center}}
+.sheet{width:100%;max-width:560px;max-height:100%;overflow-y:auto;background:var(--panel-solid);border:1px solid var(--line);border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:18px}
+.sheet header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sheet h3{margin:0;font-family:var(--font-d);font-size:24px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.sheet h4{margin:0 0 8px;font-family:var(--font-d);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.x{background:transparent;border:1px solid var(--line);border-radius:4px;width:36px;height:36px;font-size:18px;line-height:1;flex:none}
+.items{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.item{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:12px;background:#0f1013}
+.item+.item{border-top:1px solid var(--line)}
+.item b{font-weight:600;font-size:14px}
+.item small{grid-column:1;font-size:12px;color:var(--muted)}
+.item .acts{grid-row:1 / span 2;grid-column:2;display:flex;gap:6px}
+.act{background:#1d1e23;border:1px solid var(--line);border-radius:4px;padding:8px 10px;font-size:12px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.act{text-decoration:none;color:inherit}
+.act.wa{background:#103b26;border-color:#1f6b45;color:#c9f2da}
+.act svg{width:15px;height:15px;fill:currentColor}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.piece{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#000}
+.piece button.open{display:block;width:100%;padding:0;border:0;background:none;text-align:left}
+.piece img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.piece span{display:block;font-size:11px;color:var(--muted);padding:5px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.piece .del{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:3px;border:0;background:rgba(0,0,0,.65);color:var(--fg);font-size:14px}
+.empty{font-size:13px;color:var(--muted);margin:0}
+.res{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.res img,.res video{width:100%;max-height:56vh;object-fit:contain;background:#000;border:1px solid var(--line);border-radius:4px}
+.res .row{justify-content:flex-end}
+.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.inline output{font-family:var(--font-m);color:var(--fg)}
+
 @media (max-width:760px){
-  :root{--bar-h:150px}
+  :root{--bar-h:166px}
   #pgR{display:none}
   .prog .t{white-space:nowrap}
   .cams{flex:1 1 100%}
   .cams button{flex:1}
   #toast{top:calc(env(safe-area-inset-top,0px) + 96px)}
+  .ib.save{padding:0;width:40px;justify-content:center}
+  .ib.save span{display:none}
+  .group{gap:6px}
+  .item{grid-template-columns:1fr}
+  .item .acts{grid-row:auto;grid-column:1;margin-top:6px}
   #panel{left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));width:auto;top:auto;max-height:64%;bottom:calc(var(--bar-h) + env(safe-area-inset-bottom,0px) + 8px)}
   #panel.closed{display:none}
   #panelToggle{display:grid}
@@ -263,13 +321,65 @@ vita brevis</textarea></div>
     <button data-cam="cine" aria-pressed="false">Cine</button>
   </div>
   <div class="group">
-    <button class="ib" id="shotBtn" aria-label="Capturar imagen"><svg viewBox="0 0 24 24"><path d="M9 4l-2 2H4v14h16V6h-3l-2-2zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg></button>
+    <button class="ib save" id="saveBtn" aria-label="Guardar y compartir"><svg viewBox="0 0 24 24"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg><span>Guardar</span></button>
+    <button class="ib rec" id="recBtn" aria-label="Grabar vídeo de lo que se ve"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg></button>
     <button class="ib" id="snd" aria-label="Activar sonido" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm12.5 3a4 4 0 0 0-2-3.5v7a4 4 0 0 0 2-3.5zm-2-7.7v2.1a7 7 0 0 1 0 11.2v2.1a9 9 0 0 0 0-15.4z"/></svg></button>
   </div>
 </footer>
 
 <div id="toast" role="status"></div>
-<div id="shot" hidden><img id="shotImg" alt="Captura de la simulación"><p>Mantené pulsada la imagen (móvil) o hacé clic derecho → «Guardar imagen como…» (ordenador).</p><button class="btn" id="shotClose">Cerrar</button></div>
+<div id="recBadge" hidden><span class="dot"></span><span id="recTime">REC 00:00</span><button id="recStop">Detener</button></div>
+
+<div class="modal" id="saveModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+    <header><h3 id="saveTitle">Guardar y compartir</h3><button class="x" data-close aria-label="Cerrar">✕</button></header>
+
+    <section>
+      <h4>Mis piezas</h4>
+      <div class="row" style="margin-bottom:10px"><button class="primary" id="keepBtn" style="font-size:16px;padding:11px">Guardar esta pieza en la app</button></div>
+      <div class="gallery" id="gallery"></div>
+      <p class="empty" id="galleryEmpty">Todavía no guardaste ninguna pieza. Las piezas quedan en este dispositivo y podés volver a abrirlas, retallarlas o exportarlas cuando quieras.</p>
+    </section>
+
+    <section>
+      <h4>Descargar o enviar por WhatsApp</h4>
+      <div class="items">
+        <div class="item"><b>Vídeo del tallado completo</b><small>Con el sonido de la máquina. Dura <output id="vidDur">0:30</output> a la velocidad elegida abajo.</small>
+          <div class="acts"><button class="act" data-out="video">Grabar</button></div></div>
+        <div class="item" style="padding-top:4px"><div class="inline"><label for="vidSpeed">Velocidad del vídeo</label><input type="range" id="vidSpeed" min="0" max="1" step="0.05" value="1" style="width:140px"><output id="oVidSpeed">10×</output></div></div>
+        <div class="item"><b>Foto de la pieza terminada</b><small>Imagen de estudio del mármol tallado (PNG).</small>
+          <div class="acts"><button class="act" data-out="piece" data-mode="save">Descargar</button><button class="act wa" data-out="piece" data-mode="share">Enviar</button></div></div>
+        <div class="item"><b>Captura de la vista actual</b><small>Lo que se ve ahora en pantalla, con la máquina (PNG).</small>
+          <div class="acts"><button class="act" data-out="view" data-mode="save">Descargar</button><button class="act wa" data-out="view" data-mode="share">Enviar</button></div></div>
+        <div class="item"><b>Modelo 3D para imprimir</b><small>Bloque tallado en STL, en milímetros, listo para impresora 3D o CNC.</small>
+          <div class="acts"><button class="act" data-out="stl" data-mode="save">Descargar</button></div></div>
+        <div class="item"><b>Mapa de profundidad</b><small>Imagen en grises para un láser o una CNC real: blanco = más profundo (PNG).</small>
+          <div class="acts"><button class="act" data-out="depth" data-mode="save">Descargar</button><button class="act wa" data-out="depth" data-mode="share">Enviar</button></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h4>La app</h4>
+      <div class="row">
+        <a class="act wa" id="inviteWa" target="_blank" rel="noopener" href="#">Invitar a amigos por WhatsApp</a>
+        <button class="act" id="installBtn" hidden>Instalar la app</button>
+      </div>
+      <p class="note" id="installNote"></p>
+    </section>
+  </div>
+</div>
+
+<div class="modal" id="resModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="resTitle">
+    <header><h3 id="resTitle">Listo</h3><button class="x" data-close aria-label="Cerrar">✕</button></header>
+    <div class="res" id="resBody"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="act" id="resSave">Descargar</button>
+      <button class="act wa" id="resShare">Enviar por WhatsApp</button>
+    </div>
+    <p class="note" id="resNote"></p>
+  </div>
+</div>
 <div id="loader"><div><span id="ldTxt">Puliendo el bloque de mármol…</span><span class="ln"><i></i></span></div></div>
 
 <script type="importmap">
@@ -613,6 +723,7 @@ function motor(x, y, z, rotY = 0, parent = scene) {
 
 /* ───────────── Mueble, mesa y estructura ───────────── */
 const BED_Y = -0.6;
+const MACHINE_FROM = scene.children.length; // todo lo que sigue es la máquina (se oculta en la foto de estudio)
 // suelo de taller
 {
   const fc = cnv(512, 512), g = fc.getContext('2d');
@@ -774,6 +885,7 @@ gantry.add(chainX.mesh);
 const chainY = makeChain(.3, .5, Math.PI * .5 + 12, [.5, .24, .28], (p, q, a, y, th) => { p.set(-15.55, RAIL_Y - .28 + y, a); q.setFromAxisAngle(AX, -th); });
 scene.add(chainY.mesh);
 box(.25, 1.2, .6, M.aluD, -15.4, RAIL_Y + .45, 0, gantry);                // brazo de la cadena Y
+const machineObjs = scene.children.slice(MACHINE_FROM);
 
 /* ───────────── Haz, chispas, humo ───────────── */
 const beamG = new THREE.Group(); scene.add(beamG);
@@ -1038,16 +1150,23 @@ function blur(a, it) {
 const head = { x: HOME.x, z: HOME.z };
 const job = { state: 'idle', pass: 0, P: 6, maxD: .45, step: .075, passRows: [], rows: [], ri: 0, dir: 1, iz: 0, ex: 0, tx: 0, tz: 0, after: '', lastIx: 0, elapsed: 0, total: 1, floor: 0, beam: false, power: 0 };
 let vRaster = 80;
-function startJob() {
-  const maxD = +$('#pDepth').value / 10, P = +$('#pPasses').value;
-  buildTarget(maxD);
+function startJob(reuse = false) {
+  let maxD = +$('#pDepth').value / 10, P = +$('#pPasses').value;
+  if (reuse && job.state !== 'idle') { maxD = job.maxD; P = job.P; } else buildTarget(maxD);
   resetSurface();
   for (const s of smoke) s.visible = false;
   spLife.fill(0);
   Object.assign(job, { maxD, P, step: maxD / P, pass: 0, elapsed: 0 });
   U.uMaxD.value = maxD;
+  buildPassRows();
+  job.total = estimate();
+  done = false;
+  nextPass();
+  setPlaying(true);
+}
+function buildPassRows() {
   job.passRows = [];
-  for (let p = 1; p <= P; p++) {
+  for (let p = 1; p <= job.P; p++) {
     const floor = (p - 1) * job.step + 1e-5, rows = [];
     for (let iz = 0; iz < NZ; iz++) {
       let a = -1, b = -1; const r = iz * NX;
@@ -1056,10 +1175,6 @@ function startJob() {
     }
     job.passRows.push(rows);
   }
-  job.total = estimate();
-  done = false;
-  nextPass();
-  setPlaying(true);
 }
 function estimate() {
   let t = 0;
@@ -1082,13 +1197,15 @@ function startRow() {
 }
 function travel(x, z, after) { job.state = 'travel'; job.tx = x; job.tz = z; job.after = after; }
 let carvedFrame = 0;
+const snd = { cells: 0, on: 0, toggles: 0, prev: false }; // métricas del disparo para el sonido
 function carveTo(nx) {
   const newIx = Math.round((nx + BW / 2) / DX), dir = job.dir, row = job.iz * NX, lim = job.pass * job.step;
   let on = false;
   for (let ix = job.lastIx + dir; dir > 0 ? ix <= newIx : ix >= newIx; ix += dir) {
     if (ix < 0 || ix > GX) continue;
-    const i = row + ix;
-    if (target[i] > job.floor) {
+    const i = row + ix, fire = target[i] > job.floor;
+    snd.cells++; if (fire) snd.on++; if (fire !== snd.prev) { snd.toggles++; snd.prev = fire; }
+    if (fire) {
       const nd = Math.min(target[i], lim);
       if (nd > depth[i]) {
         depth[i] = nd; posArr[i * 3 + 1] = TOP - nd; carveArr[i] = Math.pow(nd / job.maxD, .55);
@@ -1129,43 +1246,101 @@ function onDone() {
   done = true;
   toast(`Tallado completado · ${job.P} capas · ${fmtTime(job.elapsed)} de máquina`);
   if (camMode === 'head' || camMode === 'macro') setCam('cine');
+  if (rec && rec.auto) setTimeout(() => stopRecording(), 3500);
 }
 
 /* ───────────── Sonido (Web Audio) ───────────── */
-let audio = null;
+// Todo se sintetiza en vivo a partir de la simulación: el chisporroteo sigue al haz celda a celda,
+// por eso una foto (encendidos y apagados rápidos) zumba y un texto sisea de forma continua.
+let audio = null, soundOn = true;
+try { soundOn = localStorage.getItem('lm-sound') !== 'off'; } catch (e) {}
 function initAudio() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const master = ctx.createGain(); master.gain.value = .6; master.connect(ctx.destination);
+  if (audio) return audio;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  const ctx = new AC();
+  const mix = ctx.createGain(); mix.gain.value = .9;
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
+  const out = ctx.createGain(); out.gain.value = soundOn ? 1 : 0;
+  mix.connect(comp); comp.connect(out); out.connect(ctx.destination);
+  const recDest = ctx.createMediaStreamDestination ? ctx.createMediaStreamDestination() : null;
+  if (recDest) comp.connect(recDest); // el vídeo lleva sonido aunque el altavoz esté silenciado
   const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = noiseBuf.getChannelData(0);
   for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
-  const mkNoise = () => { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.start(); return s; };
-  // ventilador
-  const fanF = ctx.createBiquadFilter(); fanF.type = 'lowpass'; fanF.frequency.value = 420;
-  const fanG = ctx.createGain(); fanG.gain.value = .05; mkNoise().connect(fanF).connect(fanG).connect(master);
-  const hum = ctx.createOscillator(); hum.type = 'sawtooth'; hum.frequency.value = 100;
-  const humF = ctx.createBiquadFilter(); humF.type = 'lowpass'; humF.frequency.value = 220;
-  const humG = ctx.createGain(); humG.gain.value = .02; hum.connect(humF).connect(humG).connect(master); hum.start();
-  // disparo láser / ablación
-  const zF = ctx.createBiquadFilter(); zF.type = 'bandpass'; zF.frequency.value = 3200; zF.Q.value = .8;
-  const zG = ctx.createGain(); zG.gain.value = 0; mkNoise().connect(zF).connect(zG).connect(master);
-  const tone = ctx.createOscillator(); tone.type = 'square'; tone.frequency.value = 2600;
-  const toneG = ctx.createGain(); toneG.gain.value = 0; tone.connect(toneG).connect(master); tone.start();
-  // motores paso a paso
-  const step = ctx.createOscillator(); step.type = 'triangle'; step.frequency.value = 300;
-  const stepG = ctx.createGain(); stepG.gain.value = 0; step.connect(stepG).connect(master); step.start();
-  audio = { ctx, master, zG, toneG, step, stepG };
+  const noise = () => { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.loopStart = Math.random(); s.start(); return s; };
+  const filt = (type, f, q = .7) => { const x = ctx.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = q; return x; };
+  const gain = v => { const g = ctx.createGain(); g.gain.value = v; return g; };
+  const osc = (type, f) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.start(); return o; };
+  // ventilador de la fuente y extractor de humos
+  noise().connect(filt('lowpass', 520)).connect(gain(.05)).connect(mix);
+  osc('sawtooth', 100).connect(filt('lowpass', 240)).connect(gain(.012)).connect(mix);
+  // aire asistido por la boquilla
+  const airG = gain(0); noise().connect(filt('bandpass', 5200, .6)).connect(airG).connect(mix);
+  // motores paso a paso (silbido que sube con la velocidad)
+  const motG = gain(0), motF = filt('bandpass', 600, 1.8);
+  const m1 = osc('square', 300), m2 = osc('sawtooth', 601);
+  m1.connect(motF); m2.connect(gain(.5)).connect(motF); motF.connect(motG).connect(mix);
+  // ablación: siseo agudo del mármol al vaporizarse
+  const sizG = gain(0);
+  noise().connect(filt('highpass', 1400)).connect(filt('peaking', 4300, 1.2)).connect(sizG).connect(mix);
+  // zumbido del raster: modula el siseo al ritmo de los encendidos del haz
+  const buzz = osc('square', 120), buzzD = gain(0); buzz.connect(buzzD).connect(sizG.gain);
+  const whineG = gain(0); osc('triangle', 1180).connect(whineG).connect(mix);
+  // chasquidos de la piedra
+  const crackBus = filt('highpass', 900); crackBus.connect(mix);
+  const clicks = [];
+  for (let k = 0; k < 8; k++) {
+    const len = Math.floor(ctx.sampleRate * (.008 + Math.random() * .03)), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3 + k);
+    clicks.push(b);
+  }
+  audio = { ctx, out, recDest, airG, motG, motF, m1, m2, sizG, buzz, buzzD, whineG, crackBus, clicks };
+  return audio;
+}
+function crackle(t, amt) {
+  const a = audio, s = a.ctx.createBufferSource(), g = a.ctx.createGain();
+  s.buffer = a.clicks[(Math.random() * a.clicks.length) | 0]; s.playbackRate.value = .6 + Math.random();
+  g.gain.value = amt; s.connect(g).connect(a.crackBus); s.start(t);
+}
+function setSound(on) {
+  soundOn = on;
+  try { localStorage.setItem('lm-sound', on ? 'on' : 'off'); } catch (e) {}
+  if (on) { initAudio(); audio?.ctx.resume(); }
+  if (audio) audio.out.gain.setTargetAtTime(on ? 1 : 0, audio.ctx.currentTime, .05);
+  $('#snd').setAttribute('aria-pressed', on); $('#snd').setAttribute('aria-label', on ? 'Silenciar' : 'Activar sonido');
 }
 let lastHX = 0, lastHZ = 0;
 function updateAudio(dt) {
-  if (!audio || audio.ctx.state !== 'running') return;
-  const t = audio.ctx.currentTime;
-  const on = job.beam && playing;
-  audio.zG.gain.setTargetAtTime(on ? .14 * (.6 + Math.random() * .8) : 0, t, .015);
-  audio.toneG.gain.setTargetAtTime(on ? .006 : 0, t, .02);
-  const v = dt > 0 ? Math.hypot(head.x - lastHX, head.z - lastHZ) / dt : 0;
-  audio.step.frequency.setTargetAtTime(160 + Math.min(v, 900) * 2.2, t, .05);
-  audio.stepG.gain.setTargetAtTime(v > .5 ? .025 : 0, t, .05);
+  const a = audio;
+  const cells = snd.cells, on = snd.on, toggles = snd.toggles;
+  snd.cells = snd.on = snd.toggles = 0;
+  if (!a || a.ctx.state !== 'running') return;
+  const t = a.ctx.currentTime;
+  const firing = job.beam && playing;
+  const frac = cells ? on / cells : (firing ? 1 : 0);
+  const level = firing ? .05 + .16 * frac : 0;
+  a.sizG.gain.setTargetAtTime(level, t, .012);
+  const rate = dt > 0 ? toggles / 2 / dt : 0;
+  if (firing && rate > 6) { a.buzz.frequency.setTargetAtTime(clamp(rate, 6, 1600), t, .03); a.buzzD.gain.setTargetAtTime(level * .85, t, .02); }
+  else a.buzzD.gain.setTargetAtTime(0, t, .03);
+  a.whineG.gain.setTargetAtTime(firing ? .0035 : 0, t, .03);
+  if (firing) {
+    const n = Math.floor(dt * 40 * frac * clamp(simSpeed, .1, 1.5) + Math.random());
+    for (let i = 0; i < n; i++) crackle(t + Math.random() * dt, .04 + Math.random() * .14);
+  }
+  const v = dt > 0 && playing ? Math.hypot(head.x - lastHX, head.z - lastHZ) / dt : 0;
+  const f = 90 + Math.min(v, 300) * 7;
+  a.m1.frequency.setTargetAtTime(f, t, .04); a.m2.frequency.setTargetAtTime(f * 2.004, t, .04); a.motF.frequency.setTargetAtTime(f * 1.5, t, .04);
+  a.motG.gain.setTargetAtTime(v > .3 ? .02 + Math.min(v / 300, 1) * .025 : 0, t, .04);
+  a.airG.gain.setTargetAtTime(playing && !done && job.state !== 'idle' ? .022 : 0, t, .2);
 }
+// el navegador sólo deja sonar el audio después de un toque: se enciende con la primera interacción
+function unlockAudio(e) {
+  if (e.target.closest?.('#snd')) return;
+  removeEventListener('pointerdown', unlockAudio, true); removeEventListener('keydown', unlockAudio, true);
+  if (soundOn) setSound(true);
+}
+addEventListener('pointerdown', unlockAudio, true); addEventListener('keydown', unlockAudio, true);
 
 /* ───────────── Cámara ───────────── */
 let camMode = 'orbit';
@@ -1253,7 +1428,7 @@ for (const [k, p] of Object.entries(PRESETS)) {
 }
 // mármoles
 for (const [k, m] of Object.entries(MARBLES)) {
-  const b = document.createElement('button'); b.setAttribute('aria-pressed', k === marbleKey);
+  const b = document.createElement('button'); b.dataset.k = k; b.setAttribute('aria-pressed', k === marbleKey);
   b.append(marbleCanvas(m, 30, 4242), document.createTextNode(m.name));
   b.onclick = () => {
     document.querySelectorAll('#marbles button').forEach(x => x.setAttribute('aria-pressed', x === b));
@@ -1342,7 +1517,7 @@ $('#go').onclick = async () => {
   toast(`Tallando «${srcLabel()}» en ${job.P} capas`);
 };
 $('#play').onclick = () => setPlaying(!playing);
-$('#restart').onclick = () => startJob();
+$('#restart').onclick = () => startJob(true);
 $('#speed').oninput = e => setSpeedLog(+e.target.value);
 document.querySelectorAll('.q').forEach(b => b.onclick = () => setSpeedLog(+b.dataset.sp));
 document.querySelectorAll('#cams button').forEach(b => b.onclick = () => setCam(b.dataset.cam));
@@ -1350,15 +1525,7 @@ controls.addEventListener('start', () => { if (camMode !== 'orbit') setCam('orbi
 function togglePanel(v) { const p = $('#panel'); const open = v ?? p.classList.contains('closed'); p.classList.toggle('closed', !open); $('#panelToggle').setAttribute('aria-pressed', open); }
 $('#panelToggle').onclick = () => togglePanel();
 if (isPhone) togglePanel(false);
-$('#snd').onclick = () => {
-  if (!audio) initAudio();
-  const on = audio.ctx.state !== 'running';
-  on ? audio.ctx.resume() : audio.ctx.suspend();
-  $('#snd').setAttribute('aria-pressed', on); $('#snd').setAttribute('aria-label', on ? 'Silenciar' : 'Activar sonido');
-};
-let wantShot = false;
-$('#shotBtn').onclick = () => { wantShot = true; };
-$('#shotClose').onclick = () => { $('#shot').hidden = true; };
+$('#snd').onclick = () => setSound(!(soundOn && audio?.ctx.state === 'running'));
 window.addEventListener('keydown', e => {
   if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)) return;
   if (e.code === 'Space') { e.preventDefault(); setPlaying(!playing); }
@@ -1371,6 +1538,315 @@ addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight); bloom.resolution.set(innerWidth, innerHeight);
 });
+
+/* ───────────── Guardar, exportar y compartir ───────────── */
+const APP_URL = 'https://arricio.github.io/catedral-baloncesto/laser-marmol/';
+const SHARE_TEXT = 'Lo talló un láser de fibra en mármol. Hacé el tuyo: ' + APP_URL;
+const inViewer = !!window.claude;            // abierto dentro del visor de Claude
+let dlCap = null;
+if (inViewer) Promise.resolve(window.claude.use?.('downloads')).then(d => { dlCap = d || null; }).catch(() => {});
+const stamp = () => { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`; };
+const baseName = () => 'marmol-' + (srcLabel().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'pieza') + '-' + stamp();
+function dataURLtoBlob(url) {
+  const [head, b64] = url.split(','), bin = atob(b64), u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new Blob([u8], { type: head.slice(5).split(';')[0] });
+}
+async function saveBlob(blob, name) {
+  if (dlCap) {
+    try { await dlCap.save({ filename: name, data: blob }); toast('Guardado: ' + name); return true; }
+    catch (e) {
+      const c = e?.code;
+      if (c === 'declined') return false;
+      if (c === 'rate_limited') { toast('Ya hay una descarga esperando tu confirmación. Probá de nuevo en un momento.'); return false; }
+      if (c === 'too_large') { toast('El archivo es demasiado grande para este visor. Abrí la app en el navegador.'); return false; }
+      toast('Este visor no deja descargar ese archivo. Abrí la app en el navegador: ' + APP_URL); return false;
+    }
+  }
+  if (inViewer) { toast('Para descargar, abrí la app en el navegador: ' + APP_URL); return false; }
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast('Descargado: ' + name);
+  return true;
+}
+async function shareBlob(blob, name) {
+  const file = new File([blob], name, { type: blob.type });
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], text: SHARE_TEXT }); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  if (await saveBlob(blob, name)) setTimeout(() => toast(isTouch
+    ? 'Archivo guardado. Abrí WhatsApp, tocá el clip y adjuntalo desde la galería o Archivos.'
+    : 'Archivo descargado. Arrastralo a WhatsApp Web o a WhatsApp de escritorio para enviarlo.'), 1800);
+}
+
+// superficie completa a partir de un mapa de profundidad (para fotos de la pieza terminada y piezas guardadas)
+function setSurfaceFrom(src) {
+  for (let i = 0; i < NX * NZ; i++) {
+    const d = src[i]; depth[i] = d; posArr[i * 3 + 1] = TOP - d; carveArr[i] = d > 0 ? Math.pow(d / job.maxD, .55) : 0;
+  }
+  updateNormals(0, GZ);
+  for (const a of [posAttr, norAttr, carveAttr]) { a.clearUpdateRanges(); a.needsUpdate = true; }
+}
+const studioFloor = (() => {
+  const c = cnv(512, 512), g = c.getContext('2d'), gr = g.createRadialGradient(256, 256, 10, 256, 256, 256);
+  gr.addColorStop(0, '#3b3936'); gr.addColorStop(.55, '#1a1918'); gr.addColorStop(1, '#0b0b0c');
+  g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshStandardMaterial({ map: t, roughness: .55, metalness: 0 }));
+  m.rotation.x = -Math.PI / 2; m.position.y = -.002; m.receiveShadow = true; m.visible = false; scene.add(m);
+  return m;
+})();
+function renderStill({ studio = false, final = false, w, h, type = 'image/png' }) {
+  const keep = { pos: camera.position.clone(), tgt: controls.target.clone(), fov: camera.fov };
+  const vis = [], hide = o => { vis.push([o, o.visible]); o.visible = false; };
+  let backup = null;
+  if (final && !done && job.state !== 'idle') { backup = depth.slice(); setSurfaceFrom(target); }
+  if (studio) {
+    machineObjs.forEach(hide); [beamG, flare, flare2, aim, sparks, ...smoke].forEach(hide);
+    studioFloor.visible = true; vis.push([plasma, plasma.visible]); plasma.visible = false;
+    camera.fov = 30; camera.position.set(9, 23, 25); controls.target.set(0, 1.4, 0);
+  }
+  camera.aspect = w / h; camera.updateProjectionMatrix(); camera.lookAt(controls.target);
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false); composer.setPixelRatio(1); composer.setSize(w, h);
+  composer.render();
+  const blob = dataURLtoBlob(renderer.domElement.toDataURL(type, .9));
+  renderer.setPixelRatio(DPR); renderer.setSize(innerWidth, innerHeight, false); composer.setPixelRatio(DPR); composer.setSize(innerWidth, innerHeight);
+  camera.fov = keep.fov; camera.position.copy(keep.pos); controls.target.copy(keep.tgt);
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); camera.lookAt(controls.target);
+  vis.forEach(([o, v]) => { o.visible = v; }); studioFloor.visible = false;
+  if (backup) setSurfaceFrom(backup);
+  return blob;
+}
+function captureView() { composer.render(); return dataURLtoBlob(renderer.domElement.toDataURL('image/png')); }
+function depthPNG() {
+  const c = cnv(NX, NZ), g = c.getContext('2d'), im = g.createImageData(NX, NZ);
+  for (let i = 0; i < NX * NZ; i++) { const v = Math.round(clamp(target[i] / job.maxD, 0, 1) * 255); im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; }
+  g.putImageData(im, 0, 0);
+  const big = cnv(NX * 4, NZ * 4), bg = big.getContext('2d');
+  bg.imageSmoothingEnabled = true; bg.imageSmoothingQuality = 'high'; bg.drawImage(c, 0, 0, big.width, big.height);
+  return dataURLtoBlob(big.toDataURL('image/png'));
+}
+// STL binario en milímetros, con Z hacia arriba
+function buildSTL(src) {
+  const S = 10, n = GX * GZ * 2 + (GX + GZ) * 4 + 2;
+  const buf = new ArrayBuffer(84 + n * 50), dv = new DataView(buf);
+  const hdr = 'Laser sobre Marmol - bloque tallado 200x140x32 mm';
+  for (let i = 0; i < hdr.length; i++) dv.setUint8(i, hdr.charCodeAt(i));
+  dv.setUint32(80, n, true);
+  let o = 84;
+  const P = (ix, iz, bottom) => [xOf(ix) * S, -zOf(iz) * S, bottom ? 0 : (TOP - src[iz * NX + ix]) * S];
+  function tri(a, b, c, out) {
+    let ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    if (out && nx * out[0] + ny * out[1] + nz * out[2] < 0) { [b, c] = [c, b]; nx = -nx; ny = -ny; nz = -nz; }
+    const l = Math.hypot(nx, ny, nz) || 1;
+    dv.setFloat32(o, nx / l, true); dv.setFloat32(o + 4, ny / l, true); dv.setFloat32(o + 8, nz / l, true); o += 12;
+    for (const p of [a, b, c]) { dv.setFloat32(o, p[0], true); dv.setFloat32(o + 4, p[1], true); dv.setFloat32(o + 8, p[2], true); o += 12; }
+    o += 2;
+  }
+  for (let iz = 0; iz < GZ; iz++) for (let ix = 0; ix < GX; ix++) {
+    const a = P(ix, iz), b = P(ix + 1, iz), c = P(ix, iz + 1), d = P(ix + 1, iz + 1);
+    tri(a, c, b, [0, 0, 1]); tri(b, c, d, [0, 0, 1]);
+  }
+  for (let ix = 0; ix < GX; ix++) for (const [iz, out] of [[0, [0, 1, 0]], [GZ, [0, -1, 0]]]) {
+    const t0 = P(ix, iz), t1 = P(ix + 1, iz), b0 = P(ix, iz, 1), b1 = P(ix + 1, iz, 1);
+    tri(t0, t1, b1, out); tri(t0, b1, b0, out);
+  }
+  for (let iz = 0; iz < GZ; iz++) for (const [ix, out] of [[0, [-1, 0, 0]], [GX, [1, 0, 0]]]) {
+    const t0 = P(ix, iz), t1 = P(ix, iz + 1), b0 = P(ix, iz, 1), b1 = P(ix, iz + 1, 1);
+    tri(t0, t1, b1, out); tri(t0, b1, b0, out);
+  }
+  tri(P(0, 0, 1), P(GX, 0, 1), P(GX, GZ, 1), [0, 0, -1]); tri(P(0, 0, 1), P(GX, GZ, 1), P(0, GZ, 1), [0, 0, -1]);
+  return buf;
+}
+// ZIP de un solo archivo sin compresión (el visor de Claude no admite .stl suelto)
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function zipOne(name, data) {
+  let crc = 0xFFFFFFFF; for (let i = 0; i < data.length; i++) crc = CRC[(crc ^ data[i]) & 255] ^ (crc >>> 8); crc = (crc ^ 0xFFFFFFFF) >>> 0;
+  const nm = new TextEncoder().encode(name), len = data.length, date = ((new Date().getFullYear() - 1980) << 9) | ((new Date().getMonth() + 1) << 5) | new Date().getDate();
+  const lh = new DataView(new ArrayBuffer(30)), ch = new DataView(new ArrayBuffer(46)), end = new DataView(new ArrayBuffer(22));
+  lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(12, date, true); lh.setUint32(14, crc, true); lh.setUint32(18, len, true); lh.setUint32(22, len, true); lh.setUint16(26, nm.length, true);
+  ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(14, date, true); ch.setUint32(16, crc, true); ch.setUint32(20, len, true); ch.setUint32(24, len, true); ch.setUint16(28, nm.length, true);
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, 1, true); end.setUint16(10, 1, true); end.setUint32(12, 46 + nm.length, true); end.setUint32(16, 30 + nm.length + len, true);
+  return new Blob([lh, nm, data, ch, nm, end], { type: 'application/zip' });
+}
+
+// «Mis piezas»: se guardan en este dispositivo (IndexedDB)
+const idb = {
+  db: null,
+  async open() {
+    if (!this.db) this.db = await new Promise((res, rej) => {
+      const r = indexedDB.open('laser-marmol', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('piezas', { keyPath: 'id' });
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+    return this.db;
+  },
+  async run(mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => { const t = db.transaction('piezas', mode), r = fn(t.objectStore('piezas')); t.oncomplete = () => res(r.result); t.onerror = () => rej(t.error); });
+  },
+  all() { return this.run('readonly', s => s.getAll()); },
+  put(v) { return this.run('readwrite', s => s.put(v)); },
+  del(id) { return this.run('readwrite', s => s.delete(id)); },
+};
+async function keepPiece() {
+  if (job.state === 'idle') { toast('Todavía no hay ninguna pieza.'); return; }
+  const q = new Uint16Array(NX * NZ);
+  for (let i = 0; i < NX * NZ; i++) q[i] = Math.round(clamp(target[i] / job.maxD, 0, 1) * 65535);
+  const thumb = renderStill({ studio: true, final: true, w: 480, h: 360, type: 'image/jpeg' });
+  try {
+    await idb.put({ id: Date.now(), name: srcLabel(), marble: marbleKey, maxD: job.maxD, P: job.P, target: q.buffer, thumb });
+    toast('Guardada en «Mis piezas».'); renderGallery();
+  } catch (e) { toast('No se pudo guardar en este dispositivo. En navegación privada no se guardan piezas.'); }
+}
+async function openPiece(pc) {
+  closeModals();
+  if (pc.marble !== marbleKey && MARBLES[pc.marble]) {
+    showLoader('Cambiando el bloque…'); await new Promise(r => setTimeout(r, 40));
+    applyMarble(pc.marble); hideLoader();
+    document.querySelectorAll('#marbles button').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === marbleKey));
+  }
+  const q = new Uint16Array(pc.target);
+  for (let i = 0; i < NX * NZ; i++) target[i] = q[i] / 65535 * pc.maxD;
+  Object.assign(job, { maxD: pc.maxD, P: pc.P, step: pc.maxD / pc.P, pass: pc.P, state: 'done', rows: [], ri: 0, beam: false });
+  U.uMaxD.value = pc.maxD;
+  buildPassRows(); job.total = estimate(); job.elapsed = job.total;
+  head.x = HOME.x; head.z = HOME.z; done = true;
+  setSurfaceFrom(target);
+  toast(`«${pc.name}» abierta. Tocá ↺ para verla tallarse otra vez.`);
+}
+let galleryURLs = [];
+async function renderGallery() {
+  let list = [];
+  try { list = await idb.all(); } catch (e) {}
+  list.sort((a, b) => b.id - a.id);
+  galleryURLs.forEach(u => URL.revokeObjectURL(u)); galleryURLs = [];
+  const g = $('#gallery'); g.replaceChildren();
+  $('#galleryEmpty').hidden = list.length > 0;
+  for (const pc of list) {
+    const d = document.createElement('div'); d.className = 'piece';
+    const ob = document.createElement('button'); ob.className = 'open';
+    const img = new Image(); img.alt = pc.name; img.src = URL.createObjectURL(pc.thumb); galleryURLs.push(img.src);
+    const sp = document.createElement('span'); sp.textContent = `${pc.name} · ${MARBLES[pc.marble]?.name || ''}`;
+    ob.append(img, sp); ob.onclick = () => openPiece(pc);
+    const del = document.createElement('button'); del.className = 'del'; del.textContent = '✕'; del.setAttribute('aria-label', 'Borrar pieza');
+    del.onclick = async () => {
+      if (del.dataset.sure) { await idb.del(pc.id).catch(() => {}); renderGallery(); return; }
+      del.dataset.sure = '1'; del.textContent = '¿Borrar?'; del.style.width = 'auto'; del.style.padding = '0 8px';
+      setTimeout(() => { delete del.dataset.sure; del.textContent = '✕'; del.style.width = ''; del.style.padding = ''; }, 3000);
+    };
+    d.append(ob, del); g.append(d);
+  }
+}
+
+// vídeo con sonido (MediaRecorder sobre el lienzo 3D + la mezcla de audio)
+let rec = null;
+function pickMime() {
+  for (const m of ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'])
+    if (window.MediaRecorder?.isTypeSupported?.(m)) return m;
+  return '';
+}
+function startRecording(auto = false) {
+  if (rec) return;
+  if (!window.MediaRecorder || !canvas.captureStream) { toast('Este navegador no puede grabar vídeo. Probá con Chrome, Edge o Safari actualizados.'); return; }
+  const a = initAudio(); a?.ctx.resume();
+  const stream = canvas.captureStream(30);
+  a?.recDest?.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+  const mime = pickMime();
+  let mr;
+  try { mr = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8e6 } : undefined); }
+  catch (e) { toast('No se pudo empezar a grabar en este navegador.'); return; }
+  const chunks = [];
+  mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  rec = { mr, auto, t0: performance.now(), type: (mr.mimeType || mime || 'video/webm').split(';')[0] };
+  mr.onstop = () => {
+    const type = rec.type; rec = null;
+    stream.getVideoTracks().forEach(t => t.stop());
+    $('#recBadge').hidden = true; $('#recBtn').setAttribute('aria-pressed', false);
+    if (chunks.length) showVideo(new Blob(chunks, { type }));
+  };
+  mr.start(1000);
+  $('#recBadge').hidden = false; $('#recBtn').setAttribute('aria-pressed', true);
+}
+function stopRecording() { if (rec && rec.mr.state !== 'inactive') rec.mr.stop(); }
+function recordFullCarve() {
+  closeModals();
+  setSpeedLog(+$('#vidSpeed').value);
+  if (isPhone) togglePanel(false);
+  startJob(true);
+  setCam('cine');
+  startRecording(true);
+  toast('Grabando el tallado completo. Se detiene solo al terminar.');
+}
+let resBlob = null, resName = '', resURL = '';
+function showVideo(blob) {
+  if (resURL) URL.revokeObjectURL(resURL);
+  resURL = URL.createObjectURL(blob); resBlob = blob;
+  const mp4 = blob.type.includes('mp4');
+  resName = baseName() + (mp4 ? '.mp4' : '.webm');
+  const v = document.createElement('video'); v.src = resURL; v.controls = true; v.playsInline = true; v.loop = true;
+  $('#resBody').replaceChildren(v);
+  $('#resTitle').textContent = 'Vídeo listo';
+  $('#resNote').textContent = mp4 ? '' : 'Este navegador graba en WebM: WhatsApp en el móvil puede no reproducirlo. En Chrome de Android, Edge o Safari se graba en MP4.';
+  $('#resModal').hidden = false;
+}
+$('#resSave').onclick = () => resBlob && saveBlob(resBlob, resName);
+$('#resShare').onclick = () => resBlob && shareBlob(resBlob, resName);
+$('#recBtn').onclick = () => rec ? stopRecording() : startRecording(false);
+$('#recStop').onclick = () => stopRecording();
+
+function closeModals() { document.querySelectorAll('.modal').forEach(m => { m.hidden = true; }); $('#resBody video')?.pause(); }
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) closeModals(); }));
+addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+function updateVidDur() {
+  const sp = Math.pow(10, +$('#vidSpeed').value);
+  $('#oVidSpeed').textContent = (sp < 9.95 ? sp.toFixed(1) : '10') + '×';
+  $('#vidDur').textContent = fmtTime(job.total / sp + 4).replace(/^0/, '');
+}
+$('#vidSpeed').oninput = updateVidDur;
+$('#saveBtn').onclick = () => { updateVidDur(); renderGallery(); $('#saveModal').hidden = false; };
+$('#keepBtn').onclick = () => keepPiece();
+document.querySelectorAll('[data-out]').forEach(b => b.onclick = async () => {
+  const out = b.dataset.out, mode = b.dataset.mode;
+  if (out === 'video') { recordFullCarve(); return; }
+  if (job.state === 'idle') { toast('Todavía no hay ninguna pieza.'); return; }
+  let blob, name = baseName();
+  if (out === 'piece') { blob = renderStill({ studio: true, final: true, w: 1600, h: 1200 }); name += '.png'; }
+  else if (out === 'view') { blob = captureView(); name += '-vista.png'; }
+  else if (out === 'depth') { blob = depthPNG(); name += '-profundidad.png'; }
+  else if (out === 'stl') {
+    const stl = buildSTL(target);
+    if (inViewer) { blob = zipOne(name + '.stl', new Uint8Array(stl)); name += '-stl.zip'; }
+    else { blob = new Blob([stl], { type: 'model/stl' }); name += '.stl'; }
+  }
+  if (mode === 'share') await shareBlob(blob, name); else await saveBlob(blob, name);
+});
+
+// app instalable (PWA), invitación por WhatsApp y fotos compartidas desde la galería
+$('#inviteWa').href = 'https://wa.me/?text=' + encodeURIComponent('Mirá esta simulación: un láser talla tus fotos y textos en mármol, en 3D. ' + APP_URL);
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
+$('#installBtn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; $('#installBtn').hidden = true; };
+{
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  $('#installNote').textContent = inViewer ? `Para instalarla como app, abrí ${APP_URL} en Chrome o Safari.`
+    : standalone ? 'Ya la estás usando como app. Desde la galería del móvil también podés compartir una foto con «Láser Mármol».'
+    : ios ? 'En iPhone: botón Compartir → «Añadir a pantalla de inicio».'
+    : 'En Chrome: menú ⋮ → «Instalar app» (o «Añadir a pantalla de inicio»).';
+}
+try { if ('serviceWorker' in navigator && !inViewer && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+async function loadSharedImage() {
+  if (!new URLSearchParams(location.search).has('shared')) return;
+  try {
+    const c = await caches.open('lm-share'), r = await c.match('shared-image');
+    if (r) { const b = await r.blob(); await c.delete('shared-image'); loadFile(new File([b], 'foto compartida', { type: b.type || 'image/jpeg' })); togglePanel(true); }
+  } catch (e) {}
+  history.replaceState(null, '', location.pathname);
+}
 
 /* ───────────── Bucle principal ───────────── */
 const clock = new THREE.Clock();
@@ -1417,10 +1893,6 @@ function frame() {
   updateCamera(dt);
 
   composer.render();
-  if (wantShot) {
-    wantShot = false;
-    try { $('#shotImg').src = renderer.domElement.toDataURL('image/png'); $('#shot').hidden = false; } catch (e) { toast('No se pudo capturar la imagen.'); }
-  }
 
   hudT -= dt; lcdT -= dt;
   if (hudT <= 0) { hudT = .1; updateHUD(); }
@@ -1439,6 +1911,7 @@ function updateHUD() {
   $('#rZ').textContent = (-Math.min(job.pass, job.P) * job.step * 10).toFixed(2) + ' mm';
   $('#rP').textContent = job.beam ? '85 % · 42 W' : '0 %';
   $('#rT').textContent = fmtTime(job.elapsed);
+  if (rec) $('#recTime').textContent = 'REC ' + fmtTime((performance.now() - rec.t0) / 1000);
 }
 
 /* ───────────── Arranque ───────────── */
@@ -1449,8 +1922,10 @@ setTimeout(async () => {
   startJob();
   refreshPreview();
   setCam('orbit');
+  $('#snd').setAttribute('aria-pressed', soundOn);
   frame();
   hideLoader();
+  loadSharedImage();
 }, 30);
 </script>
 </body>
