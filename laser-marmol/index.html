@@ -99,6 +99,11 @@ button{cursor:pointer}
 .pick input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:200px;z-index:2}
 .paste{border:1px dashed #4a4c52;border-radius:4px;padding:12px;min-height:52px;background:#0c0d10;color:var(--muted);font-size:13px;text-align:center;-webkit-user-select:text;user-select:text}
 .paste:focus{border-color:var(--accent);color:var(--fg)}
+.chosen{margin:0;border:1px solid var(--ok);border-radius:6px;overflow:hidden;background:#000;display:flex;flex-direction:column}
+.chosen img{display:block;width:100%;max-width:100%;max-height:220px;object-fit:contain;background:#000}
+.chosen figcaption{display:flex;flex-direction:column;gap:2px;padding:8px 10px;background:#0f1a14;font-size:12px;color:var(--muted);min-width:0}
+.chosen figcaption b{color:var(--ok);font-size:13px;font-weight:600}
+.chosen figcaption span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px dashed #4a4c52;border-radius:4px;padding:16px 10px;text-align:center;cursor:pointer;background:#0c0d10}
 .drop strong{font-family:var(--font-d);font-size:17px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .drop span{font-size:12px;color:var(--muted)}
@@ -280,8 +285,12 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         <button role="tab" id="tab-foto" aria-selected="false" data-tab="foto">Foto</button>
       </div>
       <div data-pane="foto" class="stack" hidden>
+        <figure class="chosen" id="chosen" hidden>
+          <img id="chosenImg" alt="Foto elegida para tallar">
+          <figcaption><b>✓ Foto elegida</b><span id="chosenCap"></span></figcaption>
+        </figure>
         <div class="drop pick" id="drop">
-          <strong>Elegir foto</strong>
+          <strong id="dropTitle">Elegir foto</strong>
           <span>Galería del móvil o archivos del ordenador.<br>También podés arrastrarla o pegarla (Ctrl+V).</span>
           <input type="file" id="file" accept="image/*" aria-label="Elegir foto de la galería o de los archivos">
         </div>
@@ -1630,8 +1639,15 @@ function loadFile(f) {
   if (!f || !f.type.startsWith('image/')) { toast('Ese archivo no es una imagen. Probá con JPG, PNG, WEBP o HEIC.'); return; }
   const url = URL.createObjectURL(f), img = new Image();
   img.onload = () => {
+    if (photoImg?.src && photoImg.src !== url) URL.revokeObjectURL(photoImg.src);
     photoImg = img; photoName = f.name.length > 24 ? f.name.slice(0, 22) + '…' : f.name;
+    // muestra la foto tal cual, para confirmar que es la que se va a tallar
+    $('#chosenImg').src = url;
+    $('#chosenCap').textContent = `${f.name || 'Foto'} · ${img.naturalWidth} × ${img.naturalHeight} px`;
+    $('#chosen').hidden = false;
+    $('#dropTitle').textContent = 'Cambiar foto';
     document.querySelector('#tab-foto').click();
+    $('#panel .scroll').scrollTop = 0;
     toast('Foto lista. Pulsá «Tallar diseño» para grabarla.');
   };
   img.onerror = () => toast('No se pudo leer la imagen. Si es HEIC, exportala como JPG.');
