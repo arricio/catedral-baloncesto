@@ -326,6 +326,13 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
           <div class="btn pick">Sacar foto con la cámara<input type="file" id="cam" accept="image/*" capture="environment" aria-label="Sacar foto con la cámara"></div>
         </div>
         <div class="paste" id="pasteZone" contenteditable="true" role="textbox" aria-label="Zona para pegar una foto" inputmode="none">Otra opción: copiá una foto (en Google Fotos o la galería: Compartir → Copiar), mantené pulsado aquí y elegí «Pegar».</div>
+        <div class="field"><label for="pFit">Encuadre</label>
+          <select id="pFit">
+            <option value="contain">Foto completa, sin recortar (recomendado)</option>
+            <option value="cover">Llenar todo el bloque (recorta los bordes)</option>
+          </select>
+        </div>
+        <label class="check"><input type="checkbox" id="pBg" checked> Quitar el fondo liso (blanco o de un solo color)</label>
         <div class="field"><label for="pStyle">Estilo de grabado</label>
           <select id="pStyle">
             <option value="relief">Relieve 3D profundo (recomendado)</option>
@@ -1183,13 +1190,16 @@ function radialFill(g, x, y, r, inner = 1, outer = .35) {
 }
 let design = { type: 'texto' };
 let photoImg = null, photoName = '';
+let photoRect = { x: 0, y: 0, w: DW, h: DH };
 function sourceCanvas() {
   const c = cnv(DW, DH), g = c.getContext('2d');
-  g.fillStyle = '#000'; g.fillRect(0, 0, DW, DH);
-  if (design.type === 'texto') drawText(g);
+  if (design.type === 'texto') { g.fillStyle = '#000'; g.fillRect(0, 0, DW, DH); drawText(g); }
   else if (design.type === 'foto' && photoImg) {
-    const s = Math.max(DW / photoImg.width, DH / photoImg.height), w = photoImg.width * s, h = photoImg.height * s;
-    g.drawImage(photoImg, (DW - w) / 2, (DH - h) / 2, w, h);
+    // por defecto la foto entra entera (sin cortar pelo ni barbilla); lo que queda alrededor no se talla
+    const fit = $('#pFit').value === 'cover' ? Math.max : Math.min;
+    const s = fit(DW / photoImg.width, DH / photoImg.height), w = photoImg.width * s, h = photoImg.height * s;
+    photoRect = { x: (DW - w) / 2, y: (DH - h) / 2, w, h };
+    g.drawImage(photoImg, photoRect.x, photoRect.y, w, h);
   }
   return c;
 }
@@ -1220,17 +1230,20 @@ const gridC = cnv(NX, NZ), gridG = gridC.getContext('2d', { willReadFrequently: 
 const IX0 = Math.round(MARGIN / DX), IZ0 = Math.round(MARGIN / DZ), IW = NX - 2 * IX0, IH = NZ - 2 * IZ0;
 function buildTarget(maxD, write = true) {
   const src = sourceCanvas();
-  gridG.fillStyle = '#000'; gridG.fillRect(0, 0, NX, NZ);
+  const photo = design.type === 'foto';
+  gridG.clearRect(0, 0, NX, NZ);
+  if (!photo) { gridG.fillStyle = '#000'; gridG.fillRect(0, 0, NX, NZ); }
   gridG.imageSmoothingEnabled = true; gridG.imageSmoothingQuality = 'high';
   gridG.drawImage(src, IX0, IZ0, IW, IH);
   const data = gridG.getImageData(0, 0, NX, NZ).data;
   const val = new Float32Array(NX * NZ);
-  const photo = design.type === 'foto';
+  const bg = photo ? photoBackground(data) : null;
   const darkMarble = MARBLES[marbleKey].dark;
   const con = +$('#pContrast').value, bri = +$('#pBright').value;
   for (let iz = IZ0; iz < IZ0 + IH; iz++) for (let ix = IX0; ix < IX0 + IW; ix++) {
     const i = iz * NX + ix, L = (data[i * 4] * .299 + data[i * 4 + 1] * .587 + data[i * 4 + 2] * .114) / 255;
     let v;
+    if (photo && bg[i]) { val[i] = 0; continue; }
     if (photo) {
       v = clamp((L - .5) * con + .5 + bri, 0, 1);
       if (!darkMarble) v = 1 - v;          // en mármol claro lo oscuro se talla; en oscuro, lo claro
@@ -1266,7 +1279,7 @@ function buildTarget(maxD, write = true) {
   // color del relleno
   const paint = currentPaint();
   if (write) {
-    if (paint.photo) colorG.drawImage(gridC, 0, 0);
+    if (paint.photo) { colorG.fillStyle = '#ffffff'; colorG.fillRect(0, 0, NX, NZ); colorG.drawImage(gridC, 0, 0); }
     else { colorG.fillStyle = paint.hex || '#ffffff'; colorG.fillRect(0, 0, NX, NZ); }
     colorTex.needsUpdate = true;
     U.uUseColor.value = paint.use; U.uMetal.value = paint.metal;
@@ -1276,11 +1289,61 @@ function buildTarget(maxD, write = true) {
   const pc = paint.hex ? [1, 3, 5].map(k => parseInt(paint.hex.slice(k, k + 2), 16) / 255) : [1, .93, .84];
   for (let iz = 0; iz < 308; iz++) for (let ix = 0; ix < 440; ix++) {
     const i = iz * NX + ix, v = clamp(val[i], 0, 1), o = (iz * 440 + ix) * 4;
-    if (paint.photo) { const sh = v > .02 ? .45 + .55 * v : 0; im.data[o] = data[i * 4] * sh; im.data[o + 1] = data[i * 4 + 1] * sh; im.data[o + 2] = data[i * 4 + 2] * sh; }
+    if (paint.photo && data[i * 4 + 3] > 127 && !(bg && bg[i])) { const sh = v > .02 ? .45 + .55 * v : 0; im.data[o] = data[i * 4] * sh; im.data[o + 1] = data[i * 4 + 1] * sh; im.data[o + 2] = data[i * 4 + 2] * sh; }
+    else if (paint.photo) { im.data[o] = im.data[o + 1] = im.data[o + 2] = v * 235; }
     else { im.data[o] = v * 255 * pc[0]; im.data[o + 1] = v * 255 * pc[1]; im.data[o + 2] = v * 255 * pc[2]; }
     im.data[o + 3] = 255;
   }
   pg.putImageData(im, 0, 0);
+}
+// zonas de la foto que no se tallan: fuera de la imagen, transparentes o el fondo liso que toca los bordes
+function photoBackground(data) {
+  const bg = new Uint8Array(NX * NZ).fill(1);
+  const x0 = Math.ceil(IX0 + photoRect.x / DW * IW), x1 = Math.floor(IX0 + (photoRect.x + photoRect.w) / DW * IW) - 1;
+  const z0 = Math.ceil(IZ0 + photoRect.y / DH * IH), z1 = Math.floor(IZ0 + (photoRect.y + photoRect.h) / DH * IH) - 1;
+  const X0 = Math.max(IX0, x0), X1 = Math.min(IX0 + IW - 1, x1), Z0 = Math.max(IZ0, z0), Z1 = Math.min(IZ0 + IH - 1, z1);
+  for (let iz = Z0; iz <= Z1; iz++) for (let ix = X0; ix <= X1; ix++) { const i = iz * NX + ix; bg[i] = data[i * 4 + 3] < 128 ? 1 : 0; }
+  if (!$('#pBg').checked) return bg;
+  // color dominante del borde (p. ej. el blanco de un fondo de estudio aunque la ropa toque abajo);
+  // si ningún color ocupa al menos el 40 % del borde (foto con paisaje), no se quita nada
+  const border = [];
+  for (let ix = X0; ix <= X1; ix++) border.push(Z0 * NX + ix, Z1 * NX + ix);
+  for (let iz = Z0; iz <= Z1; iz++) border.push(iz * NX + X0, iz * NX + X1);
+  const op = border.filter(i => !bg[i]);
+  if (op.length < 10) return bg;
+  const bins = new Map();
+  for (const i of op) { const k = (data[i * 4] >> 5) * 64 + (data[i * 4 + 1] >> 5) * 8 + (data[i * 4 + 2] >> 5); bins.set(k, (bins.get(k) || 0) + 1); }
+  let best = -1, bestN = 0; for (const [k, n] of bins) if (n > bestN) { best = k; bestN = n; }
+  if (bestN < op.length * .4) return bg;
+  const dom = op.filter(i => (data[i * 4] >> 5) * 64 + (data[i * 4 + 1] >> 5) * 8 + (data[i * 4 + 2] >> 5) === best);
+  const m = [0, 1, 2].map(c => dom.reduce((a, i) => a + data[i * 4 + c], 0) / dom.length);
+  const dist = i => Math.hypot(data[i * 4] - m[0], data[i * 4 + 1] - m[1], data[i * 4 + 2] - m[2]);
+  const tol = 42, stack = [];
+  for (const i of op) if (dist(i) < tol) { bg[i] = 1; stack.push(i); }
+  while (stack.length) {
+    const i = stack.pop(), ix = i % NX, iz = (i / NX) | 0;
+    for (const j of [ix > X0 ? i - 1 : -1, ix < X1 ? i + 1 : -1, iz > Z0 ? i - NX : -1, iz < Z1 ? i + NX : -1]) {
+      if (j >= 0 && !bg[j] && dist(j) < tol) { bg[j] = 1; stack.push(j); }
+    }
+  }
+  // se come 2 píxeles del borde para no dejar el halo claro alrededor del pelo ni líneas sueltas
+  for (let k = 0; k < 2; k++) {
+    const grow = [];
+    for (let iz = Z0; iz <= Z1; iz++) for (let ix = X0; ix <= X1; ix++) {
+      const i = iz * NX + ix;
+      if (!bg[i] && (bg[i - 1] || bg[i + 1] || bg[i - NX] || bg[i + NX])) grow.push(i);
+    }
+    for (const i of grow) bg[i] = 1;
+  }
+  // quita también islas sueltas muy pequeñas que queden en el fondo
+  const seen = new Uint8Array(NX * NZ);
+  for (let iz = Z0; iz <= Z1; iz++) for (let ix = X0; ix <= X1; ix++) {
+    const i0 = iz * NX + ix; if (bg[i0] || seen[i0]) continue;
+    const comp = [i0], st = [i0]; seen[i0] = 1;
+    while (st.length) { const i = st.pop(); for (const j of [i - 1, i + 1, i - NX, i + NX]) if (!bg[j] && !seen[j]) { seen[j] = 1; st.push(j); comp.push(j); } }
+    if (comp.length < 120) for (const i of comp) bg[i] = 1;
+  }
+  return bg;
 }
 function blur(a, it) {
   const tmp = new Float32Array(a.length);
@@ -1534,6 +1597,13 @@ function updateAudio(dt) {
   a.airG.gain.setTargetAtTime(playing && !done && job.state !== 'idle' ? .022 : 0, t, .2);
 }
 // el navegador sólo deja sonar el audio después de un toque: se enciende con la primera interacción
+// al pasar a otra app, al escritorio del móvil o a otra pestaña, la máquina se calla; al volver, vuelve a sonar
+document.addEventListener('visibilitychange', () => {
+  if (!audio) return;
+  if (document.hidden) audio.ctx.suspend().catch(() => {});
+  else if (soundOn) audio.ctx.resume().catch(() => {});
+});
+addEventListener('pagehide', () => { audio?.ctx.suspend().catch(() => {}); });
 // (en móviles sólo cuentan el final del toque o el clic, no el inicio)
 const UNLOCK_EVENTS = ['pointerup', 'touchend', 'click', 'keydown'];
 function unlockAudio(e) {
@@ -1698,7 +1768,7 @@ async function refreshPreview() {
     buildTarget(1, false);
   }, 120);
 }
-['#tText', '#tFont', '#tRelief', '#pFrame', '#pContrast', '#pBright', '#pDither', '#pInvert'].forEach(s => $(s).addEventListener('input', () => {
+['#tText', '#tFont', '#tRelief', '#pFrame', '#pContrast', '#pBright', '#pDither', '#pInvert', '#pFit', '#pBg'].forEach(s => $(s).addEventListener('input', () => {
   $('#oContrast').textContent = (+$('#pContrast').value).toFixed(2); $('#oBright').textContent = (+$('#pBright').value).toFixed(2);
   refreshPreview();
 }));
