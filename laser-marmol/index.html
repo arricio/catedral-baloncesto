@@ -57,9 +57,11 @@ button{cursor:pointer}
 .brand b{font-family:var(--font-d);font-weight:700;font-size:26px;letter-spacing:.06em;line-height:1;text-transform:uppercase}
 .brand b span{color:var(--accent)}
 .brand small{font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-#installTop{position:fixed;z-index:11;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:7px;background:var(--accent);color:#1a1205;border:0;border-radius:4px;padding:9px 12px;font-family:var(--font-d);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase}
-#installTop svg{width:16px;height:16px;fill:currentColor}
-@media (min-width:761px){#installTop{right:auto;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 112px)}}
+.topActions{position:fixed;z-index:11;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.tbtn.ghost{background:var(--panel-solid);color:var(--accent);border:1px solid var(--accent)}
+.tbtn{display:flex;align-items:center;gap:7px;background:var(--accent);color:#1a1205;border:0;border-radius:4px;padding:9px 12px;font-family:var(--font-d);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase}
+#installTop svg,.tbtn svg{width:16px;height:16px;fill:currentColor}
+@media (min-width:761px){.topActions{right:auto;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 112px);align-items:flex-start}}
 @media (min-width:761px){body:has(#panel.closed) .hud{right:16px}}
 .chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border:1px solid var(--line);background:var(--panel);border-radius:3px;width:max-content;margin-top:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
@@ -241,7 +243,9 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
   .cams{order:4}
   .cams button{padding:8px 7px;font-size:12px}
   .brand b{font-size:21px}
-  .brand small{max-width:calc(100vw - 210px);line-height:1.5}
+  .brand small{max-width:calc(100vw - 236px);line-height:1.5}
+  .tbtn{font-size:13px!important;letter-spacing:.05em!important;padding:8px 10px!important;justify-content:center}
+  .hud{top:calc(env(safe-area-inset-top,0px) + 176px)!important}
   .hint{display:none}
   .hud{right:auto;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 150px);width:168px;padding:6px 8px;font-size:8px;background:rgba(14,15,18,.72)}
   .hud-h b{font-size:9px}
@@ -267,7 +271,10 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
   <div class="chip" id="chip" data-s="idle"><span class="dot"></span><span id="chipTxt">En espera</span></div>
 </div>
 
-<button id="installTop" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg>Instalar app</button>
+<div class="topActions">
+<button id="helpBtn" class="tbtn ghost" aria-label="Manual de usuario: vídeo con las instrucciones de la máquina"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5a.5.5 0 0 0 0 1H20v3H6.5A2.5 2.5 0 0 1 4 19.5zM8 6v2h8V6zm0 4v2h6v-2z"/></svg>Manual de usuario</button>
+<button id="installTop" class="tbtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg>Instalar app</button>
+</div>
 
 <div class="hud" id="hud" aria-live="off">
   <div class="hud-h"><span class="dot" id="hDot"></span><b id="hSt">En espera</b><span id="hName">Texto</span></div>
@@ -393,7 +400,6 @@ vita brevis</textarea></div>
   <div class="group">
     <button class="ib save" id="saveBtn" aria-label="Guardar y compartir"><svg viewBox="0 0 24 24"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg><span>Guardar</span></button>
     <button class="ib rec" id="recBtn" aria-label="Grabar vídeo de lo que se ve"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg></button>
-    <button class="ib help" id="helpBtn" aria-label="Cómo se usa"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 16.2a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm1.7-6.4c-.7.5-.9.8-.9 1.6v.4h-2v-.5c0-1.3.4-2 1.4-2.7.8-.6 1.2-.9 1.2-1.6 0-.8-.6-1.3-1.5-1.3s-1.6.6-1.7 1.6l-2-.2C8.4 7.1 10 5.8 12 5.8c2.1 0 3.6 1.2 3.6 3 0 1.3-.7 2.1-1.9 3z"/></svg><span>Ayuda</span></button>
     <button class="ib" id="snd" aria-label="Activar sonido" aria-pressed="false"><svg viewBox="0 0 24 24" id="sndIco"><path d="M4 9h4l5-4v14l-5-4H4zm11.6.4l1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1-1.4 1.4-2.1-2.1-2.1 2.1-1.4-1.4 2.1-2.1z"/></svg></button>
   </div>
 </footer>
@@ -442,7 +448,7 @@ vita brevis</textarea></div>
 
 <div class="modal" id="helpModal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-    <header><h3 id="helpTitle">Cómo se usa</h3><button class="x" data-close aria-label="Cerrar">✕</button></header>
+    <header><h3 id="helpTitle">Manual de usuario</h3><button class="x" data-close aria-label="Cerrar">✕</button></header>
     <video id="helpVideo" src="tutorial.mp4" poster="tutorial-poster.jpg" controls playsinline preload="none"></video>
     <p class="note" style="margin:0">Tocá un paso para ir directo a esa parte del vídeo.</p>
     <ol class="chapters" id="chapters"></ol>
@@ -1991,7 +1997,7 @@ $('#recStop').onclick = () => stopRecording();
 function closeModals() { document.querySelectorAll('.modal').forEach(m => { m.hidden = true; }); $('#resBody video')?.pause(); $('#helpVideo').pause(); }
 
 // tutorial en vídeo con capítulos
-const CHAPTERS = [{"t": 5, "title": "1. Abrí el panel de diseño", "text": "Tocá el botón de las tres rayitas, abajo a la izquierda, para abrir y cerrar el panel."}, {"t": 10, "title": "2. Escribí tu texto", "text": "En la pestaña TEXTO, escribí lo que quieras tallar. Cada renglón es una línea."}, {"t": 15, "title": "3. Tipografía y color", "text": "Elegí la letra y el color del tallado: oro, plata, cobre, colores o el círculo multicolor."}, {"t": 20, "title": "4. Elegí el mármol", "text": "En BLOQUE tocá el mármol que más te guste: hay 15 tipos y colores."}, {"t": 25, "title": "5. Profundidad y capas", "text": "Más profundidad y más capas = relieve más marcado. La velocidad del cabezal cambia en vivo."}, {"t": 30, "title": "6. Tocá TALLAR DISEÑO", "text": "La máquina empieza a tallar. Al terminar, la pieza se guarda sola en «Mis piezas»."}, {"t": 35, "title": "Mirá cómo talla", "text": "El cabezal barre línea por línea y capa por capa, con chispas y humo."}, {"t": 40, "title": "7. Tallar una foto", "text": "Pestaña FOTO → «Elegir foto»: se abre la galería del móvil o los archivos del ordenador."}, {"t": 45, "title": "8. Comprobá la foto elegida", "text": "Arriba aparece la foto que elegiste. Si no es esa, tocá «Cambiar foto»."}, {"t": 50, "title": "9. Estilo y colores de la foto", "text": "«Relieve 3D profundo» y «Colores originales» la tallan con volumen y con sus colores."}, {"t": 55, "title": "10. Pausa, reinicio y velocidad", "text": "El botón de pausa detiene la máquina y la flecha circular vuelve a tallar. Con TIEMPO vas de 0.1× (cámara lenta) a 10× (rápido)."}, {"t": 60, "title": "11. Cámaras", "text": "LIBRE para girar con el dedo, CABEZAL y MACRO de cerca, CENITAL desde arriba y CINE en vuelta."}, {"t": 65, "title": "12. Sonido", "text": "Tocá el altavoz para activar o silenciar el sonido de la máquina."}, {"t": 70, "title": "13. Guardar y enviar", "text": "Botón GUARDAR (flecha hacia abajo): vídeo del tallado con sonido, foto de la pieza, modelo 3D y ENVIAR por WhatsApp."}, {"t": 75, "title": "14. Instalá la app", "text": "Tocá INSTALAR APP para tenerla en la pantalla de inicio, aunque pierdas el enlace."}, {"t": 80, "title": "¡A tallar!", "text": "Tocá «?» cuando quieras volver a ver este tutorial."}];
+const CHAPTERS = [{"t": 5, "title": "1. Abrí el panel de diseño", "text": "Tocá el botón de las tres rayitas, abajo a la izquierda, para abrir y cerrar el panel."}, {"t": 10, "title": "2. Escribí tu texto", "text": "En la pestaña TEXTO, escribí lo que quieras tallar. Cada renglón es una línea."}, {"t": 15, "title": "3. Tipografía y color", "text": "Elegí la letra y el color del tallado: oro, plata, cobre, colores o el círculo multicolor."}, {"t": 20, "title": "4. Elegí el mármol", "text": "En BLOQUE tocá el mármol que más te guste: hay 15 tipos y colores."}, {"t": 25, "title": "5. Profundidad y capas", "text": "Más profundidad y más capas = relieve más marcado. La velocidad del cabezal cambia en vivo."}, {"t": 30, "title": "6. Tocá TALLAR DISEÑO", "text": "La máquina empieza a tallar. Al terminar, la pieza se guarda sola en «Mis piezas»."}, {"t": 35, "title": "Mirá cómo talla", "text": "El cabezal barre línea por línea y capa por capa, con chispas y humo."}, {"t": 40, "title": "7. Tallar una foto", "text": "Pestaña FOTO → «Elegir foto»: se abre la galería del móvil o los archivos del ordenador."}, {"t": 45, "title": "8. Comprobá la foto elegida", "text": "Arriba aparece la foto que elegiste. Si no es esa, tocá «Cambiar foto»."}, {"t": 50, "title": "9. Estilo y colores de la foto", "text": "«Relieve 3D profundo» y «Colores originales» la tallan con volumen y con sus colores."}, {"t": 55, "title": "10. Pausa, reinicio y velocidad", "text": "El botón de pausa detiene la máquina y la flecha circular vuelve a tallar. Con TIEMPO vas de 0.1× (cámara lenta) a 10× (rápido)."}, {"t": 60, "title": "11. Cámaras", "text": "LIBRE para girar con el dedo, CABEZAL y MACRO de cerca, CENITAL desde arriba y CINE en vuelta."}, {"t": 65, "title": "12. Sonido", "text": "Tocá el altavoz para activar o silenciar el sonido de la máquina."}, {"t": 70, "title": "13. Guardar y enviar", "text": "Botón GUARDAR (flecha hacia abajo): vídeo del tallado con sonido, foto de la pieza, modelo 3D y ENVIAR por WhatsApp."}, {"t": 75, "title": "14. Instalá la app", "text": "Tocá INSTALAR APP para tenerla en la pantalla de inicio, aunque pierdas el enlace."}, {"t": 80, "title": "¡A tallar!", "text": "Tocá «MANUAL DE USUARIO» cuando quieras volver a ver estas instrucciones."}];
 for (const c of CHAPTERS) {
   const li = document.createElement('li'), b = document.createElement('button'), tm = document.createElement('time'), ti = document.createElement('b'), tx = document.createElement('span');
   tm.textContent = fmtTime(c.t).replace(/^0/, ''); ti.textContent = c.title; tx.textContent = c.text;
@@ -2005,7 +2011,7 @@ for (const c of CHAPTERS) {
   li.append(b); $('#chapters').append(li);
 }
 $('#helpBtn').onclick = () => { closeModals(); $('#helpModal').hidden = false; };
-try { if (!localStorage.getItem('lm-help-seen')) { localStorage.setItem('lm-help-seen', '1'); setTimeout(() => toast('¿Primera vez? Tocá «?» (Ayuda) para ver el vídeo de cómo se usa.'), 6000); } } catch (e) {}
+try { if (!localStorage.getItem('lm-help-seen')) { localStorage.setItem('lm-help-seen', '1'); setTimeout(() => toast('¿Primera vez? Tocá «MANUAL DE USUARIO» (arriba) para ver el vídeo con las instrucciones.'), 6000); } } catch (e) {}
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) closeModals(); }));
 addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
 function updateVidDur() {
