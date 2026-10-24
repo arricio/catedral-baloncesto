@@ -365,8 +365,8 @@ TG-1972</textarea></div>
     <section class="stack">
       <h2>Parámetros de grabado</h2>
       <div class="field"><label for="pDepth">Profundidad máxima <output id="oDepth">6.0 mm</output></label><input type="range" id="pDepth" min="0.5" max="15" step="0.1" value="6"></div>
-      <div class="field"><label for="pPasses">Capas (pasadas) <output id="oPasses">8</output></label><input type="range" id="pPasses" min="1" max="16" step="1" value="8"></div>
-      <div class="field"><label for="pRaster">Velocidad del cabezal <output id="oRaster">800 mm/s</output></label><input type="range" id="pRaster" min="200" max="1600" step="50" value="800"></div>
+      <div class="field"><label for="pPasses">Capas (pasadas) <output id="oPasses">4</output></label><input type="range" id="pPasses" min="1" max="16" step="1" value="4"></div>
+      <div class="field"><label for="pRaster">Velocidad del cabezal <output id="oRaster">1200 mm/s</output></label><input type="range" id="pRaster" min="200" max="3000" step="50" value="1200"></div>
       <p class="note">Profundidad y capas se aplican al pulsar «Tallar». La velocidad del cabezal cambia en vivo.</p>
     </section>
   </div>
@@ -727,7 +727,7 @@ float hash2(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453
       float spot = exp(-d2 * 140.0) * uOn;
       float along = (uBeam.x - vWP.x) * uDir;
       float rz = vWP.z - uBeam.z;
-      float trail = step(0.0, along) * exp(-along * 2.2) * exp(-rz * rz * 1400.0) * step(0.01, vCarve) * uOn;
+      float trail = step(0.0, along) * exp(-along * 2.2) * exp(-rz * rz * 500.0) * step(0.01, vCarve) * uOn;
       float halo = exp(-d2 * 9.0) * uOn * 0.06;
       totalEmissiveRadiance += vec3(1.0, 0.38, 0.08) * trail * 3.2 + vec3(1.0, 0.82, 0.6) * spot * 5.0 + vec3(1.0, 0.5, 0.2) * halo;`);
 };
@@ -1271,7 +1271,7 @@ function blur(a, it) {
 /* ───────────── Motor del proceso (raster capa por capa) ───────────── */
 const head = { x: HOME.x, z: HOME.z };
 const job = { state: 'idle', pass: 0, P: 6, maxD: .45, step: .075, passRows: [], rows: [], ri: 0, dir: 1, iz: 0, ex: 0, tx: 0, tz: 0, after: '', lastIx: 0, elapsed: 0, total: 1, floor: 0, beam: false, power: 0 };
-let vRaster = 80;
+let vRaster = 120;
 // relieve: todo lo tallado queda esmerilado y el volumen lo dan las sombras; grabado plano: el tono depende de la profundidad
 const frostOf = d => { if (!job.relief) return Math.pow(d / job.maxD, .55); const t = clamp((d / job.maxD - .015) / .1, 0, 1); return t * t * (3 - 2 * t); };
 function startJob(reuse = false) {
@@ -1304,13 +1304,17 @@ function showFinished(rebuild = true) {
   spLife.fill(0);
   setSurfaceFrom(target);
 }
+const LINE = 2; // filas de la malla que cubre cada barrido del haz (paso entre líneas 0,9 mm)
 function buildPassRows() {
   job.passRows = [];
   for (let p = 1; p <= job.P; p++) {
     const floor = (p - 1) * job.step + 1e-5, rows = [];
-    for (let iz = 0; iz < NZ; iz++) {
-      let a = -1, b = -1; const r = iz * NX;
-      for (let ix = 0; ix < NX; ix++) if (target[r + ix] > floor) { if (a < 0) a = ix; b = ix; }
+    for (let iz = 0; iz < NZ; iz += LINE) {
+      let a = -1, b = -1;
+      for (let k = iz; k < Math.min(NZ, iz + LINE); k++) {
+        const r = k * NX;
+        for (let ix = 0; ix < NX; ix++) if (target[r + ix] > floor) { if (a < 0 || ix < a) a = ix; if (ix > b) b = ix; }
+      }
       if (a >= 0) rows.push([iz, a, b]);
     }
     job.passRows.push(rows);
@@ -1333,30 +1337,36 @@ function startRow() {
   job.iz = iz; job.dir = (job.ri % 2 === 0) ? 1 : -1;
   const sx = job.dir > 0 ? xOf(a) - OVERSCAN : xOf(b) + OVERSCAN;
   job.ex = job.dir > 0 ? xOf(b) + OVERSCAN : xOf(a) - OVERSCAN;
-  travel(sx, zOf(iz), 'raster');
+  travel(sx, zOf(Math.min(GZ, iz + (LINE - 1) / 2)), 'raster');
 }
 function travel(x, z, after) { job.state = 'travel'; job.tx = x; job.tz = z; job.after = after; }
 let carvedFrame = 0;
 const snd = { cells: 0, on: 0, toggles: 0, prev: false }; // métricas del disparo para el sonido
 function carveTo(nx) {
-  const newIx = Math.round((nx + BW / 2) / DX), dir = job.dir, row = job.iz * NX, lim = job.pass * job.step;
+  const newIx = Math.round((nx + BW / 2) / DX), dir = job.dir, lim = job.pass * job.step;
+  const z1 = Math.min(GZ, job.iz + LINE - 1);
   let on = false;
   for (let ix = job.lastIx + dir; dir > 0 ? ix <= newIx : ix >= newIx; ix += dir) {
     if (ix < 0 || ix > GX) continue;
-    const i = row + ix, fire = target[i] > job.floor;
-    snd.cells++; if (fire) snd.on++; if (fire !== snd.prev) { snd.toggles++; snd.prev = fire; }
-    if (fire) {
-      const nd = Math.min(target[i], lim);
-      if (nd > depth[i]) {
-        depth[i] = nd; posArr[i * 3 + 1] = TOP - nd; carveArr[i] = frostOf(nd);
-        carvedFrame++; on = true;
+    let fire = false;
+    for (let z = job.iz; z <= z1; z++) {
+      const i = z * NX + ix;
+      if (target[i] > job.floor) {
+        fire = true;
+        const nd = Math.min(target[i], lim);
+        if (nd > depth[i]) {
+          depth[i] = nd; posArr[i * 3 + 1] = TOP - nd; carveArr[i] = frostOf(nd);
+          carvedFrame++; on = true;
+        }
       }
     }
+    snd.cells++; if (fire) snd.on++; if (fire !== snd.prev) { snd.toggles++; snd.prev = fire; }
   }
   if ((dir > 0 && newIx > job.lastIx) || (dir < 0 && newIx < job.lastIx)) job.lastIx = newIx;
-  if (on) { if (job.iz < dirty0) dirty0 = job.iz; if (job.iz > dirty1) dirty1 = job.iz; job.beam = true; }
+  if (on) { if (job.iz < dirty0) dirty0 = job.iz; if (z1 > dirty1) dirty1 = z1; job.beam = true; }
   const ci = clamp(newIx, 0, GX);
-  return target[row + ci] > job.floor;
+  for (let z = job.iz; z <= z1; z++) if (target[z * NX + ci] > job.floor) return true;
+  return false;
 }
 let done = false;
 function simulate(dt) {
@@ -1635,7 +1645,7 @@ for (const [key, name, hex, metal] of SWATCHES) {
   l.append(inp); $('#swatches').append(l);
 }
 $('#pColor').addEventListener('change', () => refreshPreview());
-function applyPhotoStyle() { photoRelief() ? setParams(5, 8) : setParams(1.2, 2); }
+function applyPhotoStyle() { photoRelief() ? setParams(5, 4) : setParams(1.2, 2); }
 $('#pStyle').addEventListener('change', () => { applyPhotoStyle(); refreshPreview(); });
 function setParams(d, p) {
   $('#pDepth').value = d; $('#pPasses').value = p;
@@ -1647,7 +1657,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
   const t = b.dataset.tab;
   if (t === 'foto') { design = { type: 'foto' }; applyPhotoStyle(); }
-  if (t === 'texto') { design = { type: 'texto' }; setParams(6, 8); }
+  if (t === 'texto') { design = { type: 'texto' }; setParams(6, 4); }
   refreshPreview();
 });
 let prevT = 0;
@@ -2091,8 +2101,9 @@ const clock = new THREE.Clock();
 let hudT = 0, lcdT = 0, flick = 0;
 function frame() {
   requestAnimationFrame(frame);
-  const dt = Math.min(clock.getDelta(), .05);
-  const sdt = playing ? dt * simSpeed : 0;
+  const raw = Math.min(clock.getDelta(), .25);       // tiempo real (con tope por si la pestaña estuvo en segundo plano)
+  const dt = Math.min(raw, .05);                       // para cámara y efectos
+  const sdt = playing ? raw * simSpeed : 0;             // la máquina avanza con el reloj real aunque el móvil vaya lento
   lastHX = head.x; lastHZ = head.z;
   if (playing) simulate(sdt); else job.beam = job.beam && job.state === 'raster';
   flushSurface();
@@ -2128,7 +2139,7 @@ function frame() {
     if (Math.random() < Math.min(1, sdt * 30)) spawnSmoke(head.x, surfY, head.z);
   }
   updateParticles(sdt, simSpeed);
-  updateAudio(dt);
+  updateAudio(raw);
   updateCamera(dt);
 
   composer.render();
