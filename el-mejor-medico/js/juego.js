@@ -6,7 +6,7 @@ import {
   SANGRE, ORINA, PRUEBAS, ZONAS_RX, CIRUGIAS, ANESTESIAS, ANTECEDENTES, NOMBRES_H, NOMBRES_M, APELLIDOS,
 } from './datos.js';
 import { Voz, Sonido } from './audio.js';
-import { Mundo, crearHumano, ROPAS, PELOS_NOMBRES, BARBAS_NOMBRES, GAFAS_NOMBRES } from './escena.js';
+import { Mundo, crearHumano, cargarModelos, ROPAS, PELOS_NOMBRES, BARBAS_NOMBRES, GAFAS_NOMBRES } from './escena.js';
 import { dibujarRx, dibujarTac, dibujarEco, dibujarEcg, dibujarGarganta, ecgValor as ecgVal } from './imagenes.js';
 import { Cirugia, HERRAMIENTAS, EMERGENCIAS } from './cirugia.js';
 
@@ -45,6 +45,8 @@ const nombreDoctor = () => `${titulo()} ${G.doctor.nombre}`;
 // ───────────────────────── Mundo 3D ─────────────────────────
 const canvas = $('#lienzo3d');
 let mundo = null;
+// el mundo 3D se crea después de cargar los modelos: lo que se registre antes espera aquí
+const pendientesMundo = [];
 function crearMundo() {
   mundo = new Mundo(canvas);
   mundo.ponerCalidad(G?.ajustes.calidad || (matchMedia('(max-width: 700px)').matches ? 'media' : 'alta'));
@@ -52,6 +54,7 @@ function crearMundo() {
   mundo.construirSala();
   mundo.construirQuirofano();
   mundo.construirCreador();
+  mundo.alActualizar.push(...pendientesMundo.splice(0));
   mundo.alRedimensionar = () => { if (modo === 'cirugia' && mundo.centroCampo) mundo.vistaCampo(0.01); };
 }
 Voz.onCambio = () => {};
@@ -523,7 +526,7 @@ mundoActualizar(() => {
     if (esteto.t > 2.2 && !esteto.oidos.has(cerca)) { esteto.oidos.add(cerca); $('#es-n') && ($('#es-n').textContent = `${esteto.oidos.size}/${esteto.anclas.length}`); Sonido.clic(); }
   }
 });
-function mundoActualizar(fn) { setTimeout(() => mundo && mundo.alActualizar.push(fn), 0); }
+function mundoActualizar(fn) { if (mundo) mundo.alActualizar.push(fn); else pendientesMundo.push(fn); }
 async function terminarAuscultacion() {
   if (!esteto) return;
   if (esteto.parar) esteto.parar();
@@ -1209,6 +1212,8 @@ $('#hud-menu').onclick = () => {
 $('#hud-voz').onclick = () => { if (!G) return; G.ajustes.voz = !G.ajustes.voz; Voz.activa = G.ajustes.voz; if (!G.ajustes.voz) Voz.callar(); $('#hud-voz').classList.toggle('off', !G.ajustes.voz); guardar(); };
 
 try {
+  // personajes modelados en Blender; si no cargan, se usan los hechos por código
+  try { await cargarModelos(); } catch (e) { console.warn('Sin modelos de Blender:', e); }
   crearMundo();
   pantallaInicio();
   $('#cargando').remove();
