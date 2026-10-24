@@ -228,9 +228,15 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
   .brand b{font-size:21px}
   .brand small{max-width:calc(100vw - 210px);line-height:1.5}
   .hint{display:none}
-  .hud{right:auto;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 150px);width:184px;padding:8px 10px;font-size:9px}
-  .hud dd{font-size:10px}
-  .hud dl{gap:4px 8px;margin-top:7px}
+  .hud{right:auto;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 150px);width:168px;padding:6px 8px;font-size:8px;background:rgba(14,15,18,.72)}
+  .hud-h b{font-size:9px}
+  .hud-h span:last-child{display:none}
+  .hud-bar{margin:5px 0 3px}
+  .hud dl{grid-template-columns:repeat(3,auto);gap:2px 8px;margin-top:4px}
+  .hud dl div:not(.ph){display:none}
+  .hud dl .wide{grid-column:auto}
+  .hud dt{font-size:7px;letter-spacing:.04em}
+  .hud dd{font-size:9px}
 }
 @media (min-width:761px) and (max-width:1240px){ :root{--bar-h:116px} #bar{padding-block:8px} }
 @media (min-width:761px){ #panel.closed{display:none} #panel.closed ~ .hint{right:16px} }
@@ -253,15 +259,15 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
   <div class="hud-bar"><i id="hBar"></i></div>
   <div class="hud-sub"><span id="hSub">Raster 0° · capa 1/1</span><span id="hPct">0.0%</span></div>
   <dl>
-    <div><dt>Capa</dt><dd id="hCapa">1 / 1</dd></div>
+    <div class="ph"><dt>Capa</dt><dd id="hCapa">1 / 1</dd></div>
     <div><dt>Estrategia</dt><dd>Raster 0°</dd></div>
     <div><dt>Pos. X</dt><dd id="hX">0.00 mm</dd></div>
     <div><dt>Pos. Y</dt><dd id="hY">0.00 mm</dd></div>
     <div><dt>Foco Z</dt><dd id="hZ">0.00 mm</dd></div>
     <div><dt>Avance</dt><dd id="hF">800 mm/s</dd></div>
     <div><dt>T. máquina</dt><dd id="hT">00:00 / 00:00</dd></div>
-    <div><dt>Restante (real)</dt><dd id="hR" class="warm">00:00</dd></div>
-    <div class="wide"><dt>Emisión láser</dt><dd id="hW">0 W</dd></div>
+    <div class="ph"><dt>Restante (real)</dt><dd id="hR" class="warm">00:00</dd></div>
+    <div class="wide ph"><dt>Emisión láser</dt><dd id="hW">0 W</dd></div>
   </dl>
 </div>
 
@@ -921,7 +927,7 @@ const lcdTex = new THREE.CanvasTexture(lcdC); lcdTex.colorSpace = THREE.SRGBColo
 const panelBtns = [];
 let estopGlow;
 {
-  const ped = new THREE.Group(); ped.position.set(26, 0, -1); ped.rotation.y = -1.0; scene.add(ped);
+  const ped = new THREE.Group(); ped.position.set(24.5, 0, 7); ped.rotation.y = .3; scene.add(ped); // mirando al frente, hacia quien mira
   cyl(1.6, 1.8, .4, M.paint, 0, FLOOR_Y + .2, 0, ped);
   cyl(.35, .35, 24, M.paintL, 0, FLOOR_Y + 12, 0, ped, 16);
   const con = new THREE.Group(); con.position.set(0, 2.6, .4); con.rotation.x = -.42; ped.add(con);
