@@ -1,6 +1,6 @@
 // Láser sobre Mármol: funciona sin conexión tras la primera visita y recibe fotos compartidas desde la galería.
-const VERSION = 'lm-v9';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './pwa-192.png', './pwa-512.png', './apple-touch-icon.png'];
+const VERSION = 'lm-v10';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './pwa-192.png', './pwa-512.png', './apple-touch-icon.png', './tutorial-poster.jpg'];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
 self.addEventListener('install', e => {
@@ -34,7 +34,8 @@ self.addEventListener('fetch', e => {
   // librerías y tipografías con versión fija: primero la copia guardada
   if (CDN.test(req.url) || url.origin === location.origin) {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
-      if (r.ok || r.type === 'opaque') { const copy = r.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
+      // los vídeos piden trozos (respuesta 206) y esos no se guardan
+      if (r.status === 200 || r.type === 'opaque') { const copy = r.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       return r;
     })));
   }
