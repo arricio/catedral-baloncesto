@@ -735,9 +735,10 @@ topGeo.computeBoundingSphere();
 
 const marbleTex = new THREE.CanvasTexture(cnv(4, 4));
 // colores con los que se rellena lo tallado (pintura o pan de oro, como en las lápidas y placas reales)
-const colorC = cnv(NX, NZ), colorG = colorC.getContext('2d');
-colorG.fillStyle = '#ffffff'; colorG.fillRect(0, 0, NX, NZ);
-const colorTex = new THREE.CanvasTexture(colorC); colorTex.colorSpace = THREE.SRGBColorSpace;
+// a 4× la resolución de la malla, para que las fotos se vean nítidas (la malla da la profundidad; esto, el color)
+const CS = 4, colorC = cnv(GX * CS, GZ * CS), colorG = colorC.getContext('2d');
+colorG.fillStyle = '#ffffff'; colorG.fillRect(0, 0, colorC.width, colorC.height);
+const colorTex = new THREE.CanvasTexture(colorC); colorTex.colorSpace = THREE.SRGBColorSpace; colorTex.anisotropy = ANISO;
 U.uColorMap.value = colorTex;
 // máscara por píxel del relleno: verde = lleva color, rojo = metálico (así el marco puede ser oro y la foto a color)
 const maskC = cnv(NX, NZ), maskG = maskC.getContext('2d', { willReadFrequently: true });
@@ -761,7 +762,7 @@ float hash2(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453
       vec3 paint = texture2D(uColorMap, vMapUv).rgb;
       vec2 mk = texture2D(uMask, vMapUv).rg; float useC = step(0.5, mk.y), metalC = step(0.5, mk.x);
       vec3 tint = mix(uFrost * (0.84 + 0.16 * gr), paint * (0.9 + 0.1 * gr), useC);
-      vec3 fr = tint * (1.0 - 0.5 * dn * (1.0 - metalC * useC)) * (1.0 - 0.6 * smoothstep(0.04, 0.55, vSlope));
+      vec3 fr = tint * (1.0 - mix(0.5, 0.22, useC) * dn * (1.0 - metalC * useC)) * (1.0 - mix(0.6, 0.5, useC) * smoothstep(0.04, 0.55, vSlope));
       diffuseColor.rgb = mix(diffuseColor.rgb, fr, vCarve);`)
     .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
       roughnessFactor = mix(roughnessFactor, 0.93, smoothstep(0.0, 0.25, vCarve));`)
@@ -1277,8 +1278,11 @@ function buildTarget(maxD, write = true) {
     val[i] = v;
   }
   if (photo && photoRelief()) {
-    for (let i = 0; i < NX * NZ; i++) val[i] = Math.max(0, (val[i] - .08) / .92);
-    blur(val, 2); // superficies continuas: el relieve se lee por luces y sombras
+    // la figura se hunde como un hueco con paredes (mitad de la profundidad) y encima va el detalle de la foto
+    // el detalle se suaviza mucho (volúmenes grandes, sin deformar los rasgos: los rasgos los pone el color)
+    const det = Float32Array.from(val); blur(det, 4);
+    for (let i = 0; i < NX * NZ; i++) val[i] = bg[i] ? 0 : .62 + .38 * det[i];
+    blur(val, 1); // superficies continuas: el relieve se lee por luces y sombras
   } else if (photo && $('#pDither').checked) {
     for (let iz = IZ0; iz < IZ0 + IH; iz++) for (let ix = IX0; ix < IX0 + IW; ix++) {
       const i = iz * NX + ix, o = val[i], n = o > .5 ? 1 : 0, e = o - n; val[i] = n;
@@ -1321,19 +1325,26 @@ function buildTarget(maxD, write = true) {
   // color del relleno
   const paint = currentPaint();
   if (write) {
-    if (paint.photo) { colorG.fillStyle = '#ffffff'; colorG.fillRect(0, 0, NX, NZ); colorG.drawImage(gridC, 0, 0); }
-    else { colorG.fillStyle = paint.hex || '#ffffff'; colorG.fillRect(0, 0, NX, NZ); }
+    colorG.fillStyle = paint.photo ? '#ffffff' : (paint.hex || '#ffffff'); colorG.fillRect(0, 0, colorC.width, colorC.height);
+    if (paint.photo && photoImg) {
+      // la foto original, a alta resolución, en el mismo sitio que su relieve
+      colorG.save();
+      colorG.beginPath(); colorG.rect(IX0 * CS, IZ0 * CS, IW * CS, IH * CS); colorG.clip();
+      colorG.imageSmoothingEnabled = true; colorG.imageSmoothingQuality = 'high';
+      colorG.drawImage(photoImg, (IX0 + photoRect.x / DW * IW) * CS, (IZ0 + photoRect.y / DH * IH) * CS, photoRect.w / DW * IW * CS, photoRect.h / DH * IH * CS);
+      colorG.restore();
+    }
     maskG.fillStyle = `rgb(${paint.metal ? 255 : 0},${paint.use ? 255 : 0},0)`; maskG.fillRect(0, 0, NX, NZ);
     const fp = framePaintFor(paint);
     if (frameIdx.length && fp) {
-      const ci = colorG.getImageData(0, 0, NX, NZ), mi = maskG.getImageData(0, 0, NX, NZ);
-      const rgb = fp.hex ? [1, 3, 5].map(k => parseInt(fp.hex.slice(k, k + 2), 16)) : [255, 255, 255];
+      const mi = maskG.getImageData(0, 0, NX, NZ);
+      colorG.fillStyle = fp.hex || '#ffffff';
       for (const i of frameIdx) {
         if (i < 0 || i >= NX * NZ) continue;
-        ci.data[i * 4] = rgb[0]; ci.data[i * 4 + 1] = rgb[1]; ci.data[i * 4 + 2] = rgb[2]; ci.data[i * 4 + 3] = 255;
+        colorG.fillRect((i % NX) * CS - CS / 2, ((i / NX) | 0) * CS - CS / 2, CS, CS);
         mi.data[i * 4] = fp.metal ? 255 : 0; mi.data[i * 4 + 1] = fp.use ? 255 : 0;
       }
-      colorG.putImageData(ci, 0, 0); maskG.putImageData(mi, 0, 0);
+      maskG.putImageData(mi, 0, 0);
     }
     colorTex.needsUpdate = true; maskTex.needsUpdate = true;
     U.uUseColor.value = paint.use; U.uMetal.value = paint.metal;
@@ -2109,7 +2120,7 @@ async function keepPiece(auto = false) {
   for (let i = 0; i < NX * NZ; i++) q[i] = Math.round(clamp(target[i] / job.maxD, 0, 1) * 65535);
   const thumb = renderStill({ studio: true, final: true, w: 480, h: 360, type: 'image/jpeg' });
   try {
-    const colors = dataURLtoBlob(colorC.toDataURL('image/png'));
+    const colors = dataURLtoBlob(colorC.toDataURL('image/jpeg', .9));
     await idb.put({ id: Date.now(), name: job.name || srcLabel(), marble: marbleKey, maxD: job.maxD, P: job.P, relief: job.relief, target: q.buffer, thumb, colors, mask: dataURLtoBlob(maskC.toDataURL('image/png')), useColor: U.uUseColor.value, metal: U.uMetal.value });
     toast(auto ? 'Tallado terminado y guardado en «MIS PIEZAS» (botón de arriba).' : 'Guardada en «MIS PIEZAS» (botón de arriba).'); renderGallery();
   } catch (e) { toast('No se pudo guardar en este dispositivo. En navegación privada no se guardan piezas.'); }
@@ -2127,7 +2138,7 @@ async function openPiece(pc, quiet = false) {
   U.uMaxD.value = pc.maxD;
   U.uUseColor.value = pc.useColor || 0; U.uMetal.value = pc.metal || 0;
   if (pc.colors) {
-    try { const bm = await createImageBitmap(pc.colors); colorG.drawImage(bm, 0, 0, NX, NZ); colorTex.needsUpdate = true; } catch (e) {}
+    try { const bm = await createImageBitmap(pc.colors); colorG.drawImage(bm, 0, 0, colorC.width, colorC.height); colorTex.needsUpdate = true; } catch (e) {}
   }
   maskG.fillStyle = `rgb(${pc.metal ? 255 : 0},${pc.useColor ? 255 : 0},0)`; maskG.fillRect(0, 0, NX, NZ);
   if (pc.mask) { try { const bm = await createImageBitmap(pc.mask); maskG.drawImage(bm, 0, 0, NX, NZ); } catch (e) {} }
