@@ -91,6 +91,8 @@ button{cursor:pointer}
 
 /* panel */
 #panel{position:fixed;z-index:10;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));bottom:calc(var(--bar-h) + env(safe-area-inset-bottom,0px) + 12px);width:var(--panel-w);background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;overflow:hidden}
+.morehint{border:0;border-top:1px solid var(--line);background:linear-gradient(#1a1408,#131418);color:var(--accent);font-family:var(--font-d);font-size:14px;letter-spacing:.08em;text-transform:uppercase;padding:7px;cursor:pointer}
+.framePick select{border-color:var(--accent)}
 #panel .scroll{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px;flex:1;min-height:0}
 #panel h2{margin:0 0 8px;font-family:var(--font-d);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
 #panel h2 em{font-style:normal;font-family:var(--font-m);font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:none}
@@ -317,6 +319,14 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
           <img id="chosenImg" alt="Foto elegida para tallar">
           <figcaption><b>✓ Foto elegida</b><span id="chosenCap"></span></figcaption>
         </figure>
+        <div class="field framePick" id="pFrameField"><label for="pFrameStyle">Marco de la foto</label>
+          <select id="pFrameStyle">
+            <option value="photo">Con marco alrededor de la foto, como un cuadro</option>
+            <option value="block">Con marco en el borde del bloque</option>
+            <option value="none">Sin marco</option>
+          </select>
+        </div>
+        <div id="frameColorSlotFoto"></div>
         <div class="drop pick" id="drop">
           <strong id="dropTitle">Elegir foto</strong>
           <span>Galería del móvil o archivos del ordenador.<br>También podés arrastrarla o pegarla (Ctrl+V).</span>
@@ -333,13 +343,6 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
           </select>
         </div>
         <label class="check"><input type="checkbox" id="pBg" checked> Quitar el fondo liso (blanco o de un solo color)</label>
-        <div class="field"><label for="pFrameStyle">Marco</label>
-          <select id="pFrameStyle">
-            <option value="photo">Con marco alrededor de la foto, como un cuadro</option>
-            <option value="block">Con marco en el borde del bloque</option>
-            <option value="none">Sin marco</option>
-          </select>
-        </div>
         <div class="field"><label for="pStyle">Estilo de grabado</label>
           <select id="pStyle">
             <option value="relief">Relieve 3D profundo (recomendado)</option>
@@ -376,7 +379,8 @@ TG-1972</textarea></div>
         </div>
       </div>
       <label class="check" id="pFrameRow" style="margin-top:12px"><input type="checkbox" id="pFrame"> Marco decorativo</label>
-      <div class="field" id="frameColorRow" style="margin-top:12px" hidden><span class="lbl">Color del marco <output id="oFColor">Igual que el tallado</output></span>
+      <div id="frameColorSlotTexto"></div>
+      <div class="field" id="frameColorRow" hidden><span class="lbl">Color del marco <output id="oFColor">Igual que el tallado</output></span>
         <div class="swatches" id="frameSwatches" role="radiogroup" aria-label="Color del marco"></div>
       </div>
       <figure style="margin-top:12px">
@@ -398,6 +402,7 @@ TG-1972</textarea></div>
       <p class="note">Profundidad y capas se aplican al pulsar «Tallar». La velocidad del cabezal cambia en vivo.</p>
     </section>
   </div>
+  <button class="morehint" id="moreHint" type="button">Deslizá para ver más opciones ▾</button>
   <div class="go"><button class="primary" id="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.8H21l-5.5 4 2.1 6.7L12 15.4l-5.6 4.1 2.1-6.7L3 8.8h6.8z"/></svg>Tallar diseño</button></div>
 </aside>
 <div class="hint">Arrastrá para orbitar · rueda o pellizco para zoom<br>Espacio: pausa · ← → : velocidad</div>
@@ -1775,7 +1780,20 @@ function framePaintFor(paint) {
   return { use: 1, metal: framePaint.metal, hex: framePaint.hex };
 }
 function frameActive() { return design.type === 'foto' ? $('#pFrameStyle').value !== 'none' : $('#pFrame').checked; }
-function updateFrameColorRow() { $('#frameColorRow').hidden = !frameActive(); }
+function updateFrameColorRow() {
+  // el selector de color va pegado al control de marco de la pestaña activa
+  const slot = design.type === 'foto' ? $('#frameColorSlotFoto') : $('#frameColorSlotTexto');
+  if ($('#frameColorRow').parentNode !== slot) slot.append($('#frameColorRow'));
+  $('#frameColorRow').hidden = !frameActive();
+}
+function updateMoreHint() {
+  const sc = $('#panel .scroll');
+  $('#moreHint').hidden = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 24;
+}
+$('#panel .scroll').addEventListener('scroll', updateMoreHint, { passive: true });
+$('#moreHint').onclick = () => { const sc = $('#panel .scroll'); sc.scrollBy({ top: sc.clientHeight * .8, behavior: 'smooth' }); };
+addEventListener('resize', updateMoreHint);
+setInterval(updateMoreHint, 1000);
 {
   const row = $('#frameSwatches');
   const pick = (el, fp) => { framePaint = fp; row.querySelectorAll('[role="radio"]').forEach(x => x.setAttribute('aria-checked', x === el)); $('#oFColor').textContent = fp.name; refreshPreview(); };
