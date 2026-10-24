@@ -96,7 +96,7 @@ button{cursor:pointer}
 #panel .scroll{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px;flex:1;min-height:0}
 #panel h2{margin:0 0 8px;font-family:var(--font-d);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
 #panel h2 em{font-style:normal;font-family:var(--font-m);font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:none}
-.tabs{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:12px}
 .tabs button{background:transparent;border:0;padding:9px 4px;font-family:var(--font-d);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .tabs button+button{border-left:1px solid var(--line)}
 .tabs button[aria-selected="true"]{background:var(--accent);color:#1a1205;font-weight:600}
@@ -313,6 +313,7 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
       <div class="tabs" role="tablist">
         <button role="tab" id="tab-texto" aria-selected="true" data-tab="texto">Texto</button>
         <button role="tab" id="tab-foto" aria-selected="false" data-tab="foto">Foto</button>
+        <button role="tab" id="tab-combo" aria-selected="false" data-tab="combo">Foto + texto</button>
       </div>
       <div data-pane="foto" class="stack" hidden>
         <figure class="chosen" id="chosen" hidden>
@@ -362,6 +363,13 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
         </div>
       </div>
       <div data-pane="texto" class="stack">
+        <div class="field comboOnly" hidden><label for="cTextPos">Dónde va el texto</label>
+          <select id="cTextPos">
+            <option value="bottom">Debajo de la foto</option>
+            <option value="top">Encima de la foto</option>
+            <option value="over">Sobre la foto, en la parte de abajo</option>
+          </select>
+        </div>
         <div class="field"><label for="tText">Texto a tallar</label><textarea id="tText" rows="3">ARRICIO
 TG-1972</textarea></div>
         <div class="field"><label for="tFont">Tipografía</label>
@@ -1214,22 +1222,37 @@ function radialFill(g, x, y, r, inner = 1, outer = .35) {
 let design = { type: 'texto' };
 let photoImg = null, photoName = '';
 let photoRect = { x: 0, y: 0, w: DW, h: DH };
+const hasPhoto = () => design.type === 'foto' || design.type === 'combo';
+// zonas de foto y de texto dentro del lienzo de diseño (en «Foto + texto»)
+function comboZones() {
+  const pos = $('#cTextPos').value, th = DH * .24;
+  if (pos === 'top') return { photo: [0, th, DW, DH - th], text: [0, 0, DW, th * .95] };
+  if (pos === 'over') return { photo: [0, 0, DW, DH], text: [0, DH - th, DW, th * .95] };
+  return { photo: [0, 0, DW, DH - th], text: [0, DH - th * .95, DW, th * .95] };
+}
 function sourceCanvas() {
   const c = cnv(DW, DH), g = c.getContext('2d');
   if (design.type === 'texto') { g.fillStyle = '#000'; g.fillRect(0, 0, DW, DH); drawText(g); }
-  else if (design.type === 'foto' && photoImg) {
+  else if (hasPhoto() && photoImg) {
     // por defecto la foto entra entera (sin cortar pelo ni barbilla); lo que queda alrededor no se talla
+    const [zx, zy, zw, zh] = design.type === 'combo' ? comboZones().photo : [0, 0, DW, DH];
     const fit = $('#pFit').value === 'cover' ? Math.max : Math.min;
-    const s = fit(DW / photoImg.width, DH / photoImg.height), w = photoImg.width * s, h = photoImg.height * s;
-    photoRect = { x: (DW - w) / 2, y: (DH - h) / 2, w, h };
+    const s = fit(zw / photoImg.width, zh / photoImg.height), w = photoImg.width * s, h = photoImg.height * s;
+    photoRect = { x: zx + (zw - w) / 2, y: zy + (zh - h) / 2, w, h };
+    g.save(); g.beginPath(); g.rect(zx, zy, zw, zh); g.clip();
     g.drawImage(photoImg, photoRect.x, photoRect.y, w, h);
+    g.restore();
+    // lo que sobresale de la zona (modo «llenar») no cuenta como foto
+    const x0 = Math.max(zx, photoRect.x), y0 = Math.max(zy, photoRect.y);
+    photoRect = { x: x0, y: y0, w: Math.min(zx + zw, photoRect.x + w) - x0, h: Math.min(zy + zh, photoRect.y + h) - y0, full: { x: zx + (zw - w) / 2, y: zy + (zh - h) / 2, w, h } };
   }
   return c;
 }
-function drawText(g) {
+function drawText(g, zone = [0, 0, DW, DH], solid = null) {
+  const [zx, zy, zw, zh] = zone;
   const [fam, wt] = $('#tFont').value.split('|');
   const lines = ($('#tText').value || ' ').split('\n').map(s => s.trimEnd()).filter((s, i, a) => s || a.length === 1).slice(0, 6);
-  const maxW = DW * .86, maxH = DH * .78;
+  const maxW = zw * .86, maxH = zh * (zone[3] === DH ? .78 : .9);
   let size = 300;
   g.textAlign = 'center'; g.textBaseline = 'middle';
   for (; size > 20; size -= 6) {
@@ -1238,22 +1261,22 @@ function drawText(g) {
     if (w <= maxW && size * 1.18 * lines.length <= maxH) break;
   }
   g.font = `${wt} ${size}px "${fam}"`;
-  const lh = size * 1.18, y0 = DH / 2 - lh * (lines.length - 1) / 2;
+  const lh = size * 1.18, cx = zx + zw / 2, y0 = zy + zh / 2 - lh * (lines.length - 1) / 2;
   g.lineJoin = 'round';
   const N = 6;
   for (let k = 0; k < N; k++) {
     const v = Math.round(255 * (.3 + .7 * k / (N - 1)));
-    g.strokeStyle = `rgb(${v},${v},${v})`; g.lineWidth = Math.max(1, size * .07 * (1 - k / N));
-    lines.forEach((l, i) => g.strokeText(l, DW / 2, y0 + i * lh));
+    g.strokeStyle = solid || `rgb(${v},${v},${v})`; g.lineWidth = Math.max(1, size * .07 * (1 - k / N));
+    lines.forEach((l, i) => g.strokeText(l, cx, y0 + i * lh));
   }
-  g.fillStyle = '#fff'; lines.forEach((l, i) => g.fillText(l, DW / 2, y0 + i * lh));
+  g.fillStyle = solid || '#fff'; lines.forEach((l, i) => g.fillText(l, cx, y0 + i * lh));
 }
 
 const gridC = cnv(NX, NZ), gridG = gridC.getContext('2d', { willReadFrequently: true });
 const IX0 = Math.round(MARGIN / DX), IZ0 = Math.round(MARGIN / DZ), IW = NX - 2 * IX0, IH = NZ - 2 * IZ0;
 function buildTarget(maxD, write = true) {
   const src = sourceCanvas();
-  const photo = design.type === 'foto';
+  const photo = hasPhoto();
   gridG.clearRect(0, 0, NX, NZ);
   if (!photo) { gridG.fillStyle = '#000'; gridG.fillRect(0, 0, NX, NZ); }
   gridG.imageSmoothingEnabled = true; gridG.imageSmoothingQuality = 'high';
@@ -1281,7 +1304,8 @@ function buildTarget(maxD, write = true) {
     // la figura se hunde como un hueco con paredes (mitad de la profundidad) y encima va el detalle de la foto
     // el detalle se suaviza mucho (volúmenes grandes, sin deformar los rasgos: los rasgos los pone el color)
     const det = Float32Array.from(val); blur(det, 4);
-    for (let i = 0; i < NX * NZ; i++) val[i] = bg[i] ? 0 : .62 + .38 * det[i];
+    const top = design.type === 'combo' ? .86 : 1;  // con texto, las letras quedan un poco más hondas que la foto
+    for (let i = 0; i < NX * NZ; i++) val[i] = bg[i] ? 0 : (.62 + .38 * det[i]) * top;
     blur(val, 1); // superficies continuas: el relieve se lee por luces y sombras
   } else if (photo && $('#pDither').checked) {
     for (let iz = IZ0; iz < IZ0 + IH; iz++) for (let ix = IX0; ix < IX0 + IW; ix++) {
@@ -1291,6 +1315,19 @@ function buildTarget(maxD, write = true) {
     }
   } else if (!photo) {
     blur(val, 1); // paredes con la leve conicidad del haz
+  }
+  // «Foto + texto»: el texto se talla en su zona con su propio color, encima de lo que haya de foto
+  let tv = null;
+  if (design.type === 'combo') {
+    const tc = cnv(DW, DH), tg = tc.getContext('2d');
+    tg.fillStyle = '#000'; tg.fillRect(0, 0, DW, DH); drawText(tg, comboZones().text);
+    const gc = cnv(NX, NZ), gg = gc.getContext('2d', { willReadFrequently: true });
+    gg.fillStyle = '#000'; gg.fillRect(0, 0, NX, NZ); gg.imageSmoothingQuality = 'high'; gg.drawImage(tc, IX0, IZ0, IW, IH);
+    const td = gg.getImageData(0, 0, NX, NZ).data;
+    tv = new Float32Array(NX * NZ);
+    for (let i = 0; i < NX * NZ; i++) tv[i] = td[i * 4] / 255;
+    blur(tv, 1);
+    for (let i = 0; i < NX * NZ; i++) if (tv[i] > .04) { val[i] = Math.max(val[i], tv[i]); if (bg) bg[i] = 0; }
   }
   const frameMode = photo ? $('#pFrameStyle').value : ($('#pFrame').checked ? 'block' : 'none');
   const frameIdx = [];
@@ -1329,12 +1366,21 @@ function buildTarget(maxD, write = true) {
     if (paint.photo && photoImg) {
       // la foto original, a alta resolución, en el mismo sitio que su relieve
       colorG.save();
-      colorG.beginPath(); colorG.rect(IX0 * CS, IZ0 * CS, IW * CS, IH * CS); colorG.clip();
+      const F = photoRect.full || photoRect, gx = v => (IX0 + v / DW * IW) * CS, gy = v => (IZ0 + v / DH * IH) * CS;
+      colorG.beginPath(); colorG.rect(gx(photoRect.x), gy(photoRect.y), photoRect.w / DW * IW * CS, photoRect.h / DH * IH * CS); colorG.clip();
       colorG.imageSmoothingEnabled = true; colorG.imageSmoothingQuality = 'high';
-      colorG.drawImage(photoImg, (IX0 + photoRect.x / DW * IW) * CS, (IZ0 + photoRect.y / DH * IH) * CS, photoRect.w / DW * IW * CS, photoRect.h / DH * IH * CS);
+      colorG.drawImage(photoImg, gx(F.x), gy(F.y), F.w / DW * IW * CS, F.h / DH * IH * CS);
       colorG.restore();
     }
     maskG.fillStyle = `rgb(${paint.metal ? 255 : 0},${paint.use ? 255 : 0},0)`; maskG.fillRect(0, 0, NX, NZ);
+    if (tv) {
+      const tp = textPaint.key === 'natural' ? { use: 0, metal: 0, hex: '#ffffff' } : { use: 1, metal: textPaint.metal, hex: textPaint.hex };
+      colorG.save(); colorG.translate(IX0 * CS, IZ0 * CS); colorG.scale(IW * CS / DW, IH * CS / DH);
+      drawText(colorG, comboZones().text, tp.hex); colorG.restore();
+      const mi = maskG.getImageData(0, 0, NX, NZ);
+      for (let i = 0; i < NX * NZ; i++) if (tv[i] > .04) { mi.data[i * 4] = tp.metal ? 255 : 0; mi.data[i * 4 + 1] = tp.use ? 255 : 0; }
+      maskG.putImageData(mi, 0, 0);
+    }
     const fp = framePaintFor(paint);
     if (frameIdx.length && fp) {
       const mi = maskG.getImageData(0, 0, NX, NZ);
@@ -1354,7 +1400,8 @@ function buildTarget(maxD, write = true) {
   const pc = paint.hex ? [1, 3, 5].map(k => parseInt(paint.hex.slice(k, k + 2), 16) / 255) : [1, .93, .84];
   for (let iz = 0; iz < 308; iz++) for (let ix = 0; ix < 440; ix++) {
     const i = iz * NX + ix, v = clamp(val[i], 0, 1), o = (iz * 440 + ix) * 4;
-    if (paint.photo && data[i * 4 + 3] > 127 && !(bg && bg[i])) { const sh = v > .02 ? .45 + .55 * v : 0; im.data[o] = data[i * 4] * sh; im.data[o + 1] = data[i * 4 + 1] * sh; im.data[o + 2] = data[i * 4 + 2] * sh; }
+    if (tv && tv[i] > .04) { const tc2 = textPaint.hex ? [1, 3, 5].map(k => parseInt(textPaint.hex.slice(k, k + 2), 16)) : [240, 236, 228]; im.data[o] = tc2[0] * v; im.data[o + 1] = tc2[1] * v; im.data[o + 2] = tc2[2] * v; }
+    else if (paint.photo && data[i * 4 + 3] > 127 && !(bg && bg[i])) { const sh = v > .02 ? .45 + .55 * v : 0; im.data[o] = data[i * 4] * sh; im.data[o + 1] = data[i * 4 + 1] * sh; im.data[o + 2] = data[i * 4 + 2] * sh; }
     else if (paint.photo) { im.data[o] = im.data[o + 1] = im.data[o + 2] = v * 235; }
     else { im.data[o] = v * 255 * pc[0]; im.data[o + 1] = v * 255 * pc[1]; im.data[o + 2] = v * 255 * pc[2]; }
     im.data[o + 3] = 255;
@@ -1432,7 +1479,7 @@ const frostOf = d => { if (!job.relief) return Math.pow(d / job.maxD, .55); cons
 function startJob(reuse = false) {
   let maxD = +$('#pDepth').value / 10, P = +$('#pPasses').value;
   if (reuse && job.state !== 'idle') { maxD = job.maxD; P = job.P; }
-  else { buildTarget(maxD); job.relief = !(design.type === 'foto' && !photoRelief()); job.fresh = true; job.name = srcLabel(); }
+  else { buildTarget(maxD); job.relief = !(hasPhoto() && !photoRelief()); job.fresh = true; job.name = srcLabel(); }
   resetSurface();
   for (const s of smoke) s.visible = false;
   spLife.fill(0);
@@ -1446,10 +1493,10 @@ function startJob(reuse = false) {
 }
 // pieza ya terminada, sin tallar nada: portada de la app y cambio de mármol
 function showFinished(rebuild = true) {
-  if (rebuild && !(design.type === 'foto' && !photoImg)) {
+  if (rebuild && !(hasPhoto() && !photoImg)) {
     const maxD = +$('#pDepth').value / 10, P = +$('#pPasses').value;
     buildTarget(maxD);
-    Object.assign(job, { maxD, P, step: maxD / P, relief: !(design.type === 'foto' && !photoRelief()), name: srcLabel() });
+    Object.assign(job, { maxD, P, step: maxD / P, relief: !(hasPhoto() && !photoRelief()), name: srcLabel() });
   }
   Object.assign(job, { pass: job.P, state: 'done', rows: [], ri: 0, beam: false, fresh: false, showcase: true });
   U.uMaxD.value = job.maxD;
@@ -1784,7 +1831,7 @@ const SWATCHES = [
 ];
 let textPaint = { key: 'oro', hex: '#d4a640', metal: 1, name: 'Oro' };
 function currentPaint() {
-  if (design.type === 'foto') return $('#pColor').value === 'orig' ? { use: 1, metal: 0, photo: true } : { use: 0, metal: 0 };
+  if (hasPhoto()) return $('#pColor').value === 'orig' ? { use: 1, metal: 0, photo: true } : { use: 0, metal: 0 };
   return textPaint.key === 'natural' ? { use: 0, metal: 0 } : { use: 1, metal: textPaint.metal, hex: textPaint.hex };
 }
 function pickSwatch(el, paint) {
@@ -1800,10 +1847,10 @@ function framePaintFor(paint) {
   if (framePaint.key === 'natural') return { use: 0, metal: 0 };
   return { use: 1, metal: framePaint.metal, hex: framePaint.hex };
 }
-function frameActive() { return design.type === 'foto' ? $('#pFrameStyle').value !== 'none' : $('#pFrame').checked; }
+function frameActive() { return hasPhoto() ? $('#pFrameStyle').value !== 'none' : $('#pFrame').checked; }
 function updateFrameColorRow() {
   // el selector de color va pegado al control de marco de la pestaña activa
-  const slot = design.type === 'foto' ? $('#frameColorSlotFoto') : $('#frameColorSlotTexto');
+  const slot = hasPhoto() ? $('#frameColorSlotFoto') : $('#frameColorSlotTexto');
   if ($('#frameColorRow').parentNode !== slot) slot.append($('#frameColorRow'));
   $('#frameColorRow').hidden = !frameActive();
 }
@@ -1858,22 +1905,24 @@ function setParams(d, p) {
 // pestañas
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
-  document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.tab);
   const t = b.dataset.tab;
+  document.querySelectorAll('[data-pane]').forEach(p => p.hidden = !(p.dataset.pane === t || (t === 'combo' && (p.dataset.pane === 'foto' || p.dataset.pane === 'texto'))));
+  document.querySelectorAll('.comboOnly').forEach(x => x.hidden = t !== 'combo');
   if (t === 'foto') { design = { type: 'foto' }; applyPhotoStyle(); }
-  $('#pFrameRow').hidden = t === 'foto';  // en fotos el marco se elige en su propia lista
+  if (t === 'combo') { design = { type: 'combo' }; applyPhotoStyle(); }
+  $('#pFrameRow').hidden = t !== 'texto';  // con foto el marco se elige en su propia lista
   updateFrameColorRow();
   if (t === 'texto') { design = { type: 'texto' }; setParams(6, 4); }
   refreshPreview();
 });
 let prevT = 0;
-const srcLabel = () => design.type === 'texto' ? (($('#tText').value.trim().split('\n')[0] || 'Texto').slice(0, 22)) : (photoName || 'Sin foto');
+const srcLabel = () => { const t = ($('#tText').value.trim().split('\n')[0] || 'Texto').slice(0, 22); return design.type === 'texto' ? t : design.type === 'combo' ? (t + ' · foto') : (photoName || 'Sin foto'); };
 async function refreshPreview() {
   clearTimeout(prevT);
   prevT = setTimeout(async () => {
-    if (design.type === 'texto') { const [fam, wt] = $('#tFont').value.split('|'); try { await document.fonts.load(`${wt} 100px "${fam}"`); } catch (e) {} }
+    if (design.type !== 'foto') { const [fam, wt] = $('#tFont').value.split('|'); try { await document.fonts.load(`${wt} 100px "${fam}"`); } catch (e) {} }
     $('#srcName').textContent = srcLabel();
-    if (design.type === 'foto' && !photoImg) {
+    if (hasPhoto() && !photoImg) {
       const g = $('#preview').getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, 440, 308);
       g.fillStyle = '#8e8a81'; g.font = '16px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillText('Elige una foto para ver el mapa', 220, 158); g.textAlign = 'start';
       return;
@@ -1881,7 +1930,7 @@ async function refreshPreview() {
     buildTarget(1, false);
   }, 120);
 }
-['#tText', '#tFont', '#tRelief', '#pFrame', '#pContrast', '#pBright', '#pDither', '#pInvert', '#pFit', '#pBg', '#pFrameStyle'].forEach(s => $(s).addEventListener('input', () => {
+['#cTextPos', '#tText', '#tFont', '#tRelief', '#pFrame', '#pContrast', '#pBright', '#pDither', '#pInvert', '#pFit', '#pBg', '#pFrameStyle'].forEach(s => $(s).addEventListener('input', () => {
   $('#oContrast').textContent = (+$('#pContrast').value).toFixed(2); $('#oBright').textContent = (+$('#pBright').value).toFixed(2);
   refreshPreview();
 }));
@@ -1903,7 +1952,7 @@ function loadFile(f) {
     $('#chosenCap').textContent = `${f.name || 'Foto'} · ${img.naturalWidth} × ${img.naturalHeight} px`;
     $('#chosen').hidden = false;
     $('#dropTitle').textContent = 'Cambiar foto';
-    document.querySelector('#tab-foto').click();
+    if (design.type !== 'combo') document.querySelector('#tab-foto').click(); else refreshPreview();
     $('#panel .scroll').scrollTop = 0;
     toast('Foto lista. Pulsa «Tallar diseño» para grabarla.');
   };
@@ -1932,8 +1981,8 @@ $('#pasteZone').addEventListener('beforeinput', e => { if (e.inputType !== 'inse
 $('#pasteZone').addEventListener('drop', e => e.preventDefault());
 
 $('#go').onclick = async () => {
-  if (design.type === 'foto' && !photoImg) { toast('Elige una foto primero.'); return; }
-  if (design.type === 'texto') { const [fam, wt] = $('#tFont').value.split('|'); try { await document.fonts.load(`${wt} 100px "${fam}"`); } catch (e) {} }
+  if (hasPhoto() && !photoImg) { toast('Elige una foto primero.'); return; }
+  if (design.type !== 'foto') { const [fam, wt] = $('#tFont').value.split('|'); try { await document.fonts.load(`${wt} 100px "${fam}"`); } catch (e) {} }
   startJob();
   if (isPhone) togglePanel(false);
   toast(`Tallando «${srcLabel()}» en ${job.P} capas`);
