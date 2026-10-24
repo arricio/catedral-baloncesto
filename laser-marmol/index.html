@@ -24,7 +24,7 @@
 <!--/APP-HEAD-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Cinzel:wght@500;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,700;1,500&family=Bebas+Neue&family=UnifrakturMaguntia&family=Pacifico&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,500;1,600&family=IBM+Plex+Sans:wght@400;500;600&family=Cinzel:wght@500;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,700;1,500&family=Bebas+Neue&family=UnifrakturMaguntia&family=Pacifico&display=swap">
 <style>
 /* Layout: full-bleed 3D stage; machine-control side panel on the right (bottom sheet on phones); transport bar along the bottom. */
 :root{
@@ -59,7 +59,8 @@ button{cursor:pointer}
 .brand small{font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 #installTop{position:fixed;z-index:11;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:7px;background:var(--accent);color:#1a1205;border:0;border-radius:4px;padding:9px 12px;font-family:var(--font-d);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase}
 #installTop svg{width:16px;height:16px;fill:currentColor}
-@media (min-width:761px){#installTop{right:calc(var(--panel-w) + 28px);top:calc(env(safe-area-inset-top,0px) + 56px)}}
+@media (min-width:761px){#installTop{right:auto;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 112px)}}
+@media (min-width:761px){body:has(#panel.closed) .hud{right:16px}}
 .chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border:1px solid var(--line);background:var(--panel);border-radius:3px;width:max-content;margin-top:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .chip[data-s="on"] .dot{background:var(--hot);box-shadow:0 0 10px var(--hot)}
@@ -67,8 +68,23 @@ button{cursor:pointer}
 .chip[data-s="done"] .dot{background:var(--ok)}
 
 /* readout */
-.readout{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(var(--bar-h) + env(safe-area-inset-bottom,0px) + 14px);font-family:var(--font-m);font-size:11px;color:var(--muted);display:grid;grid-template-columns:auto auto;gap:2px 12px;pointer-events:none;z-index:5;font-variant-numeric:tabular-nums}
-.readout i{font-style:normal;color:var(--fg)}
+.hud{position:fixed;z-index:5;top:calc(env(safe-area-inset-top,0px) + 14px);right:calc(var(--panel-w) + 28px);width:236px;background:rgba(14,15,18,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:8px;padding:11px 13px 10px;font-family:var(--font-m);font-size:10px;color:var(--muted);pointer-events:none;font-variant-numeric:tabular-nums}
+.hud-h{display:flex;align-items:center;gap:7px}
+.hud-h b{color:var(--fg);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.hud-h span:last-child{margin-left:auto;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud .dot{width:7px;height:7px}
+.hud[data-s="run"] .dot,.hud[data-s="on"] .dot,.hud[data-s="done"] .dot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.hud[data-s="idle"] .dot{background:var(--accent)}
+.hud-bar{height:3px;background:#2a2c31;border-radius:2px;margin:8px 0 5px;overflow:hidden}
+.hud-bar i{display:block;height:100%;width:0;background:var(--hot)}
+.hud-sub{display:flex;justify-content:space-between}
+.hud-sub span:last-child{color:var(--fg)}
+.hud dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin:9px 0 0}
+.hud dl div{min-width:0}
+.hud dl .wide{grid-column:1 / -1}
+.hud dt{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.hud dd{margin:1px 0 0;color:var(--fg);font-size:11px;font-weight:500}
+.hud dd.warm{color:var(--accent)}
 
 /* panel */
 #panel{position:fixed;z-index:10;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));bottom:calc(var(--bar-h) + env(safe-area-inset-bottom,0px) + 12px);width:var(--panel-w);background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;overflow:hidden}
@@ -211,7 +227,10 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
   .cams button{padding:8px 7px;font-size:12px}
   .brand b{font-size:21px}
   .brand small{max-width:calc(100vw - 210px);line-height:1.5}
-  .readout,.hint{display:none}
+  .hint{display:none}
+  .hud{right:auto;left:max(12px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 150px);width:184px;padding:8px 10px;font-size:9px}
+  .hud dd{font-size:10px}
+  .hud dl{gap:4px 8px;margin-top:7px}
 }
 @media (min-width:761px) and (max-width:1240px){ :root{--bar-h:116px} #bar{padding-block:8px} }
 @media (min-width:761px){ #panel.closed{display:none} #panel.closed ~ .hint{right:16px} }
@@ -229,12 +248,21 @@ figcaption{font-size:11px;color:var(--muted);font-family:var(--font-m)}
 
 <button id="installTop" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16l-5.7-5.7 1.4-1.4L11 12.2zM4 18h16v2H4z"/></svg>Instalar app</button>
 
-<div class="readout" aria-live="off">
-  <span>X</span><i id="rX">0.00 mm</i>
-  <span>Y</span><i id="rY">0.00 mm</i>
-  <span>Z</span><i id="rZ">0.00 mm</i>
-  <span>Potencia</span><i id="rP">0 %</i>
-  <span>Tiempo máquina</span><i id="rT">00:00</i>
+<div class="hud" id="hud" aria-live="off">
+  <div class="hud-h"><span class="dot" id="hDot"></span><b id="hSt">En espera</b><span id="hName">Texto</span></div>
+  <div class="hud-bar"><i id="hBar"></i></div>
+  <div class="hud-sub"><span id="hSub">Raster 0° · capa 1/1</span><span id="hPct">0.0%</span></div>
+  <dl>
+    <div><dt>Capa</dt><dd id="hCapa">1 / 1</dd></div>
+    <div><dt>Estrategia</dt><dd>Raster 0°</dd></div>
+    <div><dt>Pos. X</dt><dd id="hX">0.00 mm</dd></div>
+    <div><dt>Pos. Y</dt><dd id="hY">0.00 mm</dd></div>
+    <div><dt>Foco Z</dt><dd id="hZ">0.00 mm</dd></div>
+    <div><dt>Avance</dt><dd id="hF">800 mm/s</dd></div>
+    <div><dt>T. máquina</dt><dd id="hT">00:00 / 00:00</dd></div>
+    <div><dt>Restante (real)</dt><dd id="hR" class="warm">00:00</dd></div>
+    <div class="wide"><dt>Emisión láser</dt><dd id="hW">0 W</dd></div>
+  </dl>
 </div>
 
 <aside id="panel">
@@ -1459,31 +1487,30 @@ function updateCamera(dt) {
 /* ───────────── Pantalla de la consola ───────────── */
 function drawLCD() {
   const g = lcdG, W = 640, H = 400;
-  const bgr = g.createLinearGradient(0, 0, 0, H); bgr.addColorStop(0, '#0b1a24'); bgr.addColorStop(1, '#06101a');
-  g.fillStyle = bgr; g.fillRect(0, 0, W, H);
-  const running = playing && !done && job.state !== 'idle';
-  const st = !playing ? 'PAUSA' : done ? 'COMPLETADO' : job.state === 'raster' ? 'TALLANDO' : job.state === 'travel' ? 'POSICIONANDO' : 'EN ESPERA';
-  g.font = '600 34px "IBM Plex Mono", monospace'; g.fillStyle = '#dfe9ee'; g.fillText('ARRICIO TG-1972', 22, 50);
-  g.fillStyle = !playing ? '#ffb347' : '#5fe08d'; g.font = '700 32px "Barlow Condensed", sans-serif';
-  g.textAlign = 'right'; g.fillText('● ' + st, W - 22, 50); g.textAlign = 'left';
-  g.fillStyle = '#2b4a5a'; g.fillRect(22, 66, W - 44, 2);
-  const mm = v => v.toFixed(2);
-  g.font = '500 40px "IBM Plex Mono", monospace'; g.fillStyle = '#e8f1f4';
-  g.fillText('X ' + mm(head.x * 10 + 100), 22, 122); g.fillText('Y ' + mm(head.z * 10 + 70), 340, 122);
-  g.font = '500 34px "IBM Plex Mono", monospace';
-  g.fillText('S ' + (job.beam && playing ? String(Math.round(820 + Math.random() * 40)) : '0'), 22, 172);
-  g.fillText('F ' + Math.round(vRaster * 600), 340, 172);
-  g.fillStyle = '#ffad33'; g.font = '600 26px "IBM Plex Mono", monospace';
-  g.fillText(`RASTER 0° · CAPA ${Math.max(1, Math.min(job.pass, job.P))}/${job.P}`, 22, 222);
+  g.fillStyle = '#071019'; g.fillRect(0, 0, W, H);
+  const glow = g.createRadialGradient(W * .4, H * .35, 20, W * .4, H * .35, W * .7);
+  glow.addColorStop(0, 'rgba(40,90,110,.35)'); glow.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = glow; g.fillRect(0, 0, W, H);
+  const st = !playing ? 'PAUSA' : done ? 'COMPLETADO' : job.state === 'travel' ? 'POSICIONANDO' : job.state === 'idle' ? 'EN ESPERA' : 'TALLANDO';
+  const M = (w, px) => `italic ${w} ${px}px "IBM Plex Mono", ui-monospace, monospace`;
+  g.textBaseline = 'alphabetic';
+  g.font = M(500, 32); g.fillStyle = '#d6e6ec'; g.fillText('ARRICIO TG-1972', 24, 52);
+  g.font = M(600, 32); g.fillStyle = playing ? '#5fe08d' : '#ffb347'; g.textAlign = 'right'; g.fillText('● ' + st, W - 24, 54); g.textAlign = 'left';
+  g.fillStyle = 'rgba(140,190,210,.35)'; g.fillRect(24, 70, W - 48, 2);
+  const sVal = job.beam && playing ? Math.round(60 + Math.random() * 360) : (playing && !done ? 1 : 0);
+  g.fillStyle = '#e6f0f3';
+  g.font = M(500, 34); g.fillText('X ' + (head.x * 10 + 100).toFixed(2), 24, 120);
+  g.fillText('S ' + sVal, 24, 162);
+  g.font = M(500, 38); g.fillText('Y ' + (head.z * 10 + 70).toFixed(2), 330, 134);
+  g.fillText('F ' + Math.round(vRaster * 600), 330, 180);
+  g.font = M(600, 26); g.fillStyle = '#ffad33';
+  g.fillText(`RASTER 0° · CAPA ${Math.max(1, Math.min(job.pass, job.P))}/${job.P}`, 24, 222);
   const p = done ? 1 : clamp(job.elapsed / job.total, 0, 1);
-  g.strokeStyle = '#7fb8d0'; g.lineWidth = 3; g.strokeRect(22, 248, W - 44, 40);
-  g.fillStyle = '#6cc4e8'; g.fillRect(28, 254, (W - 56) * p, 28);
-  g.fillStyle = '#cfe4ec'; g.font = '500 24px "IBM Plex Mono", monospace';
-  g.fillText((p * 100).toFixed(1) + '%', 22, 322);
-  g.textAlign = 'right';
-  g.fillText(`PWR ${job.beam && playing ? '85' : (running ? '41' : '0')}%   ${simSpeed.toFixed(2)}x`, W - 22, 372);
+  g.strokeStyle = '#8fc6d8'; g.lineWidth = 3; g.strokeRect(24, 244, W - 48, 38);
+  g.fillStyle = '#66c2e6'; g.fillRect(30, 250, (W - 60) * p, 26);
+  g.font = M(500, 22); g.fillStyle = '#cfe4ec'; g.fillText((p * 100).toFixed(1) + '%', 24, 312);
+  g.font = M(500, 28); g.textAlign = 'right';
+  g.fillText(`PWR ${job.beam && playing ? 41 : 0}%    ${simSpeed.toFixed(2)}x`, W - 24, 360);
   g.textAlign = 'left';
-  g.fillStyle = '#7d93a0'; g.font = '500 20px "IBM Plex Mono", monospace'; g.fillText(MARBLES[marbleKey].name.toUpperCase(), 22, 372);
   lcdTex.needsUpdate = true;
 }
 function updateLamps(t) {
@@ -2039,11 +2066,21 @@ function updateHUD() {
   const chip = $('#chip'), s = !playing ? 'idle' : done ? 'done' : job.beam ? 'on' : 'run';
   chip.dataset.s = s;
   $('#chipTxt').textContent = !playing ? 'En pausa' : done ? 'Tallado completado' : job.beam ? 'Láser emitiendo' : job.state === 'travel' ? 'Posicionando' : 'Barrido raster';
-  $('#rX').textContent = (head.x * 10 + 100).toFixed(2) + ' mm';
-  $('#rY').textContent = (head.z * 10 + 70).toFixed(2) + ' mm';
-  $('#rZ').textContent = (-Math.min(job.pass, job.P) * job.step * 10).toFixed(2) + ' mm';
-  $('#rP').textContent = job.beam ? '85 % · 42 W' : '0 %';
-  $('#rT').textContent = fmtTime(job.elapsed);
+  const capa = Math.max(1, Math.min(job.pass, job.P));
+  $('#hud').dataset.s = s;
+  $('#hSt').textContent = !playing ? 'En pausa' : done ? 'Completado' : job.state === 'travel' ? 'Posicionando' : 'Tallando';
+  $('#hName').textContent = job.name || srcLabel();
+  $('#hBar').style.width = (p * 100).toFixed(1) + '%';
+  $('#hSub').textContent = `Raster 0° · capa ${capa}/${job.P}`;
+  $('#hPct').textContent = (p * 100).toFixed(1) + '%';
+  $('#hCapa').textContent = `${capa} / ${job.P}`;
+  $('#hX').textContent = (head.x * 10 + 100).toFixed(2) + ' mm';
+  $('#hY').textContent = (head.z * 10 + 70).toFixed(2) + ' mm';
+  $('#hZ').textContent = (-(capa - 1) * job.step * 10).toFixed(2) + ' mm';
+  $('#hF').textContent = Math.round(vRaster * 10) + ' mm/s';
+  $('#hT').textContent = fmtTime(job.elapsed) + ' / ' + fmtTime(job.total);
+  $('#hR').textContent = done ? '00:00' : fmtTime((job.total - job.elapsed) / Math.max(simSpeed, .01));
+  $('#hW').textContent = (job.beam && playing ? Math.round(20 + Math.random() * 24) : 0) + ' W';
   if (rec) $('#recTime').textContent = 'REC ' + fmtTime((performance.now() - rec.t0) / 1000);
 }
 
