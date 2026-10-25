@@ -7,6 +7,7 @@ const S = process.argv[2] || '.';
   pg.on('console', m => { if (m.type()==='error') console.log('CERR', m.text()); });
   const shot = async (n) => { await pg.waitForTimeout(1500); await pg.screenshot({ path: `${S}/${process.env.PREF || 'j'}_${n}.png` }); console.log('shot', n); };
   const click = async (sel) => { await pg.waitForSelector(sel, { timeout: 15000 }); await pg.evaluate((s) => document.querySelector(s).click(), sel); await pg.waitForTimeout(150); };
+  const libre = () => pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, { timeout: 40000 });
   await pg.goto('http://localhost:8766/index.html' + (process.env.CASO ? '?caso=' + process.env.CASO : ''));
   await pg.waitForSelector('#inicio.on', { timeout: 30000 }); await pg.evaluate(() => window.__juego.mundo.ponerCalidad('baja'));
   await shot('01inicio');
@@ -20,11 +21,12 @@ const S = process.argv[2] || '.';
   await shot('04consulta');
   for (const q of ['motivo','dolor','habitos']) { await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 30000}); await click(`[data-q="${q}"]`); }
   await pg.waitForTimeout(500); await shot('05hablando');
-  await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 40000});
-  if (await pg.$('.modal-fondo')) { await pg.click('.modal [data-i="0"]').catch(()=>{}); await pg.waitForTimeout(300); }
+  await libre();
+  // si el paciente desconfía sale un diálogo; al responder, el médico habla y el panel vuelve a quedar ocupado
+  if (await pg.$('.modal-fondo')) { await pg.click('.modal [data-i="0"]').catch(()=>{}); await pg.waitForTimeout(300); await libre(); }
   await click('[data-tab="explorar"]'); await click('[data-ex="constantes"]'); await shot('06constantes');
   await click('.modal .cerrar');
-  await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 40000});
+  await libre();
   await click('[data-ex="pulmones"]');
   await pg.waitForSelector('#es-fin', { timeout: 30000 }); await pg.waitForTimeout(800);
   await pg.mouse.move(600, 380); await pg.mouse.down(); await pg.mouse.up(); await shot('07esteto');

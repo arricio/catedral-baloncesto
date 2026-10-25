@@ -42,10 +42,13 @@ const S = process.argv[2] || '.';
   });
   for (let i = 0; i < 25; i++) { const r = await jugarPaso(); console.log('paso', r); if (r === 'incision') await shot('03incision'); if (r === 'extirpar') await shot('04extirpar'); if (r === 'fin') break; await pg.waitForTimeout(700); }
   await shot('05fin');
-  await click('#op-ok'); await pg.waitForTimeout(8000);
-  // terminar el día: pasar los pacientes restantes rápido
+  const idOperado = await pg.evaluate(() => window.__juego.pac.id);
+  await click('#op-ok');
+  // esperar a que el médico y la familia terminen de hablar y entre el siguiente paciente
+  await pg.waitForFunction((id) => window.__juego.pac && window.__juego.pac.id !== id, idOperado, { timeout: 90000 });
+  // terminar el día: que este sea el último paciente
   await pg.evaluate(() => { window.__juego.G.pendientes = 1; });
-  await pg.waitForSelector('#panel.on [data-q]', { timeout: 60000 }).catch(() => {});
+  await pg.waitForSelector('#panel.on [data-q]', { timeout: 60000 });
   await shot('06siguiente');
   await libre();
   await click('[data-tab="decidir"]'); await pg.evaluate(() => document.querySelector(`[data-d="${window.__juego.pac.enfId}"]`).click()); await click('[data-a="casa"]'); await click('#de-ok'); await click('[data-t="directo"]');
