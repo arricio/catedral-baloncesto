@@ -291,7 +291,7 @@ function rasgosCara(cabeza, ap, { piel, pelo, tela, r, colPiel, cara, craneo }) 
   const labioS = pon(cap(0.006, 0.026, labioMat), cabeza, 0, -0.037, 0.106, 0, 0, PI / 2);
   const labioI = pon(cap(0.0068, 0.024, labioMat), cabeza, 0, -0.049, 0.105, 0, 0, PI / 2);
   // pelo
-  ponerPelo(cabeza, ap, pelo, piel, R0, cara);
+  if (!ap._sinPelo) ponerPelo(cabeza, ap, pelo, piel, R0, cara);
   // vello facial
   if (ap.barba === 2) { const b = pon(new T.Mesh(new T.SphereGeometry(R0 * 0.8, 28, 16, 0, PI * 2, PI * 0.5, PI * 0.5), pelo), cabeza, 0, -0.035, 0.012); b.scale.set(0.9 * cara, 0.95, 0.98); b.castShadow = true; }
   if (ap.barba === 3 || ap.barba === 5) pon(cap(0.0075, 0.036, pelo), cabeza, 0, -0.03, 0.103, 0, 0, PI / 2);
@@ -450,7 +450,29 @@ export async function cargarModelos(url = 'modelos/personajes.glb') {
     esq.position.set(0, 0, 0);
     PLANTILLAS[k] = esq;
   }
+  // peinados modelados en Blender sobre la misma forma de cráneo (opcional)
+  try {
+    const p = await new GLTFLoader().loadAsync('modelos/pelo.glb');
+    for (let i = 0; i < 8; i++) {
+      const o = p.scene.getObjectByName(`Pelo_${i}`);
+      if (!o) continue;
+      o.parent.remove(o); o.position.set(0, 0, 0);
+      PELOS[i] = o;
+    }
+  } catch (e) { console.warn('Sin peinados de Blender:', e); }
   return Object.keys(PLANTILLAS).length === 2;
+}
+const PELOS = {};
+// pelo de Blender pegado al hueso de la cabeza, sin escalar: así sigue la forma real del cráneo
+function ponerPeloGLB(padre, ap, pelo, piel, esc) {
+  const est = ap.estilo ?? 1;
+  if (!PELOS[est] || (est === 0 && !(ap.edad > 50))) return null;
+  const m = est === 2 ? (() => { const mm = pelo.clone(); mm.color.lerp(piel.color, 0.35); return mm; })() : pelo;
+  const o = PELOS[est].clone(true);
+  o.traverse(x => { if (x.isMesh) { x.material = m; x.castShadow = true; x.receiveShadow = true; } });
+  o.scale.setScalar(esc);
+  padre.add(o);
+  return o;
 }
 export const modelosListos = () => !!(PLANTILLAS.H && PLANTILLAS.M);
 
@@ -632,7 +654,13 @@ function crearHumanoGLB(ap, ropaId) {
   cabeza.quaternion.copy(qh.invert().multiply(qr));
   cabeza.scale.set(0.92 / c, 1.07, 1.0 / Math.sqrt(c));
   const cabezaFino = new T.Group(); cabeza.add(cabezaFino); cabezaFino.position.set(0, -0.004, -0.012);
-  const rc = rasgosCara(cabezaFino, { ...ap, _escPelo: 1.07 }, { piel, pelo, tela, r, colPiel, cara, craneo: false });
+  const peloGLB = !r.gorro && PELOS[1];
+  const rc = rasgosCara(cabezaFino, { ...ap, _escPelo: 1.07, _sinPelo: peloGLB }, { piel, pelo, tela, r, colPiel, cara, craneo: false });
+  if (peloGLB) {
+    const craneo = new T.Group(); hc.add(craneo);
+    craneo.position.copy(cabeza.position); craneo.quaternion.copy(cabeza.quaternion);
+    ponerPeloGLB(craneo, ap, pelo, piel, esc);
+  }
   // accesorios del médico pegados al pecho
   const pecho = new T.Group(); huesos.pecho.add(pecho);
   const qp = new T.Quaternion(); huesos.pecho.getWorldQuaternion(qp);
