@@ -82,7 +82,7 @@ export class Cirugia {
   get paso() { return this.pasos[this.iPaso]; }
   geometria() {
     const z = this.cir.zona;
-    const L = { fid: [[420, 600], [640, 720]], hcd: [[360, 380], [640, 470]], torax_izq: [[330, 560], [700, 460]], ingle: [[380, 520], [650, 640]], antebrazo: [[330, 512], [700, 512]], muneca: [[320, 520], [700, 520]] }[z] || [[350, 512], [680, 512]];
+    const L = { fid: [[420, 600], [640, 720]], hcd: [[360, 380], [640, 470]], torax_izq: [[330, 560], [700, 460]], ingle: [[380, 520], [650, 640]], cadera: [[400, 330], [470, 700]], antebrazo: [[330, 512], [700, 512]], muneca: [[320, 520], [700, 520]] }[z] || [[350, 512], [680, 512]];
     this.A = { x: L[0][0], y: L[0][1] }; this.B = { x: L[1][0], y: L[1][1] };
     this.C = lerp(this.A, this.B, 0.5);
     const dx = this.B.x - this.A.x, dy = this.B.y - this.A.y, len = Math.hypot(dx, dy);

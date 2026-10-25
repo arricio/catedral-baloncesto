@@ -133,6 +133,19 @@ export const Sonido = {
   descarga() { soplo(0.25, { vol: 0.5, f: 200, q: 0.3, ataque: 0.005, tipo: 'lowpass' }); tono(70, 0.3, { tipo: 'square', vol: 0.3 }); },
   puerta() { tono(90, 0.25, { tipo: 'sine', vol: 0.3 }); soplo(0.2, { vol: 0.1, f: 400, ataque: 0.01 }); },
   ay() { tono(420, 0.4, { tipo: 'sawtooth', vol: 0.05, glide: 300 }); },
+  // llanto de bebé: «bua» con vibrato
+  llanto(veces = 2) {
+    const c = ac(); if (!c) return;
+    for (let i = 0; i < veces; i++) {
+      const t = c.currentTime + i * 1.1;
+      const o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
+      o.type = 'sawtooth'; f.type = 'bandpass'; f.frequency.value = 1300; f.Q.value = 1.2;
+      o.frequency.setValueAtTime(420, t); o.frequency.linearRampToValueAtTime(560, t + 0.25); o.frequency.linearRampToValueAtTime(380, t + 0.95);
+      const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 7; lg.gain.value = 18; lfo.connect(lg).connect(o.frequency);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.08); g.gain.setValueAtTime(0.16, t + 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+      o.connect(f).connect(g).connect(master); o.start(t); o.stop(t + 1.05); lfo.start(t); lfo.stop(t + 1.05);
+    }
+  },
   telefono() { for (let i = 0; i < 2; i++) { tono(440, 0.4, { vol: 0.08, t0: i * 0.5, tipo: 'square' }); tono(480, 0.4, { vol: 0.08, t0: i * 0.5, tipo: 'square' }); } },
 
   // Zumbido suave de hospital

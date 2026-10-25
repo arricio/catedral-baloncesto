@@ -33,6 +33,7 @@ export const SANGRE = [
   { k: 'ami', n: 'Amilasa', u: 'U/L', r: [25, 100], d: 0 },
   { k: 'fer', n: 'Ferritina', u: 'ng/mL', r: [30, 300], d: 0 },
   { k: 'oh', n: 'Alcohol en sangre', u: 'g/L', r: [0, 0], d: 2 },
+  { k: 'bnp', n: 'NT-proBNP (corazón)', u: 'pg/mL', r: [0, 300], d: 0 },
 ];
 export const ORINA = [
   { k: 'leu', n: 'Leucocitos' }, { k: 'nit', n: 'Nitritos' }, { k: 'san', n: 'Sangre' }, { k: 'glu', n: 'Glucosa' }, { k: 'pro', n: 'Proteínas' }, { k: 'cet', n: 'Cuerpos cetónicos' },
@@ -46,7 +47,7 @@ export const PRUEBAS = {
   eco: { n: 'Ecografía', precio: 80, min: 20, requiere: 'ecografo' },
   tac: { n: 'TAC (tomografía)', precio: 250, min: 30, requiere: 'tac' },
 };
-export const ZONAS_RX = { torax: 'Tórax', abdomen: 'Abdomen', muneca: 'Muñeca y mano', tobillo: 'Tobillo y pie', craneo: 'Cráneo', lumbar: 'Columna lumbar' };
+export const ZONAS_RX = { torax: 'Tórax', abdomen: 'Abdomen', muneca: 'Muñeca y mano', tobillo: 'Tobillo y pie', craneo: 'Cráneo', lumbar: 'Columna lumbar', cadera: 'Cadera y pelvis' };
 
 // ───────────────────────── Cirugías ─────────────────────────
 // pasos posibles: desinfectar, incision, separar, pinzar, aspirar, extirpar, malla, reducir, suturar
@@ -56,6 +57,7 @@ export const CIRUGIAS = {
   reseccion: { n: 'Resección pulmonar en cuña', anestesia: ['general'], zona: 'torax_izq', organo: 'tumor', pasos: ['desinfectar', 'incision', 'separar', 'pinzar', 'extirpar', 'aspirar', 'suturar'], pago: 2400, objetivo: 'Completar la sección en cuña del tumor' },
   hernioplastia: { n: 'Hernioplastia inguinal', anestesia: ['raquidea', 'general'], zona: 'ingle', organo: 'hernia', pasos: ['desinfectar', 'incision', 'separar', 'reducir', 'malla', 'suturar'], pago: 800, objetivo: 'Reducir la hernia y colocar la malla' },
   sutura: { n: 'Sutura de herida', anestesia: ['local'], zona: 'antebrazo', organo: 'herida', pasos: ['desinfectar', 'aspirar', 'suturar'], pago: 250, objetivo: 'Cerrar la herida con puntos' },
+  protesis_cadera: { n: 'Prótesis de cadera', anestesia: ['raquidea', 'general'], zona: 'cadera', organo: 'hueso', pasos: ['desinfectar', 'incision', 'separar', 'pinzar', 'reducir', 'malla', 'suturar'], pago: 2200, objetivo: 'Colocar la prótesis en el fémur roto' },
   osteosintesis: { n: 'Reducción y osteosíntesis de muñeca', anestesia: ['regional', 'general'], zona: 'muneca', organo: 'hueso', pasos: ['desinfectar', 'incision', 'separar', 'reducir', 'malla', 'suturar'], pago: 1100, objetivo: 'Alinear el hueso y fijarlo con una placa' },
 };
 export const ANESTESIAS = { general: 'Anestesia general', raquidea: 'Raquídea (de cintura para abajo)', regional: 'Bloqueo regional del brazo', local: 'Anestesia local', sedacion: 'Sedación ligera' };
@@ -516,6 +518,215 @@ export const ENFERMEDADES = [
     noticia: 'leve',
   },
 ];
+// ───────────────────────── Enfermedades propias de cada edad ─────────────────────────
+// En bebés y niños pequeños (o pacientes confusos) responde el acompañante: sus frases van en tercera persona.
+ENFERMEDADES.push(
+  {
+    id: 'bronquiolitis', n: 'Bronquiolitis', grav: 3, edad: [0.1, 1.9], sexo: 'a', peso: 8, infantil: true,
+    motivo: ['Mi bebé respira muy deprisa, tiene muchos mocos y casi no come.'],
+    sintomas: ['Mocos', 'Tos', 'Respira rápido', 'Come poco'],
+    d: {
+      motivo: ['Doctor, el niño lleva dos días con muchísimos mocos y ahora respira muy deprisa. Se le hunden las costillas al respirar.', 'Mi bebé está muy acatarrado, tose y casi no quiere el biberón. Me da miedo cómo respira.'],
+      inicio: ['Empezó como un catarro hace tres días. En la guardería están todos igual.', 'Desde el fin de semana. Su hermano mayor también tiene mocos.'],
+      dolor: ['No sabe decirlo, pero está muy quejoso y no duerme.', 'Llora mucho y se cansa al comer.'],
+      fiebre: ['Treinta y ocho y algo por las noches.', 'Unas décimas, treinta y siete ocho.'],
+    },
+    expl: { temp: [37.6, 38.4], tas: [75, 95], tad: [40, 55], fc: [145, 175], sat: [89, 93], pulmon: 'sibilancias', corazon: 'taquicardia', palpacion: { zona: null, texto: 'Abdomen blando. Hígado normal.' }, garganta: 'roja', zona: 'Tiraje entre las costillas, aleteo nasal y muchísima mucosidad.' },
+    pruebas: { sangre: { leu: [7000, 11000], pcr: [3, 12] }, orina: {}, rx: { zona: 'torax', hallazgo: 'normal', texto: 'Pulmones hinchados de aire, sin neumonía.' }, ecg: { tipo: 'taqui', texto: 'Taquicardia sinusal propia de su edad y la fiebre.' }, eco: { hallazgo: 'normal', texto: 'Normal.' }, tac: { zona: 'torax', hallazgo: 'normal', texto: 'No indicado en bebés: radiación innecesaria.' } },
+    trat: { accion: 'hospitalizar', prio: 'media', med: [['lavado', 'oxigeno', 'suero']], evitar: ['antitusivo', 'mucolitico', 'antibiotico', 'corticoide', 'benzodiacepina', 'miel', 'alcohol', 'alcohol_fuerte', 'cafeina', 'comida_adulta'], buena: ['lavado', 'lactancia', 'oxigeno', 'suero'] },
+    noticia: 'moderada',
+  },
+  {
+    id: 'colico_lactante', n: 'Cólico del lactante', grav: 1, edad: [0.05, 0.4], sexo: 'a', peso: 5, infantil: true,
+    motivo: ['Llora sin consuelo todas las tardes y encoge las piernas.'],
+    sintomas: ['Llanto inconsolable', 'Encoge las piernas', 'Por las tardes'],
+    d: {
+      motivo: ['Doctor, no sabemos qué hacer. Todas las tardes llora durante horas, se pone rojo y encoge las piernas. No dormimos nadie.', 'Mi bebé llora muchísimo, sobre todo al atardecer, y no hay manera de calmarle.'],
+      inicio: ['Desde las tres semanas de vida, más o menos.', 'Hace un mes. Siempre a la misma hora, a partir de las seis de la tarde.'],
+      dolor: ['Parece que le duele la tripa, encoge las piernas y aprieta los puños.', 'Se retuerce, como con gases.'],
+      fiebre: ['No, fiebre nunca.', 'No, ninguna.'],
+    },
+    expl: { temp: [36.6, 37.1], tas: [70, 90], tad: [40, 55], fc: [120, 150], sat: [97, 100], pulmon: 'normal', corazon: 'normal', palpacion: { zona: null, texto: 'Abdomen blando, sin masas. Exploración normal.' }, garganta: 'normal', zona: 'Bebé sano y bien alimentado: ha ganado peso con normalidad. Exploración normal.' },
+    pruebas: { sangre: {}, orina: {}, rx: { zona: 'abdomen', hallazgo: 'normal', texto: 'Normal. Algo de gas.' }, ecg: { tipo: 'normal', texto: 'Normal para su edad.' }, eco: { hallazgo: 'normal', texto: 'Abdomen normal.' }, tac: { zona: 'abdomen', hallazgo: 'normal', texto: 'No indicado en bebés.' } },
+    trat: { accion: 'casa', prio: 'baja', med: [], evitar: ['benzodiacepina', 'espasmolitico', 'opioide', 'alcohol', 'alcohol_fuerte', 'miel', 'antibiotico', 'comida_adulta', 'cafeina'], buena: ['lactancia', 'tranquilidad', 'paseo', 'nada'] },
+    noticia: 'leve',
+  },
+  {
+    id: 'varicela', n: 'Varicela', grav: 1, edad: [1, 12], sexo: 'a', peso: 7, infantil: true,
+    motivo: ['Le han salido granitos por todo el cuerpo que le pican muchísimo.'],
+    sintomas: ['Granitos con ampollas', 'Picor', 'Fiebre'],
+    d: {
+      motivo: ['Doctor, le han salido granitos por todo el cuerpo, hasta en la cabeza, y no para de rascarse.', 'Tiene fiebre y le están saliendo como ampollitas que pican un montón.'],
+      inicio: ['Ayer le salieron los primeros, en la tripa. Hoy está lleno.', 'Hace dos días. En el colegio hay varios niños igual.'],
+      dolor: ['No le duele, le pica muchísimo.', 'Le pica todo, sobre todo por la noche.'],
+      fiebre: ['Treinta y ocho y medio ayer.', 'Sí, algo de fiebre.'],
+    },
+    expl: { temp: [37.8, 38.7], tas: [90, 110], tad: [50, 70], fc: [95, 120], sat: [97, 99], pulmon: 'normal', corazon: 'normal', palpacion: { zona: null, texto: 'Abdomen normal.' }, garganta: 'roja', zona: 'Lesiones en distintas fases (manchas, ampollas y costras) por todo el cuerpo y el cuero cabelludo.' },
+    pruebas: { sangre: { leu: [4000, 7000] }, orina: {}, rx: { zona: 'torax', hallazgo: 'normal', texto: 'Normal.' }, ecg: { tipo: 'normal', texto: 'Normal.' }, eco: { hallazgo: 'normal', texto: 'Normal.' }, tac: { zona: 'torax', hallazgo: 'normal', texto: 'No indicado.' } },
+    trat: { accion: 'casa', prio: 'baja', med: [['antihistaminico', 'antitermico']], evitar: ['antiagregante', 'aine', 'corticoide', 'corticoide_topico', 'antibiotico', 'alcohol'], buena: ['unas', 'avena', 'reposo', 'liquido', 'paracetamol'] },
+    noticia: 'leve',
+  },
+  {
+    id: 'laringitis', n: 'Laringitis (crup)', grav: 2, edad: [0.6, 6], sexo: 'a', peso: 6, infantil: true,
+    motivo: ['Tos de perro por la noche y hace ruido al respirar.'],
+    sintomas: ['Tos perruna', 'Ronquera', 'Ruido al respirar'],
+    d: {
+      motivo: ['Esta noche se ha despertado con una tos rarísima, como un perro ladrando, y hacía ruido al coger aire. Nos hemos asustado mucho.', 'Tiene una tos muy fea, de foca, y la voz ronca. Esta noche le costaba respirar.'],
+      inicio: ['Esta noche, de madrugada. Ayer solo tenía mocos.', 'Anoche. Ya le pasó otra vez el invierno pasado.'],
+      dolor: ['Dice que le duele la garganta.', 'No se queja de nada, pero está muy ronco.'],
+      fiebre: ['Unas décimas.', 'Treinta y ocho.'],
+    },
+    expl: { temp: [37.4, 38.4], tas: [90, 105], tad: [50, 65], fc: [110, 135], sat: [94, 97], pulmon: 'normal', corazon: 'taquicardia', palpacion: { zona: null, texto: 'Abdomen normal.' }, garganta: 'roja', zona: 'Estridor (ruido agudo al coger aire), voz ronca y tos perruna. Algo de tiraje.' },
+    pruebas: { sangre: {}, orina: {}, rx: { zona: 'torax', hallazgo: 'normal', texto: 'Pulmones normales.' }, ecg: { tipo: 'taqui', texto: 'Taquicardia sinusal.' }, eco: { hallazgo: 'normal', texto: 'Normal.' }, tac: { zona: 'torax', hallazgo: 'normal', texto: 'No indicado.' } },
+    trat: { accion: 'casa', prio: 'media', med: [['corticoide']], evitar: ['antibiotico', 'antitusivo', 'mucolitico', 'benzodiacepina', 'alcohol'], buena: ['aire_frio', 'tranquilidad', 'liquido', 'antitermico'] },
+    noticia: 'leve',
+  },
+  {
+    id: 'cuerpo_extrano', n: 'Moneda tragada', grav: 2, edad: [1.5, 7], sexo: 'a', peso: 4, infantil: true,
+    motivo: ['Creemos que se ha tragado una moneda.'],
+    sintomas: ['Ha tragado algo', 'Molestia al tragar'],
+    d: {
+      motivo: ['Doctor, estaba jugando con la hucha y ahora le falta una moneda. Creemos que se la ha tragado, pero dice que no.', 'Mi hijo estaba con unas monedas en la boca y de repente tosió. Ahora falta una.'],
+      inicio: ['Hace una hora.', 'Esta mañana, después del desayuno.'],
+      dolor: ['Dice que no le duele nada. Come y bebe bien.', 'Se tocaba el cuello al principio, ahora está tan tranquilo.'],
+      fiebre: ['No.', 'No.'],
+    },
+    secreto: { v: 1, t: '(en voz bajita) Me la comí... era la de un euro. Pero no se lo digas a mamá, que me la había dado la abuela para chuches.', hallazgo: 'El niño confiesa que se tragó una moneda de un euro.' },
+    expl: { temp: [36.4, 37.0], tas: [90, 105], tad: [50, 65], fc: [85, 110], sat: [97, 100], pulmon: 'normal', corazon: 'normal', palpacion: { zona: null, texto: 'Abdomen blando, sin dolor.' }, garganta: 'normal', zona: 'Niño tranquilo, traga saliva sin problema. Sin dificultad para respirar.' },
+    pruebas: { sangre: {}, orina: {}, rx: { zona: 'abdomen', hallazgo: 'moneda', texto: 'Moneda en el estómago. Ya ha pasado el esófago.' }, ecg: { tipo: 'normal', texto: 'Normal.' }, eco: { hallazgo: 'normal', texto: 'No se ve bien. Mejor una radiografía.' }, tac: { zona: 'abdomen', hallazgo: 'normal', texto: 'No indicado: la radiografía basta.' } },
+    trat: { accion: 'casa', prio: 'media', med: [], evitar: ['laxante', 'antiemetico', 'alcohol', 'cafeina', 'opioide'], buena: ['blanda', 'fibra', 'vigilar', 'nada'] },
+    noticia: 'leve',
+  },
+  {
+    id: 'piojos', n: 'Piojos (pediculosis)', grav: 1, edad: [3, 12], sexo: 'a', peso: 5, infantil: true,
+    motivo: ['No para de rascarse la cabeza.'],
+    sintomas: ['Picor en la cabeza', 'Se rasca mucho'],
+    d: {
+      motivo: ['Doctor, la niña no para de rascarse la cabeza, sobre todo detrás de las orejas. Y en el colegio han mandado una nota...', 'Se rasca la cabeza todo el día. Me da hasta vergüenza decirlo, pero creo que tiene bichitos.'],
+      inicio: ['Desde la semana pasada.', 'Hace unos días, desde que volvió del campamento.'],
+      dolor: ['No le duele, solo picor. Tiene la nuca roja de rascarse.', 'Picor, mucho picor.'],
+      fiebre: ['No.', 'No.'],
+    },
+    expl: { temp: [36.3, 36.9], tas: [90, 110], tad: [50, 70], fc: [80, 100], sat: [98, 100], pulmon: 'normal', corazon: 'normal', palpacion: { zona: null, texto: 'Abdomen normal.' }, garganta: 'normal', zona: 'Liendres pegadas al pelo detrás de las orejas y en la nuca, y algún piojo vivo. Rascaduras.' },
+    pruebas: { sangre: {}, orina: {}, rx: { zona: 'craneo', hallazgo: 'normal', texto: 'Normal. (Los piojos no salen en las radiografías.)' }, ecg: { tipo: 'normal', texto: 'Normal.' }, eco: { hallazgo: 'normal', texto: 'Normal.' }, tac: { zona: 'craneo', hallazgo: 'normal', texto: 'Normal. Un TAC para unos piojos... el gerente no está contento.' } },
+    trat: { accion: 'casa', prio: 'baja', med: [['pediculicida', 'lendrera']], evitar: ['antibiotico', 'gasolina', 'corticoide', 'alcohol', 'alcohol_fuerte'], buena: ['lendrera', 'lavado_ropa', 'pediculicida'] },
+    noticia: 'leve',
+  },
+  {
+    id: 'mononucleosis', n: 'Mononucleosis («enfermedad del beso»)', grav: 2, edad: [14, 25], sexo: 'a', peso: 5,
+    motivo: ['Estoy agotad{o}, con fiebre, la garganta fatal y bultos en el cuello.'],
+    sintomas: ['Cansancio extremo', 'Fiebre', 'Dolor de garganta', 'Ganglios inflamados'],
+    d: {
+      motivo: ['Estoy reventad{o}, duermo doce horas y sigo cansad{o}. Me duele la garganta y tengo bultos en el cuello.', 'Llevo una semana con fiebre, la garganta fatal y sin ganas de nada. No puedo ni ir a clase.'],
+      inicio: ['Hace una semana, después de las fiestas del instituto.', 'Diez días ya.'],
+      dolor: ['La garganta, y los ganglios del cuello. A veces la tripa por la izquierda.', 'Me duele tragar y estoy molid{o}.'],
+      fiebre: ['Sí, treinta y ocho y pico todas las tardes.', 'Fiebre todos los días.'],
+    },
+    secreto: { v: 2, t: 'Bueno... en las fiestas del instituto me lie con un par de personas. Delante de mis padres no lo iba a decir.', hallazgo: 'Besos con varias personas en las fiestas (contagio por saliva).' },
+    expl: { temp: [37.9, 38.8], tas: [105, 125], tad: [60, 78], fc: [88, 108], sat: [97, 99], pulmon: 'normal', corazon: 'normal', palpacion: { zona: 'hci', texto: 'Bazo aumentado de tamaño, molesto al palparlo. Ganglios del cuello grandes.' }, garganta: 'placas', zona: 'Ganglios grandes en el cuello, amígdalas con placas blanquecinas.' },
+    pruebas: { sangre: { leu: [12000, 17000], got: [60, 130], pcr: [10, 30] }, orina: {}, rx: { zona: 'torax', hallazgo: 'normal', texto: 'Normal.' }, ecg: { tipo: 'normal', texto: 'Normal.' }, eco: { hallazgo: 'normal', texto: 'Bazo grande (esplenomegalia). Ganglios reactivos.' }, tac: { zona: 'abdomen', hallazgo: 'normal', texto: 'Bazo aumentado de tamaño.' } },
+    trat: { accion: 'casa', prio: 'baja', med: [['analgesico', 'antitermico']], evitar: ['penicilina', 'ejercicio', 'alcohol', 'alcohol_fuerte', 'antibiotico'], buena: ['reposo', 'liquido', 'sueno', 'blanda'] },
+    noticia: 'leve',
+  },
+  {
+    id: 'acne', n: 'Acné', grav: 1, edad: [13, 22], sexo: 'a', peso: 4,
+    motivo: ['Tengo la cara llena de granos y me da mucha vergüenza.'],
+    sintomas: ['Granos en la cara', 'Puntos negros'],
+    d: {
+      motivo: ['Tengo la cara llena de granos, y en la espalda también. No quiero ni salir de casa.', 'Me han salido un montón de granos y en clase se ríen de mí.'],
+      inicio: ['Desde hace un año, pero ahora mucho peor.', 'Desde los trece años.'],
+      dolor: ['Algunos duelen, los gordos.', 'No duelen mucho, pero quedan marcas.'],
+      fiebre: ['No.', 'No.'],
+      habitosMentira: ['Me lavo la cara todos los días, eh.'],
+    },
+    secreto: { v: 1, t: 'Vale... me los exploto todos delante del espejo. Y me echo la crema de mi madre, la de la cara.', hallazgo: 'Se revienta los granos y usa cremas grasas.' },
+    expl: { temp: [36.3, 36.9], tas: [105, 125], tad: [60, 78], fc: [65, 85], sat: [98, 100], pulmon: 'normal', corazon: 'normal', palpacion: { zona: null, texto: 'Abdomen normal.' }, garganta: 'normal', zona: 'Comedones, pápulas y algunas pústulas en la frente, mejillas y espalda. Alguna cicatriz.' },
+    pruebas: { sangre: {}, orina: {}, rx: { zona: 'craneo', hallazgo: 'normal', texto: 'Normal.' }, ecg: { tipo: 'normal', texto: 'Normal.' }, eco: { hallazgo: 'normal', texto: 'Normal.' }, tac: { zona: 'craneo', hallazgo: 'normal', texto: 'Un TAC para el acné... muy caro y nada útil.' } },
+    trat: { accion: 'casa', prio: 'baja', med: [['peroxido', 'retinoide', 'antibiotico_topico']], evitar: ['exprimir', 'corticoide_topico', 'corticoide', 'grasa_cara'], buena: ['lavado_cara', 'agua', 'fruta', 'verdura'] },
+    noticia: 'leve',
+  },
+  {
+    id: 'fractura_cadera', n: 'Fractura de cadera', grav: 4, edad: [70, 96], sexo: 'a', peso: 6,
+    motivo: ['Me he caído en el baño y no me puedo levantar. Me duele la cadera.'],
+    sintomas: ['Caída', 'Dolor de cadera', 'No puede caminar', 'Pierna acortada'],
+    d: {
+      motivo: ['Ay, hij{o}... me he caído en el baño, al salir de la ducha, y no me puedo poner de pie. Me duele muchísimo aquí, en la cadera.', 'Me resbalé en la cocina y caí de lado. No puedo apoyar la pierna.'],
+      inicio: ['Esta mañana, temprano.', 'Anoche. Estuve en el suelo hasta que vino mi hija.'],
+      dolor: ['En la cadera derecha, y se me va a la ingle. Si me mueven, veo las estrellas.', 'La cadera derecha. No la puedo mover.'],
+      fiebre: ['No, fiebre no.', 'No.'],
+    },
+    expl: { temp: [36.2, 36.9], tas: [130, 160], tad: [70, 90], fc: [85, 105], sat: [94, 97], pulmon: 'normal', corazon: 'normal', palpacion: { zona: 'ingle', texto: 'Dolor intenso en la ingle derecha al mover la cadera.' }, garganta: 'normal', zona: 'Pierna derecha más corta y girada hacia fuera. No puede levantar el talón de la camilla.' },
+    pruebas: { sangre: { hb: [10.5, 12.2] }, orina: {}, rx: { zona: 'cadera', hallazgo: 'fractura_cadera', lado: 'der', texto: 'Fractura del cuello del fémur derecho, desplazada.' }, ecg: { tipo: 'normal', texto: 'Ritmo sinusal. Apta para la operación.' }, eco: { hallazgo: 'normal', texto: 'Hematoma alrededor de la cadera.' }, tac: { zona: 'cadera', hallazgo: 'fractura_cadera', lado: 'der', texto: 'Fractura subcapital de fémur derecho.' } },
+    trat: { accion: 'cirugia', cir: 'protesis_cadera', prio: 'alta', med: [], evitar: ['ejercicio', 'benzodiacepina', 'hipnotico', 'alcohol'], buena: ['analgesico', 'anticoagulante', 'fisio', 'proteina', 'vitd', 'lacteo'] },
+    noticia: 'moderada',
+  },
+  {
+    id: 'insuficiencia_cardiaca', n: 'Insuficiencia cardíaca', grav: 3, edad: [65, 96], sexo: 'a', peso: 6,
+    motivo: ['Me ahogo al andar y tengo las piernas muy hinchadas.'],
+    sintomas: ['Ahogo al caminar', 'Piernas hinchadas', 'Duerme con varias almohadas', 'Cansancio'],
+    d: {
+      motivo: ['Me ahogo en cuanto ando un poco, hij{o}. Y mire las piernas, como botas.', 'No puedo con mi alma. Me falta el aire y por la noche tengo que dormir sentad{o} con tres almohadas.'],
+      inicio: ['Hace unas semanas, pero estos días mucho peor.', 'Desde el verano, y ahora peor.'],
+      dolor: ['No me duele, me ahogo. Y las piernas me pesan.', 'Me aprieta un poco el pecho al subir escaleras.'],
+      fiebre: ['No.', 'No.'],
+      habitosMentira: ['Yo hago todo lo que me dice el médico, eh. Las pastillas, todas.'],
+    },
+    secreto: { v: 1, t: 'Bueno... la pastilla de orinar me la salto, porque si me la tomo no puedo ir al mercado. Y con la sal... pues el jamón y la cecina no los perdono.', hallazgo: 'No toma el diurético y come mucha sal.' },
+    expl: { temp: [36.2, 36.8], tas: [140, 170], tad: [80, 95], fc: [92, 112], sat: [88, 93], pulmon: 'crepitantes_ambos', corazon: 'arritmia', palpacion: { zona: null, texto: 'Hígado algo grande y doloroso. Abdomen blando.' }, garganta: 'normal', zona: 'Piernas hinchadas: al apretar queda el hoyo del dedo. Venas del cuello hinchadas.' },
+    pruebas: { sangre: { bnp: [2500, 9000], cre: [1.2, 1.7], na: [131, 136] }, orina: {}, rx: { zona: 'torax', hallazgo: 'cardiomegalia', texto: 'Corazón grande y líquido en los pulmones.' }, ecg: { tipo: 'normal', texto: 'Fibrilación auricular (ritmo irregular).' }, eco: { hallazgo: 'normal', texto: 'Corazón dilatado. Bombea al 30 %.' }, tac: { zona: 'torax', hallazgo: 'normal', texto: 'Derrame pleural en ambos lados.' } },
+    trat: { accion: 'hospitalizar', prio: 'media', med: [['diuretico']], evitar: ['sal', 'embutido', 'aine', 'alcohol', 'alcohol_fuerte', 'refresco', 'energetica'], buena: ['oxigeno', 'reposo', 'antihipertensivo', 'betabloqueante', 'anticoagulante'] },
+    noticia: 'moderada',
+  },
+  {
+    id: 'itu_confusion', n: 'Infección de orina con desorientación', grav: 3, edad: [75, 98], sexo: 'a', peso: 5, respondeAcomp: true,
+    motivo: ['Desde ayer está muy desorientada y no nos reconoce.'],
+    sintomas: ['Desorientación', 'Fiebre', 'Agitación'],
+    d: {
+      motivo: ['Doctor, mi madre está desde ayer rarísima: no nos reconoce, dice cosas sin sentido y esta noche quería irse a la calle en camisón. Ella no es así.', 'Mi padre está muy confundido desde ayer. Habla con gente que no está y no sabe ni en qué año estamos.'],
+      inicio: ['Desde ayer por la tarde, de repente.', 'Anoche empezó. El lunes estaba perfectamente.'],
+      dolor: ['No dice que le duela nada. Bueno, se toca la tripa por abajo.', 'No se queja, pero va mucho al baño.'],
+      fiebre: ['Sí, treinta y ocho y algo.', 'Estaba caliente esta mañana.'],
+    },
+    expl: { temp: [37.8, 38.7], tas: [100, 125], tad: [55, 75], fc: [95, 112], sat: [94, 97], pulmon: 'normal', corazon: 'taquicardia', palpacion: { zona: 'hipogastrio', texto: 'Molestia encima del pubis.' }, garganta: 'normal', zona: 'Desorientada en tiempo y lugar. Sin parálisis. Mucosas secas.' },
+    pruebas: { sangre: { leu: [12500, 17000], pcr: [50, 130], urea: [55, 90], cre: [1.2, 1.6] }, orina: { leu: '+++', nit: '+', san: '+' }, rx: { zona: 'torax', hallazgo: 'normal', texto: 'Sin neumonía.' }, ecg: { tipo: 'taqui', texto: 'Taquicardia sinusal.' }, eco: { hallazgo: 'normal', texto: 'Vejiga con pared engrosada.' }, tac: { zona: 'craneo', hallazgo: 'normal', texto: 'Sin hemorragias ni infartos. Atrofia propia de la edad.' } },
+    trat: { accion: 'hospitalizar', prio: 'media', med: [['antibiotico', 'antibiotico_urinario']], evitar: ['benzodiacepina', 'hipnotico', 'alcohol', 'alcohol_fuerte', 'opioide'], buena: ['suero', 'agua', 'liquido'] },
+    noticia: 'moderada',
+  },
+  {
+    id: 'resfriado', n: 'Resfriado común', grav: 0, edad: [0.5, 90], sexo: 'a', peso: 8,
+    motivo: ['Tengo mocos, estornudos y la garganta irritada.'],
+    sintomas: ['Mocos', 'Estornudos', 'Garganta irritada'],
+    d: {
+      motivo: ['Estoy acatarrad{o}: mocos, estornudos, la nariz taponada...', 'Tengo un resfriado de los buenos. ¿No me da un antibiótico para que se me quite?'],
+      inicio: ['Desde anteayer.', 'Hace tres días.'],
+      dolor: ['La garganta un poco y la cabeza cargada.', 'Nada, solo moquera.'],
+      fiebre: ['Unas décimas.', 'No.'],
+    },
+    expl: { temp: [36.8, 37.6], tas: [110, 130], tad: [65, 82], fc: [70, 90], sat: [97, 99], pulmon: 'normal', corazon: 'normal', palpacion: { zona: null, texto: 'Abdomen normal.' }, garganta: 'roja', zona: 'Nariz congestionada, faringe algo roja. Buen estado general.' },
+    pruebas: { sangre: {}, orina: {}, rx: { zona: 'torax', hallazgo: 'normal', texto: 'Normal.' }, ecg: { tipo: 'normal', texto: 'Normal.' }, eco: { hallazgo: 'normal', texto: 'Normal.' }, tac: { zona: 'craneo', hallazgo: 'normal', texto: 'Senos con algo de moco. Nada más.' } },
+    trat: { accion: 'casa', prio: 'baja', med: [], evitar: ['antibiotico', 'corticoide', 'opioide', 'alcohol_fuerte'], buena: ['lavado', 'liquido', 'miel', 'caldo', 'vahos', 'antitermico', 'analgesico', 'reposo', 'vitc'] },
+    noticia: 'leve',
+  },
+);
+
+// Frases de los padres cuando el paciente es un niño (versiones en tercera persona de las enfermedades comunes)
+const D_NINO = {
+  gastroenteritis: { motivo: ['Doctor, el niño lleva desde ayer con vómitos y diarrea. No retiene ni el agua.', 'Está con diarrea y ha vomitado cuatro veces. Está muy decaído.'], inicio: ['Desde ayer. En la guardería hay varios igual.', 'Anoche empezó.'], dolor: ['Se queja de la tripa, como retortijones.', 'Se toca la barriga y llora.'], fiebre: ['Treinta y ocho.', 'Unas décimas.'], nino: ['Me duele la tripa...', 'No quiero comer nada.'] },
+  gripe: { motivo: ['Tiene fiebre muy alta desde ayer, está muy flojo y le duele todo.', 'Fiebre de treinta y nueve y medio, y no quiere ni jugar.'], inicio: ['Desde ayer por la tarde.', 'Hace dos días.'], dolor: ['Le duele la cabeza y las piernas.', 'Dice que le duele todo el cuerpo.'], fiebre: ['Sí, treinta y nueve y pico.', 'Mucha fiebre, con escalofríos.'], nino: ['Tengo frío...', 'Me duele la cabeza.'] },
+  otitis: { motivo: ['Se queja muchísimo del oído y no ha dormido nada.', 'Llora y se toca la oreja. Tiene fiebre.'], inicio: ['Esta noche, después de un catarro.', 'Desde ayer.'], dolor: ['El oído derecho. Si se lo tocas, llora.', 'La oreja derecha.'], fiebre: ['Treinta y ocho y medio.', 'Sí, algo.'], nino: ['¡Me duele la oreja!', 'Me pica y me duele aquí.'] },
+  faringitis: { motivo: ['Le duele mucho la garganta y tiene fiebre. No quiere comer.', 'Dice que le duele al tragar. Tiene la garganta con puntos blancos.'], inicio: ['Desde anteayer.', 'Desde ayer.'], dolor: ['La garganta, y a veces la tripa.', 'Al tragar.'], fiebre: ['Treinta y nueve.', 'Treinta y ocho y medio.'], nino: ['Me duele la garganta.', 'No puedo tragar.'] },
+  fractura_muneca: { motivo: ['Se ha caído del columpio y le duele mucho la muñeca. Está torcida.', 'Se cayó jugando al fútbol en el recreo y no puede mover la mano.'], inicio: ['Hace una hora.', 'Esta mañana, en el colegio.'], dolor: ['La muñeca derecha. No deja que se la toquemos.', 'Aquí, en la muñeca.'], fiebre: ['No.', 'No.'], nino: ['¡Ay, que me duele mucho!', 'No la puedo mover...'] },
+  apendicitis: { motivo: ['Le duele mucho la tripa, abajo a la derecha, y ha vomitado.', 'Se queja de la barriga desde anoche y no quiere ni andar.'], inicio: ['Empezó alrededor del ombligo y ahora es a la derecha.', 'Desde anoche.'], dolor: ['Abajo a la derecha. Si salta, llora.', 'En la tripa, a la derecha.'], fiebre: ['Treinta y ocho.', 'Unas décimas.'], nino: ['Me duele mucho aquí.', 'No quiero que me toquen la tripa.'] },
+  alergia: { motivo: ['Le han salido ronchas por todo el cuerpo después de comer gambas en un cumpleaños.', 'Se le han hinchado los labios y le pica todo.'], inicio: ['Hace una hora.', 'Después de la merienda.'], dolor: ['Le pica todo.', 'Dice que nota la garganta rara.'], fiebre: ['No.', 'No.'], nino: ['Me pica mucho.', 'Tengo la boca rara.'] },
+  conmocion: { motivo: ['Se ha dado un golpe en la cabeza con el columpio y ha vomitado dos veces.', 'Se cayó de la litera y está muy dormido.'], inicio: ['Hace dos horas.', 'Esta mañana.'], dolor: ['La cabeza, en la frente. Tiene un chichón enorme.', 'Dice que le duele la cabeza.'], fiebre: ['No.', 'No.'], nino: ['Me duele la cabeza...', 'Tengo sueño.'] },
+  bronquitis: { motivo: ['Tiene una tos que no le deja dormir y le pita el pecho.', 'Tose muchísimo, sobre todo por las noches.'], inicio: ['Desde hace una semana.', 'Desde el catarro de la semana pasada.'], dolor: ['Le duele el pecho de toser.', 'No se queja, solo tose.'], fiebre: ['Al principio sí, ahora no.', 'No.'], nino: ['Cof, cof...', 'Me cansa toser.'] },
+  resfriado: { motivo: ['Tiene muchos mocos y tose un poco. ¿No le daría un antibiótico?', 'Está muy acatarrado, con la nariz taponada.'], inicio: ['Desde hace tres días.', 'Desde el lunes.'], dolor: ['Nada, solo mocos.', 'Está un poco quejoso.'], fiebre: ['Unas décimas.', 'No.'], nino: ['Tengo mocos.', 'Achís.'] },
+};
+for (const [id, dn] of Object.entries(D_NINO)) { const e = ENFERMEDADES.find(x => x.id === id); if (e) e.dNino = dn; }
+// edades en las que puede aparecer cada enfermedad común
+const EDADES = { gastroenteritis: [0.5, 95], gripe: [2, 95], otitis: [1, 70], faringitis: [3, 65], neumonia: [1, 96], apendicitis: [5, 60], fractura_muneca: [4, 92], esguince: [10, 70], conmocion: [3, 92], alergia: [2, 75], bronquitis: [2, 90], intoxicacion: [5, 88], migrana: [10, 65], resaca: [16, 65], ansiedad: [14, 75], herida: [6, 88], lumbalgia: [20, 85], cistitis: [16, 95], anemia: [14, 55], hipertension: [38, 95], diabetes: [35, 95], infarto: [45, 95], colico_renal: [20, 80], ulcera: [25, 90], hernia: [25, 85], colecistitis: [30, 90], cancer_pulmon: [45, 85], simulador: [16, 60], fractura_costal: [18, 95] };
+for (const e of ENFERMEDADES) if (EDADES[e.id]) e.edad = EDADES[e.id];
+
 export const ENF = Object.fromEntries(ENFERMEDADES.map(e => [e.id, e]));
 
 // ───────────────────────── Recetario ─────────────────────────
@@ -635,7 +846,14 @@ Placebo (pastilla de azúcar)|placebo
 Betahistina (Serc)|antivertiginoso
 Dimenhidrinato (Biodramina)|antiemetico,antivertiginoso
 Vacuna de la gripe|vacuna
-Vacuna del tétanos|vacuna,antitetanica`;
+Vacuna del tétanos|vacuna,antitetanica
+Paracetamol jarabe infantil|analgesico,antitermico,paracetamol,infantil
+Ibuprofeno jarabe infantil|aine,analgesico,antitermico,antiinflamatorio,infantil
+Amoxicilina jarabe infantil|antibiotico,penicilina,infantil
+Dexametasona oral|corticoide
+Champú antipiojos (permetrina)|pediculicida
+Peróxido de benzoilo gel|peroxido
+Adapaleno gel|retinoide`;
 
 const OTROS = `Reposo relativo|reposo
 Reposo absoluto en cama|reposo,reposo_absoluto
@@ -668,7 +886,21 @@ Rezar a San Froilán|nada
 Ir de procesiones|nada,ejercicio
 Jugar al mus en el bar|nada
 Bañarse en el río Bernesga|frio
-Tumbarse al sol|nada`;
+Tumbarse al sol|nada
+Lendrera (peine de púas finas)|lendrera
+Lavar ropa y sábanas a 60 grados|lavado_ropa
+Cortarle las uñas|unas
+Baño con avena|avena
+Salir a respirar aire fresco|aire_frio
+Cogerle en brazos y tranquilizarle|tranquilidad
+Tranquilizar a los padres|tranquilidad
+Lavarse la cara con jabón suave|lavado_cara
+Explotarse los granos|exprimir
+Crema hidratante grasa|grasa_cara
+Vigilar las cacas|vigilar
+Echarle gasolina en la cabeza|gasolina
+Raparle al cero|nada
+Paseo en carrito|paseo`;
 
 const COMIDA = `Cocido leonés|grasa,sal,contundente,proteina,legumbre,embutido
 Cocido maragato|grasa,sal,contundente,proteina,legumbre,embutido
@@ -777,7 +1009,12 @@ Ostras|marisco,crudo
 Calamares fritos|marisco,frito
 Mariscada completa|marisco,contundente
 Sepia a la plancha|marisco
-Zamburiñas|marisco`;
+Zamburiñas|marisco
+Papilla de frutas|blanda,fruta,bebe
+Papilla de cereales|blanda,bebe
+Potito de pollo con verduras|blanda,proteina,bebe
+Chuches|azucar,dulce
+Galletas María|blanda,bebe`;
 
 const BEBIDA = `Agua|liquido,agua
 Agua con gas|liquido,agua
@@ -838,9 +1075,12 @@ Licor de hierbas|alcohol,alcohol_fuerte
 Carajillo|alcohol,alcohol_fuerte,cafeina
 Ponche Caballero|alcohol,alcohol_fuerte
 Chupito de Jägermeister|alcohol,alcohol_fuerte
-Absenta|alcohol,alcohol_fuerte`;
+Absenta|alcohol,alcohol_fuerte
+Leche materna (pecho)|lactancia,liquido,bebe
+Biberón de leche de fórmula|lactancia,liquido,bebe
+Cola Cao|lacteo,azucar,liquido`;
 
-const parse = (txt, cat) => txt.split('\n').map(l => { const [n, t] = l.split('|'); const tags = t.split(','); if (cat === 'comida') tags.push('comida'); if (cat === 'bebida' && !tags.includes('agua') && !tags.includes('suero')) tags.push('bebida'); return { n, cat, tags }; });
+const parse = (txt, cat) => txt.split('\n').map(l => { const [n, t] = l.split('|'); const tags = t.split(','); if (cat === 'comida') tags.push('comida'); if (cat === 'comida' && !tags.includes('bebe')) tags.push('comida_adulta'); if (cat === 'bebida' && !tags.includes('agua') && !tags.includes('suero')) tags.push('bebida'); return { n, cat, tags }; });
 export const RECETARIO = [...parse(MED, 'med'), ...parse(OTROS, 'otro'), ...parse(COMIDA, 'comida'), ...parse(BEBIDA, 'bebida')];
 export const CAT_NOMBRE = { med: 'Medicamento', otro: 'Indicación', comida: 'Comida', bebida: 'Bebida' };
 
@@ -927,22 +1167,67 @@ export function fmt(t, pac) {
 }
 
 // ───────────────────────── Generador de pacientes ─────────────────────────
+// Grupos de edad con su peso en la consulta, como en la vida real
+export const GRUPOS_EDAD = [
+  { id: 'bebe', n: 'Bebé', de: 0.08, a: 1.99, peso: 9 },
+  { id: 'nino', n: 'Niño', de: 2, a: 12.99, peso: 20 },
+  { id: 'joven', n: 'Joven', de: 13, a: 25.99, peso: 15 },
+  { id: 'adulto', n: 'Adulto', de: 26, a: 64.99, peso: 31 },
+  { id: 'mayor', n: 'Mayor', de: 65, a: 97, peso: 25 },
+];
+export const grupoEdad = (e) => (GRUPOS_EDAD.find(g => e >= g.de && e <= g.a) || GRUPOS_EDAD[3]).id;
+export function textoEdad(e) {
+  if (e < 1) { const m = Math.max(1, Math.round(e * 12)); return `${m} ${m === 1 ? 'mes' : 'meses'}`; }
+  const a = Math.floor(e); return `${a} ${a === 1 ? 'año' : 'años'}`;
+}
+// En bebés, niños pequeños y pacientes confusos contesta el acompañante
+export const respondeAcomp = (pac) => pac.edad < 10 || !!ENF[pac.enfId].infantil || !!ENF[pac.enfId].respondeAcomp;
+export const NOMBRES_NINO_H = ['Hugo', 'Lucas', 'Leo', 'Mateo', 'Martín', 'Pablo', 'Daniel', 'Álex', 'Manuel', 'Enzo', 'Bruno', 'Marco', 'Izan', 'Thiago', 'Adrián', 'Mario', 'Diego', 'Nicolás', 'Óliver', 'Gael'];
+export const NOMBRES_NINO_M = ['Lucía', 'Sofía', 'Martina', 'María', 'Julia', 'Paula', 'Valeria', 'Emma', 'Daniela', 'Carla', 'Alba', 'Noa', 'Olivia', 'Vega', 'Chloe', 'Alma', 'Lola', 'Jimena', 'Valentina', 'Mía'];
+const COLORES_NINO = ['#e8556d', '#f2a33d', '#ffd84d', '#5cc28a', '#4fa3e0', '#8a6fe0', '#f07fb5', '#3fc1c9', '#2f4b7c', '#c0392b'];
+const COLORES_BEBE = ['#f6c6d6', '#bfe0f6', '#f9f1b8', '#c9eec9', '#e3d5f5', '#ffffff'];
+
 const PIELES = ['#f1c7a8', '#e8b48f', '#d9a07a', '#c58c62', '#a86f4c', '#8a5638', '#6b3f28', '#f3d1b7'];
 const PELOS = ['#1f1611', '#3a2617', '#5b3a22', '#8a5a2b', '#b98b55', '#d8c08a', '#7c7c7c', '#bdbdbd', '#e6e6e6', '#6b2b18'];
 let contadorId = 1;
 
-export function generarPaciente({ dia = 1, rep = 50, equipos = {}, forzar = null } = {}) {
-  let pool = ENFERMEDADES.filter(e => (dia >= 2 || e.grav <= 3) && (equipos.quirofano2 || e.grav < 5 || dia >= 3));
-  let enf = forzar ? ENF[forzar] : null;
-  if (!enf) {
-    const tot = pool.reduce((s, e) => s + e.peso, 0);
-    let r = Math.random() * tot;
-    for (const e of pool) { r -= e.peso; if (r <= 0) { enf = e; break; } }
-    enf = enf || pool[0];
+function elegirPonderado(lista, peso) {
+  const tot = lista.reduce((s, x) => s + peso(x), 0);
+  let r = Math.random() * tot;
+  for (const x of lista) { r -= peso(x); if (r <= 0) return x; }
+  return lista[0];
+}
+
+// Talla de pecho para la variedad de cuerpos (sólo mujeres)
+export const TALLAS_PECHO = { pequeno: 'Pequeño', normal: 'Normal', grande: 'Grande', muy_grande: 'Muy grande' };
+export function tallaPecho(edad = 35) {
+  if (edad < 10) return 'nina';
+  if (edad < 14) return 'pequeno';
+  return elegirPonderado([['pequeno', 25], ['normal', 30], ['grande', 25], ['muy_grande', 20]], x => x[1])[0];
+}
+
+export function generarPaciente({ dia = 1, rep = 50, equipos = {}, forzar = null, edadForzada = null } = {}) {
+  const disponible = (e) => (dia >= 2 || e.grav <= 3) && (equipos.quirofano2 || e.grav < 5 || dia >= 3);
+  let enf = forzar ? ENF[forzar] : null, edad;
+  if (enf) {
+    edad = edadForzada ?? entre(enf.edad[0], enf.edad[1]);
+  } else {
+    // primero la edad (como en la vida real), después una enfermedad posible a esa edad
+    for (let intento = 0; intento < 20 && !enf; intento++) {
+      const g = elegirPonderado(GRUPOS_EDAD, x => x.peso);
+      const e0 = edadForzada ?? entre(g.de, g.a);
+      const pool = ENFERMEDADES.filter(e => disponible(e) && e0 >= e.edad[0] && e0 <= e.edad[1] && (e0 >= 10 || e.dNino || e.infantil));
+      if (!pool.length) continue;
+      enf = elegirPonderado(pool, e => e.peso * (e.infantil && e0 < 13 ? 1.6 : 1));
+      edad = e0;
+    }
+    if (!enf) { enf = ENF.gripe; edad = entre(30, 60); }
   }
+  edad = edad < 2 ? +edad.toFixed(2) : Math.floor(edad);
+  const grupo = grupoEdad(edad);
   const sexo = enf.sexo === 'a' ? (prob(0.5) ? 'h' : 'm') : enf.sexo;
-  const edad = entreInt(enf.edad[0], enf.edad[1]);
-  const nombre = azar(sexo === 'h' ? NOMBRES_H : NOMBRES_M);
+  const pequeno = edad < 13;
+  const nombre = azar(pequeno ? (sexo === 'h' ? NOMBRES_NINO_H : NOMBRES_NINO_M) : edad < 30 && prob(0.5) ? (sexo === 'h' ? NOMBRES_NINO_H : NOMBRES_NINO_M) : (sexo === 'h' ? NOMBRES_H : NOMBRES_M));
   const apellidos = `${azar(APELLIDOS)} ${azar(APELLIDOS)}`;
   const viejo = edad > 62;
   const ex = enf.expl;
@@ -952,15 +1237,25 @@ export function generarPaciente({ dia = 1, rep = 50, equipos = {}, forzar = null
     fc: entreInt(ex.fc[0], ex.fc[1]), sat: entreInt(ex.sat[0], ex.sat[1]),
     fr: enf.id === 'neumonia' ? entreInt(22, 28) : enf.id === 'ansiedad' ? entreInt(24, 30) : entreInt(13, 18),
   };
+  // los niños tienen el pulso y la respiración más rápidos y la tensión más baja
+  if (!enf.infantil && edad < 13) {
+    const k = edad < 2 ? 1 : edad < 6 ? 0.6 : 0.3;
+    vit.fc = Math.round(vit.fc + 45 * k); vit.tas = Math.round(vit.tas - 25 * k); vit.tad = Math.round(vit.tad - 15 * k);
+  }
+  if (edad < 2) vit.fr = entreInt(30, 45) + (enf.id === 'bronquiolitis' ? 20 : 0);
+  else if (edad < 7) vit.fr = entreInt(22, 30);
   // Analítica: valores normales + los propios de la enfermedad
   const sangre = {};
   for (const p of SANGRE) {
     const o = enf.pruebas.sangre[p.k];
     let r = o || p.r;
     if (!o && p.k === 'hb' && sexo === 'm') r = [13.1, 15];
+    if (!o && p.k === 'hb' && edad < 13) r = [11.5, 13.8];
     if (!o && p.k === 'oh') r = [0, 0];
     if (!o && p.k === 'trop') r = [0.0, 0.02];
     if (!o && p.k === 'pcr') r = [0.4, 4];
+    if (!o && p.k === 'bnp') r = viejo ? [80, 280] : [10, 90];
+    if (!o && p.k === 'cre' && edad < 13) r = [0.3, 0.6];
     const pad = o ? 0 : (r[1] - r[0]) * 0.15;
     sangre[p.k] = +entre(r[0] + pad, r[1] - pad).toFixed(p.d);
   }
@@ -968,65 +1263,91 @@ export function generarPaciente({ dia = 1, rep = 50, equipos = {}, forzar = null
   for (const p of ORINA) orina[p.k] = enf.pruebas.orina[p.k] || 'Negativo';
 
   const antecedentes = [];
-  if (enf.id === 'hipertension' || (viejo && prob(0.4))) antecedentes.push('Hipertensión');
-  if (enf.id === 'cancer_pulmon') antecedentes.push('Dolor de espalda', 'Dolores de cabeza', 'Enfermedad pulmonar');
-  if (enf.id === 'colico_renal' && prob(0.6)) antecedentes.push('Cálculos renales');
-  if (enf.id === 'migrana') antecedentes.push('Dolores de cabeza');
-  if (enf.id === 'ansiedad' && prob(0.6)) antecedentes.push('Depresión');
-  if (enf.id === 'ulcera' && prob(0.5)) antecedentes.push('Úlcera');
-  if (enf.id === 'lumbalgia' || prob(0.15)) antecedentes.push('Dolor de espalda');
-  if (prob(0.08)) antecedentes.push('Asma');
-  if (viejo && prob(0.2)) antecedentes.push('Diabetes');
-  if (viejo && prob(0.12)) antecedentes.push('Cardiopatía');
+  if (!pequeno) {
+    if (enf.id === 'hipertension' || (viejo && prob(0.5))) antecedentes.push('Hipertensión');
+    if (enf.id === 'cancer_pulmon') antecedentes.push('Dolor de espalda', 'Dolores de cabeza', 'Enfermedad pulmonar');
+    if (enf.id === 'colico_renal' && prob(0.6)) antecedentes.push('Cálculos renales');
+    if (enf.id === 'migrana') antecedentes.push('Dolores de cabeza');
+    if (enf.id === 'ansiedad' && prob(0.6)) antecedentes.push('Depresión');
+    if (enf.id === 'ulcera' && prob(0.5)) antecedentes.push('Úlcera');
+    if (enf.id === 'insuficiencia_cardiaca') antecedentes.push('Cardiopatía', 'Hipertensión');
+    if (enf.id === 'lumbalgia' || prob(viejo ? 0.3 : 0.12)) antecedentes.push('Dolor de espalda');
+    if (viejo && prob(0.25)) antecedentes.push('Diabetes');
+    if (viejo && prob(0.15)) antecedentes.push('Cardiopatía');
+    if (edad > 75 && prob(0.08)) antecedentes.push('Párkinson');
+  }
+  if (edad > 3 && prob(0.08)) antecedentes.push('Asma');
 
-  const fumador = enf.id === 'cancer_pulmon' || prob(0.25);
-  const bebedor = ['ulcera', 'resaca'].includes(enf.id) || prob(0.2);
-  const alergia = prob(0.18) ? azar(['penicilina', 'penicilina', 'aine', 'marisco']) : (enf.id === 'alergia' ? 'marisco' : null);
-  const acompanante = enf.secreto && enf.secreto.v >= 2 && prob(0.75) ? azar(sexo === 'h' ? ['su mujer', 'su hija', 'su madre'] : ['su marido', 'su hija', 'su madre']) : (prob(0.2) ? azar(['su hijo', 'su hermana', 'un amigo']) : null);
+  const fumador = edad >= 15 && (enf.id === 'cancer_pulmon' || prob(edad < 20 ? 0.12 : 0.25));
+  const bebedor = edad >= 16 && (['ulcera', 'resaca'].includes(enf.id) || prob(0.2));
+  const alergia = enf.id === 'alergia' ? 'marisco' : prob(edad < 2 ? 0.04 : 0.16) ? azar(['penicilina', 'penicilina', 'aine', 'marisco']) : null;
+  let acompanante = null;
+  if (edad < 14) acompanante = azar(['su madre', 'su madre', 'su padre', 'su padre', 'su abuela', 'su abuelo']);
+  else if (edad < 18) acompanante = prob(0.75) ? azar(['su madre', 'su padre']) : null;
+  else if (enf.respondeAcomp || (edad >= 80 && prob(0.7))) acompanante = azar(['su hija', 'su hija', 'su hijo', 'su nieta', 'su nieto']);
+  else if (enf.secreto && enf.secreto.v >= 2 && prob(0.75)) acompanante = azar(sexo === 'h' ? ['su mujer', 'su hija', 'su madre'] : ['su marido', 'su hija', 'su madre']);
+  else if (prob(0.2)) acompanante = azar(['su hijo', 'su hermana', 'un amigo']);
 
+  const pelos = viejo ? ['#7c7c7c', '#bdbdbd', '#e6e6e6', '#9a9a9a', '#d4d4d4'] : PELOS.slice(0, 6).concat(['#6b2b18']);
   const apariencia = {
     sexo, edad,
     piel: azar(PIELES),
-    pelo: viejo ? azar(['#7c7c7c', '#bdbdbd', '#e6e6e6', '#9a9a9a']) : azar(PELOS.slice(0, 6).concat(['#6b2b18'])),
-    estilo: sexo === 'h' ? (viejo && prob(0.5) ? 0 : azar([1, 1, 2, 3])) : azar([3, 4, 5, 6, 7]),
-    barba: sexo === 'h' && prob(0.4) ? entreInt(1, 5) : 0,
-    gafas: prob(viejo ? 0.5 : 0.15) ? entreInt(1, 3) : 0,
+    pelo: edad < 2 ? azar(['#3a2617', '#8a5a2b', '#d8c08a', '#b98b55']) : azar(pelos),
+    estilo: edad < 1.2 ? 2 : sexo === 'h' ? (viejo && prob(0.55) ? 0 : azar([1, 1, 2, 3])) : edad > 70 ? azar([4, 6, 6, 3]) : azar([3, 4, 5, 6, 7]),
+    barba: sexo === 'h' && edad >= 18 && prob(edad < 22 ? 0.2 : 0.4) ? (edad < 22 ? 1 : entreInt(1, 5)) : 0,
+    gafas: edad < 4 ? 0 : prob(viejo ? 0.6 : edad < 13 ? 0.1 : 0.18) ? entreInt(1, 3) : 0,
     ojos: azar(['#4a2e1a', '#4a2e1a', '#2b1a10', '#3d6a8a', '#4f6b3a', '#6b6f73']),
-    cara: entre(0.94, 1.06), nariz: entre(0.85, 1.2),
-    complexion: entre(0.92, 1.18),
-    altura: sexo === 'h' ? entre(0.98, 1.06) : entre(0.92, 0.99),
-    palido: ['anemia', 'infarto', 'cancer_pulmon'].includes(enf.id),
+    cara: entre(0.94, 1.06), nariz: edad < 13 ? entre(0.7, 0.85) : entre(0.85, 1.2),
+    complexion: edad < 13 ? entre(0.95, 1.08) : entre(0.92, 1.18),
+    altura: sexo === 'h' ? entre(0.97, 1.05) : entre(0.97, 1.04),
+    palido: ['anemia', 'infarto', 'cancer_pulmon', 'insuficiencia_cardiaca'].includes(enf.id),
+    pecho: sexo === 'm' ? tallaPecho(edad) : null,
+    ropa: edad < 2 ? 'bebe' : edad < 13 ? 'nino' : 'paciente',
+    colorRopa: edad < 2 ? { torso: azar(COLORES_BEBE) } : edad < 13 ? { torso: azar(COLORES_NINO), pantalon: azar(['#2f4b7c', '#34495e', '#7f8c8d', '#b3824a', '#2c3e50', '#6d4c8a']) } : null,
   };
-  const voz = { tono: (sexo === 'h' ? 0.85 : 1.15) * (viejo ? 0.92 : 1) + entre(-0.08, 0.08), vel: (viejo ? 0.9 : 1.02) + entre(-0.05, 0.08) };
+  const voz = edad < 2 ? { tono: 1.9, vel: 1 } : edad < 13 ? { tono: 1.55 + entre(-0.1, 0.15), vel: 1.08 }
+    : edad < 18 ? { tono: sexo === 'h' ? 1.0 : 1.25, vel: 1.08 }
+      : { tono: (sexo === 'h' ? 0.85 : 1.15) * (viejo ? 0.92 : 1) + entre(-0.08, 0.08), vel: (viejo ? 0.88 : 1.02) + entre(-0.05, 0.08) };
+  const dn = edad < 10 && enf.dNino ? enf.dNino : null;
   const pac = {
-    id: contadorId++, nombre, apellidos, sexo, edad, enfId: enf.id,
+    id: contadorId++, nombre, apellidos, sexo, edad, grupo, enfId: enf.id,
     direccion: `${azar(CALLES)} ${entreInt(1, 60)}, ${azar(PUEBLOS)}`,
     seguro: `SACYL ${String(entreInt(100000, 999999))}-${String.fromCharCode(65 + entreInt(0, 25))}${String.fromCharCode(65 + entreInt(0, 25))}`,
     vit, sangre, orina, antecedentes, fumador, bebedor, alergia, acompanante,
     apariencia, voz,
-    confianza: acompanante ? 0 : 1,
+    confianza: acompanante && edad >= 10 ? 0 : 1,
     secretoRevelado: false, hallazgos: [], pruebas: {}, preguntas: {},
     tomoViagra: enf.id === 'infarto' && prob(0.5),
-    cuestiona: prob(0.35) ? azar(CUESTIONAN) : null,
-    motivoEscrito: fmt(azar(enf.motivo), { sexo }),
+    cuestiona: edad >= 16 && prob(0.35) ? azar(CUESTIONAN) : null,
+    motivoEscrito: dn ? azar(dn.motivo) : fmt(azar(enf.motivo), { sexo }),
   };
   return pac;
+}
+// Frases de la enfermedad para este paciente (las de los padres si es un niño pequeño)
+export function dialogo(pac) {
+  const e = ENF[pac.enfId];
+  return pac.edad < 10 && e.dNino ? { ...e.d, ...e.dNino, habitosMentira: null } : e.d;
 }
 
 // Frases de hábitos generadas a partir del paciente (la enfermedad puede mentir)
 export function fraseHabitos(pac) {
   const e = ENF[pac.enfId];
+  if (pac.edad < 2) return azar(['¿Fumar? ¡Si es un bebé! Toma pecho y ya empieza con alguna papilla.', 'Toma biberón cada tres horas. En casa no fuma nadie... bueno, el abuelo en la terraza.']);
+  if (pac.edad < 13) return azar(['Come de todo... bueno, verdura poca. Y chuches, las que le da su abuela.', 'Come bien, pero desayuna galletas y Cola Cao. Mucha tablet, eso sí.', 'Muy buen comedor. Le encantan las lentejas de su abuela.']);
   if (e.d.habitosMentira && !pac.secretoRevelado) return azar(e.d.habitosMentira);
-  const f = pac.fumador ? azar(['Fumo, sí, unos diez cigarrillos al día.', 'Fumo medio paquete al día. Ya sé que debería dejarlo.']) : azar(['No fumo, nunca he fumado.', 'Fumar no. Lo dejé hace años.']);
+  const f = pac.fumador ? azar(['Fumo, sí, unos diez cigarrillos al día.', 'Fumo medio paquete al día. Ya sé que debería dejarlo.']) : azar(pac.edad < 20 ? ['No fumo. Bueno, algún vapeo en las fiestas.', 'No, no fumo.'] : ['No fumo, nunca he fumado.', 'Fumar no. Lo dejé hace años.']);
   const b = pac.bebedor ? azar(['Y bebo... un vino en cada comida y alguna caña.', 'Alcohol, los fines de semana bastante.']) : azar(['Alcohol, muy poco. En las fiestas.', 'No bebo casi nada.']);
-  const c = azar(['Como de todo: mucha legumbre, cocido los domingos...', 'Como bastante embutido, la verdad.', 'Intento comer sano, pescado y verdura.', 'Como en el bar casi todos los días.']);
-  return `${f} ${b} ${c}`;
+  const c = pac.edad > 70 ? azar(['Como lo de siempre: mi cocido, mis legumbres y mi vasito de vino.', 'Como poco, hij{o}. Un caldito y algo de fruta.']) : azar(['Como de todo: mucha legumbre, cocido los domingos...', 'Como bastante embutido, la verdad.', 'Intento comer sano, pescado y verdura.', 'Como en el bar casi todos los días.']);
+  return fmt(`${f} ${b} ${c}`, pac);
 }
 export function fraseAntecedentes(pac) {
+  if (pac.edad < 13) return pac.antecedentes.length ? `Tiene ${pac.antecedentes.map(a => a.toLowerCase()).join(' y ')}, con su inhalador. Las vacunas, todas al día.` : azar(['Está sanísimo. Tiene todas las vacunas al día.', 'Nada, nunca ha estado malo. Vacunas al día.']);
   if (!pac.antecedentes.length) return azar(['No, estoy sano como un roble. No tomo nada.', 'Nada, doctor. Ni una pastilla.']);
-  return `Pues tengo ${pac.antecedentes.map(a => a.toLowerCase()).join(', ').replace(/, ([^,]*)$/, ' y $1')}. ${azar(['Tomo las pastillas que me mandó el médico de cabecera.', 'Para eso tomo mi medicación.', 'Pero lo llevo bien.'])}`;
+  const extra = pac.edad > 70 ? azar(['Tomo siete pastillas al día, las tengo en un pastillero.', 'Mi hija me prepara las pastillas de la semana.']) : azar(['Tomo las pastillas que me mandó el médico de cabecera.', 'Para eso tomo mi medicación.', 'Pero lo llevo bien.']);
+  return `Pues tengo ${pac.antecedentes.map(a => a.toLowerCase()).join(', ').replace(/, ([^,]*)$/, ' y $1')}. ${extra}`;
 }
 export function fraseAlergia(pac) {
+  if (pac.edad < 13) return pac.alergia ? { penicilina: 'Sí, a la penicilina. Con la amoxicilina se puso lleno de ronchas.', aine: 'Al ibuprofeno, le salieron ronchas.', marisco: 'Al marisco, eso nos dijeron.' }[pac.alergia] : 'Que sepamos, a nada.';
   if (!pac.alergia) return azar(['No, que yo sepa no soy alérgico a nada.', 'A nada, doctor.']).replace('alérgico', pac.sexo === 'm' ? 'alérgica' : 'alérgico');
   return { penicilina: 'Sí, a la penicilina. Una vez me puse hinchad{o} como un globo.', aine: 'Sí, el ibuprofeno y esas cosas me sientan fatal, me salen ronchas.', marisco: 'Al marisco. Bueno... eso dicen, pero a mí me encanta.' }[pac.alergia];
 }
@@ -1084,6 +1405,24 @@ export function evaluarTratamiento(pac, plan) {
   if (e.simulador) {
     if (diagOk && !plan.receta.some(r => r.tags.includes('baja'))) notas.push(['bien', 'No se ha dejado engañar por el simulador.']);
     if (plan.receta.some(r => r.tags.includes('baja'))) notas.push(['mal', 'Le ha dado la baja a alguien que estaba fingiendo.']);
+  }
+  // niños, bebés y mayores
+  if (pac.edad < 16) {
+    if (alcohol.length) { peligro = Math.max(peligro, 2); notas.push(['mal', '¡Alcohol a un menor! Han llamado a los servicios sociales.']); q -= 30; }
+    if (tags.has('antiagregante') && plan.receta.some(r => /aspirina|acetilsalic/i.test(r.n))) { peligro = Math.max(peligro, 1); notas.push(['mal', 'La aspirina está prohibida en niños (síndrome de Reye).']); q -= 15; }
+    if (tags.has('benzodiacepina') || tags.has('opioide')) { peligro = Math.max(peligro, 2); notas.push(['mal', 'Tranquilizantes u opioides en un niño: muy peligroso.']); q -= 25; }
+    if (tags.has('cafeina') || tags.has('energetica')) { q -= 5; notas.push(['medio', 'Café y bebidas energéticas no son para niños.']); }
+    if (tags.has('tabaco')) { q -= 20; notas.push(['mal', '¿Tabaco para un niño? Expediente disciplinario.']); }
+  }
+  if (pac.edad < 1) {
+    if (tags.has('miel')) { peligro = Math.max(peligro, 2); notas.push(['mal', 'Miel en menores de un año: riesgo de botulismo.']); q -= 25; }
+    const solida = plan.receta.filter(r => r.tags.includes('comida_adulta'));
+    if (solida.length) { q -= 12; notas.push(['mal', `«${solida[0].n}» a un bebé de ${Math.max(1, Math.round(pac.edad * 12))} meses... no.`]); }
+    if (plan.receta.some(r => r.cat === 'med' && !r.tags.includes('infantil') && !r.tags.includes('suero') && !r.tags.includes('lavado') && !r.tags.includes('oxigeno'))) { q -= 8; notas.push(['medio', 'A un bebé hay que darle presentaciones infantiles (jarabes) ajustadas al peso.']); }
+  } else if (pac.edad < 12 && plan.receta.some(r => /^(paracetamol 1 g|ibuprofeno 600)/i.test(r.n))) { q -= 6; notas.push(['medio', 'Dosis de adulto para un niño: mejor el jarabe infantil.']); }
+  if (pac.edad >= 70) {
+    if (tags.has('benzodiacepina') || tags.has('hipnotico')) { q -= 8; notas.push(['mal', 'Tranquilizantes en mayores: más caídas y confusión.']); }
+    if (tags.has('aine') && plan.receta.some(r => r.dur === 'Para siempre' || r.dur === '1 mes')) { q -= 6; notas.push(['medio', 'Antiinflamatorios mucho tiempo en mayores dañan el riñón y el estómago.']); }
   }
   q = Math.max(0, Math.min(100, q));
   // Gravedad del error

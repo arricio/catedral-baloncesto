@@ -147,7 +147,11 @@ export const ROPAS = {
   paciente_sin: { n: 'Paciente sin camisa', torso: 'piel', manga: 'ninguna', pantalon: '#8fa6bf', falda: 0 },
   cirujano: { n: 'Cirujano', torso: '#2f6f8f', manga: 'corta', mangaColor: '#2f6f8f', pantalon: '#2f6f8f', gorro: '#2f6f8f', mascarilla: '#9cc7e0' },
   enfermera: { n: 'Enfermera', torso: '#f2f4f6', manga: 'corta', mangaColor: '#f2f4f6', pantalon: '#f2f4f6', falda: 0.3, faldaColor: '#f2f4f6', gorro: '#f2f4f6', mascarilla: '#bcd8ec' },
-  calle: { n: 'Ropa de calle', torso: '#6b5a48', manga: 'larga', mangaColor: '#6b5a48', pantalon: '#34404f' },
+  calle: { n: 'Ropa de calle', torso: '#6b5a48', manga: 'larga', mangaColor: '#6b5a48', pantalon: '#34404f', calle: true },
+  nino: { n: 'Ropa de niño', torso: '#4fa3e0', manga: 'corta', mangaColor: '#4fa3e0', pantalon: '#2f4b7c', zapato: '#e8556d' },
+  nino_sin: { n: 'Niño sin camiseta', torso: 'piel', manga: 'ninguna', pantalon: '#2f4b7c', zapato: '#e8556d', pantFin: 0.48 },
+  bebe: { n: 'Pelele', torso: '#bfe0f6', manga: 'larga', mangaColor: '#bfe0f6', pantalon: '#bfe0f6', zapato: '#bfe0f6' },
+  bebe_sin: { n: 'Pañal', torso: 'piel', manga: 'ninguna', pantalon: '#ffffff', zapato: 'piel', pantFin: 0.72 },
 };
 export const PELOS_NOMBRES = ['Calvo', 'Corto', 'Rapado', 'Con flequillo', 'Media melena', 'Melena larga', 'Moño', 'Coleta'];
 export const BARBAS_NOMBRES = ['Sin vello', 'Barba de tres días', 'Barba completa', 'Bigote', 'Perilla', 'Bigote y perilla'];
@@ -311,6 +315,24 @@ function rasgosCara(cabeza, ap, { piel, pelo, tela, r, colPiel, cara, craneo }) 
 }
 
 function ropaParte(id) { return ROPAS[id] || ROPAS.paciente; }
+// ropa para explorar sin camiseta según la edad
+export const ropaSin = (ap) => ap.ropa === 'bebe' ? 'bebe_sin' : ap.ropa === 'nino' ? 'nino_sin' : 'paciente_sin';
+// proporciones del cuerpo según la edad (respecto al modelo adulto)
+const interp = (t, x) => { if (x <= t[0][0]) return t[0][1]; for (let i = 1; i < t.length; i++) if (x <= t[i][0]) { const [a, va] = t[i - 1], [b, vb] = t[i]; return va + (vb - va) * (x - a) / (b - a); } return t[t.length - 1][1]; };
+export function proporciones(edad = 35, mujer = false) {
+  const adulto = mujer ? 1.64 : 1.77;
+  const alto = interp([[0.1, 0.55], [0.5, 0.68], [1, 0.76], [2, 0.88], [4, 1.03], [6, 1.16], [8, 1.28], [10, 1.39], [12, 1.5], [14, mujer ? 1.58 : 1.62], [16, mujer ? 1.62 : 1.72], [18, adulto]], edad);
+  let s = alto / adulto;
+  if (edad > 70) s *= 0.97;
+  const cabeza = interp([[0.1, 0.62], [1, 0.76], [2, 0.82], [4, 0.87], [6, 0.9], [10, 0.94], [14, 0.98], [18, 1]], edad);
+  return {
+    s, cabeza: cabeza / Math.min(1, alto / adulto),
+    piernas: interp([[0.1, 0.7], [1, 0.76], [2, 0.82], [4, 0.88], [8, 0.95], [12, 1]], edad),
+    brazos: interp([[0.1, 0.78], [1, 0.82], [2, 0.86], [4, 0.9], [8, 0.96], [12, 1]], edad),
+    ancho: interp([[0.1, 1.28], [1, 1.22], [2, 1.12], [4, 1.04], [7, 0.98], [12, 0.95], [18, 1]], edad),
+    cuello: interp([[0.1, 0.55], [1, 0.65], [3, 0.8], [8, 0.92], [14, 1]], edad),
+  };
+}
 
 function crearMano(padre, mat, sg) {
   const palma = pon(caja(0.075, 0.085, 0.028, mat, 0.012), padre, 0, -0.05, 0);
@@ -390,8 +412,9 @@ function animarHumano(h, dt, t) {
   if (h._parpadeo < 0) h._parpadeo = 2.5 + Math.random() * 3.5;
   for (const o of p.ojos) { o.p.scale.y = cerrado ? 1.0 : 0.42; o.p.position.y = cerrado ? 0.0 : 0.011; }
   // boca
-  const ab = h.hablando ? 0.25 + Math.abs(Math.sin(h._t * 13) * Math.sin(h._t * 5.3)) * 0.9 : (h.dolor ? 0.5 : 0);
+  const ab = h.llorando ? 1.1 + Math.sin(h._t * 6) * 0.3 : h.hablando ? 0.25 + Math.abs(Math.sin(h._t * 13) * Math.sin(h._t * 5.3)) * 0.9 : (h.dolor ? 0.5 : 0);
   p.boca.scale.y = 0.18 + ab * 0.55; p.labioI.position.y = -0.049 - ab * 0.008;
+  if (h.llorando) for (const o of p.ojos) { o.p.scale.y = 0.9; o.p.position.y = 0.003; }
   // cabeza: mirar objetivo + balanceo
   let yaw = Math.sin(h._t * 0.35) * 0.06, pitch = Math.sin(h._t * 0.5) * 0.03;
   if (h.hablando) { yaw += Math.sin(h._t * 1.7) * 0.05; pitch += Math.sin(h._t * 2.3) * 0.04; }
@@ -436,16 +459,17 @@ export function crearHumano(ap, ropaId = 'paciente') {
 }
 
 const colorV = (c) => new T.Color(c === 'piel' || c === 'bata' || !c ? '#ffffff' : c);
-function materialCuerpo(colPiel, r, mujer, offX = 0) {
+function materialCuerpo(colPiel, r, mujer, offX = 0, edad = 35) {
   const esc = mujer ? 0.95 : 1;
   const u = {
-    uSujetador: { value: mujer && r.torso === 'piel' ? 1 : 0 },
+    uSujetador: { value: mujer && r.torso === 'piel' && (edad ?? 35) >= 11 ? 1 : 0 },
+    uSujAbajo: { value: 1.215 }, uSujArriba: { value: 1.345 },
     uOffX: { value: offX }, uCintura: { value: r.torso === 'piel' ? 0.99 : 0.84 },
     uPiel: { value: colPiel.clone() },
     uTorso: { value: colorV(r.torso) }, uTorsoPiel: { value: r.torso === 'piel' ? 1 : 0 }, uTorsoBata: { value: r.torso === 'bata' ? 1 : 0 },
     uManga: { value: colorV(r.mangaColor) }, uMangaLarga: { value: r.manga === 'larga' ? 1 : 0 }, uMangaCorta: { value: r.manga === 'corta' || r.manga === 'larga' ? 1 : 0 },
-    uPant: { value: colorV(r.pantalon) }, uPantPiel: { value: r.pantalon === 'piel' ? 1 : 0 }, uPantCorto: { value: r.torso === 'bata' ? 1 : 0 },
-    uZapato: { value: new T.Color(r.zapato || (r.bata || r.calle ? '#23262b' : '#e9e9e9')) },
+    uPant: { value: colorV(r.pantalon) }, uPantPiel: { value: r.pantalon === 'piel' ? 1 : 0 }, uPantFin: { value: r.pantFin ?? (r.torso === 'bata' ? 0.48 : 0.1) }, uZapatoPiel: { value: r.zapato === 'piel' ? 1 : 0 },
+    uZapato: { value: new T.Color(r.zapato && r.zapato !== 'piel' ? r.zapato : (r.bata || r.calle ? '#23262b' : '#e9e9e9')) },
     uCamisa: { value: colorV(r.camisa) }, uConCamisa: { value: r.camisa ? 1 : 0 },
     uCorbata: { value: colorV(r.corbata) }, uConCorbata: { value: r.corbata ? 1 : 0 },
     uEsc: { value: esc },
@@ -457,7 +481,7 @@ function materialCuerpo(colPiel, r, mujer, offX = 0) {
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
 varying vec3 vRep;
 uniform vec3 uPiel, uTorso, uManga, uPant, uZapato, uCamisa, uCorbata;
-uniform float uTorsoPiel, uTorsoBata, uMangaLarga, uMangaCorta, uPantPiel, uPantCorto, uConCamisa, uConCorbata, uEsc, uOffX, uCintura, uSujetador;
+uniform float uTorsoPiel, uTorsoBata, uMangaLarga, uMangaCorta, uPantPiel, uPantFin, uZapatoPiel, uConCamisa, uConCorbata, uEsc, uOffX, uCintura, uSujetador, uSujAbajo, uSujArriba;
 float tela;
 vec3 ropa() {
   vec3 p = (vRep - vec3(uOffX, 0.0, 0.0)) / uEsc;
@@ -473,7 +497,8 @@ vec3 ropa() {
   float pie = 1.0 - smoothstep(0.095, 0.105, p.y);
   float mangaC = brazo * smoothstep(1.195, 1.205, p.y) * uMangaCorta;
   float mangaL = brazo * smoothstep(0.93, 0.94, p.y) * uMangaLarga;
-  float pantalon = pierna * (1.0 - pie) * (1.0 - uPantPiel) * mix(1.0, smoothstep(0.475, 0.485, p.y), uPantCorto);
+  float pantalon = pierna * (1.0 - pie) * (1.0 - uPantPiel) * smoothstep(uPantFin - 0.005, uPantFin + 0.005, p.y);
+  pie *= 1.0 - uZapatoPiel;
   vec3 c = uPiel; tela = 0.0;
   vec3 ct = uTorso;
   if (uTorsoBata > 0.5) { vec2 q = fract(vec2(p.x + p.z, p.y) * 62.0) - 0.5; float d = abs(q.x) + abs(q.y); ct = mix(vec3(0.36, 0.5, 0.68), vec3(0.8, 0.86, 0.93), smoothstep(0.17, 0.22, d)); }
@@ -485,7 +510,7 @@ vec3 ropa() {
   }
   c = mix(c, ct, torso * (1.0 - uTorsoPiel));
   // sujetador para las pacientes sin bata
-  float suj = uSujetador * (1.0 - brazo) * max(smoothstep(1.215, 1.225, p.y) * (1.0 - smoothstep(1.335, 1.345, p.y)),
+  float suj = uSujetador * (1.0 - brazo) * max(smoothstep(uSujAbajo, uSujAbajo + 0.01, p.y) * (1.0 - smoothstep(uSujArriba - 0.01, uSujArriba, p.y)),
     smoothstep(1.3, 1.31, p.y) * (1.0 - smoothstep(1.48, 1.49, p.y)) * smoothstep(0.062, 0.066, ax) * (1.0 - smoothstep(0.08, 0.084, ax)));
   c = mix(c, vec3(0.93, 0.93, 0.95), suj);
   c = mix(c, uManga, max(mangaC, mangaL));
@@ -501,17 +526,71 @@ vec3 ropa() {
   return m;
 }
 
+// Talla del pecho: se rehace la parte delantera del torso femenino con una forma de pecho
+// (polo superior suave, inferior lleno con su pliegue, caída según el tamaño y canalillo)
+export const FORMA_PECHO = { nina: [0.003, 0.05], pequeno: [0.022, 0.056], normal: [0.036, 0.063], grande: [0.053, 0.072], muy_grande: [0.072, 0.082] };
+const cachePecho = new Map();
+const _ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+export function centroPecho(talla) {
+  const [A, R] = FORMA_PECHO[talla] || FORMA_PECHO.normal;
+  return { A, R, cx: 0.056 + R * 0.18, cy: 1.24 - A * 0.4 };
+}
+function alturaPecho(x, y, talla) {
+  const { A, R, cx, cy } = centroPecho(talla);
+  let h = 0;
+  for (const c of [-cx, cx]) {
+    const u = (x - c) / R;
+    const v0 = (y - cy) / R;
+    // arriba baja suave, abajo es más redondo (transición continua, sin picos)
+    const v = v0 * (0.62 + 0.6 * (1 - _ss(-0.35, 0.35, v0)));
+    const t = 1 - u * u - v * v;
+    if (t <= 0) continue;
+    const e = 0.55 + 0.75 * _ss(-0.3, 0.7, v0);
+    h = Math.max(h, A * Math.pow(t, e));
+  }
+  return h;
+}
+function formarPecho(geo, offX, talla) {
+  if (!FORMA_PECHO[talla]) return geo;
+  const clave = geo.uuid + talla;
+  if (cachePecho.has(clave)) return cachePecho.get(clave);
+  const g = geo.clone(), pos = g.attributes.position;
+  // pared del pecho: sección elíptica del torso modelado en Blender
+  const pared = (x) => 0.1035 * Math.sqrt(Math.max(0, 1 - (x / 0.143) ** 2)) - 0.004;
+  const { R, cy } = centroPecho(talla);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i) - offX, y = pos.getY(i), z = pos.getZ(i);
+    if (Math.abs(x) > 0.138 || y < cy - R * 1.25 || y > cy + R * 1.9 || z < 0.03) continue;
+    const zw = pared(x);
+    if (z < zw - 0.03) continue;
+    // fundido suave en el borde de la zona
+    const borde = (1 - _ss(0.118, 0.138, Math.abs(x))) * _ss(cy - R * 1.25, cy - R * 1.05, y) * (1 - _ss(cy + R * 1.6, cy + R * 1.9, y));
+    const zn = zw + alturaPecho(x, y, talla);
+    pos.setZ(i, z + (zn - z) * borde);
+  }
+  pos.needsUpdate = true; g.computeVertexNormals();
+  cachePecho.set(clave, g);
+  return g;
+}
+
 function crearHumanoGLB(ap, ropaId) {
   const mujer = ap.sexo === 'm', k = mujer ? 'M' : 'H', esc = mujer ? 0.95 : 1;
-  const r = ropaParte(ropaId);
+  const r = { ...ropaParte(ropaId) };
+  if (ap.colorRopa && (ropaId === 'nino' || ropaId === 'bebe' || ropaId === 'nino_sin')) {
+    const cr = ap.colorRopa;
+    if (cr.torso && r.torso !== 'piel') { r.torso = cr.torso; r.mangaColor = cr.torso; if (ropaId === 'bebe') { r.pantalon = cr.torso; r.zapato = cr.torso; } }
+    if (cr.pantalon && ropaId !== 'bebe') r.pantalon = cr.pantalon;
+  }
+  const prop = proporciones(ap.edad ?? 35, mujer);
   const raiz = new T.Group();
   const esq = SkeletonUtils.clone(PLANTILLAS[k]);
   raiz.add(esq);
   const c = ap.complexion || 1, cara = ap.cara || 1;
-  esq.scale.set(c, 1, Math.sqrt(c));
+  esq.scale.set(c * prop.ancho, 1, Math.sqrt(c) * prop.ancho);
   let colPiel = new T.Color(ap.piel || '#e0b090');
   if (ap.palido) colPiel.lerp(new T.Color('#e8e3dc'), 0.35);
-  if (ap.edad > 70) colPiel.lerp(new T.Color('#c9b3a3'), 0.1);
+  if (ap.edad > 70) colPiel.lerp(new T.Color('#c9b3a3'), 0.12);
+  if (ap.edad < 2) colPiel.lerp(new T.Color('#ffd6c9'), 0.15);
   const piel = new T.MeshPhysicalMaterial({ color: colPiel, envMapIntensity: 0.35, roughness: 0.58, sheen: 0.5, sheenRoughness: 0.6, sheenColor: new T.Color('#ff9a7a').multiplyScalar(0.25) });
   const pelo = std(ap.pelo || '#3a2617', { roughness: 0.85 });
   const tela = (col) => col === 'bata' ? std('#ffffff', { map: texturas().bata, roughness: 0.9 }) : col === 'piel' ? piel : std(col, { roughness: 0.85 });
@@ -519,7 +598,10 @@ function crearHumanoGLB(ap, ropaId) {
   // en Blender cada modelo estaba a un lado: la posición de reposo trae ese desplazamiento
   cuerpo.geometry.computeBoundingBox();
   const offX = (cuerpo.geometry.boundingBox.min.x + cuerpo.geometry.boundingBox.max.x) / 2;
-  cuerpo.material = materialCuerpo(colPiel, r, mujer, offX);
+  const talla = mujer ? (ap.pecho || (ap.edad < 10 ? 'nina' : ap.edad < 14 ? 'pequeno' : 'normal')) : null;
+  if (mujer) cuerpo.geometry = formarPecho(cuerpo.geometry, offX, talla);
+  cuerpo.material = materialCuerpo(colPiel, r, mujer, offX, ap.edad);
+  if (mujer) { const cp = centroPecho(talla); const u = cuerpo.material.userData; cuerpo.material.onBeforeCompile = ((f) => (sh) => { f(sh); sh.uniforms.uSujAbajo.value = (cp.cy - cp.R * 0.95) / 0.95; sh.uniforms.uSujArriba.value = (cp.cy + cp.R * 0.75) / 0.95; })(cuerpo.material.onBeforeCompile); }
   cuerpo.frustumCulled = false;
   const faldon = esq.getObjectByName(`${k}_Faldon`);
   if (r.falda) {
@@ -568,10 +650,15 @@ function crearHumanoGLB(ap, ropaId) {
   const puntos = { espalda: [], pecho: [] };
   [[-0.06, 1.38], [0.06, 1.38], [-0.075, 1.27], [0.075, 1.27], [-0.07, 1.16], [0.07, 1.16]].forEach(([x, y]) => puntos.espalda.push(pon(new T.Object3D(), pecho, x, y * esc, -0.1 * esc)));
   [[0.035, 1.37, 0.098], [-0.035, 1.37, 0.098], [-0.02, 1.24, 0.11], [0.065, 1.21, mujer ? 0.13 : 0.11]].forEach(([x, y, z]) => puntos.pecho.push(pon(new T.Object3D(), pecho, x, y * esc, z * esc)));
-  raiz.scale.setScalar(ap.altura || 1);
+  // tamaño según la edad: cabeza más grande, piernas y brazos más cortos en los pequeños
+  huesos.cuello.scale.setScalar(prop.cuello);
+  huesos.cabeza.scale.setScalar(prop.cabeza / prop.cuello);
+  for (const L of ['L', 'R']) { huesos[`muslo${L}`].scale.setScalar(prop.piernas); huesos[`brazo${L}`].scale.setScalar(prop.brazos); }
+  const S = (ap.altura || 1) * prop.s;
+  raiz.scale.setScalar(S);
   const sb = sombraSuelo(0.9, 0.7, 0.35); raiz.add(sb);
   const partes = { ...rc, cabeza, torso: cuerpo, sombra: sb, puntos, falda: r.falda ? faldon : null, columna: huesos.columna };
-  const h = { glb: true, raiz, esq, huesos, reposo, partes, ap, ropaId, esc, hablando: false, mirar: null, _parpadeo: 2 + Math.random() * 3, _t: Math.random() * 10, pose: 'depie' };
+  const h = { glb: true, raiz, esq, huesos, reposo, partes, ap, ropaId, esc, S, dy: -(1 - prop.piernas) * 0.88 * esc, mayor: (ap.edad || 0) >= 72, hablando: false, mirar: null, _parpadeo: 2 + Math.random() * 3, _t: Math.random() * 10, pose: 'depie' };
   h.ponerPose = (n) => poseGLB(h, n);
   h.actualizar = (dt, t) => animarGLB(h, dt, t);
   h.girar = (n, eje, ang) => girarHueso(h, n, eje, ang);
@@ -596,7 +683,7 @@ function poseGLB(h, nombre) {
   h.pose = nombre;
   for (const n in h.huesos) h.huesos[n].quaternion.copy(h.reposo[n]);
   h.raiz.rotation.set(0, 0, 0);
-  h.esq.position.set(0, 0, 0);
+  h.esq.position.set(0, h.dy || 0, 0);
   const p = h.partes;
   if (p.falda) p.falda.visible = true;
   p.sombra.visible = true;
@@ -604,7 +691,7 @@ function poseGLB(h, nombre) {
   for (const L of ['L', 'R']) { const sg = L === 'L' ? 1 : -1; G(`brazo${L}`, 'z', -sg * 0.1); G(`antebrazo${L}`, 'x', -0.12); }
   if (nombre === 'espalda') h.raiz.rotation.y = PI;
   else if (nombre === 'sentado') {
-    h.esq.position.y = -(0.9 - 0.49) * h.esc;
+    h.esq.position.y = 0.49 / h.S - 0.9 * h.esc;
     for (const L of ['L', 'R']) {
       const sg = L === 'L' ? 1 : -1;
       G(`muslo${L}`, 'x', -PI / 2 + 0.06); G(`muslo${L}`, 'y', sg * 0.06);
@@ -618,11 +705,23 @@ function poseGLB(h, nombre) {
     h.raiz.rotation.x = -PI / 2;
     p.sombra.visible = false;
     if (p.falda) p.falda.visible = false;
+  } else if (nombre === 'boca_abajo') {
+    h.raiz.rotation.x = PI / 2;
+    for (const L of ['L', 'R']) G(`brazo${L}`, 'x', -0.3);
+    p.sombra.visible = false;
+    if (p.falda) p.falda.visible = false;
+  } else if (nombre === 'recostado') {
+    // bebé en el portabebés
+    h.raiz.rotation.x = -1.1;
+    for (const L of ['L', 'R']) { const sg = L === 'L' ? 1 : -1; G(`muslo${L}`, 'x', -1.0); G(`muslo${L}`, 'y', sg * 0.25); G(`pierna${L}`, 'x', 0.9); G(`brazo${L}`, 'x', -0.35); G(`brazo${L}`, 'z', sg * 0.12); G(`antebrazo${L}`, 'x', -0.7); G(`antebrazo${L}`, 'y', -sg * 0.4); }
+    p.sombra.visible = false;
   } else if (nombre === 'manos_juntas') {
     for (const L of ['L', 'R']) { const sg = L === 'L' ? 1 : -1; G(`brazo${L}`, 'x', -0.35); G(`antebrazo${L}`, 'x', -1.05); G(`antebrazo${L}`, 'y', -sg * 0.5); }
   } else if (nombre === 'brazos_cruzados') {
     for (const L of ['L', 'R']) { const sg = L === 'L' ? 1 : -1; G(`brazo${L}`, 'x', -0.45); G(`brazo${L}`, 'z', sg * 0.15); G(`antebrazo${L}`, 'x', -1.45); G(`antebrazo${L}`, 'y', -sg * 1.0); }
   }
+  // las personas mayores, algo encorvadas
+  if (h.mayor && (nombre === 'depie' || nombre === 'espalda' || nombre === 'sentado' || nombre === 'manos_juntas' || nombre === 'brazos_cruzados')) { G('pecho', 'x', 0.16); G('cuello', 'x', 0.1); }
   h.base = {}; for (const n of ['cabeza', 'cuello', 'pecho', 'columna', 'antebrazoR', 'antebrazoL']) h.base[n] = h.huesos[n].quaternion.clone();
 }
 // inclina el tronco desde la pose actual (para el paciente encamado)
@@ -1008,6 +1107,13 @@ export class Mundo {
     // sillas
     this.sillaPaciente = silla(e, 0.32, -0.3, 0);
     this.sillaAcomp = silla(e, -0.45, -0.38, 0.15);
+    // portabebés sobre la silla del paciente (sólo con bebés)
+    const pb = pon(new T.Group(), e, 0.32, 0.49, -0.25); pb.visible = false; this.portabebes = pb;
+    pon(caja(0.42, 0.18, 0.62, std('#5b6470', { roughness: 0.7 }), 0.08), pb, 0, 0.09, 0);
+    pon(caja(0.36, 0.06, 0.54, std('#e9dfd3', { roughness: 0.95 }), 0.03), pb, 0, 0.17, 0.02);
+    pon(caja(0.42, 0.3, 0.08, std('#5b6470', { roughness: 0.7 }), 0.04), pb, 0, 0.27, -0.27, -0.35, 0, 0);
+    pon(new T.Mesh(new T.TorusGeometry(0.22, 0.015, 8, 32, PI), std('#2f343b')), pb, 0, 0.17, -0.12, -1.25, 0, 0);
+    sombra(pb);
     // zona de exploración (derecha)
     const caja_luz = pon(new T.Group(), e, 2.55, 1.55, -1.45);
     pon(caja(1.08, 0.66, 0.06, M.blanco, 0.01), caja_luz, 0, 0, 0);
@@ -1066,11 +1172,16 @@ export class Mundo {
     if (this.manos) this.manos.visible = true;
     this.esteto.visible = false;
   }
-  vistaExplorar(lado = 'espalda', dur = 0.9) {
+  vistaExplorar(lado = 'espalda', dur = 0.9, h = null) {
     this.vistaConsulta = 'explorar';
     if (this.manos) this.manos.visible = false;
-    if (lado === 'espalda') this.irA([2.9, 1.48, 0.32], [2.9, 1.3, -0.6], dur);
-    else this.irA([2.9, 1.5, 0.45], [2.9, 1.3, -0.6], dur);
+    // se apunta al pecho del paciente, sea de la estatura que sea
+    let c = new T.Vector3(2.9, 1.3, -0.6);
+    if (h && h.huesos) { h.raiz.updateMatrixWorld(true); h.huesos.pecho.getWorldPosition(c); }
+    if (h && (h.pose === 'tumbado' || h.pose === 'boca_abajo')) { const d = 0.35 + 0.35 * (h.S || 1); this.irA([c.x - d * 0.75, c.y + d, c.z + d * 0.3], [c.x, c.y, c.z], dur); return; }
+    const d = 0.55 + 0.4 * Math.min(1, h?.S || 1);
+    if (lado === 'espalda') this.irA([c.x, c.y + 0.15, c.z + d], [c.x, c.y - 0.02, c.z], dur);
+    else this.irA([c.x, c.y + 0.18, c.z + d + 0.1], [c.x, c.y - 0.02, c.z], dur);
   }
   vistaDetalle(dur = 0.9) { this.vistaConsulta = 'detalle'; if (this.manos) this.manos.visible = false; this.irA([2.95, 1.62, 0.15], [2.9, 1.58, -0.6], dur); }
   ponerPacienteConsulta(h, donde = 'silla') {
@@ -1080,6 +1191,21 @@ export class Mundo {
     else if (donde === 'acomp') { h.ponerPose('sentado'); h.raiz.position.set(-0.45, 0, -0.35); h.raiz.rotation.y = 0.15; h.mirar = new T.Vector3(0, 1.26, 1.62); }
     else if (donde === 'espalda') { h.ponerPose('espalda'); h.raiz.position.set(2.9, 0, -0.6); h.mirar = null; }
     else if (donde === 'frente') { h.ponerPose('depie'); h.raiz.position.set(2.9, 0, -0.6); h.mirar = new T.Vector3(2.9, 1.5, 0.45); }
+    else if (donde === 'portabebes' || donde === 'camilla_arriba' || donde === 'camilla_abajo') {
+      const S = h.S || 1, yPel = (0.9 * (h.esc || 1) + (h.dy || 0)) * S;
+      if (donde === 'portabebes') {
+        h.ponerPose('recostado');
+        const th = -1.1, obj = new T.Vector3(0.32, 0.72, -0.18);
+        h.raiz.position.set(obj.x, obj.y - yPel * Math.cos(th), obj.z - yPel * Math.sin(th));
+        h.mirar = new T.Vector3(0, 1.26, 1.62);
+      } else {
+        h.ponerPose(donde === 'camilla_arriba' ? 'tumbado' : 'boca_abajo');
+        const grosor = 0.1 * S * (h.ap.complexion || 1);
+        h.raiz.position.set(3.4, 0.77 + grosor, donde === 'camilla_arriba' ? 1.15 + yPel : 0.75 - yPel);
+        h.mirar = null;
+      }
+    }
+    if (this.portabebes) this.portabebes.visible = donde === 'portabebes' || (this.portabebes.visible && donde !== 'silla');
     h.raiz.updateMatrixWorld(true);
   }
 
@@ -1246,7 +1372,7 @@ export class Mundo {
     if (this.pacQ) this.quitar(this.pacQ);
     (this.personalQ || []).forEach(h => this.quitar(h));
     if (paciente) {
-      const h = this.registrar(crearHumano(paciente, 'paciente_sin'));
+      const h = this.registrar(crearHumano(paciente, ropaSin(paciente)));
       e.add(h.raiz); h.ponerPose('tumbado');
       h.raiz.position.set(0.4, 0.97, -0.38);
       h.dormido = true; this.pacQ = h;
@@ -1258,7 +1384,7 @@ export class Mundo {
   }
   // coloca el campo según la zona de la cirugía y devuelve la vista cenital
   colocarCampo(zona) {
-    const pos = { fid: [-0.08, 0.32], hcd: [-0.09, 0.08], torax_izq: [0.1, -0.08], ingle: [-0.08, 0.5], antebrazo: [-0.62, -0.1], muneca: [-0.62, -0.1] }[zona] || [0, 0.2];
+    const pos = { fid: [-0.08, 0.32], hcd: [-0.09, 0.08], torax_izq: [0.1, -0.08], ingle: [-0.08, 0.5], cadera: [-0.2, 0.46], antebrazo: [-0.62, -0.1], muneca: [-0.62, -0.1] }[zona] || [0, 0.2];
     const brazo = zona === 'antebrazo' || zona === 'muneca';
     this.campo.mesh.position.set(pos[0], brazo ? 0.99 : 1.14, pos[1]);
     this.campo.mesh.scale.setScalar(brazo ? 0.75 : 1);

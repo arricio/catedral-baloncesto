@@ -2,11 +2,11 @@
 import * as THREE from 'three';
 import {
   azar, entre, entreInt, prob, normaliza, ENFERMEDADES, ENF, RECETARIO, CAT_NOMBRE, itemLibre, buscarReceta, PAUTAS, DURACIONES,
-  RESPUESTAS_AUTORIDAD, fmt, generarPaciente, fraseHabitos, fraseAntecedentes, fraseAlergia, evaluarTratamiento, reaccionReceta,
-  SANGRE, ORINA, PRUEBAS, ZONAS_RX, CIRUGIAS, ANESTESIAS, ANTECEDENTES, NOMBRES_H, NOMBRES_M, APELLIDOS,
+  RESPUESTAS_AUTORIDAD, fmt, tallaPecho, TALLAS_PECHO, generarPaciente, fraseHabitos, fraseAntecedentes, fraseAlergia, evaluarTratamiento, reaccionReceta,
+  SANGRE, ORINA, PRUEBAS, ZONAS_RX, CIRUGIAS, ANESTESIAS, ANTECEDENTES, NOMBRES_H, NOMBRES_M, APELLIDOS, textoEdad, respondeAcomp, dialogo,
 } from './datos.js';
 import { Voz, Sonido } from './audio.js';
-import { Mundo, crearHumano, cargarModelos, ROPAS, PELOS_NOMBRES, BARBAS_NOMBRES, GAFAS_NOMBRES } from './escena.js';
+import { Mundo, crearHumano, cargarModelos, ropaSin, ROPAS, PELOS_NOMBRES, BARBAS_NOMBRES, GAFAS_NOMBRES } from './escena.js';
 import { dibujarRx, dibujarTac, dibujarEco, dibujarEcg, dibujarGarganta, ecgValor as ecgVal } from './imagenes.js';
 import { Cirugia, HERRAMIENTAS, EMERGENCIAS } from './cirugia.js';
 
@@ -103,10 +103,20 @@ function reputacion(n) { G.rep = Math.max(0, Math.min(100, G.rep + n)); hud(); }
 // ───────────────────────── Voces y subtítulos ─────────────────────────
 let cola = Promise.resolve(), hablandoN = 0;
 let pac = null, hPac = null, hAcomp = null, acompDentro = false, hPacSin = null;
+const esMujerAcomp = (p) => /mujer|hija|madre|hermana|abuela|nieta/.test(p.acompanante || '');
+function parentesco(p) {
+  const rel = (p.acompanante || 'acompañante').replace(/^su /, '');
+  return `${rel[0].toUpperCase()}${rel.slice(1)} de ${p.nombre}`;
+}
+// ajusta «el niño / mi hijo» al sexo del paciente en las frases de los padres
+function generoNino(t, p) {
+  if (p.sexo === 'm') return t.replace(/\bel niño\b/g, 'la niña').replace(/\bEl niño\b/g, 'La niña').replace(/\b[Mm]i hijo\b/g, m => m[0] + 'i hija').replace(/\bmi bebé\b/gi, 'mi bebé').replace(/\bmuy flojo\b/g, 'muy floja').replace(/\bacatarrado\b/g, 'acatarrada').replace(/\bdecaído\b/g, 'decaída').replace(/\bquejoso\b/g, 'quejosa').replace(/\bdormido\b/g, 'dormida').replace(/\bronco\b/g, 'ronca').replace(/\bSu hermano\b/g, 'Su hermano').replace(/\btranquilo\b/g, 'tranquila').replace(/\brojo\b/g, 'roja');
+  return t.replace(/\bla niña\b/g, 'el niño').replace(/\bLa niña\b/g, 'El niño');
+}
 function infoHablante(quien) {
   if (quien === 'doctor') return { nombre: nombreDoctor(), genero: G.doctor.voz, tono: 1, vel: 1, clase: 'doctor', semilla: 0 };
   if (quien === 'paciente' && pac) return { nombre: `${pac.nombre} ${pac.apellidos}`, genero: pac.sexo, tono: pac.voz.tono, vel: pac.voz.vel, clase: 'paciente', humano: modo === 'sala' ? hCama : (hPacSin && hPacSin.raiz.parent ? hPacSin : hPac), semilla: pac.id };
-  if (quien === 'acomp' && pac) return { nombre: `Acompañante (${pac.acompanante})`, genero: /mujer|hija|madre|hermana/.test(pac.acompanante) ? 'm' : 'h', tono: 1.05, vel: 1.08, clase: 'acomp', humano: hAcomp, semilla: pac.id + 7 };
+  if (quien === 'acomp' && pac) return { nombre: parentesco(pac), genero: esMujerAcomp(pac) ? 'm' : 'h', tono: /abuel/.test(pac.acompanante) ? 0.92 : 1.05, vel: /abuel/.test(pac.acompanante) ? 0.92 : 1.08, clase: 'acomp', humano: hAcomp, semilla: pac.id + 7 };
   if (typeof quien === 'object') return { clase: 'otro', tono: 1, vel: 1.05, semilla: 3, ...quien };
   return { nombre: '', genero: 'h', tono: 1, vel: 1, clase: 'otro', semilla: 1 };
 }
@@ -119,11 +129,12 @@ function decir(quien, texto) {
     const sub = $('#subtitulo');
     sub.innerHTML = `<b class="${info.clase}">${esc(info.nombre)}</b><span>${esc(t)}</span>`;
     sub.classList.add('on');
-    if (info.humano) info.humano.hablando = true;
+    const bebe = quien === 'paciente' && pac && pac.edad < 1.5;
+    if (info.humano) { if (bebe && /bua/i.test(t)) { info.humano.llorando = true; Sonido.llanto(2); } else info.humano.hablando = true; }
     if (quien === 'doctor') mundo.doctorHablando = true;
     Voz.activa = G.ajustes.voz;
     await Voz.hablar(t.replace(/\(.*?\)/g, ''), { genero: info.genero, tono: info.tono, vel: info.vel * (G.ajustes.velVoz || 1), quien: info.clase + Math.random(), semilla: info.semilla });
-    if (info.humano) info.humano.hablando = false;
+    if (info.humano) { info.humano.hablando = false; info.humano.llorando = false; }
     mundo.doctorHablando = false;
     hablandoN--;
     if (!hablandoN) { $('#panel').classList.remove('ocupado'); setTimeout(() => { if (!hablandoN) sub.classList.remove('on'); }, 2500); }
@@ -208,6 +219,7 @@ function creadorMedico(nuevo = false, base = null) {
     <div class="grupo"><span>Ojos</span>${sw(COLORES_OJOS, 'ojos')}</div>
     <label class="campo">Forma de la cara<input type="range" min="0.9" max="1.1" step="0.01" value="${d.cara}" data-r="cara"></label>
     <label class="campo">Nariz<input type="range" min="0.75" max="1.3" step="0.01" value="${d.nariz}" data-r="nariz"></label>
+    ${d.sexo === 'm' ? `<div class="grupo"><span>Pecho</span>${Object.entries(TALLAS_PECHO).map(([k, n]) => `<button class="op ${(d.pecho || 'normal') === k ? 'on' : ''}" data-c="pecho" data-pe="${k}">${n}</button>`).join('')}</div>` : ''}
     <div class="grupo"><span>Peinado</span>${opts(PELOS_NOMBRES, 'estilo')}</div>
     <div class="grupo"><span>Color de pelo</span>${sw(COLORES_PELO, 'pelo')}</div>
     <div class="grupo"><span>Vello facial</span>${opts(BARBAS_NOMBRES, 'barba')}</div>
@@ -227,9 +239,10 @@ function creadorMedico(nuevo = false, base = null) {
     const c = b.dataset.c;
     if (c && b.dataset.v) d[c] = b.dataset.v;
     else if (c && b.dataset.n !== undefined) d[c] = +b.dataset.n;
-    else if (c === 'sexo') { d.sexo = b.dataset.s; d.voz = b.dataset.s; if (d.sexo === 'm') { d.barba = 0; if (d.estilo < 4) d.estilo = 5; } }
+    else if (c === 'sexo') { d.sexo = b.dataset.s; d.voz = b.dataset.s; if (d.sexo === 'm') { d.barba = 0; if (d.estilo < 4) d.estilo = 5; d.pecho = d.pecho || 'normal'; } return creadorMedico(nuevo, d); }
     else if (c === 'voz') d.voz = b.dataset.s;
     else if (c === 'ropa') d.ropa = b.dataset.ropa;
+    else if (c === 'pecho') d.pecho = b.dataset.pe;
     if (c) { $$(`button[data-c="${c}"]`, p).forEach(x => x.classList.toggle('on', x === b || (c === 'sexo' && x.dataset.s === d.sexo))); if (c === 'sexo') $$('button[data-c="voz"]', p).forEach(x => x.classList.toggle('on', x.dataset.s === d.voz)); refrescar(); }
   };
   $$('input[type=range]', p).forEach(r => r.oninput = () => { d[r.dataset.r] = +r.value; refrescar(); });
@@ -239,7 +252,7 @@ function creadorMedico(nuevo = false, base = null) {
   $('#cr-azar', p).onclick = () => {
     d.sexo = prob(0.5) ? 'h' : 'm'; d.voz = d.sexo; d.piel = azar(PIELES); d.ojos = azar(COLORES_OJOS); d.pelo = azar(COLORES_PELO);
     d.estilo = d.sexo === 'h' ? azar([0, 1, 2, 3]) : azar([3, 4, 5, 6, 7]); d.barba = d.sexo === 'h' ? entreInt(0, 5) : 0; d.gafas = prob(0.4) ? entreInt(1, 3) : 0;
-    d.cara = +entre(0.93, 1.07).toFixed(2); d.nariz = +entre(0.85, 1.2).toFixed(2); d.complexion = +entre(0.9, 1.2).toFixed(2); d.altura = +entre(0.94, 1.06).toFixed(2); d.ropa = azar(ROPA_MEDICO);
+    d.cara = +entre(0.93, 1.07).toFixed(2); d.nariz = +entre(0.85, 1.2).toFixed(2); d.complexion = +entre(0.9, 1.2).toFixed(2); d.altura = +entre(0.94, 1.06).toFixed(2); d.ropa = azar(ROPA_MEDICO); d.pecho = d.sexo === 'm' ? tallaPecho(40) : null;
     d.nombre = $('#cr-nombre', p).value; if (!d.nombre.trim() || nuevo) { d.nombre = `${azar(d.sexo === 'h' ? NOMBRES_H : NOMBRES_M)} ${azar(APELLIDOS)}`; }
     creadorMedico(nuevo, d);
   };
@@ -287,14 +300,18 @@ async function siguientePaciente() {
   await fundido(() => {
     mundo.mostrar('consulta');
     [hPac, hAcomp, hPacSin].forEach(h => mundo.quitar(h)); hPacSin = null;
-    hPac = mundo.registrar(crearHumano(pac.apariencia, 'paciente'));
-    mundo.ponerPacienteConsulta(hPac, 'silla');
+    hPac = mundo.registrar(crearHumano(pac.apariencia, pac.apariencia.ropa || 'paciente'));
+    mundo.ponerPacienteConsulta(hPac, pac.edad < 1.5 ? 'portabebes' : 'silla');
     hPac.dolor = ['apendicitis', 'colico_renal', 'infarto', 'fractura_muneca'].includes(pac.enfId);
     hPac.agitado = ['ansiedad', 'infarto', 'neumonia'].includes(pac.enfId);
     acompDentro = !!pac.acompanante;
     if (acompDentro) {
-      const mujer = /mujer|hija|madre|hermana/.test(pac.acompanante);
-      const ap = generarPaciente({ dia: 1 }).apariencia; ap.sexo = mujer ? 'm' : 'h'; ap.estilo = mujer ? azar([3, 4, 5, 6, 7]) : azar([0, 1, 2, 3]); ap.barba = mujer ? 0 : ap.barba;
+      const mujer = esMujerAcomp(pac);
+      // la edad del acompañante depende del parentesco
+      const rel = pac.acompanante;
+      const edadA = /abuel/.test(rel) ? entreInt(60, 80) : /madre|padre/.test(rel) ? (pac.edad < 18 ? entreInt(26, 48) : entreInt(Math.min(90, pac.edad + 20), Math.min(95, pac.edad + 32))) : /nieto|nieta/.test(rel) ? entreInt(18, 32) : /hija|hijo/.test(rel) ? Math.max(20, Math.min(70, pac.edad - entreInt(24, 34))) : entreInt(25, 60);
+      const ap = generarPaciente({ forzar: 'gripe', edadForzada: edadA }).apariencia;
+      ap.sexo = mujer ? 'm' : 'h'; ap.pecho = mujer ? tallaPecho(edadA) : null; ap.estilo = mujer ? (edadA > 65 ? azar([4, 6, 6]) : azar([3, 4, 5, 6, 7])) : (edadA > 60 && prob(0.5) ? 0 : azar([1, 2, 3])); ap.barba = mujer ? 0 : ap.barba;
       hAcomp = mundo.registrar(crearHumano(ap, 'calle'));
       mundo.ponerPacienteConsulta(hAcomp, 'acomp');
     }
@@ -303,8 +320,16 @@ async function siguientePaciente() {
   Sonido.puerta();
   panelConsulta('hablar');
   await decir('doctor', `Buenos días. Pase, pase. Siéntese, por favor. Soy ${G.doctor.sexo === 'm' ? 'la doctora' : 'el doctor'} ${G.doctor.nombre.split(' ').slice(-1)[0]}.`);
-  await decir('paciente', azar(['Buenos días, doctor.', 'Hola, doctor. Gracias por atenderme.', 'Buenas... a ver si me arregla esto, doctor.']));
-  if (acompDentro) decir('acomp', azar(['Buenos días. Vengo con él, que si no, no viene.', 'Hola, doctor. Yo le acompaño.', 'Buenos días. Es que solo no se aclara.']).replace('él', pac.sexo === 'm' ? 'ella' : 'él'));
+  if (pac.edad < 1.5) {
+    await decir('acomp', azar(['Buenos días, doctor. Venimos con el bebé, que no está nada bien.', 'Hola, doctor. A ver si nos puede ayudar con el peque.']));
+    decir('paciente', azar(['(llora) ¡Buaaa! ¡Buaaaa!', '(balbucea) Agú... agú.']));
+  } else if (pac.edad < 10) {
+    await decir('acomp', generoNino(azar([`Buenos días, doctor. Venimos con ${pac.nombre}.`, 'Hola, doctor. A ver qué le pasa al niño, que nos tiene preocupados.']), pac));
+    decir('paciente', azar(['Hola...', '(con vergüenza) Hola.', '¡Hola, doctor!', `Me llamo ${pac.nombre} y tengo ${Math.floor(pac.edad)} años.`]));
+  } else {
+    await decir('paciente', pac.edad < 18 ? azar(['Hola.', 'Buenas...', 'Hola, doctor.']) : pac.edad > 75 ? azar(['Buenos días, hij{o}. Ay, qué joven es usted.', 'Buenos días, doctor. A ver si me arregla, que ya estoy muy mayor.']).replace('{o}', G.doctor.sexo === 'm' ? 'a' : 'o') : azar(['Buenos días, doctor.', 'Hola, doctor. Gracias por atenderme.', 'Buenas... a ver si me arregla esto, doctor.']));
+    if (acompDentro) decir('acomp', pac.edad < 18 ? azar(['Buenos días. Vengo con mi hijo, que no hay quien le traiga solo.', 'Hola, doctor. Yo le acompaño.']).replace('mi hijo', pac.sexo === 'm' ? 'mi hija' : 'mi hijo') : azar(['Buenos días. Vengo con él, que si no, no viene.', 'Hola, doctor. Yo le acompaño.', 'Buenos días. Es que solo no se aclara.']).replace('él', pac.sexo === 'm' ? 'ella' : 'él'));
+  }
 }
 
 function panelConsulta(pestana = 'hablar') {
@@ -344,7 +369,25 @@ function panelConsulta(pestana = 'hablar') {
 }
 
 function preguntasDisponibles() {
-  const e = ENF[pac.enfId];
+  const e = ENF[pac.enfId], d = dialogo(pac);
+  if (respondeAcomp(pac)) {
+    const n = pac.nombre, a = pac.sexo === 'm' ? 'a' : 'o';
+    const l = [
+      { id: 'motivo', t: `Buenos días. ¿Qué le pasa a ${n}?` },
+      { id: 'inicio', t: '¿Desde cuándo le pasa?' },
+      { id: 'dolor', t: '¿Se queja de algún dolor? ¿Dónde?' },
+      { id: 'fiebre', t: '¿Ha tenido fiebre?' },
+      { id: 'habitos', t: pac.edad < 13 ? '¿Qué tal come? ¿Cómo está en casa?' : '¿Qué hábitos tiene? ¿Fuma, bebe?' },
+      { id: 'antecedentes', t: pac.edad < 13 ? '¿Tiene alguna enfermedad? ¿Lleva las vacunas al día?' : '¿Qué enfermedades tiene? ¿Qué medicación toma?' },
+      { id: 'alergia', t: '¿Es alérgic' + a + ' a algún medicamento o alimento?' },
+    ];
+    if (d.extra) l.push({ id: 'extra', t: '¿Han notado algo más?' });
+    l.push({ id: 'calmar', t: pac.edad < 2 ? `(Al bebé) ¿Quién es ${a === 'a' ? 'la bonita' : 'el bonito'} de la consulta? Tranquil${a}...` : pac.edad < 13 ? `Tranquil${a}, ${a === 'a' ? 'campeona' : 'campeón'}, que no te voy a hacer daño.` : 'Tranquilos, está en buenas manos.' });
+    if (acompDentro) l.push({ id: 'acomp', t: '¿Le importaría esperar fuera un momento?' });
+    if (pac.edad >= 3) l.push({ id: 'secreto', t: pac.edad < 13 ? `${n}, ¿hay algo que no nos hayas contado? No pasa nada.` : '¿Hay algo más que deba saber? Todo es confidencial.' });
+    l.push({ id: 'presionar', t: 'Creo que no me están contando toda la verdad.' });
+    return l;
+  }
   const l = [
     { id: 'motivo', t: 'Buenos días. ¿Qué le trae por aquí?' },
     { id: 'inicio', t: '¿Desde cuándo le pasa?' },
@@ -354,7 +397,7 @@ function preguntasDisponibles() {
     { id: 'antecedentes', t: '¿Tiene alguna enfermedad o toma medicación?' },
     { id: 'alergia', t: '¿Es alérgico a algún medicamento o alimento?' },
   ];
-  if (e.d.extra) l.push({ id: 'extra', t: '¿Ha notado algo más, aunque le parezca una tontería?' });
+  if (d.extra) l.push({ id: 'extra', t: '¿Ha notado algo más, aunque le parezca una tontería?' });
   l.push({ id: 'calmar', t: 'Tranquilo. Está en buenas manos, puede confiar en mí.' });
   if (acompDentro) l.push({ id: 'acomp', t: '¿Le importaría a su acompañante esperar fuera un momento?' });
   l.push({ id: 'secreto', t: '¿Hay algo más que deba saber? Todo es confidencial.' });
@@ -366,8 +409,10 @@ function anotar(texto) { if (!pac.hallazgos.includes(texto)) pac.hallazgos.push(
 async function preguntar(id) {
   if (hablandoN) return;
   Sonido.clic();
-  const e = ENF[pac.enfId];
+  const e = ENF[pac.enfId], d = dialogo(pac);
   const q = preguntasDisponibles().find(x => x.id === id);
+  // quién contesta: los padres (o los hijos de un mayor confuso) o el propio paciente
+  let quien = respondeAcomp(pac) && acompDentro && !['calmar', 'secreto'].includes(id) ? 'acomp' : 'paciente';
   const repetida = pac.preguntas[id];
   pac.preguntas[id] = true; preguntasHechas++;
   pasarTiempo(2);
@@ -376,16 +421,27 @@ async function preguntar(id) {
   let r = '';
   const tieneSecreto = e.secreto && (pac.enfId !== 'infarto' || pac.tomoViagra);
   switch (id) {
-    case 'motivo': r = fmt(azar(e.d.motivo), pac); anotar(`Síntomas: ${e.sintomas.slice(0, 2).join(', ').toLowerCase()}`); break;
-    case 'inicio': r = fmt(azar(e.d.inicio), pac); anotar(`Inicio: ${r.replace(/\.$/, '')}`); break;
-    case 'dolor': r = fmt(azar(e.d.dolor), pac); anotar(`Dolor: ${r.replace(/\.$/, '')}`); break;
-    case 'fiebre': r = fmt(azar(e.d.fiebre), pac); break;
+    case 'motivo': r = fmt(azar(d.motivo), pac); anotar(`Síntomas: ${e.sintomas.slice(0, 2).join(', ').toLowerCase()}`); break;
+    case 'inicio': r = fmt(azar(d.inicio), pac); anotar(`Inicio: ${r.replace(/\.$/, '')}`); break;
+    case 'dolor': r = fmt(azar(d.dolor), pac); anotar(`Dolor: ${r.replace(/\.$/, '')}`); break;
+    case 'fiebre': r = fmt(azar(d.fiebre), pac); break;
     case 'habitos': r = fmt(fraseHabitos(pac), pac); anotar(`Hábitos: ${r}`); break;
     case 'antecedentes': r = fraseAntecedentes(pac); pac.antecedentesVistos = true; break;
     case 'alergia': r = fmt(fraseAlergia(pac), pac); anotar(`Alergias: ${pac.alergia || 'ninguna conocida'}`); break;
-    case 'extra': r = fmt(azar(e.d.extra), pac); anotar(r); break;
-    case 'calmar': pac.confianza++; r = azar(['Gracias, doctor. Es que estoy muy preocupad{o}.', 'Vale... me quedo más tranquil{o}.', 'Se agradece, doctor.']); r = fmt(r, pac); break;
+    case 'extra': r = fmt(azar(d.extra), pac); anotar(r); break;
+    case 'calmar': pac.confianza++;
+      if (pac.edad < 1.5) r = azar(['(sonríe) Agú, agú.', '(deja de llorar y le mira con los ojos muy abiertos)']);
+      else if (pac.edad < 13) r = azar(['Vale...', '¿Me vas a pinchar?', '(asiente con la cabeza)', 'Mi mamá dice que eres muy bueno.']);
+      else if (e.respondeAcomp) r = azar(['¿Y usted quién es? ¿Ha visto a mi Manolo?', 'Hay que ir a recoger a los niños del colegio...']);
+      else r = fmt(azar(['Gracias, doctor. Es que estoy muy preocupad{o}.', 'Vale... me quedo más tranquil{o}.', 'Se agradece, doctor.']), pac);
+      break;
     case 'acomp':
+      if (pac.edad < 10 || e.respondeAcomp) {
+        await cola;
+        await decir('acomp', pac.edad < 10 ? `¿Dejarle solo? ¡Pero si tiene ${textoEdad(pac.edad)}! Yo de aquí no me muevo.` : 'Prefiero quedarme, doctor. Así no se aclara, está muy desorientada.'.replace('desorientada', pac.sexo === 'm' ? 'desorientada' : 'desorientado'));
+        panelConsulta('hablar');
+        return;
+      }
       await cola;
       await decir('acomp', azar(['Claro, claro. Espero fuera.', 'Bueno... vale. Estaré en la sala de espera.', '¿Yo? Bueno, como quiera.']));
       await fundido(() => { mundo.quitar(hAcomp); hAcomp = null; acompDentro = false; }, 250);
@@ -398,15 +454,21 @@ async function preguntar(id) {
         if (acompDentro && v >= 2) { r = '(mira de reojo a su acompañante) No... no, doctor. Nada más.'; aviso('Parece que no quiere hablar delante de su acompañante', 'info'); }
         else if (pac.confianza >= v) { r = e.secreto.t; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); Sonido.exito(); }
         else { r = azar(['Eh... no, nada más, doctor.', 'No, no. Eso es todo.']); aviso('Se guarda algo. Quizá necesite más confianza.', 'info'); }
-      } else r = repetida ? 'Ya se lo he contado todo, doctor.' : azar(['No, doctor. Le he contado todo.', 'Nada más, que yo sepa.']);
+      } else r = pac.edad < 13 ? azar(['No...', '(niega con la cabeza)', 'Que me duele.']) : e.respondeAcomp ? '¿Usted es el del gas?' : repetida ? 'Ya se lo he contado todo, doctor.' : azar(['No, doctor. Le he contado todo.', 'Nada más, que yo sepa.']);
       break;
     case 'presionar':
       if (e.simulador && pac.confianza >= 1 && !pac.secretoRevelado) { r = e.secreto.t; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); }
       else if (tieneSecreto && !pac.secretoRevelado && pac.confianza >= e.secreto.v + 1) { r = e.secreto.t; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); }
+      else if (respondeAcomp(pac) && acompDentro) { quien = 'acomp'; pac.molesto = (pac.molesto || 0) + 1; r = generoNino(azar(['¿Cómo que no le cuento la verdad? ¡Que es mi hijo!', 'Oiga, que venimos preocupados, no a que nos interroguen.']), pac); }
       else { pac.confianza = Math.max(0, pac.confianza - 1); pac.molesto = (pac.molesto || 0) + 1; r = azar(['¿Me está llamando mentiros{o}? Lo que me faltaba.', 'Oiga, que yo vengo a que me curen, no a que me interroguen.']); r = fmt(r, pac); }
       break;
   }
-  await decir('paciente', r);
+  if (quien === 'paciente' && pac.edad < 1.5 && !['calmar'].includes(id)) r = azar(['(llora) ¡Buaaa!', '(balbucea) Ta-ta-ta...', '(se mete el puño en la boca)']);
+  if (quien === 'acomp') r = generoNino(r, pac);
+  await decir(quien, r);
+  // el niño mete baza
+  if (quien === 'acomp' && pac.edad >= 3 && pac.edad < 10 && d.nino && ['motivo', 'dolor'].includes(id) && prob(0.6)) await decir('paciente', azar(d.nino));
+  if (quien === 'acomp' && pac.edad < 1.5 && prob(0.4)) decir('paciente', '(llora) ¡Buaaa!');
   // a veces el paciente cuestiona la autoridad del médico
   if (pac.cuestiona && preguntasHechas >= 3 && !pac.cuestionado) {
     pac.cuestionado = true;
@@ -419,7 +481,7 @@ async function preguntar(id) {
       decir('paciente', v > 0 ? 'Vale, vale. Usted sabrá, que para eso estudió.' : v === 0 ? 'Hmm... bueno.' : '¡Qué humos! Pues vaya.');
     });
   }
-  if (id === 'motivo' && acompDentro && prob(0.5)) decir('acomp', azar(['Y no come nada, doctor. Nada.', 'Y por las noches no deja dormir a nadie.', 'Yo ya le dije que viniera hace una semana.']));
+  if (id === 'motivo' && acompDentro && !respondeAcomp(pac) && prob(0.5)) decir('acomp', azar(['Y no come nada, doctor. Nada.', 'Y por las noches no deja dormir a nadie.', 'Yo ya le dije que viniera hace una semana.']));
 }
 
 // ───── Exploración ─────
@@ -463,15 +525,16 @@ async function explorar(id) {
 let esteto = null;
 async function auscultar(tipo) {
   const e = ENF[pac.enfId];
-  await decir('doctor', tipo === 'pulmones' ? 'Póngase de pie y quítese la bata de arriba, por favor. Voy a escucharle la espalda.' : 'Póngase de pie, por favor. Voy a escucharle el corazón.');
+  const peque = pac.edad < 3 || pac.enfId === 'fractura_cadera';
+  await decir('doctor', pac.enfId === 'fractura_cadera' ? 'No se mueva, que la ayudamos a tumbarse en la camilla. Despacito.' : peque ? 'Vamos a tumbar al bebé en la camilla y a quitarle la ropita de arriba. Así, con cuidado.' : pac.edad < 13 ? (tipo === 'pulmones' ? 'Quítate la camiseta y ponte de espaldas, que te voy a escuchar. Está un poco frío, ¿eh?' : 'Ponte aquí de pie, que te escucho el corazón. ¿Me dejas?') : tipo === 'pulmones' ? 'Póngase de pie y quítese la bata de arriba, por favor. Voy a escucharle la espalda.' : 'Póngase de pie, por favor. Voy a escucharle el corazón.');
   modo = 'esteto'; document.body.dataset.modo = 'esteto';
   await fundido(() => {
     hPac.raiz.visible = false;
-    if (!hPacSin) { hPacSin = mundo.registrar(crearHumano(pac.apariencia, 'paciente_sin')); hPacSin.agitado = hPac.agitado; }
+    if (!hPacSin) { hPacSin = mundo.registrar(crearHumano(pac.apariencia, ropaSin(pac.apariencia))); hPacSin.agitado = hPac.agitado; }
     hPacSin.raiz.visible = true;
-    mundo.ponerPacienteConsulta(hPacSin, tipo === 'pulmones' ? 'espalda' : 'frente');
+    mundo.ponerPacienteConsulta(hPacSin, peque ? (tipo === 'pulmones' ? 'camilla_abajo' : 'camilla_arriba') : tipo === 'pulmones' ? 'espalda' : 'frente');
     if (hAcomp) hAcomp.mirar = new THREE.Vector3(2.9, 1.4, -0.6);
-    mundo.vistaExplorar(tipo === 'pulmones' ? 'espalda' : 'pecho', 0);
+    mundo.vistaExplorar(tipo === 'pulmones' ? 'espalda' : 'pecho', 0, hPacSin);
   });
   const anclas = tipo === 'pulmones' ? hPacSin.partes.puntos.espalda : hPacSin.partes.puntos.pecho;
   // marcadores
@@ -487,7 +550,7 @@ async function auscultar(tipo) {
     if (pl === 'sibilancias') return 'sibilancias';
     const [t, lado] = pl.split('_');
     const base = i >= 2; // las bases suenan peor
-    if ((lado === 'der' && derecha) || (lado === 'izq' && !derecha)) return (t === 'crepitantes' && !base && i < 2) ? 'normal' : t;
+    if (lado === 'ambos' || (lado === 'der' && derecha) || (lado === 'izq' && !derecha)) return (t === 'crepitantes' && !base && i < 2) ? 'normal' : t;
     return 'normal';
   };
   esteto = { tipo, anclas, marcas, oidos: new Set(), cerca: -1, t: 0, parar: null, sonidos: anclas.map((_, i) => sonidoDe(i)) };
@@ -535,12 +598,13 @@ async function terminarAuscultacion() {
   esteto = null; mundo.marcadores.clear(); mundo.esteto.visible = false;
   $('#esteto-hud').innerHTML = '';
   if (oidos >= 2) {
-    if (tipo === 'pulmones') { const t = { normal: 'murmullo vesicular normal', sibilancias: 'sibilancias (pitos) en ambos pulmones', crepitantes_der: 'crepitantes en la base derecha', crepitantes_izq: 'crepitantes en la base izquierda', disminuido_izq: 'murmullo disminuido en el pulmón izquierdo', disminuido_der: 'murmullo disminuido en el pulmón derecho' }[e.expl.pulmon]; anotar(`Auscultación pulmonar: ${t}`); aviso(`Oyes: ${t}`, 'info'); }
+    if (tipo === 'pulmones') { const t = { normal: 'murmullo vesicular normal', sibilancias: 'sibilancias (pitos) en ambos pulmones', crepitantes_der: 'crepitantes en la base derecha', crepitantes_izq: 'crepitantes en la base izquierda', crepitantes_ambos: 'crepitantes en las dos bases', disminuido_izq: 'murmullo disminuido en el pulmón izquierdo', disminuido_der: 'murmullo disminuido en el pulmón derecho' }[e.expl.pulmon]; anotar(`Auscultación pulmonar: ${t}`); aviso(`Oyes: ${t}`, 'info'); }
     else { const t = { normal: 'tonos rítmicos, sin soplos', taquicardia: 'tonos rítmicos y rápidos (taquicardia)', arritmia: 'ritmo irregular', soplo: 'soplo suave' }[e.expl.corazon]; anotar(`Auscultación cardíaca: ${t}`); aviso(`Oyes: ${t}`, 'info'); }
   } else aviso('No has escuchado lo suficiente para sacar conclusiones', 'mal');
   await fundido(() => { hPacSin.raiz.visible = false; hPac.raiz.visible = true; if (hAcomp) hAcomp.mirar = new THREE.Vector3(0, 1.26, 1.62); mundo.vistaEscritorio(0); });
   modo = 'consulta'; document.body.dataset.modo = 'juego';
-  decir('doctor', 'Muy bien, ya puede sentarse.');
+  decir('doctor', pac.edad < 3 ? 'Ya está. Ya pueden vestirle.' : pac.edad < 13 ? '¡Muy bien! Eres muy valiente. Ya te puedes vestir.' : 'Muy bien, ya puede sentarse.');
+  if (pac.edad < 1.5 && prob(0.6)) decir('paciente', '(llora) ¡Buaaa!');
 }
 
 // ───── Palpación ─────
@@ -557,7 +621,8 @@ function palpar() {
     const duele = zona === z || (zona === 'fosa_lumbar' && z === 'flanco_der') || (zona === 'ingle' && z === 'ingle_der') || (zona === 'difuso') || (zona === 'cambiante' && Math.random() < 0.5);
     const fuerte = zona === z || (zona === 'fosa_lumbar' && z === 'flanco_der') || (zona === 'ingle' && z === 'ingle_der');
     b.classList.add(fuerte ? 'dolor' : duele ? 'molestia' : 'nada');
-    if (fuerte) { Sonido.ay(); hPac.dolor = true; decir('paciente', azar(['¡AY! ¡Ahí, ahí! ¡No apriete!', '¡Uuuh! Ahí me duele muchísimo.', '¡Ay, por Dios, doctor!'])); }
+    if (pac.edad < 2) { if (fuerte || (duele && prob(0.5))) { hPac.dolor = true; decir('paciente', '(llora) ¡Buaaa! ¡Buaaaa!'); } else if (prob(0.3)) decir('paciente', '(se ríe) Je, je.'); return; }
+    if (fuerte) { Sonido.ay(); hPac.dolor = true; decir('paciente', pac.edad < 13 ? azar(['¡Ay! ¡Ahí no, ahí no!', '¡Que me duele!', '(empieza a llorar) ¡Mamá!']) : azar(['¡AY! ¡Ahí, ahí! ¡No apriete!', '¡Uuuh! Ahí me duele muchísimo.', '¡Ay, por Dios, doctor!'])); }
     else if (duele) decir('paciente', zona === 'cambiante' ? azar(['¡Ay!... bueno, no, ahí no. ¿O sí?', 'Ahí también... creo.']) : azar(['Ahí me molesta un poco.', 'Hmm, un poco.']));
     else if (prob(0.4)) decir('paciente', azar(['Ahí no.', 'No, ahí nada.', 'Eso me hace cosquillas.']));
     if (tocadas.size === 3) anotar(`Palpación: ${e.expl.palpacion.texto}`);
@@ -654,7 +719,7 @@ function verFicha(p = pac, soloLectura = false) {
       <div class="ficha-campos">
         <label>NOMBRE <input id="fi-nombre" value="${esc(p.nombre)}" maxlength="30"></label>
         <label>APELLIDOS <input id="fi-apellidos" value="${esc(p.apellidos)}" maxlength="40"></label>
-        <label>EDAD <span class="manuscrito">${p.edad}</span></label>
+        <label>EDAD <span class="manuscrito">${textoEdad(p.edad)}${p.acompanante ? ` · viene con ${esc(p.acompanante.replace(/^su /, 'su '))}` : ''}</span></label>
         <label>DIRECCIÓN <span class="manuscrito">${esc(p.direccion)}</span></label>
         <label>SEGURO <span class="manuscrito">${esc(p.seguro)}</span></label>
       </div><div class="ficha-foto">SIN FOTO</div></div>
@@ -761,6 +826,15 @@ async function darNoticia(tono) {
     frio: `Diagnóstico: ${dElegido.n.toLowerCase()}. ${accionTxt} Siguiente.`,
     quitar: `Nada, nada, una tontería. ${accionTxt} No se preocupe por nada.`,
   };
+  // si el paciente es un niño (o un mayor confuso) se habla con la familia
+  const aFamilia = respondeAcomp(pac) && acompDentro;
+  if (aFamilia) {
+    const n = pac.nombre, diagF = dElegido.simulador ? `${n} está perfectamente` : `${n} tiene ${dElegido.n.toLowerCase().replace(/ \(.*\)/, '')}`;
+    const accF = accionTxt.replace('Puede irse a casa.', 'Se puede ir a casa.').replace('Le receto', 'Le voy a recetar').replace('ingresarle', 'ingresarle').replace('Hay que operar: le vamos', 'Hay que operar: le vamos');
+    textos.empatia = `Sé que están preocupados, y es normal. Les explico con calma: ${diagF}. ${accF} Vamos a cuidarle muy bien.`;
+    textos.directo = `${diagF}. ${accF}`;
+    textos.quitar = `Nada, una tontería. ${accF} No se preocupen.`;
+  }
   await decir('doctor', textos[tono]);
   const grav = dElegido.noticia;
   const reac = {
@@ -769,8 +843,13 @@ async function darNoticia(tono) {
     leve: { empatia: 'Muchas gracias, doctor. Es usted un cielo.', directo: 'Perfecto, gracias, doctor.', frio: 'Vale.', quitar: '¡Menos mal! Ya pensaba que me moría.' },
   }[grav][tono];
   pac.satisfaccion = (pac.satisfaccion || 0) + ({ empatia: { grave: 2, moderada: 1, leve: 1 }, directo: { grave: 0, moderada: 1, leve: 1 }, frio: { grave: -3, moderada: -1, leve: 0 }, quitar: { grave: -4, moderada: -1, leve: 0 } }[tono][grav]);
-  await decir('paciente', fmt(reac, pac));
-  if (acompDentro && grav === 'grave') await decir('acomp', azar(['¡Ay, Dios mío! ¿Y ahora qué hacemos?', '(llorando) Tranquilo, que yo estoy aquí contigo.']).replace('Tranquilo', pac.sexo === 'm' ? 'Tranquila' : 'Tranquilo'));
+  if (aFamilia) {
+    const reacF = { grave: { empatia: '(llorando) Gracias, doctor... Haremos lo que haga falta.', directo: 'Dios mío... ¿Se va a poner bien? Díganos que sí.', frio: '¿Así nos lo dice? ¡Que estamos hablando de mi familia!', quitar: 'Ah, bueno... si es una tontería...' }, moderada: { empatia: 'Gracias por explicárnoslo tan bien, doctor.', directo: 'Vale... lo que usted diga, doctor.', frio: 'Qué manera de decir las cosas...', quitar: '¿Seguro que no es nada?' }, leve: { empatia: '¡Uf, qué alivio! Muchas gracias, doctor.', directo: 'Perfecto, gracias.', frio: 'Vale.', quitar: '¡Menos mal!' } }[grav][tono];
+    await decir('acomp', reacF);
+    if (pac.edad >= 3 && pac.edad < 13) await decir('paciente', plan.accion === 'casa' ? azar(['¿Me puedo ir ya al parque?', '¿Me das una pegatina?', 'Vale...']) : azar(['¿Me van a pinchar?', '(se agarra a su madre) No quiero quedarme...', 'Vale... pero que venga mi mamá.']));
+    if (pac.edad < 1.5) decir('paciente', '(balbucea) Agú.');
+  } else await decir('paciente', fmt(reac, pac));
+  if (acompDentro && !aFamilia && grav === 'grave') await decir('acomp', azar(['¡Ay, Dios mío! ¿Y ahora qué hacemos?', '(llorando) Tranquilo, que yo estoy aquí contigo.']).replace('Tranquilo', pac.sexo === 'm' ? 'Tranquila' : 'Tranquilo'));
   G.stats.atendidos++;
   if (plan.accion === 'casa') return despedirPaciente();
   if (plan.accion === 'hospitalizar') return ingresar(pac, plan, false);
@@ -810,7 +889,9 @@ async function despedirPaciente() {
   const { res, q, ev } = resultadoCasa(pac, pac.plan);
   const hon = 60 + ENF[pac.enfId].grav * 40;
   aplicarResultado(pac, res, hon);
-  await decir('paciente', azar(['Muchas gracias, doctor. Hasta luego.', 'Gracias. A ver si me pongo bueno pronto.', 'Adiós, doctor.']).replace('bueno', pac.sexo === 'm' ? 'buena' : 'bueno'));
+  if (pac.edad < 1.5) await decir('acomp', 'Muchas gracias, doctor. ¡Di adiós con la manita!');
+  else if (pac.edad < 13) await decir('paciente', azar(['¡Adiós, doctor!', '¡Adiós! ¿Me das una piruleta?', '(dice adiós con la mano)']));
+  else await decir('paciente', azar(['Muchas gracias, doctor. Hasta luego.', 'Gracias. A ver si me pongo bueno pronto.', 'Adiós, doctor.']).replace('bueno', pac.sexo === 'm' ? 'buena' : 'bueno'));
   mostrarValoracion(ev, res);
 }
 function mostrarValoracion(ev, res, extra = '') {
@@ -1014,7 +1095,7 @@ async function mostrarIngresado() {
   await fundido(() => {
     mundo.mostrar('sala');
     mundo.quitar(hCama);
-    hCama = mundo.registrar(crearHumano(pac.apariencia, 'paciente'));
+    hCama = mundo.registrar(crearHumano(pac.apariencia, pac.apariencia.ropa || 'paciente'));
     hCama.dormido = ing.salud < 25;
     hCama.agitado = ing.salud < 40;
     mundo.ponerPacienteCama(hCama);
@@ -1023,6 +1104,7 @@ async function mostrarIngresado() {
   panelSala();
   decir('doctor', `Buenos días, ${pac.sexo === 'm' ? 'señora' : 'señor'} ${pac.apellidos.split(' ')[0]}. ¿Cómo ha pasado la noche?`);
   const s = ing.salud;
+  if (pac.edad < 10) { await decir({ nombre: parentesco(pac), genero: esMujerAcomp(pac) ? 'm' : 'h', tono: 1.05 }, generoNino(s < 25 ? 'Muy mal, doctor. Esta noche ha estado fatal, no ha parado de quejarse.' : s < 50 ? 'Regular. Ha dormido a ratos.' : s < 75 ? 'Algo mejor. Ya ha comido un poco.' : '¡Mucho mejor! Ya quiere jugar y ha pedido la tablet.', pac)); if (pac.edad < 1.5 && s < 50) decir('paciente', '(llora) ¡Buaaa!'); return; }
   await decir('paciente', s < 25 ? 'Muy mal, doctor... cada vez peor... no puedo ni respirar...' : s < 50 ? azar(['Regular, doctor. Me sigue doliendo.', 'Más o menos. Esta noche no he pegado ojo.']) : s < 75 ? azar(['Algo mejor, la verdad.', 'Voy tirando, doctor.']) : azar(['¡Mucho mejor! ¿Cuándo me voy a casa?', 'Estupendamente. Ya estoy harto de la comida de aquí.']));
 }
 function panelSala() {

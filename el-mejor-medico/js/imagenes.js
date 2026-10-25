@@ -64,7 +64,8 @@ export function dibujarRx(ctx, w, h, { zona = 'torax', hallazgo = 'normal', lado
     };
     pulmon(0, -1); pulmon(0, 1);
     // corazón (a la derecha de la imagen = izquierda del paciente)
-    ctx.save(); ctx.beginPath(); ctx.ellipse(275, 330, 92, 78, -0.35, 0, Math.PI * 2);
+    const grande = hallazgo === 'cardiomegalia' ? 1.35 : 1;
+    ctx.save(); ctx.beginPath(); ctx.ellipse(275 + (grande - 1) * 40, 330, 92 * grande, 78 * grande, -0.35, 0, Math.PI * 2);
     const gc = ctx.createRadialGradient(270, 330, 10, 275, 330, 100); gc.addColorStop(0, 'rgba(225,230,235,0.85)'); gc.addColorStop(1, 'rgba(180,188,195,0.15)');
     ctx.fillStyle = gc; ctx.fill(); ctx.restore();
     blob(ctx, 256, 200, 40, 'rgba(210,215,220,A)', 0.5);
@@ -100,6 +101,13 @@ export function dibujarRx(ctx, w, h, { zona = 'torax', hallazgo = 'normal', lado
       for (let i = 0; i < 9; i++) blob(ctx, x + (R() - 0.5) * 44, y + (R() - 0.5) * 40, 28 + R() * 26, 'rgba(235,240,245,A)', 0.55);
       blob(ctx, x, y, 52, 'rgba(245,248,250,A)', 0.6);
       roi = { x: x / 512, y: y / 512, r: 0.12 };
+    }
+    if (hallazgo === 'cardiomegalia') {
+      // corazón grande y líquido en las bases
+      for (const sg of [-1, 1]) for (let i = 0; i < 6; i++) blob(ctx, 256 + sg * (120 + R() * 60), 380 + R() * 30, 45, 'rgba(205,210,215,A)', 0.3);
+      ctx.strokeStyle = 'rgba(210,215,220,0.25)'; ctx.lineWidth = 2;
+      for (let i = 0; i < 30; i++) { const x = 70 + R() * 370, y = 120 + R() * 220; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (x < 256 ? -16 : 16), y + 2); ctx.stroke(); }
+      roi = { x: 300 / 512, y: 330 / 512, r: 0.2 };
     }
     if (hallazgo === 'consolidacion') {
       const x = lado === 'izq' ? 360 : 150, y = 340;
@@ -141,6 +149,24 @@ export function dibujarRx(ctx, w, h, { zona = 'torax', hallazgo = 'normal', lado
     ctx.beginPath(); ctx.moveTo(130, 360); ctx.quadraticCurveTo(256, 520, 382, 360); ctx.lineWidth = 18; ctx.strokeStyle = 'rgba(235,240,245,0.65)'; ctx.stroke();
     for (let i = 0; i < 12; i++) { ctx.fillStyle = 'rgba(245,248,250,0.7)'; ctx.fillRect(190 + i * 11, 382 + Math.abs(i - 5.5) * 2, 8, 22); }
     blob(ctx, 256, 330, 26, 'rgba(15,16,18,A)', 0.7);
+  } else if (zona === 'cadera') {
+    blob(ctx, 256, 260, 320, 'rgba(110,118,125,A)', 0.55);
+    // pelvis y sacro
+    ctx.strokeStyle = 'rgba(225,232,238,0.55)'; ctx.lineWidth = 30;
+    for (const sg of [-1, 1]) { ctx.beginPath(); ctx.moveTo(256 + sg * 25, 140); ctx.bezierCurveTo(256 + sg * 110, 60, 256 + sg * 215, 110, 256 + sg * 190, 230); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(225,232,238,0.45)'; ctx.beginPath(); ctx.moveTo(220, 120); ctx.lineTo(292, 120); ctx.lineTo(275, 250); ctx.lineTo(237, 250); ctx.fill();
+    ctx.lineWidth = 16; ctx.beginPath(); ctx.arc(256, 330, 70, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+    for (const sg of [-1, 1]) {
+      // cabeza, cuello y diáfisis del fémur (la derecha del paciente queda a la izquierda de la imagen)
+      const cx = 256 + sg * 150, cy = 250;
+      blob(ctx, cx, cy, 42, 'rgba(240,244,248,A)', 0.75);
+      const rota = hallazgo === 'fractura_cadera' && ((lado === 'der' && sg < 0) || (lado === 'izq' && sg > 0));
+      const dx = rota ? 12 : 0, dy = rota ? 16 : 0;
+      hueso(ctx, cx + sg * 20 + dx, cy + 30 + dy, cx + sg * 55 + dx, cy + 75 + dy, 30, 0.85);
+      hueso(ctx, cx + sg * 55 + dx, cy + 75 + dy, cx + sg * 40 + dx, 512, 40, 0.85);
+      blob(ctx, cx + sg * 72 + dx, cy + 70 + dy, 26, 'rgba(235,240,245,A)', 0.6);
+      if (rota) { ctx.strokeStyle = '#06070a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(cx + sg * 8, cy + 18); ctx.lineTo(cx + sg * 28, cy + 44); ctx.lineTo(cx + sg * 22, cy + 52); ctx.stroke(); roi = { x: (cx + sg * 20) / 512, y: (cy + 35) / 512, r: 0.1 }; }
+    }
   } else { // abdomen y lumbar
     blob(ctx, 256, 260, 320, 'rgba(110,118,125,A)', 0.6);
     for (let i = 0; i < (zona === 'lumbar' ? 7 : 6); i++) { ctx.fillStyle = 'rgba(225,232,238,0.5)'; ctx.beginPath(); ctx.roundRect(226, 20 + i * 52, 60, 42, 10); ctx.fill(); for (const sg of [-1, 1]) { ctx.fillRect(256 + sg * 30 - (sg < 0 ? 26 : 0), 32 + i * 52, 26, 10); } }
@@ -156,6 +182,13 @@ export function dibujarRx(ctx, w, h, { zona = 'torax', hallazgo = 'normal', lado
     if (hallazgo === 'calculo') {
       const x = lado === 'der' ? 205 : 307, y = 270;
       blob(ctx, x, y, 12, 'rgba(255,255,255,A)', 0.95);
+      roi = { x: x / 512, y: y / 512, r: 0.08 };
+    }
+    if (hallazgo === 'moneda') {
+      // moneda en el estómago: círculo blanquísimo de bordes nítidos
+      const x = 300, y = 150;
+      ctx.fillStyle = 'rgba(252,253,255,0.97)'; ctx.beginPath(); ctx.arc(x, y, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(200,205,210,0.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.stroke();
       roi = { x: x / 512, y: y / 512, r: 0.08 };
     }
   }
@@ -223,7 +256,7 @@ export function dibujarTac(ctx, w, h, { zona = 'torax', hallazgo = 'normal', lad
       }
     } else {
       elipse(220, 260, 40, 40, '#e1e4e7'); elipse(220, 260, 25, 25, '#a3a8ac'); elipse(300, 270, 26, 26, '#e1e4e7');
-      if (hallazgo === 'fractura') { ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(190, 240); ctx.lineTo(250, 282); ctx.stroke(); roi = { x: 220 / 512, y: 260 / 512, r: 0.1 }; }
+      if (hallazgo === 'fractura' || hallazgo === 'fractura_cadera') { ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(190, 240); ctx.lineTo(250, 282); ctx.stroke(); roi = { x: 220 / 512, y: 260 / 512, r: 0.1 }; }
     }
   }
   ctx.restore();
