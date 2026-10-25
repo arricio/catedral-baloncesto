@@ -1,7 +1,9 @@
 // Ayudas para las pruebas: la conversación va por turnos (ENVIAR · HABLAR MÉDICO / RESPONDER PACIENTE).
 // Las pruebas no suenan: se desactivan las voces (el juego sigue calculando qué voz usaría cada personaje).
-module.exports = (pg) => {
-  const silenciar = () => pg.evaluate(() => { const G = window.__juego.G; if (G) G.ajustes.voz = false; });
+// Salvo que se pida { ia: true }, las respuestas son las predefinidas, para que las pruebas del juego sean repetibles
+// aunque haya una IA instalada (la IA real se prueba en ia_real.js).
+module.exports = (pg, { ia = false } = {}) => {
+  const silenciar = () => pg.evaluate((ia) => { const G = window.__juego.G; if (!G) return; G.ajustes.voz = false; if (!ia && G.ajustes.ia.modo !== 'predefinida') G.ajustes.ia = { ...G.ajustes.ia, modo: 'predefinida', manual: true }; }, ia);
   silenciar().catch(() => {});
   const libreCharla = () => pg.waitForFunction(() => { const c = window.__juego.charla; return !c.pensando && !c.entregando && !document.querySelector('#panel').classList.contains('ocupado'); }, null, { timeout: 90000 });
   // sin texto: usa la sugerencia del juego, como haría el jugador al pulsarla

@@ -52,7 +52,8 @@ async function abrir(b, consulta, { ancho = 1200, alto = 700, tactil = false, sc
   await pg.waitForSelector('#inicio.on', { timeout: 30000 });
   await pg.evaluate(() => window.__juego.mundo.ponerCalidad('baja'));
   await pg.click('#b-nueva'); await pg.click('#cr-ok');
-  await pg.evaluate(() => { window.__juego.G.ajustes.voz = false; }); // las pruebas no suenan
+  // las pruebas no suenan y empiezan con respuestas predefinidas (la IA se activa a mano en cada prueba)
+  await pg.evaluate(() => { const G = window.__juego.G; G.ajustes.voz = false; G.ajustes.ia = { ...G.ajustes.ia, modo: 'predefinida', manual: true }; });
   await pg.click('#int-ok');
   await pg.waitForSelector('#ch-sug:not([hidden])', { timeout: 30000 });
   return pg;
@@ -86,7 +87,7 @@ const PERSONAS = [
   for (const [k, P] of PERSONAS.entries()) {
     console.log(`\n── ${P.n} ──`);
     const pg = await abrir(b, `?edad=${P.edad}&sexo=${P.sexo}`);
-    const T = turnos(pg);
+    const T = turnos(pg, { ia: true });
     const info = await pg.evaluate(() => ({ edad: window.__juego.pac.edad, sexo: window.__juego.pac.sexo, enf: window.__juego.pac.enfId, nombre: window.__juego.pac.nombre }));
     console.log(`   paciente: ${info.nombre}, ${info.edad} años, ${info.sexo}, ${info.enf}`);
     await pg.waitForTimeout(2500);
@@ -153,7 +154,7 @@ const PERSONAS = [
   console.log('\n── Micrófono ──');
   {
     const pg = await abrir(b, '?edad=50&sexo=m', { scripts: [FALSO_MICRO] });
-    const T = turnos(pg);
+    const T = turnos(pg, { ia: true });
     await pg.fill('#ch-texto', '');
     await pg.click('#ch-mic');
     await pg.waitForSelector('#mi-si'); await pg.click('#mi-si');
@@ -174,7 +175,7 @@ const PERSONAS = [
   console.log('\n── Mando ──');
   {
     const pg = await abrir(b, '?edad=35', { scripts: [FALSO_MANDO] });
-    const T = turnos(pg);
+    const T = turnos(pg, { ia: true });
     // el navegador automático va a pocos fotogramas: cada botón se mantiene pulsado un momento para que se lea
     const pulsar = async (i) => { await pg.evaluate((i) => window.__pulsar(i, true), i); await pg.waitForTimeout(150); await pg.evaluate((i) => window.__pulsar(i, false), i); await pg.waitForTimeout(150); };
     comprobar('Mando: se detecta automáticamente', await pg.evaluate(() => window.__juego.Mando.conectado));
@@ -208,7 +209,7 @@ const PERSONAS = [
   console.log('\n── Receta ──');
   {
     const pg = await abrir(b, '?caso=faringitis&edad=35&sexo=h');
-    const T = turnos(pg);
+    const T = turnos(pg, { ia: true });
     await T.hablar(); await T.responder();
     // al explorar, el paciente reacciona con la cara y en los subtítulos, pero no habla
     const vozExpl = (await estado(pg)).voz?.texto;
@@ -294,7 +295,7 @@ const PERSONAS = [
   console.log('\n── Móvil ──');
   for (const [w, h, n] of [[412, 915, 'vertical'], [915, 412, 'horizontal']]) {
     const pg = await abrir(b, '?edad=60', { ancho: w, alto: h, tactil: true });
-    const T = turnos(pg);
+    const T = turnos(pg, { ia: true });
     await T.hablar(); await T.responder();
     const caja = await pg.evaluate(() => { const r = (s) => document.querySelector(s).getBoundingClientRect(); return { charla: r('#charla'), panel: r('#panel'), medico: r('#ch-medico'), paciente: r('#ch-paciente') }; });
     const solapa = caja.charla.bottom > caja.panel.top + 1 && caja.charla.right > caja.panel.left + 1 && caja.charla.left < caja.panel.right - 1 && caja.charla.top < caja.panel.bottom - 1;
