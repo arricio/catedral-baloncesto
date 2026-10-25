@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const turnos = require('./turnos.js');
 const S = process.argv[2] || '.';
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
@@ -7,7 +8,7 @@ const S = process.argv[2] || '.';
   pg.on('console', m => { if (m.type()==='error') console.log('CERR', m.text()); });
   const shot = async (n) => { await pg.waitForTimeout(1500); await pg.screenshot({ path: `${S}/${process.env.PREF || 'j'}_${n}.png` }); console.log('shot', n); };
   const click = async (sel) => { await pg.waitForSelector(sel, { timeout: 15000 }); await pg.evaluate((s) => document.querySelector(s).click(), sel); await pg.waitForTimeout(150); };
-  const libre = () => pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, { timeout: 40000 });
+  const libre = () => pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, { timeout: 90000 });
   await pg.goto('http://localhost:8766/index.html' + (process.env.CASO ? '?caso=' + process.env.CASO : ''));
   await pg.waitForSelector('#inicio.on', { timeout: 30000 }); await pg.evaluate(() => window.__juego.mundo.ponerCalidad('baja'));
   await shot('01inicio');
@@ -17,13 +18,11 @@ const S = process.argv[2] || '.';
   await click('#cr-ok');
   await click('#int-ok');
   await pg.waitForSelector('#panel.on [data-q]', { timeout: 15000 });
-  await pg.evaluate(() => { document.querySelector('#subtitulo').click(); });
+  const T = turnos(pg);
   await shot('04consulta');
-  for (const q of ['motivo','dolor','habitos']) { await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 30000}); await click(`[data-q="${q}"]`); }
-  await pg.waitForTimeout(500); await shot('05hablando');
+  // conversación por turnos: la pregunta va al cuadro, HABLAR MÉDICO la dice y RESPONDER PACIENTE da la respuesta
+  for (const q of ['motivo','dolor','habitos']) { await click(`[data-q="${q}"]`); await T.hablar(); if (q === 'habitos') { await pg.evaluate(() => document.querySelector('#ch-paciente').click()); await pg.waitForTimeout(500); await shot('05hablando'); await T.libreCharla(); } else await T.responder(); }
   await libre();
-  // si el paciente desconfía sale un diálogo; al responder, el médico habla y el panel vuelve a quedar ocupado
-  if (await pg.$('.modal-fondo')) { await pg.click('.modal [data-i="0"]').catch(()=>{}); await pg.waitForTimeout(300); await libre(); }
   await click('[data-tab="explorar"]'); await click('[data-ex="constantes"]'); await shot('06constantes');
   await click('.modal .cerrar');
   await libre();
@@ -41,9 +40,15 @@ const S = process.argv[2] || '.';
   await pg.fill('#re-q', 'orujo'); await pg.dispatchEvent('#re-q','input'); await pg.waitForTimeout(200); await shot('12receta_busca');
   await click('#re-sug button'); await pg.fill('#re-q', 'cocido'); await pg.dispatchEvent('#re-q','input'); await click('#re-sug button');
   await pg.fill('#re-q', 'unas cigalas'); await pg.dispatchEvent('#re-q','input'); await click('#re-sug button.libre');
+  await pg.fill('input[data-i="0"][data-k="dosis"]', 'un chupito'); await pg.fill('input[data-i="0"][data-k="pauta"]', 'después de comer'); await pg.fill('input[data-i="0"][data-k="dur"]', '3 días');
+  await pg.fill('#re-ind', 'Reposo y beber mucha agua');
   await pg.evaluate(() => { const id = window.__juego.pac.enfId; document.querySelector(`[data-d="${id}"]`).click(); });
   await click('[data-a="casa"]'); await click('[data-p="baja"]'); await shot('13decidir');
+  await click('#re-conf'); await click('#rv-ok');
   await click('#de-ok'); await click('[data-t="empatia"]');
-  await pg.waitForSelector('#va-ok', { timeout: 60000 }); await shot('14valoracion');
+  // noticia, receta (lectura y entrega en mano) y despedida, cada intervención con su botón
+  await T.avanzarHasta(() => window.__juego.charla.espera?.leer, 10); await shot('14receta');
+  await pg.evaluate(() => document.querySelector('#ch-medico').click()); await pg.waitForFunction(() => window.__juego.charla.entregando, null, { timeout: 60000 }); await shot('15entrega');
+  await T.avanzarHasta('#va-ok'); await shot('16valoracion');
   await b.close();
 })();

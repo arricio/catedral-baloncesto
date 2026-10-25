@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const turnos = require('./turnos.js');
 const S = process.argv[2] || '.';
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
@@ -15,7 +16,8 @@ const S = process.argv[2] || '.';
       await shot('inicio'); await click('#b-nueva'); await shot('creador'); await click('#cr-ok'); await click('#int-ok'); await shot('consulta');
       await click('[data-tab="decidir"]'); await shot('decidir'); await click('.modal .cerrar');
       if (flujo === 'qx') { await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, { timeout: 60000 }); await click('[data-tab="decidir"]'); await click('[data-d="colecistitis"]'); await click('[data-a="cirugia"]'); await pg.selectOption('#de-cir', 'colecistectomia'); await click('#de-ok'); await click('[data-t="empatia"]');
-        for (let i = 0; i < 40; i++) { if (await pg.$('[data-f="calmar"]')) await click('[data-f="calmar"]'); if (await pg.$('[data-an]')) break; await pg.waitForTimeout(1000); }
+        const T = turnos(pg);
+        for (let i = 0; i < 60; i++) { if (await pg.$('[data-an]')) break; if (await pg.$('[data-f="calmar"]')) { await click('[data-f="calmar"]'); continue; } const e = await T.espera(); if (e === 'medico') await T.hablar(); else if (e === 'paciente') await T.responder(); else await pg.waitForTimeout(500); }
         await click('[data-an="local"]'); await click('#qx-ok'); await pg.waitForTimeout(8000);
         await pg.evaluate(() => { const c = window.__juego.cir; c.temblor = 0; c.ponerHerramienta('bisturi'); c.pasos.shift(); c.iPaso = 0; c.empezarPaso(); c.abajo(c.A); for (let i = 1; i <= 30; i++) c.mover({ x: c.A.x + (c.B.x - c.A.x) * i / 30, y: c.A.y + (c.B.y - c.A.y) * i / 30 }); c.arriba(); c.ponerHerramienta('separador'); c.asas.forEach(a => { c.abajo(a); c.arriba(); }); c.lanzar('hemorragia'); });
         await shot('quirofano');

@@ -5,8 +5,11 @@ import {
   RESPUESTAS_AUTORIDAD, fmt, tallaPecho, TALLAS_PECHO, generarPaciente, fraseHabitos, fraseAntecedentes, fraseAlergia, evaluarTratamiento, reaccionReceta,
   SANGRE, ORINA, PRUEBAS, ZONAS_RX, CIRUGIAS, ANESTESIAS, ANTECEDENTES, NOMBRES_H, NOMBRES_M, APELLIDOS, textoEdad, respondeAcomp, dialogo,
 } from './datos.js';
-import { Voz, Sonido } from './audio.js';
-import { Mundo, crearHumano, cargarModelos, ropaSin, ROPAS, PELOS_NOMBRES, BARBAS_NOMBRES, GAFAS_NOMBRES } from './escena.js';
+import { Voz, Sonido, perfilVoz, grupoVoz } from './audio.js';
+import { Mundo, crearHumano, cargarModelos, ropaSin, ROPAS, PELOS_NOMBRES, BARBAS_NOMBRES, GAFAS_NOMBRES, texReceta } from './escena.js';
+import { IA_POR_DEFECTO, clasificar, intenciones, hablaDeTu, generarRespuesta, probarIA, respuestaGeneral, leerNatural, detectarOllama, elegirModelo } from './ia.js';
+import { Dictado } from './dictado.js';
+import { Mando } from './mando.js';
 import { dibujarRx, dibujarTac, dibujarEco, dibujarEcg, dibujarGarganta, ecgValor as ecgVal } from './imagenes.js';
 import { Cirugia, HERRAMIENTAS, EMERGENCIAS } from './cirugia.js';
 
@@ -33,8 +36,15 @@ function estadoNuevo(doctor) {
     ingresados: [], historial: [], stats: { atendidos: 0, curados: 0, fallecidos: 0, operaciones: 0 },
     hoy: { ingresos: 0, gastos: 0, eventos: [], repIni: 50 },
     fase: 'consulta', pendientes: 0,
-    ajustes: { voz: true, sonido: true, calidad: 'alta', velVoz: 1 },
+    ajustes: ajustesPorDefecto(),
   };
+}
+function ajustesPorDefecto() {
+  return { voz: true, sonido: true, calidad: 'alta', velVoz: 1, ia: { ...IA_POR_DEFECTO }, mando: { sensibilidad: 1, zonaMuerta: 0.18 } };
+}
+function completarAjustes(a) {
+  const d = ajustesPorDefecto();
+  return { ...d, ...a, ia: { ...d.ia, ...(a?.ia || {}) }, mando: { ...d.mando, ...(a?.mando || {}) } };
 }
 let G = null;
 function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify(G)); } catch (e) {} }
@@ -113,35 +123,248 @@ function generoNino(t, p) {
   if (p.sexo === 'm') return t.replace(/\bel niño\b/g, 'la niña').replace(/\bEl niño\b/g, 'La niña').replace(/\b[Mm]i hijo\b/g, m => m[0] + 'i hija').replace(/\bmi bebé\b/gi, 'mi bebé').replace(/\bmuy flojo\b/g, 'muy floja').replace(/\bacatarrado\b/g, 'acatarrada').replace(/\bdecaído\b/g, 'decaída').replace(/\bquejoso\b/g, 'quejosa').replace(/\bdormido\b/g, 'dormida').replace(/\bronco\b/g, 'ronca').replace(/\bSu hermano\b/g, 'Su hermano').replace(/\btranquilo\b/g, 'tranquila').replace(/\brojo\b/g, 'roja');
   return t.replace(/\bla niña\b/g, 'el niño').replace(/\bLa niña\b/g, 'El niño');
 }
+// edad del acompañante: se fija al llegar el paciente; en partidas antiguas se estima por el parentesco
+function edadAcomp(p) {
+  if (p.acompEdad) return p.acompEdad;
+  const rel = p.acompanante || '';
+  return /abuel/.test(rel) ? 70 : /madre|padre/.test(rel) ? (p.edad < 18 ? 38 : Math.min(95, p.edad + 26)) : /nieto|nieta/.test(rel) ? 24 : /hija|hijo/.test(rel) ? Math.max(22, p.edad - 28) : 45;
+}
 function infoHablante(quien) {
-  if (quien === 'doctor') return { nombre: nombreDoctor(), genero: G.doctor.voz, tono: 1, vel: 1, clase: 'doctor', semilla: 0 };
-  if (quien === 'paciente' && pac) return { nombre: `${pac.nombre} ${pac.apellidos}`, genero: pac.sexo, tono: pac.voz.tono, vel: pac.voz.vel, clase: 'paciente', humano: modo === 'sala' ? hCama : (hPacSin && hPacSin.raiz.parent ? hPacSin : hPac), semilla: pac.id };
-  if (quien === 'acomp' && pac) return { nombre: parentesco(pac), genero: esMujerAcomp(pac) ? 'm' : 'h', tono: /abuel/.test(pac.acompanante) ? 0.92 : 1.05, vel: /abuel/.test(pac.acompanante) ? 0.92 : 1.08, clase: 'acomp', humano: hAcomp, semilla: pac.id + 7 };
-  if (typeof quien === 'object') return { clase: 'otro', tono: 1, vel: 1.05, semilla: 3, ...quien };
+  if (quien === 'doctor') return { nombre: nombreDoctor(), ...perfilVoz({ rol: 'doctor', sexo: G.doctor.sexo, vozElegida: G.doctor.voz }), clase: 'doctor' };
+  if (quien === 'paciente' && pac) return { nombre: `${pac.nombre} ${pac.apellidos}`, ...perfilVoz({ edad: pac.edad, sexo: pac.sexo, semilla: pac.id }), clase: 'paciente', humano: modo === 'sala' ? hCama : (hPacSin && hPacSin.raiz.parent ? hPacSin : hPac) };
+  if (quien === 'acomp' && pac) return { nombre: parentesco(pac), ...perfilVoz({ edad: edadAcomp(pac), sexo: esMujerAcomp(pac) ? 'm' : 'h', semilla: pac.id * 31 + 7 }), clase: 'acomp', humano: hAcomp };
+  if (typeof quien === 'object') return { clase: 'otro', ...perfilVoz({ edad: quien.edad || 45, sexo: quien.genero || 'h', semilla: quien.semilla || 3 }), nombre: quien.nombre, humano: quien.humano };
   return { nombre: '', genero: 'h', tono: 1, vel: 1, clase: 'otro', semilla: 1 };
 }
-function decir(quien, texto) {
-  hablandoN++; $('#panel').classList.add('ocupado');
+// emoción con la que se dice una frase (cambia la voz y la cara)
+function emocionDe(quien, t, info) {
+  if (quien === 'doctor') return { voz: 'neutra', cara: 'neutra' };
+  const n = normaliza(t);
+  if (/\(llor|lloros|snif/.test(n)) return { voz: 'triste', cara: 'tristeza' };
+  if (/gracias|menos mal|que alivio|es usted un cielo|genial|estupend/.test(n)) return { voz: 'agradecido', cara: 'alegria' };
+  if (/miedo|me van a pinchar|no quiero|dios mio|se va a morir|asust/.test(n)) return { voz: 'asustado', cara: 'miedo' };
+  if (/\bay\b|duele|dolor|uf\b|no puedo/.test(n) || info.humano?.dolor) return { voz: 'dolor', cara: 'dolor' };
+  if (/preocup|que tengo|es grave|me voy a curar/.test(n)) return { voz: 'preocupado', cara: 'preocupacion' };
+  if (info.humano?.agitado) return { voz: 'nervioso', cara: 'preocupacion' };
+  return { voz: 'neutra', cara: 'neutra' };
+}
+let hablanteActual = null;
+Voz.alPalabra = (largo) => {
+  const h = hablanteActual; if (!h) return;
+  h.pulso = performance.now(); h.pulsoDur = Math.min(0.5, 0.08 + largo * 0.045); h.conPulsos = true;
+};
+// texto: lo que aparece en los subtítulos; opciones.leer: lo que pronuncia la voz (por ejemplo, abreviaturas desarrolladas)
+function decir(quien, texto, { origen = null, leer = null } = {}) {
+  hablandoN++; $('#panel').classList.add('ocupado'); actualizarCharla();
   cola = cola.then(async () => {
     const info = infoHablante(quien);
     let t = texto;
     if (quien !== 'doctor' && G.doctor.sexo === 'm') t = t.replace(/\b([Dd])octor\b/g, '$1octora');
     const sub = $('#subtitulo');
-    sub.innerHTML = `<b class="${info.clase}">${esc(info.nombre)}</b><span>${esc(t)}</span>`;
+    const etiqueta = origen === 'ia' ? '<i class="origen ia" title="Respuesta generada por inteligencia artificial">IA</i>' : origen === 'predefinida' ? '<i class="origen pre" title="Respuesta escrita de antemano en el juego">predefinida</i>' : '';
+    sub.innerHTML = `<b class="${info.clase}">${esc(info.nombre)}${etiqueta}</b><span>${esc(t)}</span>`;
     sub.classList.add('on');
     const bebe = quien === 'paciente' && pac && pac.edad < 1.5;
-    if (info.humano) { if (bebe && /bua/i.test(t)) { info.humano.llorando = true; Sonido.llanto(2); } else info.humano.hablando = true; }
+    const em = emocionDe(quien, t, info);
+    if (info.humano) { info.humano.emocion = em.cara; if (bebe && /bua/i.test(t)) { info.humano.llorando = true; Sonido.llanto(2); } else { info.humano.hablando = true; info.humano.conPulsos = false; hablanteActual = info.humano; } }
     if (quien === 'doctor') mundo.doctorHablando = true;
     Voz.activa = G.ajustes.voz;
-    await Voz.hablar(t.replace(/\(.*?\)/g, ''), { genero: info.genero, tono: info.tono, vel: info.vel * (G.ajustes.velVoz || 1), quien: info.clase + Math.random(), semilla: info.semilla });
-    if (info.humano) { info.humano.hablando = false; info.humano.llorando = false; }
+    await Voz.hablar((leer || t).replace(/\(.*?\)/g, ''), { genero: info.genero, tono: info.tono, vel: info.vel * (G.ajustes.velVoz || 1), quien: info.clase + Math.random(), semilla: info.semilla, emocion: em.voz });
+    if (info.humano) { info.humano.hablando = false; info.humano.llorando = false; info.humano.conPulsos = false; if (hablanteActual === info.humano) hablanteActual = null; }
     mundo.doctorHablando = false;
     hablandoN--;
     if (!hablandoN) { $('#panel').classList.remove('ocupado'); setTimeout(() => { if (!hablandoN) sub.classList.remove('on'); }, 2500); }
+    actualizarCharla();
   });
   return cola;
 }
+// Reacción física del paciente al explorarle (dolor, cosquillas, llanto del bebé): se ve en su cara y en los
+// subtítulos, pero no habla. En la consulta sólo se habla al pulsar HABLAR MÉDICO o RESPONDER PACIENTE.
+function reaccion(texto) {
+  const h = hPacSin && hPacSin.raiz.parent && hPacSin.raiz.visible ? hPacSin : hPac;
+  const n = normaliza(texto);
+  if (h) {
+    h.emocion = /\bay\b|duele|uuuh|llor|bua|mama/.test(n) ? 'dolor' : /je, je|cosquillas/.test(n) ? 'alegria' : 'neutra';
+    if (/bua|llor/.test(n) && pac.edad < 3) { h.llorando = true; Sonido.llanto(2); setTimeout(() => { h.llorando = false; }, 2200); }
+  }
+  const sub = $('#subtitulo');
+  sub.innerHTML = `<b class="paciente">${esc(`${pac.nombre} ${pac.apellidos}`)}<i class="origen accion">reacción</i></b><span><i>${esc(texto)}</i></span>`;
+  sub.classList.add('on');
+  setTimeout(() => { if (!hablandoN) sub.classList.remove('on'); }, 2600);
+  return Promise.resolve();
+}
+// Lo que hace el médico al explorar: sólo se describe en los subtítulos, nunca se dice en voz alta
+function narrar(texto) {
+  const sub = $('#subtitulo');
+  sub.innerHTML = `<b class="doctor">${esc(nombreDoctor())}<i class="origen accion">acción</i></b><span><i>${esc(texto)}</i></span>`;
+  sub.classList.add('on');
+  setTimeout(() => { if (!hablandoN) sub.classList.remove('on'); }, 2600);
+  return Promise.resolve();
+}
 $('#subtitulo').addEventListener('click', () => Voz.callar());
+
+// ───────────────────────── Conversación por turnos ─────────────────────────
+// El jugador escribe (o dicta) lo que dice el médico y decide cuándo habla cada uno:
+// HABLAR MÉDICO dice exactamente el texto del cuadro y RESPONDER PACIENTE hace que conteste el paciente.
+// Nadie habla por su cuenta: los diálogos del guion también esperan a que se pulse el botón de cada uno.
+const charla = {
+  espera: null,      // turno del guion pendiente: { tipo: 'medico' | 'paciente', ..., resolver }
+  pendiente: null,   // última frase libre del médico (o algo que el paciente quiere decir) sin respuesta todavía
+  sugerencia: null,  // { texto, id, ctx }: pregunta elegida en el panel, para la mecánica del juego
+  pensando: false, entregando: false, activa: false,
+};
+const cajaCharla = () => $('#ch-texto');
+const textoCaja = () => cajaCharla().value.trim();
+function ajustarAltura() { const c = cajaCharla(); c.style.height = 'auto'; c.style.height = `${Math.min(c.scrollHeight, 120)}px`; }
+function mostrarCharla(on) { charla.activa = on; document.body.classList.toggle('con-charla', on); if (!on && Dictado.escuchando) Dictado.parar(); actualizarCharla(); }
+function reiniciarCharla() { charla.espera = null; charla.pendiente = null; charla.sugerencia = null; charla.pensando = false; charla.entregando = false; cajaCharla().value = ''; cajaCharla().readOnly = false; proponer(null); ajustarAltura(); actualizarCharla(); }
+// Una idea del juego para lo que podría decir el médico: NUNCA se escribe sola en el cuadro;
+// sólo se copia si el jugador pulsa la sugerencia, y después la puede cambiar antes de enviarla.
+let propuesta = null;
+function proponer(texto, { id = null, ctx = null } = {}) {
+  propuesta = texto ? { texto, id, ctx } : null;
+  $('#ch-sug').hidden = !texto;
+  $('#ch-sug-usar').textContent = texto || '';
+  actualizarCharla();
+}
+$('#ch-sug-usar').onclick = () => { if (!propuesta) return; const p = propuesta; proponer(null); ponerTextoMedico(p.texto, { id: p.id, ctx: p.ctx }); if (Mando.ultimaEntrada !== 'mando') cajaCharla().focus(); };
+function ponerTextoMedico(texto, { id = null, ctx = null, soloLectura = false } = {}) {
+  const c = cajaCharla(); c.value = texto; c.readOnly = soloLectura; charla.sugerencia = { texto, id, ctx };
+  ajustarAltura(); actualizarCharla();
+  if (Mando.ultimaEntrada === 'mando') Mando.enfocar($('#ch-medico'));
+}
+function actualizarCharla() {
+  const el = $('#charla'); if (!el || !G) return;
+  const ocupado = hablandoN > 0 || charla.pensando || charla.entregando;
+  const esperaPac = charla.espera?.tipo === 'paciente';
+  const puedeMedico = !ocupado && !esperaPac && !!textoCaja();
+  const puedePaciente = !ocupado && (esperaPac || (!charla.espera && !!charla.pendiente));
+  $('#ch-medico').disabled = !puedeMedico;
+  $('#ch-paciente').disabled = !puedePaciente;
+  $('#ch-mic').classList.toggle('on', Dictado.escuchando);
+  $('#ch-mic').setAttribute('aria-pressed', Dictado.escuchando ? 'true' : 'false');
+  let estado, turno;
+  const hablaMedico = String(Voz.quien || '').startsWith('doctor') || mundo?.doctorHablando;
+  if (charla.pensando) { estado = G.ajustes.ia.modo === 'predefinida' ? 'El paciente va a responder…' : 'El paciente está pensando qué responder (IA)…'; turno = 'paciente'; }
+  else if (charla.entregando) { estado = 'Entregando la receta en mano…'; turno = 'medico'; }
+  else if (hablandoN) { estado = hablaMedico ? 'El médico está hablando…' : 'Está hablando el paciente…'; turno = hablaMedico ? 'medico' : 'paciente'; }
+  else if (Dictado.escuchando) { estado = 'Escuchando el micrófono… habla y después revisa el texto.'; turno = 'medico'; }
+  else if (puedePaciente) { estado = charla.pendiente?.ctx?.tipo === 'extra' || charla.pendiente?.ctx?.tipo === 'cuestiona' ? 'Parece que quieren decir algo: pulsa RESPONDER PACIENTE si quieres oírlo, o sigue preguntando.' : 'Turno del paciente: pulsa RESPONDER PACIENTE cuando quieras.'; turno = 'paciente'; }
+  else { estado = charla.espera?.tipo === 'medico' ? (charla.espera.etiqueta || 'Turno del médico: revisa el texto y pulsa HABLAR MÉDICO.') : 'Turno del médico: escribe o dicta lo que quieres decir.'; turno = 'medico'; }
+  // mientras un paciente quiere decir algo, el médico también puede seguir hablando
+  if (charla.pendiente && !charla.espera && !ocupado && textoCaja()) $('#ch-medico').disabled = false;
+  // se avisa siempre de si las respuestas son de IA o predefinidas
+  if (turno === 'paciente' && !hablandoN && !charla.pensando) estado += G.ajustes.ia.modo === 'predefinida' ? ' (Sin IA instalada: respuestas predefinidas.)' : ` (IA: ${G.ajustes.ia.modelo})`;
+  $('#ch-estado').textContent = estado;
+  el.dataset.turno = turno;
+  if (el.offsetHeight) document.documentElement.style.setProperty('--alto-charla', `${el.offsetHeight}px`);
+  $('#panel').classList.toggle('guion', !!charla.espera);
+}
+cajaCharla().addEventListener('input', () => { ajustarAltura(); actualizarCharla(); });
+cajaCharla().addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); hablarMedico(); } });
+$('#ch-escribir').onclick = () => { if (Mando.ultimaEntrada === 'mando') Mando.abrirTeclado(cajaCharla()); else cajaCharla().focus(); };
+$('#ch-mic').onclick = () => alternarMicro(cajaCharla());
+$('#ch-medico').onclick = () => hablarMedico();
+$('#ch-paciente').onclick = () => responderPaciente();
+
+// Micrófono: lo dicho se convierte en texto en el campo; el médico no habla hasta pulsar HABLAR MÉDICO
+async function alternarMicro(campo) {
+  if (Dictado.escuchando) { Dictado.parar(); return; }
+  if (campo.readOnly) return aviso('Este texto no se puede cambiar: es la receta que has confirmado.', 'info');
+  if (!Dictado.disponible) { aviso(Dictado.motivoNoDisponible, 'mal'); campo.focus(); return; }
+  if (!G.ajustes.micAvisado) {
+    const ok = await new Promise(res => {
+      const m = abrirModal(`<h2>Usar el micrófono</h2><p>Vas a dictar lo que dirá el médico. Tu voz <b>sólo se convierte en texto</b>: no se guarda ni se reproduce. Después podrás corregir el texto antes de que el médico lo diga con su propia voz.</p>
+        <p class="nota">El navegador te pedirá permiso para usar el micrófono. En Chrome y Edge el reconocimiento de voz necesita conexión a Internet.</p>
+        <div class="botones"><button class="btn sec" id="mi-no">Ahora no</button><button class="btn grande" id="mi-si">Permitir y dictar</button></div>`, { clase: 'pequeno', alCerrar: () => res(false) });
+      $('#mi-si', m).onclick = () => { m.parentElement.remove(); res(true); };
+      $('#mi-no', m).onclick = () => { m.cerrar(); };
+    });
+    if (!ok) return;
+    G.ajustes.micAvisado = true; guardar();
+  }
+  const base = campo.value.trim();
+  await Dictado.iniciar({
+    alTexto: (t) => { campo.value = (base ? `${base} ` : '') + t; campo.dispatchEvent(new Event('input', { bubbles: true })); },
+    alFin: (err) => { if (err) aviso(err, 'mal'); actualizarCharla(); try { campo.focus(); } catch (e) {} },
+  });
+  actualizarCharla();
+}
+
+async function hablarMedico() {
+  if ($('#ch-medico').disabled) return;
+  if (Dictado.escuchando) Dictado.parar();
+  const texto = textoCaja();
+  if (!texto) return;
+  const sug = charla.sugerencia && charla.sugerencia.texto.trim() === texto ? charla.sugerencia : null;
+  const espera = charla.espera?.tipo === 'medico' ? charla.espera : null;
+  const leer = espera && espera.leer && texto === espera.texto.trim() ? espera.leer : null;
+  cajaCharla().value = ''; cajaCharla().readOnly = false; charla.sugerencia = null; proponer(null); ajustarAltura();
+  if (pac) (pac.charla ||= []).push({ quien: 'medico', texto });
+  if (espera) charla.espera = null; else charla.pendiente = null;
+  Sonido.clic();
+  await decir('doctor', texto, { leer });
+  if (espera) espera.resolver(texto);
+  else charla.pendiente = { texto, id: sug?.id || null, ctx: sug?.ctx || null };
+  actualizarCharla();
+}
+async function responderPaciente() {
+  if ($('#ch-paciente').disabled) return;
+  Sonido.clic();
+  if (charla.espera?.tipo === 'paciente') {
+    const e = charla.espera; charla.espera = null;
+    await responderCon(e.quien, e.referencia, e);
+    e.resolver();
+    return;
+  }
+  const p = charla.pendiente; if (!p) return;
+  charla.pendiente = null;
+  if (p.ctx?.tipo === 'extra') return responderCon(p.ctx.quien, p.ctx.referencia);
+  if (p.ctx?.tipo === 'cuestiona') return responderCuestiona();
+  if (p.ctx?.tipo === 'autoridad') return responderAutoridad(p.ctx.v);
+  if (modo === 'sala') return responderSala(p);
+  return responderPregunta(p);
+}
+// Turnos del guion: el texto propuesto aparece en el cuadro y espera a que se pulse el botón
+// Turno del médico en el guion. La receta (escrita por el jugador) va directamente al cuadro, sin poder cambiarse;
+// cualquier otra frase del juego sólo se ofrece como sugerencia y el cuadro queda vacío para escribir o dictar.
+function turnoMedico(texto, { soloLectura = false, etiqueta = null, leer = null } = {}) {
+  return new Promise(res => {
+    charla.pendiente = null; charla.espera = { tipo: 'medico', texto, leer, etiqueta, resolver: res };
+    mostrarCharla(true);
+    if (soloLectura) { proponer(null); ponerTextoMedico(texto, { soloLectura }); }
+    else { cajaCharla().value = ''; cajaCharla().readOnly = false; charla.sugerencia = null; ajustarAltura(); proponer(texto); }
+  });
+}
+function turnoPaciente(quien, referencia, opciones = {}) {
+  return new Promise(res => { charla.espera = { tipo: 'paciente', quien, referencia, ...opciones, resolver: res }; mostrarCharla(true); actualizarCharla(); if (Mando.ultimaEntrada === 'mando') Mando.enfocar($('#ch-paciente')); });
+}
+// lo que el médico ya ha comunicado al paciente (para que la IA lo tenga en cuenta)
+function tratamientoDicho() {
+  if (!pac || !pac.plan || !pac.noticiaDada) return '';
+  const d = ENF[pac.plan.diag];
+  const acc = { casa: 'se puede ir a casa', hospitalizar: 'le van a ingresar en planta', cirugia: 'le van a operar' }[pac.plan.accion] || '';
+  return `Diagnóstico que le ha dicho el médico: ${d ? d.n : '—'}; ${acc}.${pac.recetaTexto ? ` Receta entregada: ${pac.recetaTexto}` : ''}`;
+}
+// El paciente (o quien corresponda) contesta: con IA si está configurada, si no con la respuesta del juego
+async function responderCon(quien, referencia, { fija = false, tratamiento = null } = {}) {
+  const cfg = G.ajustes.ia;
+  let texto = referencia, origen = 'predefinida';
+  const bebe = quien === 'paciente' && pac && pac.edad < 1.5;
+  const objeto = typeof quien === 'object';
+  const rolIA = quien === 'acomp' || (objeto && quien.rol === 'acomp') ? 'acomp' : objeto ? null : 'paciente';
+  if (!fija && !bebe && pac && rolIA && cfg.modo !== 'predefinida') {
+    charla.pensando = true; actualizarCharla();
+    const hist = pac.charla || [];
+    let iu = hist.length - 1; while (iu >= 0 && hist[iu].quien !== 'medico') iu--;
+    const r = await generarRespuesta(cfg, { pac, quien: rolIA, nombreDoctor: nombreDoctor(), historial: iu >= 0 ? hist.slice(0, iu) : hist, pregunta: iu >= 0 ? hist[iu].texto : '', referencia, tratamiento: tratamiento || tratamientoDicho() });
+    charla.pensando = false;
+    texto = r.texto; origen = r.origen;
+    if (r.error) aviso(`IA no disponible (${r.error}). Se usa la respuesta predefinida.`, 'info');
+  }
+  if (pac) (pac.charla ||= []).push({ quien: objeto ? 'acomp' : quien, texto, origen });
+  await decir(quien, texto, { origen });
+}
 
 // ───────────────────────── Pantalla de inicio ─────────────────────────
 function pantallaInicio() {
@@ -159,9 +382,9 @@ function pantallaInicio() {
       <button class="btn sec" id="b-como">Cómo se juega</button>
       <button class="btn sec" id="b-ajustes">Ajustes</button>
     </div>
-    <p class="nota">Las voces usan el sintetizador en español de tu dispositivo. Pulsa los subtítulos para saltar una frase.</p>`;
+    <p class="nota">Tú decides qué dice el médico y cuándo contesta el paciente. Las voces usan el sintetizador en español de España de tu dispositivo. Pulsa los subtítulos para saltar una frase.</p>`;
   $('#inicio').classList.add('on');
-  $('#b-continuar') && ($('#b-continuar').onclick = () => { Sonido.iniciar(); G = guardada; G.ajustes = { voz: true, sonido: true, calidad: 'alta', velVoz: 1, ...G.ajustes }; mundo.actualizarDoctor(G.doctor); $('#inicio').classList.remove('on'); empezarDia(true); });
+  $('#b-continuar') && ($('#b-continuar').onclick = () => { Sonido.iniciar(); G = guardada; G.ajustes = completarAjustes(G.ajustes); aplicarMando(); mundo.actualizarDoctor(G.doctor); $('#inicio').classList.remove('on'); empezarDia(true); });
   $('#b-nueva').onclick = () => {
     Sonido.iniciar();
     if (guardada && !confirm('¿Empezar una partida nueva? Se perderá la partida guardada.')) return;
@@ -175,34 +398,117 @@ function pantallaInicio() {
 function comoSeJuega() {
   abrirModal(`<h2>Cómo se juega</h2>
   <ol class="ayuda">
-    <li><b>Consulta.</b> Habla con cada paciente: pregúntale qué le pasa, desde cuándo, sus hábitos... Algunos esconden cosas: gánate su confianza o pide al acompañante que salga.</li>
+    <li><b>Consulta.</b> Tú controlas la conversación: escribe (o dicta con el micrófono) lo que quieres decir y pulsa <b>HABLAR MÉDICO</b>; cuando quieras que conteste, pulsa <b>RESPONDER PACIENTE</b>. Nadie habla si no pulsas su botón. También puedes elegir preguntas del panel: aparecen en el cuadro y puedes cambiarlas. Algunos pacientes esconden cosas: gánate su confianza o pide al acompañante que salga.</li>
     <li><b>Explora.</b> Toma las constantes, ausculta pulmones y corazón con el estetoscopio (mueve el dedo o el ratón por la espalda), palpa la barriga o mira la garganta.</li>
     <li><b>Pide pruebas.</b> Análisis, radiografías, electrocardiograma, ecografía y TAC (estos dos hay que comprarlos). En las imágenes, rodea con el dedo la zona sospechosa.</li>
-    <li><b>Decide.</b> Elige el diagnóstico, qué hacer (casa, ingreso o quirófano) y escribe la receta: puedes recetar <i>cualquier</i> medicamento, comida o bebida, del cocido leonés al orujo. Cada cosa tiene sus consecuencias.</li>
+    <li><b>Decide.</b> Elige el diagnóstico, qué hacer (casa, ingreso o quirófano) y escribe la receta con tus palabras: medicamento, dosis, frecuencia, duración y recomendaciones. Puedes recetar <i>cualquier</i> medicamento, comida o bebida, del cocido leonés al orujo. Revísala y pulsa <b>CONFIRMAR RECETA</b>; después, el médico la leerá cuando pulses HABLAR MÉDICO y se la entregará en mano.</li>
     <li><b>Comunica la noticia</b> con tacto. Los pacientes tienen sentimientos.</li>
     <li><b>Opera.</b> Elige la anestesia, lávate y ponte guantes, y usa el bisturí, las pinzas, el separador, el aspirador y la sutura. Atento a las complicaciones del monitor.</li>
     <li><b>Ronda de guardia.</b> Cada mañana visita a tus ingresados, ajusta tratamientos y da altas.</li>
     <li><b>Gestiona.</b> Con el dinero, compra equipos, amplía la planta y contrata especialistas. Con mucha reputación, el hospital llevará tu nombre.</li>
   </ol>`);
 }
+// Personas de prueba para comprobar las voces por edades
+const PRUEBA_VOCES = [
+  { n: 'Niño de 5 años', edad: 5, sexo: 'h', t: 'Me duele mucho la barriga, doctor. ¿Me vas a pinchar?' },
+  { n: 'Niña de 8 años', edad: 8, sexo: 'm', t: 'Hola. Me pica mucho la garganta y no puedo tragar.' },
+  { n: 'Adolescente de 15 años', edad: 15, sexo: 'h', t: 'Pues... llevo dos días con fiebre y me duele la cabeza.' },
+  { n: 'Hombre de 40 años', edad: 40, sexo: 'h', t: 'Buenos días, doctor. Desde el lunes tengo un dolor en el pecho que me preocupa.' },
+  { n: 'Mujer de 45 años', edad: 45, sexo: 'm', t: 'Buenos días. Vengo porque no duermo bien y estoy muy cansada.' },
+  { n: 'Abuelo de 85 años', edad: 85, sexo: 'h', t: 'Ay, hijo. Es que ya no ando como antes, y la rodilla me mata.' },
+  { n: 'Abuela de 85 años', edad: 85, sexo: 'm', t: 'Buenos días, hijo. Ay, qué joven es usted. Me mareo mucho últimamente.' },
+];
+function perfilesPrueba() {
+  return PRUEBA_VOCES.map((p, i) => { const v = perfilVoz({ edad: p.edad, sexo: p.sexo, semilla: 1000 + i * 17 }); return { ...p, ...v, nombreGrupo: grupoVoz(p.edad).n, voz: Voz.vozPara(v.genero, v.semilla) }; });
+}
+function aplicarMando() {
+  const c = (G?.ajustes || completarAjustes({})).mando;
+  Mando.sensibilidad = c.sensibilidad; Mando.zonaMuerta = c.zonaMuerta;
+}
 function ajustes() {
-  const a = G?.ajustes || { voz: true, sonido: true, calidad: 'alta', velVoz: 1 };
+  const a = G?.ajustes || completarAjustes({});
+  const ia = a.ia;
   const m = abrirModal(`<h2>Ajustes</h2>
-    <label class="fila"><input type="checkbox" id="aj-voz" ${a.voz ? 'checked' : ''}> Voces habladas en español</label>
+    <div class="ficha-sec">VOZ Y CONVERSACIÓN</div>
+    <label class="fila"><input type="checkbox" id="aj-voz" ${a.voz ? 'checked' : ''}> Voces habladas en español de España</label>
     <label class="fila">Velocidad de voz <input type="range" id="aj-vel" min="0.7" max="1.4" step="0.05" value="${a.velVoz || 1}"></label>
-    <label class="fila">Calidad gráfica <select id="aj-cal"><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja (móviles antiguos)</option></select></label>
-    <p class="nota">Voces encontradas: ${Voz.nombres.length ? esc(Voz.nombres.slice(0, 6).join(' · ')) : 'ninguna en español; se mostrarán sólo subtítulos. En Android instala «Síntesis de voz de Google» con el idioma Español.'}</p>
-    <div class="botones"><button class="btn" id="aj-probar">Probar voz</button>${G ? '<button class="btn peligro" id="aj-borrar">Borrar partida</button>' : ''}</div>`);
+    <p class="nota">Voces de España encontradas: ${Voz.nombres.length ? esc(Voz.nombres.slice(0, 8).join(' · ')) : 'ninguna; se mostrarán sólo subtítulos. En Android instala «Servicios de voz de Google» con el idioma Español (España).'}</p>
+    <div class="botones"><button class="btn" id="aj-probar">Probar la voz del médico</button><button class="btn sec" id="aj-edades">Probar voces por edades</button></div>
+    <div id="aj-voces"></div>
+    <div class="ficha-sec">RESPUESTAS DE LOS PACIENTES</div>
+    <label class="fila">Modo <select id="aj-ia"><option value="predefinida">Predefinidas del juego (sin IA, sin Internet)</option><option value="ollama">IA local con Ollama (gratis, sin Internet)</option><option value="openai">IA local compatible con OpenAI (LM Studio, llama.cpp…)</option></select></label>
+    <div id="aj-ia-cfg"><label class="campo">Dirección del servidor<input id="aj-url" value="${esc(ia.url)}" autocomplete="off"></label><label class="campo">Modelo<input id="aj-mod" value="${esc(ia.modelo)}" autocomplete="off"></label>
+      <div class="botones"><button class="btn sec" id="aj-iap">Probar la conexión</button></div><p class="nota" id="aj-iar"></p></div>
+    <p class="nota">En los subtítulos verás <i class="origen ia">IA</i> si la respuesta la ha generado la inteligencia artificial y <i class="origen pre">predefinida</i> si es una frase escrita en el juego (por ejemplo, cuando no hay IA o no contesta).</p>
+    <div class="ficha-sec">MANDO Y CONTROLES</div>
+    <p class="nota">${Mando.conectado ? `Mando conectado: ${esc(Mando.nombre)}` : 'No hay ningún mando conectado. Empareja el mando de Xbox por Bluetooth y pulsa cualquier botón.'}</p>
+    <label class="fila">Sensibilidad del cursor <input type="range" id="aj-sens" min="0.4" max="2.5" step="0.1" value="${a.mando.sensibilidad}"></label>
+    <label class="fila">Zona muerta de los joysticks <input type="range" id="aj-dz" min="0.05" max="0.4" step="0.01" value="${a.mando.zonaMuerta}"></label>
+    <div class="botones"><button class="btn sec" id="aj-controles">Ver los controles</button></div>
+    <div class="ficha-sec">GRÁFICOS</div>
+    <label class="fila">Calidad gráfica <select id="aj-cal"><option value="alta">Alta (portátil)</option><option value="media">Media (móvil)</option><option value="baja">Baja (móviles antiguos)</option></select></label>
+    <div class="botones"><button class="btn sec" id="aj-pc">Pantalla completa</button>${G ? '<button class="btn peligro" id="aj-borrar">Borrar partida</button>' : ''}</div>`);
   $('#aj-cal', m).value = a.calidad;
-  const aplicar = () => { a.voz = $('#aj-voz', m).checked; a.velVoz = +$('#aj-vel', m).value; a.calidad = $('#aj-cal', m).value; if (G) { G.ajustes = a; guardar(); } mundo.ponerCalidad(a.calidad); };
+  $('#aj-ia', m).value = ia.modo;
+  const verIA = () => $('#aj-ia-cfg', m).classList.toggle('oculto', $('#aj-ia', m).value === 'predefinida');
+  verIA();
+  const aplicar = () => {
+    a.voz = $('#aj-voz', m).checked; a.velVoz = +$('#aj-vel', m).value; a.calidad = $('#aj-cal', m).value;
+    const nuevoModo = $('#aj-ia', m).value;
+    if (nuevoModo !== ia.modo && nuevoModo === 'openai' && /11434/.test($('#aj-url', m).value)) $('#aj-url', m).value = 'http://localhost:1234';
+    if (nuevoModo !== ia.modo && nuevoModo === 'ollama' && /1234/.test($('#aj-url', m).value)) $('#aj-url', m).value = 'http://localhost:11434';
+    if (nuevoModo !== ia.modo) ia.manual = true;
+    ia.modo = nuevoModo; ia.url = $('#aj-url', m).value.trim(); ia.modelo = $('#aj-mod', m).value.trim();
+    a.mando.sensibilidad = +$('#aj-sens', m).value; a.mando.zonaMuerta = +$('#aj-dz', m).value;
+    verIA();
+    if (G) { G.ajustes = a; guardar(); } aplicarMando(); mundo.ponerCalidad(a.calidad);
+  };
   $$('input,select', m).forEach(el => el.onchange = aplicar);
-  $('#aj-probar', m).onclick = () => { aplicar(); Voz.activa = a.voz; Voz.hablar('Buenos días. Soy el mejor médico de León. ¿Qué le trae por aquí?', { genero: G?.doctor.voz || 'h', vel: a.velVoz }); };
+  $('#aj-probar', m).onclick = () => { aplicar(); Voz.activa = a.voz; const v = perfilVoz({ rol: 'doctor', sexo: G?.doctor.sexo || 'h', vozElegida: G?.doctor.voz || 'h' }); Voz.hablar('Buenos días. Soy el mejor médico de León. ¿Qué le trae por aquí?', { ...v, vel: v.vel * a.velVoz }); };
+  $('#aj-edades', m).onclick = async () => {
+    aplicar(); Voz.activa = a.voz;
+    const lista = perfilesPrueba();
+    $('#aj-voces', m).innerHTML = `<table class="tabla"><tr><th>Persona</th><th>Grupo</th><th>Voz del dispositivo</th><th>Tono</th><th>Ritmo</th></tr>${lista.map((p, i) => `<tr data-v="${i}"><td>${p.n}</td><td>${esc(p.nombreGrupo)}</td><td>${esc(p.voz || 'sin voz')}</td><td>${p.tono}</td><td>${p.vel}</td></tr>`).join('')}</table>
+      <p class="nota">Tu dispositivo no tiene voces infantiles ni de personas mayores: cada edad usa la voz más parecida con su propio tono y ritmo.</p>`;
+    for (const [i, p] of lista.entries()) {
+      $$('#aj-voces tr', m).forEach(tr => tr.classList.toggle('ok', tr.dataset.v === String(i)));
+      await Voz.hablar(p.t, { genero: p.genero, tono: p.tono, vel: p.vel * a.velVoz, semilla: p.semilla, quien: 'prueba' + i, emocion: p.edad < 7 ? 'asustado' : p.edad > 80 ? 'preocupado' : 'neutra' });
+      if (!document.contains(m)) break;
+    }
+  };
+  $('#aj-iap', m).onclick = async () => {
+    aplicar(); $('#aj-iar', m).textContent = 'Probando…';
+    const r = await probarIA(ia);
+    $('#aj-iar', m).textContent = r.ok ? `Funciona. El modelo ha contestado: «${r.texto}»` : `No funciona: ${r.error}. Comprueba que el servidor está en marcha y que permite conexiones desde el juego.`;
+  };
+  $('#aj-controles', m).onclick = mostrarControles;
+  $('#aj-pc', m).onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(() => aviso('Este navegador no permite la pantalla completa', 'mal')); };
   if ($('#aj-borrar', m)) $('#aj-borrar', m).onclick = () => { if (confirm('¿Seguro que quieres borrar la partida?')) { localStorage.removeItem(CLAVE); location.reload(); } };
+}
+function mostrarControles() {
+  abrirModal(`<h2>Controles</h2>
+    <div class="ficha-sec">CONVERSACIÓN</div>
+    <table class="tabla controles"><tr><th>Acción</th><th>Táctil / ratón</th><th>Teclado</th><th>Mando Xbox</th></tr>
+      <tr><td>Escribir lo que dice el médico</td><td>Cuadro de texto · ✎ ESCRIBIR</td><td>Escribir</td><td>A sobre el cuadro (teclado en pantalla)</td></tr>
+      <tr><td>Dictar por micrófono</td><td>🎤 MICRÓFONO</td><td>—</td><td>LT</td></tr>
+      <tr><td>Hablar el médico</td><td>HABLAR MÉDICO</td><td>Intro</td><td>X</td></tr>
+      <tr><td>Responder el paciente</td><td>RESPONDER PACIENTE</td><td>—</td><td>Y</td></tr>
+      <tr><td>Elegir pregunta, pestaña u opción</td><td>Tocar</td><td>Tab</td><td>Cruceta o joystick izquierdo + A</td></tr>
+      <tr><td>Cancelar o volver</td><td>✕</td><td>Esc</td><td>B</td></tr></table>
+    <div class="ficha-sec">EXPLORACIÓN, IMÁGENES Y QUIRÓFANO</div>
+    <table class="tabla controles"><tr><th>Acción</th><th>Táctil / ratón</th><th>Mando Xbox</th></tr>
+      <tr><td>Mover el estetoscopio, el bisturí o el lápiz</td><td>Arrastrar</td><td>Joystick izquierdo (o derecho, más lento) mueve el cursor</td></tr>
+      <tr><td>Apoyar o cortar</td><td>Pulsar</td><td>RT (o A)</td></tr>
+      <tr><td>Movimiento de precisión</td><td>—</td><td>Mantener LT</td></tr>
+      <tr><td>Cambiar de instrumento</td><td>Tocar el instrumento</td><td>LB / RB</td></tr></table>
+    <div class="ficha-sec">GENERAL</div>
+    <table class="tabla controles"><tr><td>Menú, pausa y ajustes</td><td>☰</td><td>Botón MENÚ</td></tr><tr><td>Ver estos controles</td><td>Ajustes › Ver los controles</td><td>Botón VISTA</td></tr></table>`, { clase: 'ancho2' });
 }
 
 // ───────────────────────── Creador del médico ─────────────────────────
 function creadorMedico(nuevo = false, base = null) {
   modo = 'creador'; document.body.dataset.modo = 'creador';
+  mostrarCharla(false);
   const d = { ...(base || G.doctor) };
   mundo.mostrar('creador'); mundo.giroCreador = 0.25;
   const refrescar = () => { mundo.ponerDoctorCreador(d); };
@@ -279,8 +585,19 @@ function introduccion() {
 }
 
 // ───────────────────────── Ciclo del día ─────────────────────────
+// Si hay una IA local (Ollama) en el ordenador, los pacientes responden con ella sin tener que configurar nada.
+// Si el jugador eligió el modo a mano en Ajustes, se respeta su elección.
+async function detectarIA() {
+  const ia = G.ajustes.ia;
+  if (ia.manual || ia.modo !== 'predefinida') return;
+  const modelos = await detectarOllama(ia.url);
+  if (!modelos.length) return;
+  ia.modo = 'ollama'; ia.modelo = elegirModelo(modelos, ia.modelo); guardar(); actualizarCharla();
+  aviso(`IA local detectada (${ia.modelo}): los pacientes responderán con inteligencia artificial.`, 'bien');
+}
 function empezarDia(continuar) {
   document.body.dataset.modo = 'juego';
+  detectarIA();
   hud();
   if (!continuar || G.fase === 'nuevo') { G.hora = 8 * 60; G.hoy = { ingresos: 0, gastos: 0, eventos: [], repIni: G.rep }; G.pendientes = Math.min(5, 3 + Math.floor(G.rep / 35) + (G.inst.vip ? 1 : 0)); G.fase = G.ingresados.length ? 'ronda' : 'consulta'; }
   guardar();
@@ -293,9 +610,13 @@ let preguntasHechas = 0;
 async function siguientePaciente() {
   modo = 'consulta'; cerrarModales();
   if (G.pendientes <= 0) return finDia();
-  const caso = new URLSearchParams(location.search).get('caso');
-  pac = generarPaciente({ dia: G.dia, rep: G.rep, equipos: G.equipos, forzar: caso && ENF[caso] ? caso : null });
-  pac.hallazgos = []; pac.receta = []; pac.notas = '';
+  // depuración: ?caso=<enfermedad>, ?edad=<años> y ?sexo=h|m fuerzan el paciente
+  const q = new URLSearchParams(location.search), caso = q.get('caso'), edadQ = q.get('edad') ? +q.get('edad') : null, sexoQ = q.get('sexo');
+  for (let i = 0; i < 60; i++) {
+    pac = generarPaciente({ dia: G.dia, rep: G.rep, equipos: G.equipos, forzar: caso && ENF[caso] ? caso : null, edadForzada: edadQ });
+    if (!sexoQ || pac.sexo === sexoQ) break;
+  }
+  pac.hallazgos = []; pac.receta = []; pac.notas = ''; pac.charla = [];
   preguntasHechas = 0;
   await fundido(() => {
     mundo.mostrar('consulta');
@@ -310,6 +631,7 @@ async function siguientePaciente() {
       // la edad del acompañante depende del parentesco
       const rel = pac.acompanante;
       const edadA = /abuel/.test(rel) ? entreInt(60, 80) : /madre|padre/.test(rel) ? (pac.edad < 18 ? entreInt(26, 48) : entreInt(Math.min(90, pac.edad + 20), Math.min(95, pac.edad + 32))) : /nieto|nieta/.test(rel) ? entreInt(18, 32) : /hija|hijo/.test(rel) ? Math.max(20, Math.min(70, pac.edad - entreInt(24, 34))) : entreInt(25, 60);
+      pac.acompEdad = edadA;
       const ap = generarPaciente({ forzar: 'gripe', edadForzada: edadA }).apariencia;
       ap.sexo = mujer ? 'm' : 'h'; ap.pecho = mujer ? tallaPecho(edadA) : null; ap.estilo = mujer ? (edadA > 65 ? azar([4, 6, 6]) : azar([3, 4, 5, 6, 7])) : (edadA > 60 && prob(0.5) ? 0 : azar([1, 2, 3])); ap.barba = mujer ? 0 : ap.barba;
       hAcomp = mundo.registrar(crearHumano(ap, 'calle'));
@@ -319,17 +641,10 @@ async function siguientePaciente() {
   });
   Sonido.puerta();
   panelConsulta('hablar');
-  await decir('doctor', `Buenos días. Pase, pase. Siéntese, por favor. Soy ${G.doctor.sexo === 'm' ? 'la doctora' : 'el doctor'} ${G.doctor.nombre.split(' ').slice(-1)[0]}.`);
-  if (pac.edad < 1.5) {
-    await decir('acomp', azar(['Buenos días, doctor. Venimos con el bebé, que no está nada bien.', 'Hola, doctor. A ver si nos puede ayudar con el peque.']));
-    decir('paciente', azar(['(llora) ¡Buaaa! ¡Buaaaa!', '(balbucea) Agú... agú.']));
-  } else if (pac.edad < 10) {
-    await decir('acomp', generoNino(azar([`Buenos días, doctor. Venimos con ${pac.nombre}.`, 'Hola, doctor. A ver qué le pasa al niño, que nos tiene preocupados.']), pac));
-    decir('paciente', azar(['Hola...', '(con vergüenza) Hola.', '¡Hola, doctor!', `Me llamo ${pac.nombre} y tengo ${Math.floor(pac.edad)} años.`]));
-  } else {
-    await decir('paciente', pac.edad < 18 ? azar(['Hola.', 'Buenas...', 'Hola, doctor.']) : pac.edad > 75 ? azar(['Buenos días, hij{o}. Ay, qué joven es usted.', 'Buenos días, doctor. A ver si me arregla, que ya estoy muy mayor.']).replace('{o}', G.doctor.sexo === 'm' ? 'a' : 'o') : azar(['Buenos días, doctor.', 'Hola, doctor. Gracias por atenderme.', 'Buenas... a ver si me arregla esto, doctor.']));
-    if (acompDentro) decir('acomp', pac.edad < 18 ? azar(['Buenos días. Vengo con mi hijo, que no hay quien le traiga solo.', 'Hola, doctor. Yo le acompaño.']).replace('mi hijo', pac.sexo === 'm' ? 'mi hija' : 'mi hijo') : azar(['Buenos días. Vengo con él, que si no, no viene.', 'Hola, doctor. Yo le acompaño.', 'Buenos días. Es que solo no se aclara.']).replace('él', pac.sexo === 'm' ? 'ella' : 'él'));
-  }
+  // nadie habla solo: el saludo del médico queda propuesto en el cuadro, listo para revisar y decir
+  reiniciarCharla(); mostrarCharla(true);
+  const yo = `${G.doctor.sexo === 'm' ? 'la doctora' : 'el doctor'} ${G.doctor.nombre.split(' ').slice(-1)[0]}`;
+  proponer(respondeAcomp(pac) ? `Buenos días. Pasen y siéntense, por favor. Soy ${yo}. ¿Qué le pasa a ${pac.nombre}?` : `Buenos días. Pase y siéntese, por favor. Soy ${yo}. ¿Qué le trae por aquí?`, { id: 'motivo' });
 }
 
 function panelConsulta(pestana = 'hablar') {
@@ -340,7 +655,7 @@ function panelConsulta(pestana = 'hablar') {
   let cuerpo = '';
   if (pestana === 'hablar') {
     const pre = preguntasDisponibles();
-    cuerpo = pre.map(q => `<button class="pregunta ${pac.preguntas[q.id] ? 'hecha' : ''}" data-q="${q.id}">${esc(q.t)}</button>`).join('');
+    cuerpo = '<p class="nota pista">Elige una pregunta: aparecerá en el cuadro de abajo. Puedes cambiarla o escribir la tuya, y después pulsa HABLAR MÉDICO.</p>' + pre.map(q => `<button class="pregunta ${pac.preguntas[q.id] ? 'hecha' : ''}" data-q="${q.id}">${esc(q.t)}</button>`).join('');
   } else if (pestana === 'explorar') {
     cuerpo = [['constantes', 'Tomar constantes', 'Temperatura, tensión, pulso y saturación'], ['pulmones', 'Auscultar los pulmones', 'Con el estetoscopio, por la espalda'], ['corazon', 'Auscultar el corazón', 'Con el estetoscopio, por delante'], ['abdomen', 'Palpar el abdomen', 'Busca dónde le duele'], ['garganta', 'Mirar la garganta', 'Con el depresor y la linterna'], ['zona', 'Explorar la zona afectada', 'Inspección y palpación']]
       .map(([id, t, s]) => `<button class="pregunta ${pac.preguntas['ex_' + id] ? 'hecha' : ''}" data-ex="${id}"><b>${t}</b><small>${s}</small></button>`).join('');
@@ -406,19 +721,36 @@ function preguntasDisponibles() {
 }
 function anotar(texto) { if (!pac.hallazgos.includes(texto)) pac.hallazgos.push(texto); }
 
-async function preguntar(id) {
-  if (hablandoN) return;
-  Sonido.clic();
-  const e = ENF[pac.enfId], d = dialogo(pac);
+// Elegir una pregunta del panel sólo la escribe en el cuadro: el médico la dice al pulsar HABLAR MÉDICO
+function preguntar(id) {
   const q = preguntasDisponibles().find(x => x.id === id);
-  // quién contesta: los padres (o los hijos de un mayor confuso) o el propio paciente
+  if (!q) return;
+  Sonido.clic();
+  ponerTextoMedico(q.t, { id });
+}
+const MECANICA = ['motivo', 'inicio', 'dolor', 'fiebre', 'habitos', 'antecedentes', 'alergia', 'extra', 'calmar', 'acomp', 'secreto', 'presionar'];
+// Respuesta a lo último que ha dicho el médico en la consulta
+async function responderPregunta(p) {
+  const e = ENF[pac.enfId], d = dialogo(pac);
+  // «¿Qué le pasa y desde cuándo?»: se contesta a las dos cosas
+  const todas = p.id ? [p.id] : intenciones(p.texto);
+  const id = !p.id && todas.includes('motivo') ? 'motivo' : (p.id || clasificar(p.texto));
+  const anadidos = id === 'motivo' ? todas.filter(x => ['inicio', 'fiebre'].includes(x) && d[x]) : [];
+  // quién contesta: los padres (o los hijos de un mayor confuso) o el propio paciente; si el médico habla de tú al niño, contesta el niño
   let quien = respondeAcomp(pac) && acompDentro && !['calmar', 'secreto'].includes(id) ? 'acomp' : 'paciente';
+  // al niño se le pregunta de tú qué le pasa o dónde le duele; los antecedentes, alergias o fechas los saben sus padres
+  const ninoContesta = quien === 'acomp' && pac.edad >= 3 && hablaDeTu(p.texto) && ['motivo', 'dolor', 'fiebre', 'general'].includes(id);
+  if (ninoContesta) quien = 'paciente';
+  if (!MECANICA.includes(id)) {
+    const ref = respuestaGeneral(pac, id, quien);
+    return responderCon(quien, quien === 'acomp' ? generoNino(ref, pac) : ref);
+  }
   const repetida = pac.preguntas[id];
+  const primera = (pac.charla || []).filter(h => h.quien === 'medico').length <= 1;
   pac.preguntas[id] = true; preguntasHechas++;
   pasarTiempo(2);
-  panelConsulta('hablar');
-  decir('doctor', q.t);
-  let r = '';
+  if ($('#panel').dataset.pestana === 'hablar' && modo === 'consulta') panelConsulta('hablar');
+  let r = '', fija = false;
   const tieneSecreto = e.secreto && (pac.enfId !== 'infarto' || pac.tomoViagra);
   switch (id) {
     case 'motivo': r = fmt(azar(d.motivo), pac); anotar(`Síntomas: ${e.sintomas.slice(0, 2).join(', ').toLowerCase()}`); break;
@@ -436,14 +768,13 @@ async function preguntar(id) {
       else r = fmt(azar(['Gracias, doctor. Es que estoy muy preocupad{o}.', 'Vale... me quedo más tranquil{o}.', 'Se agradece, doctor.']), pac);
       break;
     case 'acomp':
+      if (!acompDentro) { r = respuestaGeneral(pac, 'general', 'paciente'); break; }
       if (pac.edad < 10 || e.respondeAcomp) {
-        await cola;
-        await decir('acomp', pac.edad < 10 ? `¿Dejarle solo? ¡Pero si tiene ${textoEdad(pac.edad)}! Yo de aquí no me muevo.` : 'Prefiero quedarme, doctor. Así no se aclara, está muy desorientada.'.replace('desorientada', pac.sexo === 'm' ? 'desorientada' : 'desorientado'));
+        await responderCon('acomp', pac.edad < 10 ? `¿Dejarle solo? ¡Pero si tiene ${textoEdad(pac.edad)}! Yo de aquí no me muevo.` : 'Prefiero quedarme, doctor. Así no se aclara, está muy desorientada.'.replace('desorientada', pac.sexo === 'm' ? 'desorientada' : 'desorientado'));
         panelConsulta('hablar');
         return;
       }
-      await cola;
-      await decir('acomp', azar(['Claro, claro. Espero fuera.', 'Bueno... vale. Estaré en la sala de espera.', '¿Yo? Bueno, como quiera.']));
+      await responderCon('acomp', azar(['Claro, claro. Espero fuera.', 'Bueno... vale. Estaré en la sala de espera.', '¿Yo? Bueno, como quiera.']));
       await fundido(() => { mundo.quitar(hAcomp); hAcomp = null; acompDentro = false; }, 250);
       Sonido.puerta(); pac.confianza++;
       panelConsulta('hablar');
@@ -452,36 +783,51 @@ async function preguntar(id) {
       if (tieneSecreto && !pac.secretoRevelado) {
         const v = e.secreto.v - (G.personal.psicologo ? 1 : 0);
         if (acompDentro && v >= 2) { r = '(mira de reojo a su acompañante) No... no, doctor. Nada más.'; aviso('Parece que no quiere hablar delante de su acompañante', 'info'); }
-        else if (pac.confianza >= v) { r = e.secreto.t; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); Sonido.exito(); }
+        else if (pac.confianza >= v) { r = e.secreto.t; fija = true; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); Sonido.exito(); }
         else { r = azar(['Eh... no, nada más, doctor.', 'No, no. Eso es todo.']); aviso('Se guarda algo. Quizá necesite más confianza.', 'info'); }
       } else r = pac.edad < 13 ? azar(['No...', '(niega con la cabeza)', 'Que me duele.']) : e.respondeAcomp ? '¿Usted es el del gas?' : repetida ? 'Ya se lo he contado todo, doctor.' : azar(['No, doctor. Le he contado todo.', 'Nada más, que yo sepa.']);
       break;
     case 'presionar':
-      if (e.simulador && pac.confianza >= 1 && !pac.secretoRevelado) { r = e.secreto.t; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); }
-      else if (tieneSecreto && !pac.secretoRevelado && pac.confianza >= e.secreto.v + 1) { r = e.secreto.t; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); }
+      if (e.simulador && pac.confianza >= 1 && !pac.secretoRevelado) { r = e.secreto.t; fija = true; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); }
+      else if (tieneSecreto && !pac.secretoRevelado && pac.confianza >= e.secreto.v + 1) { r = e.secreto.t; fija = true; pac.secretoRevelado = true; anotar(`Confesión: ${e.secreto.hallazgo}`); }
       else if (respondeAcomp(pac) && acompDentro) { quien = 'acomp'; pac.molesto = (pac.molesto || 0) + 1; r = generoNino(azar(['¿Cómo que no le cuento la verdad? ¡Que es mi hijo!', 'Oiga, que venimos preocupados, no a que nos interroguen.']), pac); }
       else { pac.confianza = Math.max(0, pac.confianza - 1); pac.molesto = (pac.molesto || 0) + 1; r = azar(['¿Me está llamando mentiros{o}? Lo que me faltaba.', 'Oiga, que yo vengo a que me curen, no a que me interroguen.']); r = fmt(r, pac); }
       break;
   }
+  for (const a of anadidos) { const t = fmt(azar(d[a]), pac); if (a === 'inicio') anotar(`Inicio: ${t.replace(/\.$/, '')}`); pac.preguntas[a] = true; r += ` ${t}`; }
+  // el niño contesta con sus propias palabras; lo que explicarían sus padres queda para cuando se pulse RESPONDER otra vez
+  let extraPadre = null;
+  if (ninoContesta) {
+    extraPadre = acompDentro ? generoNino(r, pac) : null;
+    r = d.nino && ['motivo', 'dolor'].includes(id) ? azar(d.nino) : id === 'fiebre' ? azar(['Estoy calentito...', 'No sé... mi mamá me puso el termómetro.', 'Tengo frío y calor.']) : azar(['Me encuentro malito...', 'No sé... me duele.', '(mira a su familia) Ellos lo saben.']);
+  }
   if (quien === 'paciente' && pac.edad < 1.5 && !['calmar'].includes(id)) r = azar(['(llora) ¡Buaaa!', '(balbucea) Ta-ta-ta...', '(se mete el puño en la boca)']);
   if (quien === 'acomp') r = generoNino(r, pac);
-  await decir(quien, r);
-  // el niño mete baza
-  if (quien === 'acomp' && pac.edad >= 3 && pac.edad < 10 && d.nino && ['motivo', 'dolor'].includes(id) && prob(0.6)) await decir('paciente', azar(d.nino));
-  if (quien === 'acomp' && pac.edad < 1.5 && prob(0.4)) decir('paciente', '(llora) ¡Buaaa!');
-  // a veces el paciente cuestiona la autoridad del médico
-  if (pac.cuestiona && preguntasHechas >= 3 && !pac.cuestionado) {
-    pac.cuestionado = true;
-    await decir('paciente', pac.cuestiona);
-    const m = abrirModal(`<h3>¿Qué le respondes?</h3>${RESPUESTAS_AUTORIDAD.map(([t], i) => `<button class="pregunta" data-i="${i}">${esc(t)}</button>`).join('')}`, { clase: 'pequeno', cerrable: false });
-    $$('[data-i]', m).forEach(b => b.onclick = async () => {
-      m.cerrar(); const [t, v] = RESPUESTAS_AUTORIDAD[+b.dataset.i];
-      pac.satisfaccion = (pac.satisfaccion || 0) + v;
-      await decir('doctor', t);
-      decir('paciente', v > 0 ? 'Vale, vale. Usted sabrá, que para eso estudió.' : v === 0 ? 'Hmm... bueno.' : '¡Qué humos! Pues vaya.');
-    });
+  // saludo en la primera respuesta, si el médico ha saludado
+  if (primera && id === 'motivo' && /\b(buen|hola)/.test(normaliza(p.texto)) && !(quien === 'paciente' && pac.edad < 1.5)) {
+    const saludo = quien === 'acomp' ? 'Buenos días, doctor.' : pac.edad < 13 ? 'Hola...' : pac.edad > 75 ? 'Buenos días. Ay, qué joven es usted.' : 'Buenos días, doctor.';
+    r = `${saludo} ${r}`;
   }
-  if (id === 'motivo' && acompDentro && !respondeAcomp(pac) && prob(0.5)) decir('acomp', azar(['Y no come nada, doctor. Nada.', 'Y por las noches no deja dormir a nadie.', 'Yo ya le dije que viniera hace una semana.']));
+  await responderCon(quien, r, { fija });
+  // Algo que alguien quiere añadir: sólo se dice si el jugador pulsa RESPONDER PACIENTE otra vez
+  if (extraPadre) charla.pendiente = { ctx: { tipo: 'extra', quien: 'acomp', referencia: extraPadre } };
+  else if (pac.cuestiona && preguntasHechas >= 3 && !pac.cuestionado) { pac.cuestionado = true; charla.pendiente = { ctx: { tipo: 'cuestiona' } }; }
+  else if (quien === 'acomp' && pac.edad >= 3 && pac.edad < 10 && d.nino && ['motivo', 'dolor'].includes(id) && prob(0.6)) charla.pendiente = { ctx: { tipo: 'extra', quien: 'paciente', referencia: azar(d.nino) } };
+  else if (id === 'motivo' && acompDentro && !respondeAcomp(pac) && prob(0.5)) charla.pendiente = { ctx: { tipo: 'extra', quien: 'acomp', referencia: azar(['Y no come nada, doctor. Nada.', 'Y por las noches no deja dormir a nadie.', 'Yo ya le dije que viniera hace una semana.']) } };
+  actualizarCharla();
+}
+// El paciente cuestiona la autoridad del médico; las posibles respuestas se proponen en el cuadro
+async function responderCuestiona() {
+  await responderCon('paciente', pac.cuestiona);
+  const m = abrirModal(`<h3>¿Qué le respondes?</h3><p class="nota">La respuesta aparecerá en el cuadro. Puedes cambiarla antes de pulsar HABLAR MÉDICO.</p>${RESPUESTAS_AUTORIDAD.map(([t], i) => `<button class="pregunta" data-i="${i}">${esc(t)}</button>`).join('')}`, { clase: 'pequeno' });
+  $$('[data-i]', m).forEach(b => b.onclick = () => {
+    m.cerrar(); const [t, v] = RESPUESTAS_AUTORIDAD[+b.dataset.i];
+    ponerTextoMedico(t, { ctx: { tipo: 'autoridad', v } });
+  });
+}
+async function responderAutoridad(v) {
+  pac.satisfaccion = (pac.satisfaccion || 0) + v;
+  await responderCon('paciente', v > 0 ? 'Vale, vale. Usted sabrá, que para eso estudió.' : v === 0 ? 'Hmm... bueno.' : '¡Qué humos! Pues vaya.');
 }
 
 // ───── Exploración ─────
@@ -492,7 +838,7 @@ async function explorar(id) {
   pac.preguntas['ex_' + id] = true;
   pasarTiempo(4);
   if (id === 'constantes') {
-    decir('doctor', 'Vamos a tomarle la tensión, la temperatura y el pulso.');
+    narrar('Vamos a tomarle la tensión, la temperatura y el pulso.');
     const fuera = (x, a, b) => x < a || x > b ? 'mal' : '';
     abrirModal(`<h2>Constantes vitales</h2><div class="constantes">
       <div class="${fuera(v.temp, 35.8, 37.4)}"><small>Temperatura</small><b>${v.temp.toFixed(1)} °C</b></div>
@@ -506,18 +852,18 @@ async function explorar(id) {
   if (id === 'pulmones' || id === 'corazon') return auscultar(id);
   if (id === 'abdomen') return palpar();
   if (id === 'garganta') {
-    decir('doctor', 'Abra la boca y diga «aaaa».');
+    narrar('Abra la boca y diga «aaaa».');
     const m = abrirModal(`<h2>Garganta</h2><canvas width="420" height="320" class="imagen"></canvas><p>${{ normal: 'Faringe y amígdalas normales.', roja: 'Faringe enrojecida, sin placas.', placas: 'Amígdalas hinchadas con placas de pus.' }[ex.garganta]}</p>`, { clase: 'pequeno' });
     dibujarGarganta($('canvas', m).getContext('2d'), 420, 320, ex.garganta);
     anotar(`Garganta: ${{ normal: 'normal', roja: 'enrojecida', placas: 'placas de pus en amígdalas' }[ex.garganta]}`);
-    await decir('paciente', 'Aaaaaaa...');
+    await reaccion('Aaaaaaa...');
     return;
   }
   if (id === 'zona') {
-    decir('doctor', 'A ver, déjeme ver la zona... ¿Le duele aquí?');
+    narrar('A ver, déjeme ver la zona... ¿Le duele aquí?');
     abrirModal(`<h2>Exploración</h2><p class="manuscrito">${esc(ex.zona)}</p>`, { clase: 'pequeno' });
     anotar(`Exploración: ${ex.zona}`);
-    await decir('paciente', e.simulador ? azar(['¡Ay! Sí... bueno, no. Un poco. Creo.', 'Ahí... o un poco más arriba. Me duele todo.']) : azar(['¡Ay! Sí, ahí, ahí.', 'Uf, con cuidado, doctor.', 'Ahí me molesta, sí.']));
+    await reaccion(e.simulador ? azar(['¡Ay! Sí... bueno, no. Un poco. Creo.', 'Ahí... o un poco más arriba. Me duele todo.']) : azar(['¡Ay! Sí, ahí, ahí.', 'Uf, con cuidado, doctor.', 'Ahí me molesta, sí.']));
   }
 }
 
@@ -526,7 +872,7 @@ let esteto = null;
 async function auscultar(tipo) {
   const e = ENF[pac.enfId];
   const peque = pac.edad < 3 || pac.enfId === 'fractura_cadera';
-  await decir('doctor', pac.enfId === 'fractura_cadera' ? 'No se mueva, que la ayudamos a tumbarse en la camilla. Despacito.' : peque ? 'Vamos a tumbar al bebé en la camilla y a quitarle la ropita de arriba. Así, con cuidado.' : pac.edad < 13 ? (tipo === 'pulmones' ? 'Quítate la camiseta y ponte de espaldas, que te voy a escuchar. Está un poco frío, ¿eh?' : 'Ponte aquí de pie, que te escucho el corazón. ¿Me dejas?') : tipo === 'pulmones' ? 'Póngase de pie y quítese la bata de arriba, por favor. Voy a escucharle la espalda.' : 'Póngase de pie, por favor. Voy a escucharle el corazón.');
+  await narrar(pac.enfId === 'fractura_cadera' ? 'No se mueva, que la ayudamos a tumbarse en la camilla. Despacito.' : peque ? 'Vamos a tumbar al bebé en la camilla y a quitarle la ropita de arriba. Así, con cuidado.' : pac.edad < 13 ? (tipo === 'pulmones' ? 'Quítate la camiseta y ponte de espaldas, que te voy a escuchar. Está un poco frío, ¿eh?' : 'Ponte aquí de pie, que te escucho el corazón. ¿Me dejas?') : tipo === 'pulmones' ? 'Póngase de pie y quítese la bata de arriba, por favor. Voy a escucharle la espalda.' : 'Póngase de pie, por favor. Voy a escucharle el corazón.');
   modo = 'esteto'; document.body.dataset.modo = 'esteto';
   await fundido(() => {
     hPac.raiz.visible = false;
@@ -603,14 +949,14 @@ async function terminarAuscultacion() {
   } else aviso('No has escuchado lo suficiente para sacar conclusiones', 'mal');
   await fundido(() => { hPacSin.raiz.visible = false; hPac.raiz.visible = true; if (hAcomp) hAcomp.mirar = new THREE.Vector3(0, 1.26, 1.62); mundo.vistaEscritorio(0); });
   modo = 'consulta'; document.body.dataset.modo = 'juego';
-  decir('doctor', pac.edad < 3 ? 'Ya está. Ya pueden vestirle.' : pac.edad < 13 ? '¡Muy bien! Eres muy valiente. Ya te puedes vestir.' : 'Muy bien, ya puede sentarse.');
-  if (pac.edad < 1.5 && prob(0.6)) decir('paciente', '(llora) ¡Buaaa!');
+  narrar(pac.edad < 3 ? 'Ya está. Ya pueden vestirle.' : pac.edad < 13 ? '¡Muy bien! Eres muy valiente. Ya te puedes vestir.' : 'Muy bien, ya puede sentarse.');
+  if (pac.edad < 1.5 && prob(0.6)) reaccion('(llora) ¡Buaaa!');
 }
 
 // ───── Palpación ─────
 function palpar() {
   const e = ENF[pac.enfId]; const zona = e.expl.palpacion.zona;
-  decir('doctor', 'Túmbese en la camilla. Voy a apretarle un poco la barriga; dígame si le duele.');
+  narrar('Túmbese en la camilla. Voy a apretarle un poco la barriga; dígame si le duele.');
   const regiones = [['hcd', 'Hipocondrio der.'], ['epigastrio', 'Epigastrio'], ['hci', 'Hipocondrio izq.'], ['flanco_der', 'Flanco der.'], ['umbilical', 'Ombligo'], ['flanco_izq', 'Flanco izq.'], ['fid', 'Fosa ilíaca der.'], ['hipogastrio', 'Hipogastrio'], ['fii', 'Fosa ilíaca izq.'], ['ingle_der', 'Ingle der.'], ['ingle_izq', 'Ingle izq.']];
   const m = abrirModal(`<h2>Palpación abdominal</h2><p class="nota">Toca las zonas para palpar. La derecha del paciente está a tu izquierda.</p>
     <div class="abdomen">${regiones.map(([id, n]) => `<button data-z="${id}" class="${id.startsWith('ingle') ? 'ingle' : ''}">${n}</button>`).join('')}</div>`, { clase: 'pequeno', alCerrar: () => { if (tocadas.size >= 3) anotar(`Palpación: ${e.expl.palpacion.texto}`); } });
@@ -621,10 +967,10 @@ function palpar() {
     const duele = zona === z || (zona === 'fosa_lumbar' && z === 'flanco_der') || (zona === 'ingle' && z === 'ingle_der') || (zona === 'difuso') || (zona === 'cambiante' && Math.random() < 0.5);
     const fuerte = zona === z || (zona === 'fosa_lumbar' && z === 'flanco_der') || (zona === 'ingle' && z === 'ingle_der');
     b.classList.add(fuerte ? 'dolor' : duele ? 'molestia' : 'nada');
-    if (pac.edad < 2) { if (fuerte || (duele && prob(0.5))) { hPac.dolor = true; decir('paciente', '(llora) ¡Buaaa! ¡Buaaaa!'); } else if (prob(0.3)) decir('paciente', '(se ríe) Je, je.'); return; }
-    if (fuerte) { Sonido.ay(); hPac.dolor = true; decir('paciente', pac.edad < 13 ? azar(['¡Ay! ¡Ahí no, ahí no!', '¡Que me duele!', '(empieza a llorar) ¡Mamá!']) : azar(['¡AY! ¡Ahí, ahí! ¡No apriete!', '¡Uuuh! Ahí me duele muchísimo.', '¡Ay, por Dios, doctor!'])); }
-    else if (duele) decir('paciente', zona === 'cambiante' ? azar(['¡Ay!... bueno, no, ahí no. ¿O sí?', 'Ahí también... creo.']) : azar(['Ahí me molesta un poco.', 'Hmm, un poco.']));
-    else if (prob(0.4)) decir('paciente', azar(['Ahí no.', 'No, ahí nada.', 'Eso me hace cosquillas.']));
+    if (pac.edad < 2) { if (fuerte || (duele && prob(0.5))) { hPac.dolor = true; reaccion('(llora) ¡Buaaa! ¡Buaaaa!'); } else if (prob(0.3)) reaccion('(se ríe) Je, je.'); return; }
+    if (fuerte) { Sonido.ay(); hPac.dolor = true; reaccion(pac.edad < 13 ? azar(['¡Ay! ¡Ahí no, ahí no!', '¡Que me duele!', '(empieza a llorar) ¡Mamá!']) : azar(['¡AY! ¡Ahí, ahí! ¡No apriete!', '¡Uuuh! Ahí me duele muchísimo.', '¡Ay, por Dios, doctor!'])); }
+    else if (duele) reaccion(zona === 'cambiante' ? azar(['¡Ay!... bueno, no, ahí no. ¿O sí?', 'Ahí también... creo.']) : azar(['Ahí me molesta un poco.', 'Hmm, un poco.']));
+    else if (prob(0.4)) reaccion(azar(['Ahí no.', 'No, ahí nada.', 'Eso me hace cosquillas.']));
     if (tocadas.size === 3) anotar(`Palpación: ${e.expl.palpacion.texto}`);
   });
 }
@@ -643,8 +989,8 @@ function pedirPrueba(id) {
   pac.pruebas[id] = { circulos: 0 };
   dinero(-precio, pr.n);
   pasarTiempo(pr.min);
-  if (id === 'tac' || id === 'eco') decir('doctor', `Vamos a hacerle ${id === 'tac' ? 'un TAC' : 'una ecografía'}. No se preocupe, no duele.`);
-  if (id === 'sangre') decir('paciente', azar(['¿Pincho? Uy, que me mareo con la sangre...', 'Vale, pero con cuidado, que tengo las venas finas.']));
+  if (id === 'tac' || id === 'eco') narrar(`Vamos a hacerle ${id === 'tac' ? 'un TAC' : 'una ecografía'}. No se preocupe, no duele.`);
+  if (id === 'sangre') reaccion(azar(['¿Pincho? Uy, que me mareo con la sangre...', 'Vale, pero con cuidado, que tengo las venas finas.']));
   panelConsulta('pruebas');
   verPrueba(id);
 }
@@ -693,7 +1039,7 @@ function verPrueba(id, zonaRx) {
   const dib = $('canvas.rx-dibujo', m), dc = dib.getContext('2d');
   let trazo = null;
   const pos = (ev) => { const r = dib.getBoundingClientRect(); return { x: (ev.clientX - r.left) / r.width * 512, y: (ev.clientY - r.top) / r.height * 512 }; };
-  dib.onpointerdown = (ev) => { dib.setPointerCapture(ev.pointerId); trazo = [pos(ev)]; dc.clearRect(0, 0, 512, 512); };
+  dib.onpointerdown = (ev) => { try { dib.setPointerCapture(ev.pointerId); } catch (e) {} trazo = [pos(ev)]; dc.clearRect(0, 0, 512, 512); };
   dib.onpointermove = (ev) => { if (!trazo) return; const p = pos(ev); trazo.push(p); dc.strokeStyle = '#e8302c'; dc.lineWidth = 7; dc.lineCap = 'round'; dc.beginPath(); const a = trazo[trazo.length - 2]; dc.moveTo(a.x, a.y); dc.lineTo(p.x, p.y); dc.stroke(); };
   dib.onpointerup = () => {
     if (!trazo || trazo.length < 6) { trazo = null; return; }
@@ -739,24 +1085,50 @@ function verFicha(p = pac, soloLectura = false) {
 }
 
 // ───── Receta ─────
-function editorReceta(cont, lista, { reaccion = true, alCambiar = () => {} } = {}) {
+// El jugador escribe la receta: producto, dosis, frecuencia, duración y recomendaciones.
+// Nadie habla mientras se escribe. Con «CONFIRMAR RECETA» se revisa y se da por buena.
+function editorReceta(cont, plan, { confirmar = true, alCambiar = () => {} } = {}) {
+  const lista = plan.receta;
+  if (confirmar && plan.recetaConfirmada) {
+    cont.innerHTML = `<div class="receta-hoja"><div class="ficha-sec">RECETA CONFIRMADA</div>${lineasReceta(plan).map(l => `<p class="manuscrito">${esc(l)}</p>`).join('')}
+      <button class="btn sec mini" id="re-mod">Modificar la receta</button></div>`;
+    $('#re-mod', cont).onclick = () => { plan.recetaConfirmada = false; editorReceta(cont, plan, { confirmar, alCambiar }); };
+    return;
+  }
   cont.innerHTML = `<div class="receta">
-    <div class="receta-buscar"><input id="re-q" placeholder="Escribe cualquier cosa: paracetamol, cocido leonés, orujo, merluza..." autocomplete="off"><div class="receta-sug" id="re-sug"></div></div>
+    <div class="receta-buscar"><input id="re-q" placeholder="Medicamento, comida o bebida: amoxicilina, cocido leonés, orujo..." autocomplete="off"><div class="receta-sug" id="re-sug"></div></div>
     <div class="receta-cats">${Object.entries(CAT_NOMBRE).map(([c, n]) => `<button class="op" data-cat="${c}">${n}s</button>`).join('')}</div>
-    <div class="receta-lista" id="re-lista"></div></div>`;
+    <div class="receta-lista" id="re-lista"></div>
+    <datalist id="dl-pautas">${PAUTAS.map(p => `<option value="${p}">`).join('')}</datalist><datalist id="dl-dur">${DURACIONES.map(p => `<option value="${p}">`).join('')}</datalist>
+    <label class="re-ind">Recomendaciones y otras instrucciones<textarea id="re-ind" placeholder="Por ejemplo: beber mucha agua, reposo en casa y volver si sube la fiebre.">${esc(plan.indicaciones || '')}</textarea></label>
+    <div class="botones re-acc"><button class="btn sec" id="re-mic" title="Dicta en el campo que hayas elegido">🎤 Dictar</button>${confirmar ? '<button class="btn grande" id="re-conf">CONFIRMAR RECETA</button>' : ''}</div></div>`;
   const q = $('#re-q', cont), sug = $('#re-sug', cont), lis = $('#re-lista', cont);
+  let campoActivo = null;
+  cont.addEventListener('focusin', (e) => { if (e.target.matches('input, textarea')) campoActivo = e.target; });
   const pintar = () => {
-    lis.innerHTML = lista.length ? lista.map((r, i) => `<div class="receta-item cat-${r.cat}"><div><b>${esc(r.n)}</b><small>${CAT_NOMBRE[r.cat]}${r.libre ? ' · escrito a mano' : ''}</small></div>
-      <select data-i="${i}" data-k="pauta">${PAUTAS.map(p => `<option ${p === r.pauta ? 'selected' : ''}>${p}</option>`).join('')}</select>
-      <select data-i="${i}" data-k="dur">${DURACIONES.map(p => `<option ${p === r.dur ? 'selected' : ''}>${p}</option>`).join('')}</select>
-      <button class="quitar" data-q="${i}" aria-label="Quitar">✕</button></div>`).join('') : '<p class="vacio manuscrito">Receta vacía. Puedes recetar medicamentos, comidas, bebidas o indicaciones.</p>';
-    $$('select', lis).forEach(s => s.onchange = () => { lista[+s.dataset.i][s.dataset.k] = s.value; alCambiar(); });
+    lis.innerHTML = lista.length ? lista.map((r, i) => `<div class="receta-item cat-${r.cat}"><div class="ri-cab"><b>${esc(r.n)}</b><small>${CAT_NOMBRE[r.cat]}${r.libre ? ' · escrito a mano' : ''}</small><button class="quitar" data-q="${i}" aria-label="Quitar">✕</button></div>
+      <div class="ri-campos"><input data-i="${i}" data-k="dosis" value="${esc(r.dosis || '')}" placeholder="Dosis (p. ej. 1 comprimido de 500 mg)" autocomplete="off">
+      <input data-i="${i}" data-k="pauta" value="${esc(r.pauta || '')}" list="dl-pautas" placeholder="Frecuencia (p. ej. cada 8 horas)" autocomplete="off">
+      <input data-i="${i}" data-k="dur" value="${esc(r.dur || '')}" list="dl-dur" placeholder="Duración (p. ej. 7 días)" autocomplete="off"></div></div>`).join('') : '<p class="vacio manuscrito">Receta vacía. Puedes recetar medicamentos, comidas, bebidas o sólo dar recomendaciones.</p>';
+    $$('input[data-k]', lis).forEach(s => s.oninput = () => { lista[+s.dataset.i][s.dataset.k] = s.value; alCambiar(); });
     $$('[data-q]', lis).forEach(b => b.onclick = () => { lista.splice(+b.dataset.q, 1); pintar(); alCambiar(); });
   };
+  $('#re-ind', cont).oninput = (e) => { plan.indicaciones = e.target.value; alCambiar(); };
+  $('#re-mic', cont).onclick = () => alternarMicro(campoActivo || $('#re-ind', cont));
+  if ($('#re-conf', cont)) $('#re-conf', cont).onclick = () => {
+    if (!lista.length && !(plan.indicaciones || '').trim()) return aviso('La receta está vacía: añade algo o escribe recomendaciones.', 'mal');
+    const sinPauta = lista.filter(r => !(r.pauta || '').trim());
+    const m = abrirModal(`<h2>Revisa la receta</h2><div class="receta-hoja">${lineasReceta(plan).map(l => `<p class="manuscrito">${esc(l)}</p>`).join('')}</div>
+      ${sinPauta.length ? `<p class="nota">Aviso: no has escrito la frecuencia de ${sinPauta.map(r => esc(r.n)).join(', ')}.</p>` : ''}
+      <p class="nota">El médico leerá exactamente este texto cuando pulses HABLAR MÉDICO.</p>
+      <div class="botones"><button class="btn sec" id="rv-corr">Corregir</button><button class="btn grande" id="rv-ok">Confirmar receta</button></div>`, { clase: 'papel pequeno' });
+    $('#rv-corr', m).onclick = () => m.cerrar();
+    $('#rv-ok', m).onclick = () => { m.cerrar(); plan.recetaConfirmada = true; Sonido.hoja(); guardar(); editorReceta(cont, plan, { confirmar, alCambiar }); alCambiar(); };
+  };
   const anadir = (it) => {
-    const item = { ...it, tags: [...it.tags], pauta: it.cat === 'med' ? '1 cada 8 horas' : it.cat === 'otro' ? '1 al día' : 'En cada comida', dur: it.cat === 'med' ? '5 días' : '7 días' };
+    const item = { ...it, tags: [...it.tags], dosis: '', pauta: '', dur: '' };
     lista.push(item); q.value = ''; sug.innerHTML = ''; sug.classList.remove('on'); pintar(); alCambiar(); Sonido.hoja();
-    if (reaccion && pac && hablandoN < 2) decir('paciente', reaccionReceta(pac, item));
+    const campo = $(`input[data-i="${lista.length - 1}"][data-k="dosis"]`, lis); if (campo && Mando.ultimaEntrada !== 'mando') campo.focus();
   };
   const sugerir = (items, texto) => {
     sug.innerHTML = items.map((it, i) => `<button data-s="${i}"><b>${esc(it.n)}</b><small>${CAT_NOMBRE[it.cat]}</small></button>`).join('') + (texto ? `<button data-libre="1" class="libre">Recetar «${esc(texto)}» tal cual</button>` : '');
@@ -769,6 +1141,26 @@ function editorReceta(cont, lista, { reaccion = true, alCambiar = () => {} } = {
   $$('[data-cat]', cont).forEach(b => b.onclick = () => { const c = b.dataset.cat; q.value = ''; sugerir(RECETARIO.filter(r => r.cat === c), ''); sug.classList.add('lista'); });
   pintar();
 }
+
+// Texto de la receta tal y como la ha escrito el jugador (es lo que lee el médico y lo que lleva el papel)
+function lineasReceta(plan) {
+  const l = [plan.receta.length ? 'Le receto lo siguiente.' : 'Le indico lo siguiente.'];
+  for (const r of plan.receta) {
+    const dur = (r.dur || '').trim();
+    const partes = [r.n, r.dosis, r.pauta, dur && (/^(durante|hasta|por|para|toda|siempre|de por vida)/i.test(dur) ? dur : `durante ${dur}`)].map(x => String(x || '').trim()).filter(Boolean);
+    l.push(partes.join(', ').replace(/[.,;]+$/, '') + '.');
+  }
+  const ind = (plan.indicaciones || '').trim();
+  if (ind) l.push(`Recomendaciones: ${ind}${/[.!?]$/.test(ind) ? '' : '.'}`);
+  return l;
+}
+const tieneReceta = (plan) => plan.receta.length > 0 || !!(plan.indicaciones || '').trim();
+// Las recomendaciones escritas también cuentan para la valoración médica (agua, reposo, dieta...)
+function itemsDeIndicaciones(texto) {
+  return String(texto || '').split(/[.;\n]+|,\s+(?=\S)/).map(s => s.trim()).filter(s => s.length > 2)
+    .map(s => itemLibre(s)).filter(it => !it.tags.includes('desconocido')).map(it => ({ ...it, deIndicaciones: true, pauta: '', dur: '' }));
+}
+const evaluar = (p, plan) => evaluarTratamiento(p, { ...plan, receta: [...plan.receta, ...itemsDeIndicaciones(plan.indicaciones)] });
 
 // ───── Decidir y comunicar ─────
 function decidir() {
@@ -793,7 +1185,7 @@ function decidir() {
       <div id="de-receta"></div>
       <button class="btn rojo grande" id="de-ok">COMUNICAR EL DIAGNÓSTICO</button>
     </div></div>`, { clase: 'papel ancho' });
-  editorReceta($('#de-receta', m), plan.receta);
+  editorReceta($('#de-receta', m), plan);
   $('#de-filtro', m).oninput = (ev) => { const t = normaliza(ev.target.value); $$('[data-d]', m).forEach(b => b.style.display = normaliza(b.textContent).includes(t) ? '' : 'none'); };
   $$('[data-d]', m).forEach(b => b.onclick = () => { plan.diag = b.dataset.d; $$('[data-d]', m).forEach(x => x.classList.toggle('on', x === b)); Sonido.clic(); });
   $$('[data-a]', m).forEach(b => b.onclick = () => { plan.accion = b.dataset.a; $$('[data-a]', m).forEach(x => x.classList.toggle('on', x === b)); $('#de-cir', m).classList.toggle('oculto', plan.accion !== 'cirugia'); Sonido.clic(); });
@@ -804,6 +1196,7 @@ function decidir() {
     if (!plan.accion) return aviso('Decide qué hacer con el paciente', 'mal');
     if (plan.accion === 'cirugia' && !plan.cir) return aviso('Elige qué operación vas a hacer', 'mal');
     if (plan.accion === 'hospitalizar' && G.ingresados.length >= G.inst.camas) return aviso(`No quedan camas libres (${G.inst.camas}). Amplía la planta en Gestión o da altas.`, 'mal');
+    if (tieneReceta(plan) && !plan.recetaConfirmada) return aviso('Revisa la receta y pulsa CONFIRMAR RECETA antes de comunicar el diagnóstico.', 'mal');
     if (!plan.prio) plan.prio = 'media';
     m.cerrar(); comunicar();
   };
@@ -818,7 +1211,8 @@ async function darNoticia(tono) {
   const dElegido = ENF[plan.diag];
   const sr = pac.sexo === 'm' ? 'señora' : 'señor';
   const ap = pac.apellidos.split(' ')[0];
-  const accionTxt = plan.accion === 'casa' ? `Puede irse a casa.${plan.receta.length ? ` Le receto ${plan.receta.slice(0, 3).map(r => r.n.toLowerCase()).join(', ')}${plan.receta.length > 3 ? ' y alguna cosa más' : ''}.` : ''}` : plan.accion === 'hospitalizar' ? 'Vamos a ingresarle en planta para tenerle vigilado.' : `Hay que operar: le vamos a hacer una ${CIRUGIAS[plan.cir].n.toLowerCase()}.`;
+  // el tratamiento no se menciona aquí: el médico lo explica después, leyendo la receta confirmada
+  const accionTxt = plan.accion === 'casa' ? `Puede irse a casa.${tieneReceta(plan) ? ' Ahora le explico la receta.' : ''}` : plan.accion === 'hospitalizar' ? 'Vamos a ingresarle en planta para tenerle vigilado.' : `Hay que operar: le vamos a hacer una ${CIRUGIAS[plan.cir].n.toLowerCase()}.`;
   const diagTxt = dElegido.simulador ? 'usted está perfectamente sano' : `lo que tiene es ${dElegido.n.toLowerCase().replace(/ \(.*\)/, '')}`;
   const textos = {
     empatia: `${sr[0].toUpperCase() + sr.slice(1)} ${ap}, sé que está preocupad${pac.sexo === 'm' ? 'a' : 'o'}. Le explico con calma: ${diagTxt}. ${accionTxt} Vamos a estar a su lado en todo momento.`,
@@ -830,12 +1224,13 @@ async function darNoticia(tono) {
   const aFamilia = respondeAcomp(pac) && acompDentro;
   if (aFamilia) {
     const n = pac.nombre, diagF = dElegido.simulador ? `${n} está perfectamente` : `${n} tiene ${dElegido.n.toLowerCase().replace(/ \(.*\)/, '')}`;
-    const accF = accionTxt.replace('Puede irse a casa.', 'Se puede ir a casa.').replace('Le receto', 'Le voy a recetar').replace('ingresarle', 'ingresarle').replace('Hay que operar: le vamos', 'Hay que operar: le vamos');
+    const accF = accionTxt.replace('Puede irse a casa.', 'Se puede ir a casa.').replace('Ahora le explico', 'Ahora les explico');
     textos.empatia = `Sé que están preocupados, y es normal. Les explico con calma: ${diagF}. ${accF} Vamos a cuidarle muy bien.`;
     textos.directo = `${diagF}. ${accF}`;
     textos.quitar = `Nada, una tontería. ${accF} No se preocupen.`;
   }
-  await decir('doctor', textos[tono]);
+  await turnoMedico(textos[tono], { etiqueta: 'Comunica la noticia: revisa o cambia el texto y pulsa HABLAR MÉDICO.' });
+  pac.noticiaDada = true;
   const grav = dElegido.noticia;
   const reac = {
     grave: { empatia: '(se le humedecen los ojos) Gracias por decírmelo así, doctor. Haré lo que haga falta.', directo: 'Dios mío... ¿Y me voy a curar? Bueno... confío en usted.', frio: '¿Así me lo suelta? ¿Como quien da el parte del tiempo? Qué poca humanidad.', quitar: '¿Una tontería? Ah, bueno, menos mal...' },
@@ -845,18 +1240,39 @@ async function darNoticia(tono) {
   pac.satisfaccion = (pac.satisfaccion || 0) + ({ empatia: { grave: 2, moderada: 1, leve: 1 }, directo: { grave: 0, moderada: 1, leve: 1 }, frio: { grave: -3, moderada: -1, leve: 0 }, quitar: { grave: -4, moderada: -1, leve: 0 } }[tono][grav]);
   if (aFamilia) {
     const reacF = { grave: { empatia: '(llorando) Gracias, doctor... Haremos lo que haga falta.', directo: 'Dios mío... ¿Se va a poner bien? Díganos que sí.', frio: '¿Así nos lo dice? ¡Que estamos hablando de mi familia!', quitar: 'Ah, bueno... si es una tontería...' }, moderada: { empatia: 'Gracias por explicárnoslo tan bien, doctor.', directo: 'Vale... lo que usted diga, doctor.', frio: 'Qué manera de decir las cosas...', quitar: '¿Seguro que no es nada?' }, leve: { empatia: '¡Uf, qué alivio! Muchas gracias, doctor.', directo: 'Perfecto, gracias.', frio: 'Vale.', quitar: '¡Menos mal!' } }[grav][tono];
-    await decir('acomp', reacF);
-    if (pac.edad >= 3 && pac.edad < 13) await decir('paciente', plan.accion === 'casa' ? azar(['¿Me puedo ir ya al parque?', '¿Me das una pegatina?', 'Vale...']) : azar(['¿Me van a pinchar?', '(se agarra a su madre) No quiero quedarme...', 'Vale... pero que venga mi mamá.']));
-    if (pac.edad < 1.5) decir('paciente', '(balbucea) Agú.');
-  } else await decir('paciente', fmt(reac, pac));
-  if (acompDentro && !aFamilia && grav === 'grave') await decir('acomp', azar(['¡Ay, Dios mío! ¿Y ahora qué hacemos?', '(llorando) Tranquilo, que yo estoy aquí contigo.']).replace('Tranquilo', pac.sexo === 'm' ? 'Tranquila' : 'Tranquilo'));
+    await turnoPaciente('acomp', reacF);
+    if (pac.edad >= 3 && pac.edad < 13) charla.pendiente = { ctx: { tipo: 'extra', quien: 'paciente', referencia: plan.accion === 'casa' ? azar(['¿Me puedo ir ya al parque?', '¿Me das una pegatina?', 'Vale...']) : azar(['¿Me van a pinchar?', '(se agarra a su madre) No quiero quedarme...', 'Vale... pero que venga mi mamá.']) } };
+  } else await turnoPaciente('paciente', fmt(reac, pac));
+  if (acompDentro && !aFamilia && grav === 'grave') charla.pendiente = { ctx: { tipo: 'extra', quien: 'acomp', referencia: azar(['¡Ay, Dios mío! ¿Y ahora qué hacemos?', '(llorando) Tranquilo, que yo estoy aquí contigo.']).replace('Tranquilo', pac.sexo === 'm' ? 'Tranquila' : 'Tranquilo') } };
+  actualizarCharla();
   G.stats.atendidos++;
+  if (tieneReceta(plan)) await explicarYEntregarReceta(plan);
   if (plan.accion === 'casa') return despedirPaciente();
   if (plan.accion === 'hospitalizar') return ingresar(pac, plan, false);
   return prepararCirugia(pac, plan, 'consulta');
 }
+// La receta confirmada: el médico la lee al pulsar HABLAR MÉDICO, la entrega en mano y el paciente contesta al pulsar RESPONDER
+async function explicarYEntregarReceta(plan) {
+  const lineas = lineasReceta(plan);
+  const texto = lineas.join(' ');
+  await turnoMedico(texto, { soloLectura: true, leer: leerNatural(texto), etiqueta: 'Receta confirmada: pulsa HABLAR MÉDICO para que el médico la explique.' });
+  pac.recetaTexto = texto;
+  const aFamilia = (respondeAcomp(pac) || pac.edad < 1.5) && acompDentro && hAcomp;
+  const receptor = aFamilia ? hAcomp : hPac;
+  charla.entregando = true; actualizarCharla();
+  const tex = texReceta(lineas, { hospital: G.hospital, medico: nombreDoctor(), paciente: `${pac.nombre} ${pac.apellidos}` });
+  const entregada = await mundo.entregarPapel(receptor, tex);
+  pac.recetaEntregada = { lineas, enMano: entregada, a: aFamilia ? 'acomp' : 'paciente' };
+  charla.entregando = false; actualizarCharla();
+  // referencia para la respuesta: la reacción más llamativa a lo recetado, o un agradecimiento
+  const genericas = ['Vale, doctor.', 'De acuerdo, lo tomaré.', 'Muy bien, gracias.', 'Apuntado.', 'Bueno...', 'Si usted lo dice...', 'Vale.'];
+  const llamativa = aFamilia ? null : plan.receta.map(r => reaccionReceta(pac, r)).find(t => !genericas.includes(t));
+  const ref = aFamilia ? azar(['De acuerdo, doctor. Se lo daremos tal y como nos ha dicho.', 'Muchas gracias, doctor. ¿Tenemos que volver a consulta?'])
+    : llamativa || (pac.edad < 13 ? azar(['Vale... ¿sabe mal?', 'Gracias, doctor.']) : azar(['Muchas gracias, doctor. Seguiré sus indicaciones.', 'De acuerdo, doctor. ¿Tengo que volver a consulta?', 'Muy bien. Lo haré tal cual me ha dicho.']));
+  await turnoPaciente(aFamilia ? 'acomp' : 'paciente', ref, { tratamiento: `${tratamientoDicho()}` });
+}
 function resultadoCasa(p, plan) {
-  const ev = evaluarTratamiento(p, plan);
+  const ev = evaluar(p, plan);
   let q = ev.q + (p.satisfaccion || 0) * 2 + entre(-6, 6);
   let res;
   if (prob(ev.riesgo)) res = ENF[p.enfId].grav >= 4 || ev.peligro === 3 ? 'muerte' : 'urgencias';
@@ -889,9 +1305,11 @@ async function despedirPaciente() {
   const { res, q, ev } = resultadoCasa(pac, pac.plan);
   const hon = 60 + ENF[pac.enfId].grav * 40;
   aplicarResultado(pac, res, hon);
-  if (pac.edad < 1.5) await decir('acomp', 'Muchas gracias, doctor. ¡Di adiós con la manita!');
-  else if (pac.edad < 13) await decir('paciente', azar(['¡Adiós, doctor!', '¡Adiós! ¿Me das una piruleta?', '(dice adiós con la mano)']));
-  else await decir('paciente', azar(['Muchas gracias, doctor. Hasta luego.', 'Gracias. A ver si me pongo bueno pronto.', 'Adiós, doctor.']).replace('bueno', pac.sexo === 'm' ? 'buena' : 'bueno'));
+  const a = pac.sexo === 'm' ? 'a' : 'o';
+  await turnoMedico(pac.edad < 13 ? `¡Muy bien, ${a === 'a' ? 'campeona' : 'campeón'}! Ya podéis iros a casa. ¡Que te mejores!` : 'Muy bien. Cuídese mucho y, si no mejora, vuelva por aquí. Hasta luego.', { etiqueta: 'Despide al paciente: revisa el texto y pulsa HABLAR MÉDICO.' });
+  if (pac.edad < 1.5) await turnoPaciente('acomp', 'Muchas gracias, doctor. ¡Di adiós con la manita!');
+  else if (pac.edad < 13) await turnoPaciente('paciente', azar(['¡Adiós, doctor!', '¡Adiós! ¿Me das una piruleta?', '(dice adiós con la mano) Adiós...']));
+  else await turnoPaciente('paciente', azar(['Muchas gracias, doctor. Hasta luego.', 'Gracias. A ver si me pongo bueno pronto.', 'Adiós, doctor.']).replace('bueno', a === 'a' ? 'buena' : 'bueno'));
   mostrarValoracion(ev, res);
 }
 function mostrarValoracion(ev, res, extra = '') {
@@ -902,14 +1320,17 @@ function mostrarValoracion(ev, res, extra = '') {
     <div class="botones"><button class="btn grande" id="va-ok">Siguiente paciente</button></div>`, { cerrable: false });
   $('#va-ok', m).onclick = () => { m.cerrar(); G.pendientes--; guardar(); siguientePaciente(); };
 }
-function ingresar(p, plan, operado, puntuacionCir = null) {
-  const ev = evaluarTratamiento(p, plan);
+async function ingresar(p, plan, operado, puntuacionCir = null) {
+  const ev = evaluar(p, plan);
   const grav = ENF[p.enfId].grav;
   const ing = { pac: p, plan, q: ev.q, salud: operado ? Math.max(15, Math.min(90, (puntuacionCir ?? 60) * 0.7 + 15)) : Math.max(20, 70 - grav * 9), dias: 0, operado, infeccion: plan.infeccion || false, diaIngreso: G.dia };
   G.ingresados.push(ing);
   guardar();
   if (!operado) {
-    decir('paciente', azar(['Bueno... si hay que quedarse, me quedo.', '¿Y la comida del hospital es buena? Porque yo soy de buen comer.']));
+    if (p === pac && modo === 'consulta') {
+      await turnoMedico('La enfermera le acompañará a su habitación. Mañana paso a verle en la ronda.', { etiqueta: 'Explícale el ingreso y pulsa HABLAR MÉDICO.' });
+      await turnoPaciente(respondeAcomp(p) && acompDentro ? 'acomp' : 'paciente', respondeAcomp(p) && acompDentro ? 'De acuerdo, doctor. Nos quedamos con él.'.replace('él', p.sexo === 'm' ? 'ella' : 'él') : azar(['Bueno... si hay que quedarse, me quedo.', '¿Y la comida del hospital es buena? Porque yo soy de buen comer.']));
+    }
     mostrarValoracion(ev, 'ingreso', `<p>${esc(p.nombre)} ingresa en planta. Lo verás mañana en la ronda.</p>`);
   }
 }
@@ -921,21 +1342,23 @@ async function prepararCirugia(p, plan, origen) {
   // la familia, en pánico
   if (e.grav >= 3 && prob(0.6)) {
     const fam = p.acompanante || azar(['su mujer', 'su hijo', 'su hermana']);
-    const quien = { nombre: `Familiar (${fam})`, genero: /mujer|hija|madre|hermana/.test(fam) ? 'm' : 'h' };
-    await decir(quien, azar(['¡Doctor! ¿Se va a morir? ¡Dígame la verdad! ¡Quiero entrar con él al quirófano!', '¡No puede operarle! ¡Lo he leído en internet y es muy peligroso! ¡Exijo hablar con el director!']).replace('con él', p.sexo === 'm' ? 'con ella' : 'con él').replace('operarle', p.sexo === 'm' ? 'operarla' : 'operarle'));
+    const quien = { nombre: `Familiar (${fam})`, genero: /mujer|hija|madre|hermana/.test(fam) ? 'm' : 'h', edad: p.acompEdad || 45, semilla: p.id * 31 + 7, rol: 'acomp', humano: p === pac ? hAcomp : null };
+    aviso('Un familiar quiere hablar contigo: pulsa RESPONDER PACIENTE para escucharle.', 'info');
+    await turnoPaciente(quien, azar(['¡Doctor! ¿Se va a morir? ¡Dígame la verdad! ¡Quiero entrar con él al quirófano!', '¡No puede operarle! ¡Lo he leído en internet y es muy peligroso! ¡Exijo hablar con el director!']).replace('con él', p.sexo === 'm' ? 'con ella' : 'con él').replace('operarle', p.sexo === 'm' ? 'operarla' : 'operarle'));
     await new Promise(res => {
       const m = abrirModal(`<h3>La familia está en pánico</h3>${[['calmar', 'Calmarle y explicarle el procedimiento'], ['seguridad', 'Pedir a seguridad que le acompañe a la sala de espera'], ['gritar', '¡Silencio! ¡Aquí mando yo!'], ['entrar', 'Dejarle entrar al quirófano']].map(([id, t]) => `<button class="pregunta" data-f="${id}">${t}</button>`).join('')}`, { clase: 'pequeno', cerrable: false });
       $$('[data-f]', m).forEach(b => b.onclick = async () => {
         m.cerrar(); const f = b.dataset.f;
-        if (f === 'calmar') { await decir('doctor', 'Entiendo que tenga miedo. Es una operación que hacemos a menudo, el equipo es muy bueno y le informaré en cuanto terminemos.'); await decir(quien, 'Vale... vale. Gracias, doctor. Cuídemelo, por favor.'); reputacion(1); }
-        if (f === 'seguridad') { await decir('doctor', 'Seguridad, por favor, acompañen al familiar a la sala de espera.'); await decir(quien, '¡Esto es una vergüenza!'); }
-        if (f === 'gritar') { await decir('doctor', '¡Silencio! ¡Aquí mando yo!'); await decir(quien, '¡Pues vaya modales! ¡Le voy a poner una reclamación!'); reputacion(-2); }
-        if (f === 'entrar') { await decir(quien, '¡Gracias, doctor! Me pongo aquí en una esquina...'); plan.familiarDentro = true; reputacion(-1); }
+        if (f === 'calmar') { await turnoMedico('Entiendo que tenga miedo. Es una operación que hacemos a menudo, el equipo es muy bueno y le informaré en cuanto terminemos.'); await turnoPaciente(quien, 'Vale... vale. Gracias, doctor. Cuídemelo, por favor.'); reputacion(1); }
+        if (f === 'seguridad') { await turnoMedico('Seguridad, por favor, acompañen al familiar a la sala de espera.'); await turnoPaciente(quien, '¡Esto es una vergüenza!'); }
+        if (f === 'gritar') { await turnoMedico('¡Silencio! ¡Aquí mando yo!'); await turnoPaciente(quien, '¡Pues vaya modales! ¡Le voy a poner una reclamación!'); reputacion(-2); }
+        if (f === 'entrar') { await turnoMedico('Está bien, puede entrar, pero quédese en una esquina y no toque nada.'); await turnoPaciente(quien, '¡Gracias, doctor! Me pongo aquí en una esquina...'); plan.familiarDentro = true; reputacion(-1); }
         res();
       });
     });
   }
   modo = 'preqx'; document.body.dataset.modo = 'preqx';
+  mostrarCharla(false);
   const def = CIRUGIAS[plan.cir];
   const personal = [[{ ...generarPaciente().apariencia, sexo: 'm', estilo: 6, barba: 0 }, 'enfermera', -1.15, -0.5, 1.3]];
   if (G.personal.anestesista) personal.push([{ ...generarPaciente().apariencia, sexo: 'h', estilo: 1 }, 'cirujano', 1.25, -0.95, -0.9]);
@@ -1012,7 +1435,7 @@ async function operar(p, plan, origen, op) {
 }
 function posCampo(ev) { return mundo.uvCampo(ev.clientX, ev.clientY); }
 canvas.addEventListener('pointerdown', (ev) => {
-  if (modo === 'cirugia' && cir) { canvas.setPointerCapture(ev.pointerId); const p = posCampo(ev); if (p) cir.abajo(p); }
+  if (modo === 'cirugia' && cir) { try { canvas.setPointerCapture(ev.pointerId); } catch (e) {} const p = posCampo(ev); if (p) cir.abajo(p); }
   if (modo === 'esteto') moverEsteto(ev.clientX, ev.clientY);
 });
 canvas.addEventListener('pointermove', (ev) => {
@@ -1035,7 +1458,7 @@ async function finCirugia(p, plan, origen, r, op) {
       Sonido.alarma();
       aplicarResultado(p, 'muerte', 0);
       const m = abrirModal(`<h2>El paciente ha fallecido</h2><p>${esc(p.nombre)} ${esc(p.apellidos)} no ha superado la operación. Tendrás que dar la noticia a la familia.</p><div class="botones"><button class="btn grande" id="mu-ok">Hablar con la familia</button></div>`, { cerrable: false });
-      $('#mu-ok', m).onclick = async () => { m.cerrar(); await decir('doctor', 'Lo siento muchísimo. Hemos hecho todo lo posible, pero no ha podido superar la operación.'); await decir({ nombre: 'Familiar', genero: 'm', tono: 1.1 }, '(llorando) No... no puede ser...'); salirQuirofano(origen); };
+      $('#mu-ok', m).onclick = async () => { m.cerrar(); await turnoMedico('Lo siento muchísimo. Hemos hecho todo lo posible, pero no ha podido superar la operación.', { etiqueta: 'Da la mala noticia con tacto: revisa el texto y pulsa HABLAR MÉDICO.' }); await turnoPaciente({ nombre: 'Familiar', genero: 'm', edad: p.acompEdad || 50, semilla: p.id * 31 + 7, rol: 'acomp' }, '(llorando) No... no puede ser...'); mostrarCharla(false); salirQuirofano(origen); };
       return;
     }
     Sonido.exito();
@@ -1054,8 +1477,9 @@ async function finCirugia(p, plan, origen, r, op) {
       <div class="botones"><button class="btn grande" id="op-ok">Hablar con la familia</button></div>`, { cerrable: false });
     $('#op-ok', m).onclick = async () => {
       m.cerrar();
-      await decir('doctor', 'La operación ha ido bien. Ahora tiene que descansar; podrán verle en la planta.');
-      await decir({ nombre: 'Familiar', genero: 'm', tono: 1.08 }, '¡Gracias, doctor! ¡Muchísimas gracias!');
+      await turnoMedico('La operación ha ido bien. Ahora tiene que descansar; podrán verle en la planta.', { etiqueta: 'Habla con la familia: revisa el texto y pulsa HABLAR MÉDICO.' });
+      await turnoPaciente({ nombre: 'Familiar', genero: 'm', edad: p.acompEdad || 50, semilla: p.id * 31 + 7, rol: 'acomp' }, '¡Gracias, doctor! ¡Muchísimas gracias!');
+      mostrarCharla(false);
       const ya = G.ingresados.find(i => i.pac.id === p.id);
       if (ya) { ya.operado = true; ya.salud = Math.max(ya.salud, r.puntuacion * 0.7 + 15); ya.infeccion = plan.infeccion; ya.plan = plan; }
       else ingresarOperado(p, plan, r.puntuacion);
@@ -1070,7 +1494,7 @@ function ingresarOperado(p, plan, punt) {
 async function salirQuirofano(origen) {
   modo = origen; document.body.dataset.modo = 'juego';
   guardar();
-  if (origen === 'ronda') { await fundido(() => mundo.mostrar('sala')); return siguienteIngresado(); }
+  if (origen === 'ronda') { await fundido(() => mundo.mostrar('sala')); return mostrarIngresado(); }
   G.pendientes--; guardar();
   siguientePaciente();
 }
@@ -1101,11 +1525,30 @@ async function mostrarIngresado() {
     mundo.ponerPacienteCama(hCama);
     const s = ing.salud; mundo.vitalesSala = { fc: 68 + (100 - s) * 0.45, tas: 125 - (100 - s) * 0.4, tad: 78 - (100 - s) * 0.2, sat: 99 - (100 - s) * 0.09 };
   });
+  modo = 'sala';
   panelSala();
-  decir('doctor', `Buenos días, ${pac.sexo === 'm' ? 'señora' : 'señor'} ${pac.apellidos.split(' ')[0]}. ¿Cómo ha pasado la noche?`);
-  const s = ing.salud;
-  if (pac.edad < 10) { await decir({ nombre: parentesco(pac), genero: esMujerAcomp(pac) ? 'm' : 'h', tono: 1.05 }, generoNino(s < 25 ? 'Muy mal, doctor. Esta noche ha estado fatal, no ha parado de quejarse.' : s < 50 ? 'Regular. Ha dormido a ratos.' : s < 75 ? 'Algo mejor. Ya ha comido un poco.' : '¡Mucho mejor! Ya quiere jugar y ha pedido la tablet.', pac)); if (pac.edad < 1.5 && s < 50) decir('paciente', '(llora) ¡Buaaa!'); return; }
-  await decir('paciente', s < 25 ? 'Muy mal, doctor... cada vez peor... no puedo ni respirar...' : s < 50 ? azar(['Regular, doctor. Me sigue doliendo.', 'Más o menos. Esta noche no he pegado ojo.']) : s < 75 ? azar(['Algo mejor, la verdad.', 'Voy tirando, doctor.']) : azar(['¡Mucho mejor! ¿Cuándo me voy a casa?', 'Estupendamente. Ya estoy harto de la comida de aquí.']));
+  // el saludo queda propuesto en el cuadro; el paciente contesta cuando se pulse RESPONDER PACIENTE
+  reiniciarCharla(); mostrarCharla(true);
+  pac.charla ||= [];
+  proponer(pac.edad < 10 ? `Buenos días. ¿Qué tal ha pasado la noche ${pac.nombre}?` : `Buenos días, ${pac.sexo === 'm' ? 'señora' : 'señor'} ${pac.apellidos.split(' ')[0]}. ¿Cómo ha pasado la noche?`, { ctx: { tipo: 'sala', id: 'noche' } });
+}
+// quién contesta en la planta: los niños pequeños, a través de su familiar
+const hablanteSala = (p) => p.edad < 10 ? { nombre: parentesco(p), genero: esMujerAcomp(p) ? 'm' : 'h', edad: edadAcomp(p), semilla: p.id * 31 + 7, rol: 'acomp' } : 'paciente';
+async function responderSala(p) {
+  const ing = G.ingresados[iRonda]; if (!ing) return;
+  const s = ing.salud, id = p.ctx?.id || clasificar(p.texto);
+  const quien = hablanteSala(pac);
+  let r;
+  if (pac.edad < 10 && ['noche', 'hablar', 'motivo', 'dolor'].includes(id)) r = generoNino(s < 25 ? 'Muy mal, doctor. Esta noche ha estado fatal, no ha parado de quejarse.' : s < 50 ? 'Regular. Ha dormido a ratos.' : s < 75 ? 'Algo mejor. Ya ha comido un poco.' : '¡Mucho mejor! Ya quiere jugar y ha pedido la tablet.', pac);
+  else if (id === 'noche') r = s < 25 ? 'Muy mal, doctor... cada vez peor... no puedo ni respirar...' : s < 50 ? azar(['Regular, doctor. Me sigue doliendo.', 'Más o menos. Esta noche no he pegado ojo.']) : s < 75 ? azar(['Algo mejor, la verdad.', 'Voy tirando, doctor.']) : azar(['¡Mucho mejor! ¿Cuándo me voy a casa?', 'Estupendamente. Ya estoy harto de la comida de aquí.']);
+  else if (['hablar', 'motivo', 'dolor'].includes(id)) {
+    r = s < 30 ? 'Fatal, doctor. Peor que ayer. ¿Seguro que me están dando lo correcto?' : s < 60 ? azar(['Me sigue doliendo, pero menos.', 'Bueno, ahí vamos.']) : '¡Bien, bien! Ya casi no me duele nada.';
+    if (ing.infeccion && ing.operado) r += ' Y la herida me pica y está muy roja...';
+  } else if (id === 'comida' || id === 'habitos') r = azar(['¿Esto es comida? Un caldo sin sal y un yogur. ¿No me podría recetar un cocido leonés, doctor?', 'Horrible. Si me receta unos callos, le hago un monumento.', 'Mire, si me deja tomar un orujito para la digestión, me curo antes.']);
+  else r = respuestaGeneral(pac, id, quien === 'paciente' ? 'paciente' : 'acomp');
+  await responderCon(quien, r, { tratamiento: `Está ingresado en planta (día ${ing.dias + 1}). ${ing.operado ? 'Le han operado.' : ''} Se encuentra ${s >= 75 ? 'bastante bien' : s >= 45 ? 'regular' : 'mal'}.` });
+  if (['hablar', 'motivo', 'dolor'].includes(id) && pac.edad >= 10 && prob(0.3)) charla.pendiente = { ctx: { tipo: 'extra', quien: 'paciente', referencia: azar(['Oiga, ¿y no será que se han equivocado con lo mío?', 'Mi cuñado dice que en el hospital de Ponferrada me habrían curado ya.', 'La enfermera de noche dice que usted es nuevo...']) } };
+  actualizarCharla();
 }
 function panelSala() {
   const ing = G.ingresados[iRonda], e = ENF[ing.pac.enfId];
@@ -1132,15 +1575,9 @@ async function accionSala(a) {
   if (hablandoN && a !== 'sig') return;
   const ing = G.ingresados[iRonda];
   Sonido.clic();
-  if (a === 'hablar') {
-    await decir('doctor', '¿Cómo se encuentra hoy? ¿Le duele algo?');
-    const s = ing.salud;
-    let r = s < 30 ? 'Fatal, doctor. Peor que ayer. ¿Seguro que me están dando lo correcto?' : s < 60 ? azar(['Me sigue doliendo, pero menos.', 'Bueno, ahí vamos.']) : '¡Bien, bien! Ya casi no me duele nada.';
-    if (ing.infeccion && ing.operado) r += ' Y la herida me pica y está muy roja...';
-    await decir('paciente', r);
-    if (prob(0.3)) await decir('paciente', azar(['Oiga, ¿y no será que se han equivocado con lo mío?', 'Mi cuñado dice que en el hospital de Ponferrada me habrían curado ya.', 'La enfermera de noche dice que usted es nuevo...']));
-  }
-  if (a === 'comida') { await decir('doctor', '¿Qué tal la comida del hospital?'); await decir('paciente', azar(['¿Esto es comida? Un caldo sin sal y un yogur. ¿No me podría recetar un cocido leonés, doctor?', 'Horrible. Si me receta unos callos, le hago un monumento.', 'Mire, si me deja tomar un orujito para la digestión, me curo antes.'])); }
+  if (charla.espera && a !== 'sig') return aviso('Termina primero la conversación (HABLAR MÉDICO / RESPONDER PACIENTE).', 'info');
+  if (a === 'hablar') ponerTextoMedico('¿Cómo se encuentra hoy? ¿Le duele algo?', { ctx: { tipo: 'sala', id: 'hablar' } });
+  if (a === 'comida') ponerTextoMedico('¿Qué tal la comida del hospital?', { ctx: { tipo: 'sala', id: 'comida' } });
   if (a === 'constantes') {
     const v = mundo.vitalesSala;
     abrirModal(`<h2>Gráfica de planta</h2><div class="constantes"><div><small>Salud</small><b>${Math.round(ing.salud)}%</b></div><div><small>Pulso</small><b>${v.fc | 0}</b></div><div><small>Tensión</small><b>${v.tas | 0}/${v.tad | 0}</b></div><div><small>Saturación</small><b>${v.sat | 0}%</b></div></div>
@@ -1149,9 +1586,9 @@ async function accionSala(a) {
   if (a === 'ficha') verFicha(ing.pac);
   if (a === 'receta') {
     const m = abrirModal(`<h2>Tratamiento de ${esc(ing.pac.nombre)}</h2><div id="sa-re"></div><div class="botones"><button class="btn grande" id="sa-ok">Guardar</button></div>`, { clase: 'papel' });
-    editorReceta($('#sa-re', m), ing.plan.receta, { alCambiar: () => {} });
+    editorReceta($('#sa-re', m), ing.plan, { confirmar: false, alCambiar: () => {} });
     $('#sa-ok', m).onclick = () => {
-      const ev = evaluarTratamiento(ing.pac, ing.plan);
+      const ev = evaluar(ing.pac, ing.plan);
       ing.q = ev.q;
       if (ing.infeccion && ing.plan.receta.some(r => r.tags.includes('antibiotico'))) { ing.infeccion = false; aviso('La infección de la herida empieza a remitir', 'bien'); }
       guardar(); m.cerrar(); aviso('Tratamiento actualizado', 'bien');
@@ -1162,12 +1599,12 @@ async function accionSala(a) {
     $$('[data-c]', m).forEach(b => b.onclick = () => { m.cerrar(); ing.plan.cir = b.dataset.c; ing.plan.accion = 'cirugia'; prepararCirugia(ing.pac, ing.plan, 'ronda'); });
   }
   if (a === 'alta') {
-    await decir('doctor', 'Le voy a dar el alta. Puede irse a casa.');
+    await turnoMedico('Le voy a dar el alta. Puede irse a casa.', { etiqueta: 'Da el alta: revisa el texto y pulsa HABLAR MÉDICO.' });
     const e = ENF[ing.pac.enfId];
     let res;
     if (ing.salud >= 75) res = 'curado'; else if (ing.salud >= 50) res = 'mejora'; else res = e.grav >= 4 ? (prob(0.4) ? 'muerte' : 'urgencias') : 'empeora';
     if (e.trat.accion === 'cirugia' && !ing.operado && e.grav >= 3) res = prob(0.5) ? 'urgencias' : 'muerte';
-    await decir('paciente', ing.salud >= 75 ? '¡Por fin! Muchas gracias por todo, doctor.' : '¿Ya? Pero si todavía me encuentro mal...');
+    await turnoPaciente(hablanteSala(ing.pac), ing.salud >= 75 ? '¡Por fin! Muchas gracias por todo, doctor.' : '¿Ya? Pero si todavía me encuentro mal...');
     const hon = 60 + e.grav * 40 + ing.dias * 40;
     aplicarResultado(ing.pac, res, hon);
     aviso(res === 'curado' ? 'Alta: paciente curado' : 'Alta precipitada...', res === 'curado' ? 'bien' : 'mal');
@@ -1189,6 +1626,7 @@ const SUELDOS = { enfermera: 120, anestesista: 260, radiologo: 220, cardiologo: 
 function finDia() {
   modo = 'fin';
   $('#panel').classList.remove('on');
+  reiniciarCharla(); mostrarCharla(false);
   // evolución de los ingresados durante la noche
   const evol = [];
   for (const i of G.ingresados) {
@@ -1303,4 +1741,29 @@ try {
   console.error(err);
   $('#cargando').innerHTML = `<p>No se ha podido iniciar el 3D en este dispositivo.</p><small>${esc(err.message)}</small>`;
 }
-window.__juego = { get G() { return G; }, get mundo() { return mundo; }, get pac() { return pac; }, get cir() { return cir; } };
+// ───────────────────────── Mando ─────────────────────────
+Mando.alConectar = (on, nombre) => aviso(on ? `Mando conectado${nombre ? `: ${nombre.replace(/\(.*\)/, '').trim()}` : ''}. Pulsa VISTA para ver los controles.` : 'Mando desconectado', 'info');
+Mando.alAccion = (b) => {
+  const hayModal = !!$('#modales .modal-fondo');
+  if (b === 'MENU') { if (hayModal) { const c = $('#modales .modal-fondo:last-child .cerrar'); if (c) c.click(); } else if (G && document.body.dataset.modo !== 'inicio') $('#hud-menu').click(); else ajustes(); return true; }
+  if (b === 'VISTA') { mostrarControles(); return true; }
+  if (charla.activa && !hayModal) {
+    if (b === 'X') { hablarMedico(); return true; }
+    if (b === 'Y') { responderPaciente(); return true; }
+    if (b === 'LT') { alternarMicro(cajaCharla()); return true; }
+    if (b === 'ATRAS' && Dictado.escuchando) { Dictado.parar(); return true; }
+  }
+  if (modo === 'cirugia' && cir && (b === 'LB' || b === 'RB')) {
+    const botones = $$('#cir-hud [data-h]'); const i = botones.findIndex(x => x.classList.contains('on'));
+    const sig = botones[(i + (b === 'RB' ? 1 : -1) + botones.length) % botones.length]; if (sig) sig.click();
+    return true;
+  }
+  if (modo === 'esteto' && b === 'B') { terminarAuscultacion(); return true; }
+  return false;
+};
+// con mando, las actividades con puntero (estetoscopio, imágenes, quirófano) usan un cursor virtual
+mundoActualizar(() => { Mando.modoCursor = Mando.conectado && (modo === 'cirugia' || modo === 'esteto' || !!$('.rx-dibujo')); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && modo !== 'esteto') { const c = $('#modales .modal-fondo:last-child .cerrar'); if (c) c.click(); } });
+Mando.iniciar();
+
+window.__juego = { get G() { return G; }, get mundo() { return mundo; }, get pac() { return pac; }, get cir() { return cir; }, get charla() { return charla; }, perfilesPrueba, lineasReceta, Voz, Mando, Dictado };

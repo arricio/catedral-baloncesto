@@ -68,12 +68,46 @@ Reglas de trabajo que se han seguido:
 - Los commits van a la rama `claude/medical-simulator-game-ruh821`.
 - No se crea un pull request salvo que el usuario lo pida.
 
+16. **Actualización del 25 de octubre de 2026** (petición «ACTUALIZACIÓN COMPLETA»):
+    - el jugador controla toda la conversación: escribe o dicta lo que dice el médico; **HABLAR MÉDICO** y **RESPONDER PACIENTE** son botones independientes; nadie habla sin pulsar su botón;
+    - respuestas de los pacientes con IA generativa, coherentes con su edad, personalidad, enfermedad e historial, sin conocer el diagnóstico; distinguir IA de respuestas predefinidas;
+    - recetas escritas por el jugador (medicamento, dosis, frecuencia, duración, recomendaciones), con **CONFIRMAR RECETA**, lectura fiel por el médico al pulsar HABLAR MÉDICO, entrega física en mano y respuesta del paciente al pulsar RESPONDER PACIENTE;
+    - voces diferenciadas por edad y sexo, en español de España, estables por personaje;
+    - mando Xbox (Gamepad API), teclado y ratón, táctil;
+    - versiones instalables para Android (APK) y Windows (EXE o MSIX), sin suscripciones ni servicios de pago sin autorización;
+    - no afirmar que algo funciona sin probarlo; distinguir pruebas automáticas de pruebas en los dispositivos reales (Xiaomi 17 Ultra y Lenovo Legion).
+
+---
+
+## 2 bis. Estado tras la actualización del 25 de octubre de 2026
+
+Hecho y probado con pruebas automáticas (`pruebas/charla.js`, 104 comprobaciones):
+- **Conversación por turnos** (`js/juego.js`, sección «Conversación por turnos»): barra `#charla` con cuadro de texto, ✎ ESCRIBIR, 🎤 MICRÓFONO, HABLAR MÉDICO (azul) y RESPONDER PACIENTE (ámbar), con indicador de turno. Las preguntas del panel sólo rellenan el cuadro. Todos los diálogos del guion (llegada, noticia, receta, despedida, ingreso, familia en pánico, quirófano, ronda) usan `turnoMedico()` / `turnoPaciente()`, que esperan al botón. Lo que un acompañante o el niño quieren añadir queda pendiente y sólo se oye si se vuelve a pulsar RESPONDER.
+- **Corrección prioritaria del usuario (25/10/2026)**: «el médico sólo habla cuando yo se lo ordeno y el paciente sólo responde cuando pulso su botón». Por eso: el cuadro empieza siempre vacío y las frases del juego sólo se ofrecen como «Sugerencia (opcional)» (`proponer()`), que hay que pulsar para copiarla y se puede cambiar; la única excepción es la receta, que ha escrito el propio jugador. Al explorar, el médico nunca habla (sólo subtítulos, `narrar()`) y el paciente reacciona con la cara y en los subtítulos sin voz (`reaccion()`). Se eliminó la opción «frasesAuto». El botón se llama «ENVIAR · HABLAR MÉDICO». Las frases de prueba de voces sólo existen en Ajustes › «Probar voces por edades». Las pruebas automáticas desactivan la voz para que no se oigan en el portátil.
+- **IA automática**: al empezar el día, si hay un Ollama en `localhost:11434`, se activa solo con el mejor modelo instalado (`detectarIA`, `detectarOllama`, `elegirModelo`); si el jugador elige el modo a mano en Ajustes, se respeta. La barra indica siempre si las respuestas son de IA o predefinidas.
+- **IA** (`js/ia.js`): modos `predefinida` (por defecto, sin Internet), `ollama` y `openai` (servidor local compatible). Prompt con los datos del paciente, personalidad estable, estilo por edad, historial de la consulta y respuesta de referencia del juego. Si la IA falla o tarda, se usa la predefinida y se avisa. Subtítulos con etiqueta «IA» o «predefinida». La conversación se guarda en `pac.charla` (también para los ingresados).
+- **Mecánica conservada**: la frase libre se clasifica (`clasificar`, `intenciones`) para seguir anotando hallazgos, confianza y secretos. Los secretos revelados se dicen con el texto del juego (`fija`).
+- **Recetas** (`editorReceta`, `lineasReceta`, `explicarYEntregarReceta`): campos libres, recomendaciones que también puntúan (`itemsDeIndicaciones`), revisión y confirmación obligatoria antes de comunicar, lectura con abreviaturas desarrolladas (`leerNatural`) y subtítulo exacto, entrega física (`Mundo.entregarPapel` en `escena.js`, papel con el texto exacto `texReceta`).
+- **Voces** (`js/audio.js`): 8 grupos de edad (`GRUPOS_VOZ`, `perfilVoz`), sólo voces es-ES, variación estable por personaje, emociones (`EMOCIONES`). Prueba en Ajustes › «Probar voces por edades».
+- **Boca y caras**: la boca sigue las palabras que marca el sintetizador (`Voz.alPalabra`); expresiones (alegría, dolor, tristeza, miedo, preocupación) en cejas, párpados, labios y cabeza (`EXPRESIONES` en `escena.js`).
+- **Mando** (`js/mando.js`): detección automática, navegación con cruceta, A/B, X = HABLAR MÉDICO, Y = RESPONDER PACIENTE, LT = micrófono, cursor virtual con RT en estetoscopio, imágenes y quirófano, LB/RB instrumentos, MENÚ, VISTA (controles), teclado virtual, sensibilidad y zona muerta en Ajustes.
+- **Dictado** (`js/dictado.js`): reconocimiento de voz del navegador en es-ES; preparado para el complemento de Capacitor en Android.
+- Corregido un fallo antiguo: al operar desde la ronda se llamaba a `siguienteIngresado()`, que no existía.
+- Depuración nueva: `?edad=<años>` y `?sexo=h|m`.
+
+Pendiente o limitado:
+- **Voces infantiles y de ancianos reales**: el sistema de voz del dispositivo no las tiene; ahora se simulan con la voz más parecida, tono y ritmo. Alternativas a valorar con el usuario: Piper (gratuito, local, sin voces infantiles en es-ES) o servicios de pago.
+- **IA real**: probada sólo con un servidor simulado. Falta que el usuario autorice instalar Ollama y un modelo en el portátil; en Android hay que decidir entre conectarse al portátil por wifi, WebLLM (WebGPU, por comprobar en el Xiaomi) o un servicio de pago.
+- **Instaladores**: faltan JDK y Android SDK (APK con Capacitor) y Electron o Tauri (EXE/MSIX). Pedir autorización antes de instalar. Ojo: el dictado del navegador no funciona dentro de Electron ni de WebView2; habría que usar el dictado de Windows (Windows + H) o un reconocedor local.
+- Caminar, sentarse y levantarse; caras, barbas, gafas, ropa y mobiliario en Blender (sección 5).
+- El médico se ve en primera persona: sólo se animan sus manos, no su cara.
+
 ---
 
 ## 3. Tecnología actual (importante antes de tocar nada)
 
 - **Juego web en 3D** con **Three.js r160**, que está incluido en `vendor/` y no se descarga de ningún CDN. JavaScript con módulos ES y sin compilación: ni npm ni bundler en el juego.
-- **Aplicación instalable (PWA)** con `manifest.webmanifest`, iconos y `sw.js`. El service worker guarda en caché el juego y los modelos para usarlo sin conexión. La versión de caché actual es `emm-v4`; **súbela (emm-v5…) cada vez que cambies archivos**, o los móviles seguirán con la versión antigua.
+- **Aplicación instalable (PWA)** con `manifest.webmanifest`, iconos y `sw.js`. El service worker guarda en caché el juego y los modelos para usarlo sin conexión. La versión de caché actual es `emm-v5`; **súbela (emm-v6…) cada vez que cambies archivos**, o los móviles seguirán con la versión antigua.
 - **Voces:** API Web Speech del navegador (`speechSynthesis`), que elige una voz `es-ES` según el sexo y la edad del personaje. No hay audios grabados.
 - **Sonidos** sintetizados con WebAudio: corazón, respiración, crepitantes, sibilancias, monitor, alarmas, llanto de bebé, etc.
 - **Personajes:**
@@ -232,7 +266,10 @@ node pruebas\jugar.js C:\Temp\capturas            & rem consulta completa con pa
 set CASO=bronquiolitis& node pruebas\jugar.js C:\Temp\capturas
 node pruebas\cir.js C:\Temp\capturas              & rem cirugía, planta y alta
 node pruebas\movil.js C:\Temp\capturas            & rem pantallas en formato móvil
+node pruebas\charla.js C:\Temp\capturas           & rem conversación por turnos, 7 edades, IA simulada, micro, mando, receta y móvil
 ```
+
+Todas las pruebas usan `pruebas/turnos.js` para pulsar HABLAR MÉDICO y RESPONDER PACIENTE. En el ordenador del usuario no hay Python: se puede servir la carpeta con cualquier servidor estático de Node en el puerto 8766.
 
 Casos útiles para `CASO` o `?caso=`: `bronquiolitis`, `fractura_cadera`, `varicela`, `itu_confusion`, `apendicitis`, `colecistitis`.
 

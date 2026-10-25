@@ -8,21 +8,58 @@ const MAS = /(jorge|diego|juan|pablo|alvaro|álvaro|enrique|carlos|raul|raúl|jo
 function cargarVoces() {
   if (!synth) return;
   const todas = synth.getVoices();
-  voces = todas.filter(v => /^es([-_]|$)/i.test(v.lang));
-  // primero las de España, luego las de mejor calidad (online/natural/neural)
-  const calidad = v => (/natural|neural|online|premium|enhanced|google/i.test(v.name) ? 2 : 0) + (/es[-_]ES/i.test(v.lang) ? 3 : 0);
-  voces.sort((a, b) => calidad(b) - calidad(a));
+  // sólo español de España; las de otros países únicamente si el dispositivo no tiene ninguna de España
+  const espana = todas.filter(v => /^es[-_]ES/i.test(v.lang));
+  voces = espana.length ? espana : todas.filter(v => /^es([-_]|$)/i.test(v.lang));
+  // primero las de mejor calidad (online/natural/neural); el nombre deja el orden estable entre sesiones
+  const calidad = v => (/natural|neural|online|premium|enhanced|google/i.test(v.name) ? 2 : 0);
+  voces.sort((a, b) => calidad(b) - calidad(a) || a.name.localeCompare(b.name));
 }
 if (synth) { cargarVoces(); synth.onvoiceschanged = cargarVoces; }
 
+const generoVoz = (v) => FEM.test(v.name) || FEM.test(v.voiceURI || '') ? 'm' : MAS.test(v.name) || MAS.test(v.voiceURI || '') ? 'h' : null;
 function elegirVoz(genero, semilla = 0) {
   if (!voces.length) cargarVoces();
   if (!voces.length) return null;
-  const re = genero === 'm' ? FEM : MAS;
-  const del = voces.filter(v => re.test(v.name) || re.test(v.voiceURI || ''));
+  const del = voces.filter(v => generoVoz(v) === genero);
   const lista = del.length ? del : voces;
-  return lista[semilla % lista.length];
+  return lista[Math.abs(semilla) % lista.length];
 }
+
+// ───────────────────────── Perfiles de voz por edad ─────────────────────────
+// La síntesis del dispositivo no trae voces infantiles ni de ancianos: cada grupo de edad usa la voz
+// (masculina o femenina) que mejor encaja y le aplica su propio tono y ritmo. Cada personaje recibe
+// además una variación estable sacada de su semilla, para que no suenen todos iguales.
+export const GRUPOS_VOZ = [
+  { id: 'bebe', n: 'Bebé', de: 0, a: 2.99, h: { voz: 'm', tono: 1.95, vel: 1.0 }, m: { voz: 'm', tono: 1.95, vel: 1.0 } },
+  { id: 'infantil', n: 'Niño o niña de 3 a 6 años', de: 3, a: 6.99, h: { voz: 'm', tono: 1.62, vel: 1.1 }, m: { voz: 'm', tono: 1.78, vel: 1.08 } },
+  { id: 'escolar', n: 'Niño o niña de 7 a 12 años', de: 7, a: 12.99, h: { voz: 'm', tono: 1.42, vel: 1.08 }, m: { voz: 'm', tono: 1.55, vel: 1.06 } },
+  { id: 'adolescente', n: 'Adolescente de 13 a 17 años', de: 13, a: 17.99, h: { voz: 'h', tono: 1.14, vel: 1.08 }, m: { voz: 'm', tono: 1.18, vel: 1.08 } },
+  { id: 'joven', n: 'Joven de 18 a 30 años', de: 18, a: 30.99, h: { voz: 'h', tono: 1.02, vel: 1.06 }, m: { voz: 'm', tono: 1.08, vel: 1.05 } },
+  { id: 'mediana', n: 'Adulto de 31 a 60 años', de: 31, a: 60.99, h: { voz: 'h', tono: 0.92, vel: 1.0 }, m: { voz: 'm', tono: 0.98, vel: 1.0 } },
+  { id: 'mayor', n: 'Mayor de 61 a 75 años', de: 61, a: 75.99, h: { voz: 'h', tono: 0.82, vel: 0.9 }, m: { voz: 'm', tono: 0.88, vel: 0.9 } },
+  { id: 'anciano', n: 'Abuelo o abuela de 76 años o más', de: 76, a: 200, h: { voz: 'h', tono: 0.72, vel: 0.8 }, m: { voz: 'm', tono: 0.78, vel: 0.82 } },
+];
+export const grupoVoz = (edad) => GRUPOS_VOZ.find(g => edad >= g.de && edad <= g.a) || GRUPOS_VOZ[5];
+// pseudoaleatorio estable a partir de un número
+const ruidoEstable = (n, k) => { const x = Math.sin((n + 1) * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+export function perfilVoz({ edad = 40, sexo = 'h', semilla = 0, rol = 'paciente', vozElegida = null }) {
+  const g = grupoVoz(edad), base = g[sexo === 'm' ? 'm' : 'h'];
+  if (rol === 'doctor') return { grupo: 'doctor', genero: vozElegida || sexo, tono: 0.98, vel: 0.97, semilla: 0 };
+  const varTono = (ruidoEstable(semilla, 1) - 0.5) * 0.12, varVel = (ruidoEstable(semilla, 2) - 0.5) * 0.08;
+  return { grupo: g.id, genero: base.voz, tono: +(base.tono + varTono).toFixed(3), vel: +(base.vel + varVel).toFixed(3), semilla: Math.floor(ruidoEstable(semilla, 3) * 1000) };
+}
+// Emociones: cambian el tono y el ritmo de la frase
+export const EMOCIONES = {
+  neutra: { tono: 1, vel: 1 },
+  asustado: { tono: 1.07, vel: 1.08 },
+  preocupado: { tono: 0.98, vel: 0.95 },
+  dolor: { tono: 0.96, vel: 0.88 },
+  nervioso: { tono: 1.05, vel: 1.12 },
+  agradecido: { tono: 1.04, vel: 0.98 },
+  triste: { tono: 0.94, vel: 0.88 },
+  alegre: { tono: 1.06, vel: 1.04 },
+};
 
 export const Voz = {
   activa: true,
@@ -30,24 +67,38 @@ export const Voz = {
   quien: null,
   onCambio: null,
   _cola: Promise.resolve(),
+  // se llama en cada palabra que pronuncia la voz (si el sintetizador lo permite), para mover la boca
+  alPalabra: null,
+  // última voz y ajustes usados: sirven para las pruebas y para la pantalla de ajustes
+  ultima: null,
   get disponible() { return !!synth && voces.length > 0; },
   get nombres() { return voces.map(v => `${v.name} (${v.lang})`); },
+  vozPara(genero, semilla) { const v = elegirVoz(genero, semilla); return v ? `${v.name} (${v.lang})` : null; },
   callar() {
     if (synth) synth.cancel();
     this.hablando = false; this.quien = null;
     this.onCambio && this.onCambio(null);
   },
   // Habla un texto; resuelve al terminar. Las voces suelen cortarse en textos largos: se trocea en frases.
-  hablar(texto, { genero = 'h', tono = 1, vel = 1, quien = null, semilla = 0 } = {}) {
+  hablar(texto, { genero = 'h', tono = 1, vel = 1, quien = null, semilla = 0, emocion = 'neutra' } = {}) {
     return new Promise(res => {
+      const em = EMOCIONES[emocion] || EMOCIONES.neutra;
+      tono *= em.tono; vel *= em.vel;
       const duracion = Math.max(1200, texto.length * 62 / vel);
       const fin = () => { if (this.quien === quien) { this.hablando = false; this.quien = null; this.onCambio && this.onCambio(null); } res(); };
       this.hablando = true; this.quien = quien; this.onCambio && this.onCambio(quien);
-      if (!synth || !this.activa) { setTimeout(fin, duracion); return; }
+      const voz = synth ? elegirVoz(genero, semilla) : null;
+      // Si no hay voz del sexo pedido, se diferencia a hombres y mujeres con el tono
+      const unica = !voz || generoVoz(voz) !== genero;
+      const tonoFinal = Math.max(0.1, Math.min(2, tono * (unica ? (genero === 'm' ? 1.18 : 0.82) : 1)));
+      this.ultima = { texto, voz: voz ? `${voz.name} (${voz.lang})` : null, genero, tono: +tonoFinal.toFixed(3), vel: +Math.max(0.6, Math.min(1.5, vel)).toFixed(3), emocion };
+      if (!synth || !this.activa) {
+        // sin voz: la boca se mueve igualmente al ritmo estimado de las palabras
+        const palabras = texto.split(/\s+/); let k = 0; const paso = duracion / Math.max(1, palabras.length);
+        const tic = () => { if (this.quien !== quien || k >= palabras.length) return; this.alPalabra && this.alPalabra(palabras[k++].length); setTimeout(tic, paso); };
+        tic(); setTimeout(fin, duracion); return;
+      }
       synth.cancel();
-      const voz = elegirVoz(genero, semilla);
-      // Si sólo hay una voz para todos, se diferencia a hombres y mujeres con el tono
-      const unica = !voz || !(genero === 'm' ? FEM : MAS).test(voz.name);
       const frases = texto.match(/[^.!?¿¡]*[.!?]+["»]?|[^.!?]+$/g) || [texto];
       let i = 0, vigilante;
       const sig = () => {
@@ -56,11 +107,12 @@ export const Voz = {
         const u = new SpeechSynthesisUtterance(frases[i++].trim());
         u.lang = voz ? voz.lang : 'es-ES';
         if (voz) u.voice = voz;
-        u.pitch = Math.max(0.1, Math.min(2, tono * (unica ? (genero === 'm' ? 1.18 : 0.82) : 1)));
+        u.pitch = tonoFinal;
         u.rate = Math.max(0.6, Math.min(1.5, vel));
         u.volume = 1;
         u.onend = sig;
         u.onerror = sig;
+        u.onboundary = (ev) => { if (ev.name === 'word' || ev.name === undefined) this.alPalabra && this.alPalabra(ev.charLength || 5); };
         clearTimeout(vigilante);
         vigilante = setTimeout(sig, Math.max(4000, u.text.length * 120));
         synth.speak(u);

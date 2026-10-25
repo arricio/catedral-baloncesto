@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const turnos = require('./turnos.js');
 const S = process.argv[2] || '.';
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
@@ -15,8 +16,9 @@ const S = process.argv[2] || '.';
   await click('[data-tab="decidir"]');
   await click('[data-d="apendicitis"]'); await click('[data-a="cirugia"]'); await pg.selectOption('#de-cir', 'apendicectomia'); await click('[data-p="alta"]');
   await click('#de-ok'); await click('[data-t="empatia"]');
-  // pánico familiar opcional
-  for (let i = 0; i < 40; i++) { if (await pg.$('[data-f="calmar"]')) { await click('[data-f="calmar"]'); } if (await pg.$('[data-an]')) break; await pg.waitForTimeout(1000); }
+  const T = turnos(pg);
+  // noticia por turnos y, a veces, la familia en pánico
+  for (let i = 0; i < 60; i++) { if (await pg.$('[data-an]')) break; if (await pg.$('[data-f="calmar"]')) { await click('[data-f="calmar"]'); continue; } const e = await T.espera(); if (e === 'medico') await T.hablar(); else if (e === 'paciente') await T.responder(); else await pg.waitForTimeout(500); }
   await click('[data-an="general"]'); for (const a of ['manos','gorro','bata','guantes']) await click(`[data-as="${a}"]`);
   await shot('01prep');
   await click('#qx-ok'); await pg.waitForTimeout(2500); await shot('02campo');
@@ -42,20 +44,21 @@ const S = process.argv[2] || '.';
   });
   for (let i = 0; i < 25; i++) { const r = await jugarPaso(); console.log('paso', r); if (r === 'incision') await shot('03incision'); if (r === 'extirpar') await shot('04extirpar'); if (r === 'fin') break; await pg.waitForTimeout(700); }
   await shot('05fin');
-  const idOperado = await pg.evaluate(() => window.__juego.pac.id);
+  await pg.evaluate(() => { window.__idOperado = window.__juego.pac.id; });
   await click('#op-ok');
-  // esperar a que el médico y la familia terminen de hablar y entre el siguiente paciente
-  await pg.waitForFunction((id) => window.__juego.pac && window.__juego.pac.id !== id, idOperado, { timeout: 90000 });
+  // hablar con la familia (por turnos) hasta que entre el siguiente paciente
+  await T.avanzarHasta(() => window.__juego.pac && window.__juego.pac.id !== window.__idOperado);
   // terminar el día: que este sea el último paciente
   await pg.evaluate(() => { window.__juego.G.pendientes = 1; });
   await pg.waitForSelector('#panel.on [data-q]', { timeout: 60000 });
   await shot('06siguiente');
   await libre();
   await click('[data-tab="decidir"]'); await pg.evaluate(() => document.querySelector(`[data-d="${window.__juego.pac.enfId}"]`).click()); await click('[data-a="casa"]'); await click('#de-ok'); await click('[data-t="directo"]');
+  await T.avanzarHasta('#va-ok');
   await click('#va-ok'); await pg.waitForSelector('#fd-sig', { timeout: 60000 }); await shot('07informe');
   await click('#fd-gest'); await shot('08gestion'); await click('[data-g="personal"]'); await click('[data-pe="enfermera"]'); await click('.gestion-modal .cerrar');
   await click('#fd-sig'); await pg.waitForSelector('#ro-ok', { timeout: 30000 }); await click('#ro-ok'); await pg.waitForTimeout(4000); await shot('09ronda');
   await libre(); await click('[data-s="receta"]'); await shot('10receta_planta'); await click('#sa-ok');
-  await click('[data-s="alta"]'); await pg.waitForTimeout(6000); await shot('11alta');
+  await click('[data-s="alta"]'); await T.avanzarHasta('#panel.on [data-q]'); await shot('11alta');
   await b.close();
 })();

@@ -130,6 +130,30 @@ export function texDiploma(nombre) {
     c.fillStyle = '#b5332b'; c.beginPath(); c.arc(w / 2, 300, 34, 0, 7); c.fill();
   });
 }
+// Hoja de receta con el texto exacto que ha escrito el jugador
+export function texReceta(lineas, { hospital = 'Hospital San Marcos', medico = '', paciente = '' } = {}) {
+  const t = lienzo(512, 720, (c, w, h) => {
+    c.fillStyle = '#fbfaf4'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#2e5aa8'; c.fillRect(0, 0, w, 70);
+    c.fillStyle = '#fff'; c.font = 'bold 26px "Barlow Condensed", Arial'; c.textAlign = 'left'; c.fillText(hospital.toUpperCase(), 24, 32); c.font = '20px "Barlow Condensed", Arial'; c.fillText('RECETA MÉDICA', 24, 58);
+    c.fillStyle = '#5d646b'; c.font = '20px Barlow, Arial'; c.fillText(`Paciente: ${paciente}`, 24, 104);
+    c.strokeStyle = '#c9c3b3'; c.lineWidth = 2; c.beginPath(); c.moveTo(24, 118); c.lineTo(w - 24, 118); c.stroke();
+    c.fillStyle = '#1d3a8a'; c.font = '30px Caveat, "Segoe Print", cursive';
+    let y = 160;
+    const ancho = w - 48;
+    for (const l of lineas) {
+      const palabras = String(l).split(/\s+/); let fila = '';
+      for (const p of palabras) { const prueba = fila ? `${fila} ${p}` : p; if (c.measureText(prueba).width > ancho && fila) { c.fillText(fila, 24, y); y += 34; fila = p; } else fila = prueba; }
+      if (fila) { c.fillText(fila, 24, y); y += 40; }
+      if (y > h - 120) break;
+    }
+    c.strokeStyle = '#5d646b'; c.beginPath(); c.moveTo(w - 230, h - 70); c.lineTo(w - 24, h - 70); c.stroke();
+    c.fillStyle = '#5d646b'; c.font = '18px Barlow, Arial'; c.fillText(medico, w - 230, h - 44);
+    c.fillStyle = '#1d3a8a'; c.font = '34px Caveat, cursive'; c.fillText('~ Firma ~', w - 210, h - 80);
+  });
+  t.userData.lineas = [...lineas];
+  return t;
+}
 
 // ───────────────────────── ropa ─────────────────────────
 export const ROPAS = {
@@ -268,7 +292,7 @@ function rasgosCara(cabeza, ap, { piel, pelo, tela, r, colPiel, cara, craneo }) 
   if (craneo) { const mand = pon(esf(R0 * 0.76, mandibulaMat, 32, 20), cabeza, 0, -0.047, 0.022); mand.scale.set(0.86 * cara, 0.72, 0.9); }
   else if (ap.barba === 1) { const sb = pelo.clone(); sb.transparent = true; sb.opacity = 0.42; sb.depthWrite = false; const b = pon(new T.Mesh(new T.SphereGeometry(R0 * 0.8, 28, 16, 0, PI * 2, PI * 0.5, PI * 0.5), sb), cabeza, 0, -0.036, 0.008); b.scale.set(0.9 * cara, 0.95, 0.97); }
   // ojos
-  const ojos = [];
+  const ojos = [], cejas = [];
   for (const sg of [-1, 1]) {
     const g = pon(new T.Group(), cabeza, sg * 0.036 * cara, 0.012, 0.084);
     pon(esf(0.0145, std('#f7f5f0', { roughness: 0.2 }), 16, 12), g, 0, 0, 0);
@@ -278,7 +302,8 @@ function rasgosCara(cabeza, ap, { piel, pelo, tela, r, colPiel, cara, craneo }) 
     const p = pon(esf(0.0152, piel, 16, 10), g, 0, 0.0004, 0); p.scale.set(1.04, 0.42, 1.0); p.position.y = 0.011;
     ojos.push({ g, p });
     // ceja
-    pon(caja(0.03, 0.0055, 0.008, pelo, 0.002), cabeza, sg * 0.037 * cara, 0.04, 0.097, 0, 0, -sg * 0.1);
+    const ceja = pon(caja(0.03, 0.0055, 0.008, pelo, 0.002), cabeza, sg * 0.037 * cara, 0.04, 0.097, 0, 0, -sg * 0.1);
+    cejas.push({ m: ceja, sg, y: 0.04, rz: -sg * 0.1 });
     // oreja
     if (craneo) pon(esf(0.026, piel, 12, 10), cabeza, sg * 0.098 * cara, 0, -0.005).scale.set(0.35, 1, 0.7);
   }
@@ -311,7 +336,42 @@ function rasgosCara(cabeza, ap, { piel, pelo, tela, r, colPiel, cara, craneo }) 
   }
   if (r.gorro) { const g = pon(new T.Mesh(new T.SphereGeometry(R0 * 1.1, 28, 14, 0, PI * 2, 0, PI * 0.52), tela(r.gorro)), cabeza, 0, 0.008, -0.005); g.rotation.x = -0.25; g.scale.set(0.95 * cara, 1.05, 1.05); }
   if (r.mascarilla) { const m = pon(caja(0.11 * cara, 0.07, 0.03, tela(r.mascarilla), 0.012), cabeza, 0, -0.042, 0.098); out.mascarilla = m; }
-  return Object.assign(out, { ojos, boca, labioI });
+  return Object.assign(out, { ojos, boca, labioI, labioS, cejas });
+}
+
+// ───────────────────────── expresiones y boca ─────────────────────────
+// ceja: subida; rz: cejas en pico (tristeza, miedo); ojo: apertura; sonrisa: comisuras (negativo = triste)
+const EXPRESIONES = {
+  neutra: { ceja: 0, rz: 0, ojo: 1, sonrisa: 0, cabeza: 0 },
+  alegria: { ceja: 0.003, rz: -0.05, ojo: 0.9, sonrisa: 1, cabeza: -0.03 },
+  dolor: { ceja: -0.003, rz: 0.28, ojo: 0.55, sonrisa: -0.6, cabeza: 0.06 },
+  tristeza: { ceja: 0.001, rz: 0.32, ojo: 0.8, sonrisa: -0.7, cabeza: 0.12 },
+  miedo: { ceja: 0.006, rz: 0.22, ojo: 1.35, sonrisa: -0.3, cabeza: 0.02 },
+  preocupacion: { ceja: 0.002, rz: 0.16, ojo: 1, sonrisa: -0.25, cabeza: 0.04 },
+};
+// apertura de la boca: sigue las palabras que marca la voz; sin marcas, un movimiento natural de habla
+function aperturaBoca(h) {
+  if (h.llorando) return 1.1 + Math.sin(h._t * 6) * 0.3;
+  if (h.hablando) {
+    const dtp = (performance.now() - (h.pulso || 0)) / 1000;
+    if (h.conPulsos) {
+      if (dtp > 0.55) return 0.06;
+      const k = Math.min(1, dtp / (h.pulsoDur || 0.3));
+      return 0.15 + Math.sin(PI * k) * 0.78 * (0.7 + 0.3 * Math.abs(Math.sin(h._t * 17)));
+    }
+    return 0.25 + Math.abs(Math.sin(h._t * 13) * Math.sin(h._t * 5.3)) * 0.9;
+  }
+  return h.dolor ? 0.5 : 0;
+}
+function aplicarExpresion(h, p, dt) {
+  const obj = EXPRESIONES[h.emocion || (h.dolor ? 'dolor' : 'neutra')] || EXPRESIONES.neutra;
+  const e = h._exp || (h._exp = { ...EXPRESIONES.neutra });
+  const k = Math.min(1, dt * 4);
+  for (const c in e) e[c] += (obj[c] - e[c]) * k;
+  if (p.cejas) for (const c of p.cejas) { c.m.position.y = c.y + e.ceja; c.m.rotation.z = c.rz + c.sg * e.rz; }
+  if (p.labioI) { p.labioI.scale.y = 1 + Math.max(0, e.sonrisa) * 0.25; p.boca.scale.x = 1.2 * (1 + e.sonrisa * 0.12); }
+  if (p.labioS) p.labioS.position.y = -0.037 + Math.max(0, e.sonrisa) * 0.0015;
+  return e;
 }
 
 function ropaParte(id) { return ROPAS[id] || ROPAS.paciente; }
@@ -410,9 +470,10 @@ function animarHumano(h, dt, t) {
   h._parpadeo -= dt;
   const cerrado = h.dormido || (h._parpadeo < 0.12 && h._parpadeo > 0);
   if (h._parpadeo < 0) h._parpadeo = 2.5 + Math.random() * 3.5;
+  aplicarExpresion(h, p, dt);
   for (const o of p.ojos) { o.p.scale.y = cerrado ? 1.0 : 0.42; o.p.position.y = cerrado ? 0.0 : 0.011; }
   // boca
-  const ab = h.llorando ? 1.1 + Math.sin(h._t * 6) * 0.3 : h.hablando ? 0.25 + Math.abs(Math.sin(h._t * 13) * Math.sin(h._t * 5.3)) * 0.9 : (h.dolor ? 0.5 : 0);
+  const ab = aperturaBoca(h);
   p.boca.scale.y = 0.18 + ab * 0.55; p.labioI.position.y = -0.049 - ab * 0.008;
   if (h.llorando) for (const o of p.ojos) { o.p.scale.y = 0.9; o.p.position.y = 0.003; }
   // cabeza: mirar objetivo + balanceo
@@ -750,7 +811,7 @@ function poseGLB(h, nombre) {
   }
   // las personas mayores, algo encorvadas
   if (h.mayor && (nombre === 'depie' || nombre === 'espalda' || nombre === 'sentado' || nombre === 'manos_juntas' || nombre === 'brazos_cruzados')) { G('pecho', 'x', 0.16); G('cuello', 'x', 0.1); }
-  h.base = {}; for (const n of ['cabeza', 'cuello', 'pecho', 'columna', 'antebrazoR', 'antebrazoL']) h.base[n] = h.huesos[n].quaternion.clone();
+  h.base = {}; for (const n of ['cabeza', 'cuello', 'pecho', 'columna', 'antebrazoR', 'antebrazoL', 'brazoR']) h.base[n] = h.huesos[n].quaternion.clone();
 }
 // inclina el tronco desde la pose actual (para el paciente encamado)
 export function inclinarTronco(h, ang) {
@@ -766,11 +827,14 @@ function animarGLB(h, dt, t) {
   h._parpadeo -= dt;
   const cerrado = h.dormido || (h._parpadeo < 0.12 && h._parpadeo > 0);
   if (h._parpadeo < 0) h._parpadeo = 2.5 + Math.random() * 3.5;
-  for (const o of p.ojos) { o.p.scale.y = cerrado ? 1.0 : 0.42; o.p.position.y = cerrado ? 0.0 : 0.011; }
-  const ab = h.hablando ? 0.25 + Math.abs(Math.sin(h._t * 13) * Math.sin(h._t * 5.3)) * 0.9 : (h.dolor ? 0.5 : 0);
-  p.boca.scale.y = 0.18 + ab * 0.55; p.labioI.position.y = -0.049 - ab * 0.008;
+  const ex = aplicarExpresion(h, p, dt);
+  // el párpado tapa más o menos el ojo según la expresión (miedo: muy abierto; dolor: entornado)
+  const abierto = Math.max(0.2, Math.min(0.75, 0.42 / ex.ojo));
+  for (const o of p.ojos) { o.p.scale.y = cerrado ? 1.0 : abierto; o.p.position.y = cerrado ? 0.0 : 0.011; }
+  const ab = aperturaBoca(h);
+  p.boca.scale.y = 0.18 + ab * 0.55; p.labioI.position.y = -0.049 - ab * 0.008 + Math.max(0, ex.sonrisa) * 0.002;
   // cabeza
-  let yaw = Math.sin(h._t * 0.35) * 0.06, pitch = Math.sin(h._t * 0.5) * 0.03;
+  let yaw = Math.sin(h._t * 0.35) * 0.06, pitch = Math.sin(h._t * 0.5) * 0.03 - ex.cabeza;
   if (h.hablando) { yaw += Math.sin(h._t * 1.7) * 0.05; pitch += Math.sin(h._t * 2.3) * 0.04; }
   if (h.mirar && h.pose !== 'tumbado' && h.pose !== 'espalda') {
     h.huesos.cabeza.getWorldPosition(_v);
@@ -788,7 +852,10 @@ function animarGLB(h, dt, t) {
   girarHueso(h, 'cabeza', 'y', h._yaw); girarHueso(h, 'cabeza', 'x', -h._pitch);
   // gesto con la mano al hablar sentado
   h.huesos['antebrazoR'].quaternion.copy(h.base['antebrazoR']);
-  if (h.pose === 'sentado') { h._gesto = (h._gesto || 0) + ((h.hablando ? Math.max(0, Math.sin(h._t * 2.1)) * 0.35 : 0) - (h._gesto || 0)) * Math.min(1, dt * 5); girarHueso(h, 'antebrazoR', 'x', -h._gesto); }
+  h.huesos['brazoR'].quaternion.copy(h.base['brazoR']);
+  if (h.pose === 'sentado') { h._gesto = (h._gesto || 0) + ((h.hablando && !h.alcance ? Math.max(0, Math.sin(h._t * 2.1)) * 0.35 : 0) - (h._gesto || 0)) * Math.min(1, dt * 5); girarHueso(h, 'antebrazoR', 'x', -h._gesto); }
+  // extiende el brazo derecho para recoger algo (la receta)
+  if (h.alcance) { const k = h.alcance; girarHueso(h, 'brazoR', 'x', -0.75 * k); girarHueso(h, 'brazoR', 'z', 0.12 * k); girarHueso(h, 'antebrazoR', 'x', 0.62 * k); }
 }
 
 // ───────────────────────── manos del médico en primera persona ─────────────────────────
@@ -1065,9 +1132,13 @@ export class Mundo {
       for (const b of this.manos.userData.brazos) {
         const k = this.doctorHablando ? 1 : 0;
         b.gest = (b.gest || 0) + (k - (b.gest || 0)) * Math.min(1, dt * 5);
-        b.b.rotation.x = b.base.x + b.gest * (0.25 + Math.sin(t * 3.1 + b.sg) * 0.12);
-        b.b.rotation.z = b.gest * Math.sin(t * 2.3 + b.sg * 2) * 0.12;
-        b.b.position.y = b.basePos.y + Math.sin(t * 1.2 + b.sg) * 0.004;
+        const ext = b.extra || 0; // brazo extendido hacia el paciente (entregar la receta)
+        // al extender, el antebrazo se pone casi horizontal y avanza hacia el paciente
+        b.b.rotation.x = b.base.x + b.gest * (1 - ext) * (0.25 + Math.sin(t * 3.1 + b.sg) * 0.12) + ext * 0.14;
+        b.b.rotation.z = b.gest * (1 - ext) * Math.sin(t * 2.3 + b.sg * 2) * 0.12;
+        b.b.position.y = b.basePos.y + Math.sin(t * 1.2 + b.sg) * 0.004 + ext * 0.05;
+        b.b.position.z = b.basePos.z - ext * 0.34;
+        b.b.position.x = b.basePos.x - b.sg * ext * 0.06;
       }
     }
     for (const m of this.monitores) if (this.escenaDe(m.obj) === this.escenas[this.actual]) { pintarMonitor(m.mon, dt, m.vitales ? m.vitales() : this.vitales, m.ritmo ? m.ritmo() : this.ritmo); m.mon.t.needsUpdate = true; }
@@ -1086,6 +1157,66 @@ export class Mundo {
   }
   registrar(h) { this.humanos.push(h); return h; }
   quitar(h) { if (!h) return; h.raiz.parent && h.raiz.parent.remove(h.raiz); this.humanos = this.humanos.filter(x => x !== h); }
+
+  // El médico entrega un papel (la receta) en mano: lo sostiene, extiende el brazo, el paciente
+  // extiende el suyo, el papel pasa de una mano a otra y el paciente se lo queda.
+  entregarPapel(receptor, textura, { duracion = 1 } = {}) {
+    return new Promise(res => {
+      const brazo = this.manos && this.manos.visible ? (this.manos.userData.brazos.find(b => b.sg === 1) || this.manos.userData.brazos[0]) : null;
+      const mano = receptor && receptor.huesos && receptor.huesos.manoR;
+      if (!brazo || !mano) return res(false);
+      const papel = new T.Mesh(new T.PlaneGeometry(0.1, 0.14), new T.MeshStandardMaterial({ map: textura, side: T.DoubleSide, roughness: 0.92 }));
+      papel.name = 'receta';
+      brazo.mun.add(papel); papel.position.set(0.0, -0.085, -0.02); papel.rotation.set(-1.25, 0, 0.1);
+      const ease = (x) => x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+      const D = duracion; // escala de tiempos
+      const fase = { pasando: null, enMano: false };
+      // dónde y cómo debe quedar el papel: delante de la mano del paciente y de cara al médico, como quien sujeta una hoja
+      const _p = new T.Vector3(), _q = new T.Quaternion(), _qr = new T.Quaternion(), _qp = new T.Quaternion();
+      const inclinacion = new T.Quaternion().setFromEuler(new T.Euler(-0.35, 0, 0));
+      const objetivo = () => {
+        receptor.raiz.updateMatrixWorld(true);
+        mano.getWorldPosition(_p); receptor.raiz.getWorldQuaternion(_qr);
+        _p.add(new T.Vector3(0, 0.02, 0.07).applyQuaternion(_qr));
+        _q.copy(_qr).multiply(inclinacion);
+      };
+      // fija el papel (ya colgado de la mano) en la posición y orientación del objetivo
+      const colocarEnMano = () => {
+        objetivo();
+        mano.getWorldQuaternion(_qp);
+        papel.position.copy(mano.worldToLocal(_p.clone()));
+        papel.quaternion.copy(_qp.invert().multiply(_q));
+      };
+      // con el reloj real: dura lo mismo aunque el dispositivo vaya a pocos fotogramas por segundo
+      const t0 = performance.now();
+      let t = 0;
+      const paso = () => {
+        t = (performance.now() - t0) / 1000 / D;
+        brazo.extra = t < 1.0 ? ease(t) : t < 2.5 ? 1 : t < 3.4 ? 1 - ease((t - 2.5) / 0.9) : 0;
+        receptor.alcance = t < 0.7 ? 0 : t < 1.6 ? ease((t - 0.7) / 0.9) : t < 2.7 ? 1 : t < 3.7 ? 1 - ease((t - 2.7) / 1.0) : 0;
+        // las dos manos se encuentran: el papel pasa de la del médico a la del paciente
+        if (t >= 1.6 && !fase.pasando) { this.escenas[this.actual].attach(papel); fase.pasando = { t0: t, p: papel.position.clone(), q: papel.quaternion.clone() }; }
+        if (fase.pasando && !fase.enMano) {
+          const k = ease(Math.min(1, (t - fase.pasando.t0) / 0.45));
+          objetivo();
+          papel.position.lerpVectors(fase.pasando.p, _p, k);
+          papel.quaternion.slerpQuaternions(fase.pasando.q, _q, k);
+          if (k >= 1) { mano.attach(papel); fase.enMano = true; }
+        }
+        // mientras el paciente recoge el brazo, el papel sigue en su mano y de cara al médico
+        if (fase.enMano) colocarEnMano();
+        if (t >= 3.8) {
+          // en un dispositivo lento puede saltarse fotogramas: el papel acaba siempre en la mano del paciente
+          if (!fase.enMano) { mano.attach(papel); fase.enMano = true; }
+          receptor.alcance = 0; receptor.actualizar(0); colocarEnMano();
+          this.alActualizar = this.alActualizar.filter(f => f !== paso);
+          brazo.extra = 0; receptor.alcance = 0;
+          res(true);
+        }
+      };
+      this.alActualizar.push(paso);
+    });
+  }
 
   // ───────── CONSULTA ─────────
   construirConsulta(doctor) {

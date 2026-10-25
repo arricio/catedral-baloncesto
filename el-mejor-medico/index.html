@@ -264,6 +264,73 @@ body:not([data-modo="cirugia"]) #cir-hud { display: none; }
   .cir-alarma { top: calc(140px + env(safe-area-inset-top)); max-width: calc(100% - 150px); }
 }
 
+/* ── conversación por turnos ── */
+#charla { position: fixed; left: 12px; right: 354px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 18; display: none; flex-direction: column; gap: 6px; background: #12161bf0; border: 1px solid #3a424a; border-radius: 12px; padding: 8px; box-shadow: 0 10px 30px #0008; }
+body.con-charla:not([data-modo="inicio"]):not([data-modo="creador"]):not([data-modo="esteto"]):not([data-modo="preqx"]) #charla { display: flex; }
+#charla[data-turno="medico"] { border-color: #2f6fb0; } #charla[data-turno="paciente"] { border-color: #b8862a; }
+.ch-estado { font-family: var(--cond); letter-spacing: .05em; font-size: 15px; color: var(--suave); display: flex; align-items: center; gap: 8px; }
+.ch-estado::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #4fb3ff; box-shadow: 0 0 8px #4fb3ff; flex-shrink: 0; }
+#charla[data-turno="paciente"] .ch-estado::before { background: #ffc24d; box-shadow: 0 0 8px #ffc24d; }
+#ch-texto { width: 100%; resize: none; background: #0b0e11; color: #fff; border: 1px solid #4a535c; border-radius: 8px; padding: 9px 11px; font: 18px/1.3 var(--sans); min-height: 42px; max-height: 120px; }
+#ch-texto:focus { outline: 2px solid #4fb3ff88; }
+#ch-texto[readonly] { background: #f4f1e8; color: #1d3a8a; font-family: var(--mano); font-size: 21px; }
+.ch-botones { display: grid; grid-template-columns: auto auto 1fr 1fr; gap: 6px; }
+.ch-botones button { display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 9px; padding: 10px 12px; font-family: var(--cond); font-size: 18px; letter-spacing: .05em; text-transform: uppercase; color: #fff; min-height: 50px; }
+.ch-botones button span { font-size: 20px; } .ch-botones kbd { font: 700 12px var(--sans); background: #0005; border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; }
+.ch-sec { background: #3a424a; } #ch-mic.on { background: #c8352d; animation: latido 1s infinite; }
+.ch-medico { background: linear-gradient(#3d86d0, #2b64a8); } .ch-medico kbd { background: #1d4a80; }
+.ch-paciente { background: linear-gradient(#d39a2c, #a8741a); } .ch-paciente kbd { background: #7a5410; }
+.ch-botones button:disabled { opacity: .35; filter: grayscale(.6); cursor: not-allowed; }
+#charla[data-turno="medico"] .ch-medico:not(:disabled) { box-shadow: 0 0 0 2px #8fd0ff, 0 0 16px #4fb3ff88; }
+#charla[data-turno="paciente"] .ch-paciente:not(:disabled) { box-shadow: 0 0 0 2px #ffe08f, 0 0 16px #ffc24d88; }
+#panel.guion .cuerpo { opacity: .5; pointer-events: none; }
+.ch-sug { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--suave); min-width: 0; }
+.ch-sug[hidden] { display: none; }
+.ch-sug button { flex: 1; min-width: 0; text-align: left; background: #1d2a38; border: 1px dashed #4f7fb0; border-radius: 8px; color: #cfe6ff; padding: 6px 10px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-sug button::before { content: '↳ '; color: #7cc8ff; }
+.pista { margin: 0 0 4px; font-size: 13px; }
+body.con-charla:not([data-modo="esteto"]) #subtitulo { bottom: calc(var(--alto-charla, 150px) + 22px + env(safe-area-inset-bottom)); }
+.origen { font-style: normal; font-family: var(--sans); font-size: 11px; letter-spacing: 0; text-transform: none; margin-left: 8px; padding: 1px 6px; border-radius: 9px; vertical-align: 1px; }
+.origen.ia { background: #7b4dff; color: #fff; } .origen.pre { background: #4a535c; color: #e5e8ea; } .origen.accion { background: #2b64a8; color: #fff; }
+@media (max-width: 760px) {
+  #charla { left: 8px; right: 8px; bottom: calc(34vh + 14px + env(safe-area-inset-bottom)); padding: 6px; gap: 5px; }
+  body.con-charla #panel { height: 34vh; }
+  .ch-estado { font-size: 13px; }
+  #ch-texto { font-size: 17px; min-height: 40px; padding: 7px 9px; }
+  .ch-botones { grid-template-columns: 1fr 1fr 1.4fr 1.4fr; gap: 5px; }
+  .ch-botones button { flex-direction: column; gap: 1px; padding: 5px 4px; font-size: 14px; min-height: 52px; line-height: 1.05; }
+  .ch-botones kbd { display: none; }
+  body.con-charla:not([data-modo="esteto"]) #subtitulo { bottom: calc(34vh + var(--alto-charla, 140px) + 22px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 760px) and (orientation: landscape), (max-height: 500px) {
+  #charla { left: 8px; right: 47vw; bottom: calc(6px + env(safe-area-inset-bottom)); }
+  body.con-charla #panel { left: auto; right: 8px; width: 45vw; top: calc(44px + env(safe-area-inset-top)); height: auto; bottom: 6px; }
+  body.con-charla:not([data-modo="esteto"]) #subtitulo { left: 8px; right: 47vw; width: auto; transform: none; bottom: calc(var(--alto-charla, 130px) + 12px); }
+}
+
+/* ── receta escrita por el jugador ── */
+.receta-item { display: block; }
+.ri-cab { display: flex; align-items: baseline; gap: 8px; } .ri-cab small { flex: 1; } .ri-cab .quitar { margin-left: auto; }
+.ri-campos { display: grid; grid-template-columns: 1.3fr 1fr 0.8fr; gap: 5px; margin-top: 5px; }
+.ri-campos input, .re-ind textarea { width: 100%; padding: 7px 8px; border: 1px solid #b9b3a3; border-radius: 4px; background: #fffef8; font-size: 15px; color: #1d3a8a; font-family: var(--sans); }
+@media (max-width: 560px) { .ri-campos { grid-template-columns: 1fr; } }
+.re-ind { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-family: var(--cond); font-weight: 600; letter-spacing: .04em; font-size: 15px; }
+.re-ind textarea { min-height: 64px; font-family: var(--mano); font-size: 20px; }
+.re-acc { justify-content: space-between; margin-top: 8px; }
+.receta-hoja { background: #fffef8; border: 1px solid #c9c3b3; border-radius: 6px; padding: 8px 14px; color: #1d3a8a; }
+.receta-hoja p { margin: 4px 0; }
+#re-conf { background: #2e7d4f; }
+
+/* ── mando ── */
+.foco-mando { outline: 3px solid #ffd54d !important; outline-offset: 2px; box-shadow: 0 0 0 6px #ffd54d44 !important; }
+#cursor-mando { position: fixed; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; border: 3px solid #ffd54d; box-shadow: 0 0 0 2px #000a, 0 0 14px #ffd54d; pointer-events: none; z-index: 90; display: none; }
+#cursor-mando::after { content: ''; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: #ffd54d; }
+#teclado-virtual { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(760px, calc(100% - 16px)); background: #12161bf7; border: 1px solid #5b646c; border-radius: 12px; padding: 10px; z-index: 95; box-shadow: 0 10px 40px #000c; }
+.tv-texto { background: #0b0e11; border-radius: 8px; padding: 8px 10px; font-size: 18px; min-height: 40px; margin-bottom: 8px; white-space: pre-wrap; }
+.tv-fila { display: flex; gap: 4px; margin: 4px 0; } .tv-fila button { flex: 1; background: #31373e; border: 1px solid #4a535c; border-radius: 6px; padding: 10px 0; font-size: 18px; color: #fff; } .tv-fila button.ancha { flex: 2.5; font-family: var(--cond); font-size: 15px; }
+.tv-ayuda { color: var(--suave); font-size: 13px; margin: 6px 0 0; text-align: center; }
+.controles td, .controles th { font-size: 14px; }
+
 /* ── avisos ── */
 #avisos { position: fixed; top: calc(60px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 60; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; width: min(520px, calc(100% - 20px)); }
 .aviso { background: #1d2124f2; border: 1px solid #5b646c; border-left: 4px solid var(--acento); padding: 8px 14px; border-radius: 6px; font-size: 15px; transition: .5s; box-shadow: 0 6px 18px #0007; }
@@ -287,6 +354,17 @@ body:not([data-modo="cirugia"]) #cir-hud { display: none; }
   <button id="hud-voz" aria-label="Voces">🔊</button>
 </div>
 <div id="panel"></div>
+<div id="charla" data-turno="medico" aria-label="Conversación con el paciente">
+  <div class="ch-estado" id="ch-estado" role="status" aria-live="polite">Turno del médico</div>
+  <div class="ch-sug" id="ch-sug" hidden><span>Sugerencia (opcional):</span><button id="ch-sug-usar" title="Copiar la sugerencia al cuadro para revisarla"></button></div>
+  <textarea id="ch-texto" rows="1" maxlength="400" placeholder="Escribe o dicta lo que quieres decir al paciente…" aria-label="Lo que dirá el médico" enterkeyhint="send"></textarea>
+  <div class="ch-botones">
+    <button id="ch-escribir" class="ch-sec" aria-label="Escribir"><span>✎</span><b>Escribir</b></button>
+    <button id="ch-mic" class="ch-sec" aria-label="Micrófono" aria-pressed="false"><span>🎤</span><b>Micrófono</b></button>
+    <button id="ch-medico" class="ch-medico" disabled><span>🩺</span><b>Enviar · Hablar médico</b><kbd>X</kbd></button>
+    <button id="ch-paciente" class="ch-paciente" disabled><span>💬</span><b>Responder paciente</b><kbd>Y</kbd></button>
+  </div>
+</div>
 <div id="subtitulo"></div>
 <div id="esteto-hud"></div>
 <div id="cir-hud"></div>
