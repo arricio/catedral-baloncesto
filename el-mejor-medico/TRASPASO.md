@@ -1,0 +1,251 @@
+# EL MEJOR MÉDICO: informe de continuidad
+
+Informe para continuar el desarrollo en una sesión **local** de Claude Code (portátil Lenovo Legion con Windows, con Blender 5.2.2 LTS y Unreal Engine 5.8 conectados por MCP) sin empezar de cero.
+
+Fecha del traspaso: 25 de octubre de 2026.
+Último commit subido: `753e93d EL MEJOR MÉDICO: peinados modelados en Blender`. Este informe y la carpeta `pruebas/` van en el commit siguiente.
+
+---
+
+## 1. Dónde está todo
+
+| Dato | Valor |
+|---|---|
+| Repositorio de GitHub | `https://github.com/arricio/catedral-baloncesto` |
+| Rama de trabajo correcta | **`claude/medical-simulator-game-ruh821`** |
+| Carpeta del juego dentro del repositorio | `el-mejor-medico/` |
+| Rama `main` | **No** contiene el juego todavía; no hay pull request creado |
+| Cambios sin subir | Ninguno: todo está subido a la rama |
+| Otros proyectos del mismo repositorio (NO tocar) | `laser-marmol/`, `impresora-3d/`, `catedral_baloncesto_juego_*.html` |
+| «MI GRANJA» | No está en este repositorio y no tiene relación con este juego. No mezclar. |
+
+Para jugar en local: servir la carpeta `el-mejor-medico/` con cualquier servidor estático y abrir `index.html`. Los módulos ES no funcionan abriendo el archivo con doble clic.
+
+Cuando se fusione en `main`, si el repositorio publica con GitHub Pages desde `main`, la dirección será `https://arricio.github.io/catedral-baloncesto/el-mejor-medico/`. Hay que comprobarlo en Settings → Pages.
+
+---
+
+## 2. Todas las instrucciones del usuario (no se puede incumplir ninguna)
+
+1. Hacer un juego como el del vídeo y las capturas de referencia (estilo simulador de médico de Steam), **con la mayor calidad gráfica posible**.
+2. El juego se llama **«EL MEJOR MÉDICO»**. No debe aparecer **nada** de «DOCTOR SIMULATOR» en ningún sitio: título, textos, código ni imágenes.
+3. **Voces y audios en español de España.** Responder siempre al usuario en español de España.
+4. Se puede **recetar cualquier cosa**:
+   - cualquier medicamento;
+   - cualquier comida: cocido leonés, callos, cualquier pescado o marisco, embutidos…;
+   - cualquier bebida: agua, vino, cerveza, orujo, coñac, ron, refrescos…
+5. El médico **habla** con los pacientes y los pacientes **cuentan lo que les pasa**.
+6. La descripción del juego que dio el usuario incluye:
+   - Hospital San Marcos;
+   - exploración, pruebas (sangre, radiografía, TAC…) y diagnóstico;
+   - simuladores y secretos vergonzosos;
+   - cirugía con elección de anestesia y complicaciones;
+   - dar malas noticias con tacto y familiares nerviosos;
+   - reputación y dinero;
+   - ampliar el hospital y contratar especialistas;
+   - renombrar el hospital en honor al médico.
+7. El **nombre del médico** lo elige el jugador y se puede cambiar.
+8. **Creador del médico:**
+   - cara, pelo, cuerpo y vello facial;
+   - gafas;
+   - varios modelos de ropa y de batas.
+9. Los **nombres de los pacientes** se pueden poner y cambiar.
+10. Usar **Blender y Unreal Engine** mediante sus conectores.
+11. Muchos **pacientes distintos**, como en la vida real:
+    - abuelos y abuelas;
+    - niños y niñas de varias edades;
+    - bebés;
+    - jóvenes y adultos.
+12. Mujeres con **pechos pequeños, normales, grandes y muy grandes**. El usuario corrigió: «se distingue el tamaño, pero eso no parecen pechos». Por eso se rehízo la forma, que debe parecer real.
+13. «Conecta el Blender en la nube, pero **haz el juego aquí en el móvil**»: el juego tiene que funcionar en el móvil.
+14. «Sigue mejorando el juego del móvil con Blender»: esa era la tarea en curso en el momento del traspaso.
+15. Para este traspaso:
+    - no eliminar, sobrescribir ni modificar archivos existentes sin necesidad;
+    - **no cambiar de motor gráfico ni migrar** sin comprobar antes la compatibilidad;
+    - conservar todas las funcionalidades.
+
+Reglas de trabajo que se han seguido:
+- Los commits van a la rama `claude/medical-simulator-game-ruh821`.
+- No se crea un pull request salvo que el usuario lo pida.
+
+---
+
+## 3. Tecnología actual (importante antes de tocar nada)
+
+- **Juego web en 3D** con **Three.js r160**, que está incluido en `vendor/` y no se descarga de ningún CDN. JavaScript con módulos ES y sin compilación: ni npm ni bundler en el juego.
+- **Aplicación instalable (PWA)** con `manifest.webmanifest`, iconos y `sw.js`. El service worker guarda en caché el juego y los modelos para usarlo sin conexión. La versión de caché actual es `emm-v4`; **súbela (emm-v5…) cada vez que cambies archivos**, o los móviles seguirán con la versión antigua.
+- **Voces:** API Web Speech del navegador (`speechSynthesis`), que elige una voz `es-ES` según el sexo y la edad del personaje. No hay audios grabados.
+- **Sonidos** sintetizados con WebAudio: corazón, respiración, crepitantes, sibilancias, monitor, alarmas, llanto de bebé, etc.
+- **Personajes:**
+  - `modelos/personajes.glb`, hecho en Blender: un cuerpo de hombre (H) y otro de mujer (M), cada uno de una pieza y con 19 huesos. Se clonan con `SkeletonUtils.clone`.
+  - La ropa se pinta en el sombreador según la posición de reposo de cada vértice.
+  - La edad cambia la escala de los huesos.
+  - El pecho se deforma por personaje con un perfil de alturas.
+- **Peinados:** `modelos/pelo.glb`, hecho en Blender, con 8 peinados pegados al hueso de la cabeza.
+- **Rasgos de la cara** (ojos, cejas, nariz, boca, orejas, barba, gafas): todavía procedimentales en `js/escena.js`, función `rasgosCara`.
+- **Imágenes médicas procedimentales:** radiografías, TAC, ecografía, electrocardiograma y garganta, en `js/imagenes.js`.
+- **Guardado** en `localStorage`, con la clave `el-mejor-medico-v1`.
+- **Depuración:**
+  - `?caso=<id>` en la dirección fuerza una enfermedad, por ejemplo `index.html?caso=apendicitis`;
+  - `window.__juego` da acceso a `G`, `mundo`, `pac` y `cir`.
+
+### Compatibilidad con Unreal Engine (comprobarlo ANTES de migrar)
+- El juego **no** es un proyecto de Unreal. Pasarlo a Unreal significaría **reescribirlo entero** en C++ o Blueprints: unas 5.500 líneas de lógica, datos, diálogos, cirugía e interfaz.
+- Para el móvil, Unreal exige compilar para Android, con el SDK y el NDK; iPhone necesita un Mac. Además, la descarga pesa cientos de MB. Hoy el juego se abre en el navegador del móvil y pesa unos 5 MB.
+- **Recomendación:** mantener el juego web como producto principal y usar Unreal **solo si el usuario lo confirma**, como proyecto aparte. Ese proyecto debe ir fuera de este repositorio, por ejemplo en `C:\Proyectos\ElMejorMedico_Unreal\`, porque GitHub Pages no admite archivos de más de 100 MB.
+  - Primero, un prototipo que importe los mismos GLB (`personajes.glb`, `pelo.glb`) para comparar la calidad.
+  - Nunca hay que sustituir el juego web sin la aprobación expresa del usuario.
+- **Blender local** sí encaja directamente. Los scripts `modelos/*_blender.py` se ejecutan en Blender y se exporta a GLB en `modelos/`.
+
+---
+
+## 4. Archivos del juego
+
+| Archivo | Qué es |
+|---|---|
+| `index.html` | Interfaz completa con su CSS, el importmap de Three.js y el registro del service worker. Usa las fuentes Barlow, Barlow Condensed y Caveat. |
+| `js/juego.js` (1.306 líneas) | Lógica y pantallas. Ver el detalle debajo de la tabla. |
+| `js/datos.js` (1.459 líneas) | Datos y reglas médicas. Ver el detalle debajo de la tabla. |
+| `js/escena.js` (1.466 líneas) | Mundo 3D. Ver el detalle debajo de la tabla. |
+| `js/cirugia.js` | Minijuego de cirugía. Ver el detalle debajo de la tabla. |
+| `js/imagenes.js` | Radiografías, TAC, ecografía, ECG y garganta procedimentales. |
+| `js/audio.js` | `Voz.hablar()` y `Voz.callar()` en español; `Sonido.*`, sintetizados con WebAudio. |
+| `modelos/personajes.glb` y `modelos/personajes_blender.py` | Cuerpos H y M con esqueleto, más el script de Blender que los genera: tubos, remallado de vóxeles, suavizado, diezmado, armadura y pesos automáticos. |
+| `modelos/pelo.glb` y `modelos/pelo_blender.py` | 8 peinados: 0 calvo con corona (solo mayores de 50), 1 corto, 2 rapado, 3 flequillo, 4 media melena, 5 melena larga, 6 moño y 7 coleta. Cada peinado `Pelo_N` está centrado en el centro de la cabeza; las cabezas `Ref_cabeza_*`, la cámara y las luces solo sirven para revisar en Blender. |
+| `vendor/` | Three.js r160, RoomEnvironment, RoundedBoxGeometry, GLTFLoader, SkeletonUtils y BufferGeometryUtils. |
+| `sw.js`, `manifest.webmanifest`, `pwa-*.png`, `apple-touch-icon.png`, `favicon.svg`, `og-image.jpg` | Aplicación instalable e iconos. |
+| `pruebas/jugar.js`, `pruebas/cir.js`, `pruebas/movil.js` | Pruebas automáticas con Playwright. Ver la sección 7. |
+
+**`js/juego.js`** contiene:
+- la partida y el guardado;
+- la pantalla de inicio y el creador del médico;
+- la consulta: preguntas, exploración, auscultación, palpación, pruebas, ficha con nombre editable, receta, decisión y malas noticias;
+- la cirugía;
+- la planta de ingresados y la ronda;
+- el fin del día;
+- la gestión: equipos, camas, personal y sueldos;
+- el cambio de nombre del hospital.
+
+**`js/datos.js`** contiene:
+- las 41 enfermedades;
+- el recetario de 346 productos;
+- la búsqueda de recetas con texto libre (`itemLibre`);
+- el generador de pacientes por grupos de edad;
+- los diálogos;
+- la evaluación del tratamiento, con reglas de edad, alergias e interacciones;
+- la reacción de los pacientes a la receta.
+
+**`js/escena.js`** contiene:
+- la clase `Mundo`;
+- la consulta, la planta, el quirófano y el escenario del creador;
+- la carga de los GLB (`cargarModelos`);
+- los personajes: `crearHumanoGLB` y, si falta el GLB, `crearHumanoProc`;
+- la ropa (`ROPAS`), las poses, las animaciones (respiración, parpadeo, boca, llanto, mirada), la forma del pecho y los peinados;
+- las cámaras, incluido el ajuste para el móvil en vertical.
+
+**`js/cirugia.js`** contiene:
+- los pasos: desinfectar, incisión, separar, pinzar, extirpar, aspirar, reducir, malla y suturar;
+- el temblor;
+- las complicaciones (hemorragia, FV, desaturación, bradicardia, despertar, alergia), las constantes y la puntuación.
+
+Hay **escenarios** (consulta, planta y quirófano), pero están construidos en código dentro de `escena.js`; no son modelos importados.
+
+---
+
+## 5. Estado del trabajo
+
+### Terminado y probado
+- Nombre «EL MEJOR MÉDICO», sin ninguna referencia a «Doctor Simulator».
+- Voces en español (TTS del navegador) y subtítulos.
+- Creador del médico:
+  - sexo, voz, piel, ojos, cara, nariz, pecho en mujeres;
+  - 8 peinados, color de pelo, 6 tipos de vello facial y 4 de gafas;
+  - complexión, altura y edad;
+  - 9 modelos de ropa y bata: bata clásica, bata con corbata azul, bata corta, bata moderna y pijamas azul, verde, granate, negro y rosa;
+  - aleatorio;
+  - nombre editable en todo momento.
+- Nombres de los pacientes editables desde la ficha.
+- 41 enfermedades, entre ellas:
+  - de bebés y niños: bronquiolitis, cólico del lactante, varicela, laringitis, cuerpo extraño, piojos;
+  - de jóvenes: mononucleosis, acné;
+  - de mayores: fractura de cadera, insuficiencia cardiaca, infección de orina con confusión;
+  - además, simuladores y secretos vergonzosos.
+- Pacientes de todas las edades:
+  - bebés en portabebés;
+  - niños, que responden a través de sus padres;
+  - jóvenes, adultos y mayores encorvados;
+  - acompañantes según la edad.
+- Variedad de cuerpos: complexión, altura y 4 tallas de pecho con forma rehecha.
+- Recetario libre: cualquier medicamento, comida o bebida. Lo que no está en la lista se interpreta por texto. Hay reglas médicas reales: alcohol en menores, aspirina en menores de 16 años, miel en menores de 1 año, benzodiacepinas en mayores, alergias, Viagra con nitratos, etc.
+- Pruebas: sangre (incluida BNP), orina, radiografía por zonas (incluida la cadera), ecografía, TAC, ECG y faringe.
+- Cirugía con anestesia y complicaciones, y planta de ingresados con ronda.
+- Malas noticias, también a los padres; reputación y dinero.
+- Gestión: equipos (ecógrafo, TAC, laboratorio, monitores, instrumental, segundo quirófano), camas y personal (enfermera jefa, anestesista, radiólogo, cardiólogo, psicólogo, cirujano ayudante).
+- Cambiar el nombre del hospital.
+- Funciona en el móvil, en vertical y en horizontal, e instalable como aplicación.
+- Personajes con cuerpo de Blender y **peinados de Blender**, terminados en el último commit.
+
+### A medias
+- **Realismo gráfico:**
+  - los cuerpos y el pelo ya vienen de Blender;
+  - la **cara** (ojos, nariz, boca, orejas), la **barba** y las **gafas** siguen siendo piezas simples hechas en código;
+  - la ropa está pintada sobre el cuerpo, sin volumen de tela, salvo el faldón de la bata.
+- **Blender:** hasta ahora se usó un Blender **en la nube** (Higgsfield «3D Jutsu», a través de Composio), que no tiene GPU y no puede renderizar. Los proyectos de esa nube son «El Mejor Medico - personajes» y «El Mejor Medico - peinados». Con el Blender local esto ya no hace falta: los scripts `.py` del repositorio son la fuente.
+- **Voces:** dependen de las voces españolas que tenga instaladas el dispositivo. No hay voces grabadas.
+
+### Pendiente
+1. **Unreal Engine:** no se ha usado nunca, porque el conector solo existe en el portátil. Primero hay que decidir con el usuario si se usa para un prototipo aparte (ver la sección 3).
+2. **Caras en Blender:** modelar ojos, párpados, nariz, boca y orejas integrados en la malla, o una malla de cabeza con morph targets para hablar y parpadear. Hay que conservar los nombres de los huesos y el sistema de animación de `animarGLB`.
+3. **Barbas y gafas en Blender**, con la misma técnica que `pelo.glb`: una pieza `Barba_N` o `Gafas_N` pegada al hueso de la cabeza.
+4. **Mobiliario en Blender:** cama de hospital, lámpara de quirófano, mesa de quirófano, carro de instrumental, camilla, monitor. Hoy está hecho con cajas y cilindros en `escena.js`.
+5. **Ropa con volumen:** batas y pijamas como mallas con pesos, que sustituyan a la ropa pintada solo cuando estén probadas.
+6. Animaciones de andar o entrar, que hoy no existen.
+7. Cuando el usuario lo pida, crear un pull request de la rama a `main` y publicar.
+
+---
+
+## 6. Cómo encajan los modelos (para no romper nada)
+
+- Los huesos de `personajes.glb` llegan a Three.js **sin puntos**: `brazo.L` se convierte en `brazoL`. Los repetidos entre H y M llegan con sufijo, como `pelvis_1`; el código lo normaliza con `.replace(/_\d+$/, '')`.
+- En Blender cada cuerpo estaba desplazado en X (±0,45). El sombreador lo compensa con `uOffX`, calculado a partir de la caja de la malla.
+- La mujer está a escala 0,95.
+- El centro de la cabeza, en el espacio del personaje, es `(0, 1.705·esc, 0.008·esc)` en glTF, lo que en Blender equivale a `(0, -0.008, 1.705)`. El delante del personaje es +Z en glTF y −Y en Blender.
+- Peinados:
+  - `crearHumanoGLB` crea un grupo sin escala en el hueso `cabeza`, en ese centro, y le añade un clon de `Pelo_{estilo}` con escala `esc`;
+  - si el personaje lleva gorro de quirófano o falta `pelo.glb`, se usa el pelo procedimental de antes (`ponerPelo`).
+- Si se cambian los GLB, hay que mantener:
+  - los nombres de los objetos: `H_Esqueleto`, `H_Cuerpo`, `H_Faldon`, `M_…` y `Pelo_0` a `Pelo_7`;
+  - los nombres de los huesos;
+  - la escala en metros.
+
+---
+
+## 7. Pruebas antes de cada commit
+
+Requisitos: Node.js y Playwright (`npm i -g playwright` o en una carpeta aparte, con `npx playwright install chromium`).
+
+```bat
+cd el-mejor-medico
+python -m http.server 8766
+:: en otra terminal (las capturas se guardan en la carpeta indicada):
+node pruebas\jugar.js C:\Temp\capturas            & rem consulta completa con paciente al azar
+set CASO=bronquiolitis& node pruebas\jugar.js C:\Temp\capturas
+node pruebas\cir.js C:\Temp\capturas              & rem cirugía, planta y alta
+node pruebas\movil.js C:\Temp\capturas            & rem pantallas en formato móvil
+```
+
+Casos útiles para `CASO` o `?caso=`: `bronquiolitis`, `fractura_cadera`, `varicela`, `itu_confusion`, `apendicitis`, `colecistitis`.
+
+Todas las pruebas pasaban sin errores en el último commit. Hay que mirar las capturas: que los personajes se vean bien, que el pelo no tape los ojos y que el panel no tape al paciente en el móvil.
+
+---
+
+## 8. Reglas para seguir trabajando
+
+- Trabajar siempre en la rama `claude/medical-simulator-game-ruh821` y en la carpeta `el-mejor-medico/`.
+- No tocar `laser-marmol/`, `impresora-3d/` ni los juegos de baloncesto.
+- No mezclar con «MI GRANJA».
+- No cambiar de motor ni migrar sin comprobar antes la compatibilidad y sin la aprobación del usuario.
+- Los modelos nuevos de Blender se guardan como GLB en `modelos/`, junto con su script `.py` para poder rehacerlos. Hay que añadirlos a la lista de `sw.js` y subir la versión de la caché.
+- Los textos del juego y las respuestas al usuario van en español de España.
+- No poner nunca «Doctor Simulator».

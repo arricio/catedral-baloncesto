@@ -1,0 +1,47 @@
+const { chromium } = require('playwright');
+const S = process.argv[2] || '.';
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
+  const pg = await b.newPage({ viewport: { width: Number(process.argv[3]||1200), height: Number(process.argv[4]||700) } });
+  pg.on('pageerror', e => console.log('ERR', e.message, e.stack?.split('\n')[1]));
+  pg.on('console', m => { if (m.type()==='error') console.log('CERR', m.text()); });
+  const shot = async (n) => { await pg.waitForTimeout(1500); await pg.screenshot({ path: `${S}/${process.env.PREF || 'j'}_${n}.png` }); console.log('shot', n); };
+  const click = async (sel) => { await pg.waitForSelector(sel, { timeout: 15000 }); await pg.evaluate((s) => document.querySelector(s).click(), sel); await pg.waitForTimeout(150); };
+  await pg.goto('http://localhost:8766/index.html' + (process.env.CASO ? '?caso=' + process.env.CASO : ''));
+  await pg.waitForSelector('#inicio.on', { timeout: 30000 }); await pg.evaluate(() => window.__juego.mundo.ponerCalidad('baja'));
+  await shot('01inicio');
+  await click('#b-nueva');
+  await pg.waitForSelector('#creador.on'); await shot('02creador');
+  await click('#cr-azar'); await shot('03creador_azar');
+  await click('#cr-ok');
+  await click('#int-ok');
+  await pg.waitForSelector('#panel.on [data-q]', { timeout: 15000 });
+  await pg.evaluate(() => { document.querySelector('#subtitulo').click(); });
+  await shot('04consulta');
+  for (const q of ['motivo','dolor','habitos']) { await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 30000}); await click(`[data-q="${q}"]`); }
+  await pg.waitForTimeout(500); await shot('05hablando');
+  await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 40000});
+  if (await pg.$('.modal-fondo')) { await pg.click('.modal [data-i="0"]').catch(()=>{}); await pg.waitForTimeout(300); }
+  await click('[data-tab="explorar"]'); await click('[data-ex="constantes"]'); await shot('06constantes');
+  await click('.modal .cerrar');
+  await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 40000});
+  await click('[data-ex="pulmones"]');
+  await pg.waitForSelector('#es-fin', { timeout: 30000 }); await pg.waitForTimeout(800);
+  await pg.mouse.move(600, 380); await pg.mouse.down(); await pg.mouse.up(); await shot('07esteto');
+  await click('#es-fin'); await pg.waitForTimeout(800);
+  await pg.waitForFunction(() => !document.querySelector('#panel').classList.contains('ocupado'), null, {timeout: 40000});
+  await click('[data-tab="pruebas"]'); await click('[data-pr="sangre"]'); await shot('08sangre'); await click('.modal .cerrar');
+  await click('[data-pr="rx"]'); await click('.modal [data-z="torax"]'); await shot('09rx'); await click('.modal .cerrar');
+  await click('[data-pr="ecg"]'); await shot('10ecg'); await click('.modal .cerrar');
+  await click('[data-tab="ficha"]'); await pg.fill('#fi-nombre', 'Paciente Renombrado'); await shot('11ficha'); await click('.modal .cerrar');
+  console.log('enf', await pg.evaluate(() => window.__juego.pac.enfId), await pg.evaluate(() => window.__juego.pac.nombre));
+  await click('[data-tab="decidir"]');
+  await pg.fill('#re-q', 'orujo'); await pg.dispatchEvent('#re-q','input'); await pg.waitForTimeout(200); await shot('12receta_busca');
+  await click('#re-sug button'); await pg.fill('#re-q', 'cocido'); await pg.dispatchEvent('#re-q','input'); await click('#re-sug button');
+  await pg.fill('#re-q', 'unas cigalas'); await pg.dispatchEvent('#re-q','input'); await click('#re-sug button.libre');
+  await pg.evaluate(() => { const id = window.__juego.pac.enfId; document.querySelector(`[data-d="${id}"]`).click(); });
+  await click('[data-a="casa"]'); await click('[data-p="baja"]'); await shot('13decidir');
+  await click('#de-ok'); await click('[data-t="empatia"]');
+  await pg.waitForSelector('#va-ok', { timeout: 60000 }); await shot('14valoracion');
+  await b.close();
+})();
