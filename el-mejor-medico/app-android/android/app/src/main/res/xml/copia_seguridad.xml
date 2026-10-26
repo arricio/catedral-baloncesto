@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 o anterior: las partidas (WebView) entran en la copia de seguridad; el modelo de IA de 2 GB, no
+     (se vuelve a descargar o importar). -->
+<full-backup-content>
+    <exclude domain="file" path="modelos/" />
+</full-backup-content>

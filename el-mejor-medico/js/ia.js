@@ -137,7 +137,7 @@ async function llamar(cfg, mensajes) {
     const P = window.Capacitor?.Plugins?.IALocal;
     if (!P) throw new Error('la IA del móvil sólo funciona en la aplicación de Android');
     let tmr;
-    const limite = new Promise((_, no) => { tmr = setTimeout(() => no(Object.assign(new Error('tiempo'), { name: 'AbortError' })), Math.max(cfg.espera || 30, 60) * 1000); });
+    const limite = new Promise((_, no) => { tmr = setTimeout(() => no(Object.assign(new Error('tiempo'), { name: 'AbortError' })), Math.max(cfg.espera || 30, 120) * 1000); });
     try { return (await Promise.race([P.generar({ mensajes, temperatura: 0.8, maxTokens: 120 }), limite])).texto || ''; }
     finally { clearTimeout(tmr); }
   }
@@ -163,7 +163,11 @@ export function esEco(respuesta, pregunta) {
   const pal = (s) => normaliza(s).replace(/[^a-zñ0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 2);
   const r = pal(respuesta), q = new Set(pal(pregunta));
   if (!r.length || !q.size) return false;
-  return r.filter(w => q.has(w)).length / r.length > 0.6;
+  if (r.filter(w => q.has(w)).length / r.length <= 0.6) return false;
+  // «No he tenido fiebre» o «Me duele la cabeza» usan las palabras de la pregunta, pero contestan:
+  // sólo es eco si vuelve a preguntar o si no hay nada que suene a respuesta del paciente
+  if (/\?\s*$/.test(respuesta)) return true;
+  return !/\b(no|si|nada|nunca|tengo|tenia|tuve|he|me|mi|estoy|estaba|llevo|creo|pues|bueno|vale|claro|ayer|hoy)\b/.test(normaliza(respuesta));
 }
 // Devuelve { texto, origen: 'ia' | 'predefinida', modelo, error }
 export async function generarRespuesta(cfg, datos) {

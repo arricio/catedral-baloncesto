@@ -16,6 +16,10 @@ android {
                 keyAlias firma['alias']
                 keyPassword firma['clave']
             }
+            // v2 + v3 (v3 permite cambiar de clave en el futuro sin perder las partidas)
+            enableV1Signing false
+            enableV2Signing true
+            enableV3Signing true
         }
     }
     compileOptions {
@@ -30,8 +34,8 @@ android {
         applicationId "es.elmejormedico.juego"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -40,6 +44,11 @@ android {
         }
     }
     buildTypes {
+        // copia de pruebas (depurable): se instala aparte y no toca las partidas de la aplicación real
+        debug {
+            applicationIdSuffix ".prueba"
+            versionNameSuffix "-prueba"
+        }
         release {
             if (archivoFirma.exists()) signingConfig signingConfigs.juego
             minifyEnabled false

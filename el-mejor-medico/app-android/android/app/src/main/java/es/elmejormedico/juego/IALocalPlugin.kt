@@ -1,7 +1,7 @@
 package es.elmejormedico.juego
 
 // IA generativa dentro del móvil: LiteRT-LM (Google) con Gemma 4 E2B. Sin Internet y sin el portátil.
-// El modelo (≈2 GB) se descarga una vez de Hugging Face o se importa desde un archivo, y se guarda
+// El modelo (≈2,6 GB) se descarga una vez de Hugging Face o se importa desde un archivo, y se guarda
 // en la memoria interna de la aplicación (se conserva al actualizar el APK).
 
 import android.app.Activity
@@ -33,10 +33,26 @@ import java.util.concurrent.atomic.AtomicBoolean
 @CapacitorPlugin(name = "IALocal")
 class IALocalPlugin : Plugin() {
     companion object {
-        const val ARCHIVO = "gemma-4-E2B-it-gpu.litertlm"
-        const val TAMANO = 2008432640L
-        const val URL_MODELO = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm"
+        // El de Android (procesador y GPU). OJO: «-gpu.litertlm» y «-web.litertlm» son para navegadores y
+        // LiteRT-LM de Android no los abre («tf_lite_prefill_decode not found in the model»).
+        const val ARCHIVO = "gemma-4-E2B-it.litertlm"
+        const val TAMANO = 2588147712L
+        const val SHA256 = "181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c"
+        const val URL_MODELO = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm"
+        val OBSOLETOS = listOf("gemma-4-E2B-it-gpu.litertlm", "gemma-4-E2B-it-gpu.litertlm.parte", "gemma-4-E2B-it-gpu.litertlm.importando")
     }
+
+    // Huella del archivo: sólo se da por bueno si coincide con la publicada en Hugging Face
+    private fun comprobarHuella(f: File) {
+        notifyListeners("progreso", JSObject().put("bytes", TAMANO).put("total", TAMANO).put("comprobando", true))
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        f.inputStream().use { ent -> val buf = ByteArray(1 shl 20); while (true) { val n = ent.read(buf); if (n < 0) break; md.update(buf, 0, n) } }
+        val h = md.digest().joinToString("") { "%02x".format(it) }
+        if (h != SHA256) { f.delete(); throw Exception("el archivo está dañado o no es el modelo correcto (huella SHA-256 distinta)") }
+    }
+
+    // la versión 1.0 descargaba un archivo que Android no puede usar: se borra para liberar 2 GB
+    private fun borrarObsoletos() { OBSOLETOS.forEach { File(carpeta(), it).delete() } }
 
     // un solo hilo: el modelo no admite dos respuestas a la vez
     private val hilo = Executors.newSingleThreadExecutor()
@@ -51,6 +67,7 @@ class IALocalPlugin : Plugin() {
 
     @PluginMethod
     fun estado(call: PluginCall) {
+        borrarObsoletos()
         val m = modelo()
         val r = JSObject()
         r.put("instalado", instalado())
@@ -104,6 +121,7 @@ class IALocalPlugin : Plugin() {
                     }
                 }
                 if (parte.length() != TAMANO) throw Exception("el archivo descargado no está completo (${parte.length()} de $TAMANO bytes)")
+                comprobarHuella(parte)
                 if (!parte.renameTo(modelo())) throw Exception("no se pudo guardar el modelo")
                 notifyListeners("progreso", JSObject().put("bytes", TAMANO).put("total", TAMANO))
                 call.resolve(JSObject().put("ok", true))
@@ -144,6 +162,7 @@ class IALocalPlugin : Plugin() {
                     }
                 }
                 if (tmp.length() != TAMANO) { tmp.delete(); throw Exception("ese archivo no es $ARCHIVO (${tmp.length()} bytes)") }
+                comprobarHuella(tmp)
                 cerrarMotor()
                 if (!tmp.renameTo(modelo())) throw Exception("no se pudo guardar el modelo")
                 call.resolve(JSObject().put("ok", true))

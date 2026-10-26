@@ -658,9 +658,9 @@ function instalarIAMovil(e) {
     <p class="nota">Espacio libre en el móvil: ${gb(e.libre)}.${e.parcial ? ` Ya hay ${gb(e.parcial)} descargados: la descarga seguirá donde se quedó.` : ''} Conviene usar wifi.</p>
     <div id="ia-prog" class="oculto"><progress id="ia-barra" max="1" value="0" style="width:100%"></progress><p class="nota" id="ia-txt"></p></div>
     <div class="botones"><button class="btn grande" id="ia-desc">Descargar (${gb(e.total - (e.parcial || 0))})</button><button class="btn sec" id="ia-imp">Importar archivo…</button><button class="btn sec" id="ia-no">Ahora no</button></div>
-    <p class="nota">«Importar archivo» sirve si ya tienes <i>gemma-4-E2B-it-gpu.litertlm</i> en el móvil (por ejemplo, copiado por USB a Descargas). Mientras no haya modelo, las respuestas serán las predefinidas del juego y se indicará en los subtítulos.</p>`, { cerrable: false });
+    <p class="nota">«Importar archivo» sirve si ya tienes <i>gemma-4-E2B-it.litertlm</i> en el móvil (por ejemplo, copiado por USB a Descargas). Mientras no haya modelo, las respuestas serán las predefinidas del juego y se indicará en los subtítulos.</p>`, { cerrable: false });
   let escucha = null;
-  const progreso = (d) => { $('#ia-prog', m).classList.remove('oculto'); $('#ia-barra', m).value = d.bytes / d.total; $('#ia-txt', m).textContent = `${gb(d.bytes)} de ${gb(d.total)}`; };
+  const progreso = (d) => { $('#ia-prog', m).classList.remove('oculto'); $('#ia-barra', m).value = d.bytes / d.total; $('#ia-txt', m).textContent = d.comprobando ? 'Comprobando que el archivo está completo y es el correcto…' : `${gb(d.bytes)} de ${gb(d.total)}`; };
   const bloquear = (b) => $$('#ia-desc,#ia-imp', m).forEach(x => x.disabled = b);
   const terminar = async (accion) => {
     bloquear(true);

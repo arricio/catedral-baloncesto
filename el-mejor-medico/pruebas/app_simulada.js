@@ -14,11 +14,12 @@ const comprobar = (nombre, ok, detalle = '') => { resultados.push({ nombre, ok: 
 
 const SIMULACION = () => {
   const oyentes = {};
-  const plugin = (nombre, metodos) => ({ ...metodos, addListener: async (ev, fn) => { (oyentes[nombre + ev] ||= []).push(fn); return { remove: () => { oyentes[nombre + ev] = oyentes[nombre + ev].filter(f => f !== fn); } }; } });
+  // como en el Capacitor real del móvil: addListener devuelve el oyente directamente (no una promesa)
+  const plugin = (nombre, metodos) => ({ ...metodos, addListener: (ev, fn) => { (oyentes[nombre + ev] ||= []).push(fn); return { remove: () => { oyentes[nombre + ev] = oyentes[nombre + ev].filter(f => f !== fn); } }; } });
   const emitir = (nombre, ev, d) => (oyentes[nombre + ev] || []).forEach(f => f(d));
   const reg = window.__nativo = { instalado: false, cargado: false, llamadas: [], habladas: [], palabras: 0, dictados: 0, avisos: [] };
   document.addEventListener('DOMContentLoaded', () => new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => n.textContent && reg.avisos.push(n.textContent)))).observe(document.querySelector('#avisos'), { childList: true }));
-  const TOTAL = 2008432640;
+  const TOTAL = 2588147712;
   window.Capacitor = {
     isNativePlatform: () => true,
     Plugins: {

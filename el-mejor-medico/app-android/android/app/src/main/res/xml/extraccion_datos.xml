@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 o posterior: las partidas (WebView) entran en la copia en la nube y en el paso a otro móvil;
+     el modelo de IA de 2 GB, no (se vuelve a descargar o importar). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="modelos/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="modelos/" />
+    </device-transfer>
+</data-extraction-rules>

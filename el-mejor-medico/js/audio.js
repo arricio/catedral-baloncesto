@@ -11,7 +11,8 @@ const synthNativo = vozNativa && {
   speak(u) {
     const id = 'u' + Math.random().toString(36).slice(2);
     let escucha = null;
-    vozNativa.addListener('palabra', (d) => { if (d.id === id) u.onboundary && u.onboundary({ name: 'word', charLength: d.largo }); }).then(h => { escucha = h; });
+    // según la versión de Capacitor, addListener devuelve el oyente o una promesa del oyente
+    Promise.resolve(vozNativa.addListener('palabra', (d) => { if (d.id === id) u.onboundary && u.onboundary({ name: 'word', charLength: d.largo }); })).then(h => { escucha = h; });
     vozNativa.hablar({ texto: u.text, voz: u.voice?.name || null, tono: u.pitch, vel: u.rate, id })
       .then(() => u.onend && u.onend(), () => u.onerror && u.onerror())
       .finally(() => escucha?.remove());
