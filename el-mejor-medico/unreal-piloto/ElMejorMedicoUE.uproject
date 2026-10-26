@@ -1,0 +1,25 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "",
+	"Description": "EL MEJOR MÉDICO - prueba piloto en Unreal Engine 5.8 (consulta con MetaHumans, IA y voces)",
+	"Modules": [
+		{
+			"Name": "ElMejorMedicoUE",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{ "Name": "ModelingToolsEditorMode", "Enabled": true, "TargetAllowList": [ "Editor" ] },
+		{ "Name": "MetaHuman", "Enabled": true },
+		{ "Name": "MetaHumanCharacter", "Enabled": true },
+		{ "Name": "MetaHumanSDK", "Enabled": true },
+		{ "Name": "PythonScriptPlugin", "Enabled": true, "TargetAllowList": [ "Editor" ] },
+		{ "Name": "EditorScriptingUtilities", "Enabled": true, "TargetAllowList": [ "Editor" ] },
+		{ "Name": "AndroidPermission", "Enabled": true },
+		{ "Name": "ModelContextProtocol", "Enabled": true, "TargetAllowList": [ "Editor" ] },
+		{ "Name": "AllToolsets", "Enabled": true, "TargetAllowList": [ "Editor" ] }
+	],
+	"TargetPlatforms": [ "Windows", "Android" ]
+}

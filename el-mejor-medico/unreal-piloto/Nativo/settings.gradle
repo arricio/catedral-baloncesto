@@ -1,0 +1,4 @@
+// Biblioteca nativa de Android para EL MEJOR MÉDICO (Unreal): IA (LiteRT-LM) y voces del móvil.
+// Se compila con  gradlew.bat :emm-nativo:assembleRelease  y el .aar se copia a Source/ElMejorMedicoUE/Android.
+rootProject.name = 'emm-nativo-raiz'
+include ':emm-nativo'

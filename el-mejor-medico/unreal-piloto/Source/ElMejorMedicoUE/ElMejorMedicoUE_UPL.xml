@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EL MEJOR MÉDICO (Unreal, Android): IA dentro del móvil (LiteRT-LM + Gemma 4 E2B) y voces del sistema.
+     emm-nativo.aar se compila en Nativo/ (gradlew :emm-nativo:assembleRelease). -->
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+	<init>
+		<log text="EL MEJOR MÉDICO: IA y voces nativas de Android"/>
+	</init>
+
+	<buildGradleAdditions>
+		<insert>
+dependencies {
+	implementation files('$S(AbsPluginDir)/Android/emm-nativo.aar')
+	implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.1'
+}
+android {
+	packagingOptions { jniLibs { useLegacyPackaging = false } }
+}
+		</insert>
+	</buildGradleAdditions>
+
+	<androidManifestUpdates>
+		<!-- GPU del móvil para la IA (opcionales: si no existen, la IA usa el procesador) -->
+		<addElements tag="application">
+			<uses-native-library android:name="libvndksupport.so" android:required="false"/>
+			<uses-native-library android:name="libOpenCL.so" android:required="false"/>
+		</addElements>
+		<!-- Android 11+: para encontrar el motor de voces del sistema -->
+		<addElements tag="manifest">
+			<queries>
+				<intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
+			</queries>
+		</addElements>
+		<addPermission android:name="android.permission.INTERNET"/>
+	</androidManifestUpdates>
+
+	<proguardAdditions>
+		<insert>
+-keep class es.elmejormedico.nativo.** { *; }
+-keep class com.google.ai.edge.litertlm.** { *; }
+		</insert>
+	</proguardAdditions>
+</root>
