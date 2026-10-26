@@ -254,7 +254,7 @@ function actualizarCharla() {
   // mientras un paciente quiere decir algo, el médico también puede seguir hablando
   if (charla.pendiente && !charla.espera && !ocupado && textoCaja()) $('#ch-medico').disabled = false;
   // se avisa siempre de si las respuestas son de IA o predefinidas
-  if (turno === 'paciente' && !hablandoN && !charla.pensando) estado += G.ajustes.ia.modo === 'predefinida' ? ' (Sin IA instalada: respuestas predefinidas.)' : ` (IA: ${G.ajustes.ia.modelo})`;
+  if (turno === 'paciente' && !hablandoN && !charla.pensando) estado += iaMovil.carga ? ' (Cargando la IA del móvil…)' : G.ajustes.ia.modo === 'predefinida' ? ' (Sin IA instalada: respuestas predefinidas.)' : ` (IA: ${G.ajustes.ia.modelo}${G.ajustes.ia.modo === 'movil' ? ', en el móvil' : ''})`;
   $('#ch-estado').textContent = estado;
   el.dataset.turno = turno;
   if (el.offsetHeight) document.documentElement.style.setProperty('--alto-charla', `${el.offsetHeight}px`);
@@ -275,7 +275,7 @@ async function alternarMicro(campo) {
   if (!G.ajustes.micAvisado) {
     const ok = await new Promise(res => {
       const m = abrirModal(`<h2>Usar el micrófono</h2><p>Vas a dictar lo que dirá el médico. Tu voz <b>sólo se convierte en texto</b>: no se guarda ni se reproduce. Después podrás corregir el texto antes de que el médico lo diga con su propia voz.</p>
-        <p class="nota">El navegador te pedirá permiso para usar el micrófono. En Chrome y Edge el reconocimiento de voz necesita conexión a Internet.</p>
+        <p class="nota">${esApp() ? 'Android te pedirá permiso para usar el micrófono. Se usa el reconocedor de voz del propio móvil; funciona sin Internet si tienes descargado el español (Ajustes de Android › Google › Voz › Reconocimiento sin conexión).' : 'El navegador te pedirá permiso para usar el micrófono. En Chrome y Edge el reconocimiento de voz necesita conexión a Internet.'}</p>
         <div class="botones"><button class="btn sec" id="mi-no">Ahora no</button><button class="btn grande" id="mi-si">Permitir y dictar</button></div>`, { clase: 'pequeno', alCerrar: () => res(false) });
       $('#mi-si', m).onclick = () => { m.parentElement.remove(); res(true); };
       $('#mi-no', m).onclick = () => { m.cerrar(); };
@@ -348,6 +348,8 @@ function tratamientoDicho() {
 }
 // El paciente (o quien corresponda) contesta: con IA si está configurada, si no con la respuesta del juego
 async function responderCon(quien, referencia, { fija = false, tratamiento = null } = {}) {
+  // en el móvil, si la IA aún se está cargando, se espera a que termine (no se cambia a las predefinidas sin avisar)
+  if (iaMovil.carga) { charla.pensando = true; actualizarCharla(); await iaMovil.carga; charla.pensando = false; }
   const cfg = G.ajustes.ia;
   let texto = referencia, origen = 'predefinida';
   const bebe = quien === 'paciente' && pac && pac.edad < 1.5;
@@ -436,10 +438,11 @@ function ajustes() {
     <div class="botones"><button class="btn" id="aj-probar">Probar la voz del médico</button><button class="btn sec" id="aj-edades">Probar voces por edades</button></div>
     <div id="aj-voces"></div>
     <div class="ficha-sec">RESPUESTAS DE LOS PACIENTES</div>
-    <label class="fila">Modo <select id="aj-ia"><option value="predefinida">Predefinidas del juego (sin IA, sin Internet)</option><option value="ollama">IA local con Ollama (gratis, sin Internet)</option><option value="openai">IA local compatible con OpenAI (LM Studio, llama.cpp…)</option></select></label>
+    <label class="fila">Modo <select id="aj-ia">${esApp() ? '<option value="movil">IA en el propio móvil (Gemma 4 E2B, sin Internet)</option>' : ''}<option value="predefinida">Predefinidas del juego (sin IA, sin Internet)</option><option value="ollama">IA local con Ollama (gratis, sin Internet)</option><option value="openai">IA local compatible con OpenAI (LM Studio, llama.cpp…)</option></select></label>
     <div id="aj-ia-cfg"><label class="campo">Dirección del servidor<input id="aj-url" value="${esc(ia.url)}" autocomplete="off"></label><label class="campo">Modelo<input id="aj-mod" value="${esc(ia.modelo)}" autocomplete="off"></label>
       <div class="botones"><button class="btn sec" id="aj-iap">Probar la conexión</button></div><p class="nota" id="aj-iar"></p></div>
-    <p class="nota">En el móvil: abre en el portátil <b>JUGAR-EN-EL-MOVIL.cmd</b> y, en el móvil, conectado a la misma wifi, la dirección que te muestra. El juego usará la IA del portátil sin configurar nada.</p>
+    ${esApp() ? `<div id="aj-movil"><p class="nota" id="aj-mov-est">Comprobando la IA del móvil…</p><div class="botones"><button class="btn sec" id="aj-mov-inst">Descargar o importar el modelo</button><button class="btn sec" id="aj-mov-carg">Cargar / reintentar</button><button class="btn sec" id="aj-mov-cpu">Usar el procesador en vez de la GPU</button></div></div>`
+      : '<p class="nota">Para jugar en el móvil sin el portátil, instala la aplicación de Android (APK): la IA va dentro del móvil. Para pruebas, también puedes abrir en el portátil <b>JUGAR-EN-EL-MOVIL.cmd</b> y, en el móvil, la dirección que te muestra.</p>'}
     <p class="nota">En los subtítulos verás <i class="origen ia">IA</i> si la respuesta la ha generado la inteligencia artificial y <i class="origen pre">predefinida</i> si es una frase escrita en el juego (por ejemplo, cuando no hay IA o no contesta).</p>
     <div class="ficha-sec">MANDO Y CONTROLES</div>
     <p class="nota">${Mando.conectado ? `Mando conectado: ${esc(Mando.nombre)}` : 'No hay ningún mando conectado. Empareja el mando de Xbox por Bluetooth y pulsa cualquier botón.'}</p>
@@ -451,14 +454,26 @@ function ajustes() {
     <div class="botones"><button class="btn sec" id="aj-pc">Pantalla completa</button>${G ? '<button class="btn peligro" id="aj-borrar">Borrar partida</button>' : ''}</div>`);
   $('#aj-cal', m).value = a.calidad;
   $('#aj-ia', m).value = ia.modo;
-  const verIA = () => $('#aj-ia-cfg', m).classList.toggle('oculto', $('#aj-ia', m).value === 'predefinida');
+  const verIA = () => { $('#aj-ia-cfg', m).classList.toggle('oculto', ['predefinida', 'movil'].includes($('#aj-ia', m).value)); $('#aj-movil', m)?.classList.toggle('oculto', $('#aj-ia', m).value !== 'movil'); };
   verIA();
+  if (esApp()) {
+    const P = window.Capacitor.Plugins.IALocal;
+    const verMovil = async () => {
+      const e = await P.estado().catch(err => ({ error: err.message }));
+      $('#aj-mov-est', m).textContent = e.error ? `Error: ${e.error}` : !e.instalado ? `Modelo no instalado (${gb(e.total)}). Espacio libre: ${gb(e.libre)}.` : e.cargado ? `Gemma 4 E2B cargado ${e.aceleracion === 'gpu' ? 'en la GPU' : 'en el procesador'}. Funciona sin Internet.` : iaMovil.carga ? 'Cargando Gemma 4 E2B…' : 'Gemma 4 E2B instalado (sin cargar).';
+    };
+    verMovil();
+    $('#aj-mov-inst', m).onclick = async () => { const e = await P.estado(); if (e.instalado) return aviso('El modelo ya está instalado.', 'info'); instalarIAMovil(e); };
+    $('#aj-mov-carg', m).onclick = async () => { ia.manual = false; await detectarIAMovil(); verMovil(); $('#aj-ia', m).value = ia.modo; verIA(); };
+    $('#aj-mov-cpu', m).onclick = async () => { ia.aceleracion = 'cpu'; guardar(); aviso('Se usará el procesador la próxima vez que se abra el juego.', 'info'); };
+  }
   const aplicar = () => {
     a.voz = $('#aj-voz', m).checked; a.velVoz = +$('#aj-vel', m).value; a.calidad = $('#aj-cal', m).value;
     const nuevoModo = $('#aj-ia', m).value;
     if (nuevoModo !== ia.modo && nuevoModo === 'openai' && /11434/.test($('#aj-url', m).value)) $('#aj-url', m).value = 'http://localhost:1234';
     if (nuevoModo !== ia.modo && nuevoModo === 'ollama' && /1234/.test($('#aj-url', m).value)) $('#aj-url', m).value = 'http://localhost:11434';
-    if (nuevoModo !== ia.modo) ia.manual = true;
+    if (nuevoModo !== ia.modo) ia.manual = nuevoModo !== 'movil';
+    if (nuevoModo === 'movil' && ia.modo !== 'movil') setTimeout(() => detectarIAMovil(), 0);
     ia.modo = nuevoModo; ia.url = $('#aj-url', m).value.trim(); ia.modelo = $('#aj-mod', m).value.trim();
     a.mando.sensibilidad = +$('#aj-sens', m).value; a.mando.zonaMuerta = +$('#aj-dz', m).value;
     verIA();
@@ -592,6 +607,7 @@ function introduccion() {
 const puenteIA = () => /^https?:$/.test(location.protocol) ? `${location.origin}/ollama` : null;
 async function detectarIA() {
   const ia = G.ajustes.ia;
+  if (esApp()) return detectarIAMovil();
   if (ia.manual) return;
   const candidatas = [...new Set([ia.url, puenteIA(), IA_POR_DEFECTO.url].filter(Boolean))];
   for (const url of candidatas) {
@@ -605,6 +621,57 @@ async function detectarIA() {
   }
   // la IA que se encontró otro día ya no está (portátil apagado, otra wifi…): mejor no esperar en cada respuesta
   if (ia.modo === 'ollama') { ia.modo = 'predefinida'; guardar(); actualizarCharla(); aviso('No se encuentra la IA: los pacientes usarán las respuestas predefinidas.', 'mal'); }
+}
+// ───────────────────────── IA dentro del móvil (aplicación de Android) ─────────────────────────
+// Gemma 4 E2B con LiteRT-LM (app-android/…/IALocalPlugin.kt). No necesita Internet ni el portátil:
+// sólo hay que descargar el modelo una vez (o importarlo desde un archivo).
+const esApp = () => !!window.Capacitor?.isNativePlatform?.() && !!window.Capacitor.Plugins?.IALocal;
+const iaMovil = { carga: null, ofrecida: false, aceleracion: '' };
+const gb = (b) => (b / 1e9).toFixed(2).replace('.', ',') + ' GB';
+async function detectarIAMovil({ ofrecer = true } = {}) {
+  const ia = G.ajustes.ia, P = window.Capacitor.Plugins.IALocal;
+  if (ia.manual && ia.modo !== 'movil') return;
+  let e; try { e = await P.estado(); } catch (err) { aviso(`IA del móvil no disponible: ${err.message}`, 'mal'); return; }
+  if (!e.instalado) {
+    if (ia.modo === 'movil') { ia.modo = 'predefinida'; guardar(); actualizarCharla(); }
+    if (ofrecer && !iaMovil.ofrecida) { iaMovil.ofrecida = true; instalarIAMovil(e); }
+    return;
+  }
+  if (e.cargado) { ia.modo = 'movil'; ia.modelo = e.modelo; actualizarCharla(); return; }
+  aviso('Cargando la IA del móvil (Gemma 4 E2B)…', 'info');
+  iaMovil.carga = P.cargar({ aceleracion: ia.aceleracion || 'gpu' }).then(r => {
+    ia.modo = 'movil'; ia.modelo = e.modelo; iaMovil.aceleracion = r.aceleracion; guardar();
+    aviso(`IA del móvil lista (${e.modelo}, ${r.aceleracion === 'gpu' ? 'en la GPU' : 'en el procesador'}, ${(r.ms / 1000).toFixed(1).replace('.', ',')} s). Funciona sin Internet.`, 'bien');
+  }).catch(err => {
+    ia.modo = 'predefinida'; guardar();
+    const mm = abrirModal(`<h2>La IA del móvil no ha arrancado</h2><p>${esc(err.message || String(err))}</p><p>Mientras tanto, los pacientes contestarán con las <b>respuestas predefinidas</b> del juego (lo verás en los subtítulos). Puedes reintentarlo en Ajustes.</p><div class="botones"><button class="btn" id="ia-ok">Entendido</button></div>`);
+    $('#ia-ok', mm).onclick = () => mm.cerrar();
+  }).finally(() => { iaMovil.carga = null; actualizarCharla(); });
+  actualizarCharla();
+  return iaMovil.carga;
+}
+// Pantalla para conseguir el modelo: descargarlo una vez o importarlo desde un archivo
+function instalarIAMovil(e) {
+  const P = window.Capacitor.Plugins.IALocal;
+  const m = abrirModal(`<h2>IA de los pacientes en el móvil</h2>
+    <p>Para que los pacientes contesten con inteligencia artificial <b>sin Internet y sin el portátil</b>, el juego necesita el modelo <b>Gemma 4 E2B</b> (${gb(e.total)}, gratuito, licencia Apache 2.0). Se guarda en el móvil y se conserva al actualizar el juego.</p>
+    <p class="nota">Espacio libre en el móvil: ${gb(e.libre)}.${e.parcial ? ` Ya hay ${gb(e.parcial)} descargados: la descarga seguirá donde se quedó.` : ''} Conviene usar wifi.</p>
+    <div id="ia-prog" class="oculto"><progress id="ia-barra" max="1" value="0" style="width:100%"></progress><p class="nota" id="ia-txt"></p></div>
+    <div class="botones"><button class="btn grande" id="ia-desc">Descargar (${gb(e.total - (e.parcial || 0))})</button><button class="btn sec" id="ia-imp">Importar archivo…</button><button class="btn sec" id="ia-no">Ahora no</button></div>
+    <p class="nota">«Importar archivo» sirve si ya tienes <i>gemma-4-E2B-it-gpu.litertlm</i> en el móvil (por ejemplo, copiado por USB a Descargas). Mientras no haya modelo, las respuestas serán las predefinidas del juego y se indicará en los subtítulos.</p>`, { cerrable: false });
+  let escucha = null;
+  const progreso = (d) => { $('#ia-prog', m).classList.remove('oculto'); $('#ia-barra', m).value = d.bytes / d.total; $('#ia-txt', m).textContent = `${gb(d.bytes)} de ${gb(d.total)}`; };
+  const bloquear = (b) => $$('#ia-desc,#ia-imp', m).forEach(x => x.disabled = b);
+  const terminar = async (accion) => {
+    bloquear(true);
+    escucha = await P.addListener('progreso', progreso);
+    try { await accion(); m.cerrar(); aviso('Modelo de IA instalado en el móvil.', 'bien'); detectarIAMovil({ ofrecer: false }); }
+    catch (err) { $('#ia-txt', m).textContent = err.message || String(err); $('#ia-prog', m).classList.remove('oculto'); bloquear(false); }
+    finally { escucha?.remove(); }
+  };
+  $('#ia-desc', m).onclick = () => { $('#ia-no', m).textContent = 'Cancelar'; terminar(() => P.descargar({})); };
+  $('#ia-imp', m).onclick = () => terminar(() => P.importar());
+  $('#ia-no', m).onclick = () => { P.cancelarDescarga().catch(() => {}); m.cerrar(); actualizarCharla(); };
 }
 function empezarDia(continuar) {
   document.body.dataset.modo = 'juego';

@@ -1,14 +1,16 @@
 // EL MEJOR MÉDICO — dictado por micrófono (reconocimiento de voz del navegador, en español de España).
 // La grabación nunca se reproduce: sólo se convierte en texto, que el jugador revisa antes de que hable el médico.
-// En la aplicación de Android (Capacitor) se usa el reconocedor del sistema si está instalado su complemento.
+// En la aplicación de Android se usa el reconocedor del propio móvil, sin Internet si está disponible
+// (DictadoNativoPlugin.kt); el WebView de Android no tiene reconocimiento de voz web.
 
-const SR = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+const nativo = () => (window.Capacitor?.isNativePlatform?.() && window.Capacitor.Plugins?.DictadoNativo) || null;
+const SR = typeof window !== 'undefined' && !nativo() ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
 const capacitorSR = () => window.Capacitor?.Plugins?.SpeechRecognition || null;
 
 export const Dictado = {
   escuchando: false,
   _rec: null,
-  get disponible() { return !!(SR || capacitorSR()); },
+  get disponible() { return !!(nativo() || SR || capacitorSR()); },
   get motivoNoDisponible() {
     if (this.disponible) return '';
     return 'Este navegador no tiene reconocimiento de voz. Usa Chrome o Edge, o el dictado del teclado (en Windows: tecla Windows + H; en Android: el micrófono del teclado).';
@@ -16,6 +18,19 @@ export const Dictado = {
   // alTexto(textoProvisional, esFinal); alFin(error)
   async iniciar({ alTexto, alFin }) {
     if (this.escuchando) return;
+    const N = nativo();
+    if (N) {
+      this.escuchando = true;
+      const esc = await N.addListener('parcial', (d) => alTexto(d.texto || '', false));
+      try {
+        const r = await N.iniciar();
+        this.sinConexion = !!r.sinConexion;
+        alTexto(r.texto || '', true);
+        this.escuchando = false; alFin && alFin(null);
+      } catch (e) { this.escuchando = false; alFin && alFin(e.message || String(e)); }
+      finally { esc.remove(); }
+      return;
+    }
     const cap = capacitorSR();
     if (cap && !SR) {
       try {
@@ -48,6 +63,7 @@ export const Dictado = {
     try { rec.start(); } catch (e) { this.escuchando = false; this._rec = null; alFin && alFin(e.message); }
   },
   parar() {
+    const N = nativo(); if (N && this.escuchando) { N.parar().catch(() => {}); return; }
     if (this._rec) { try { this._rec.stop(); } catch (e) {} }
     const cap = capacitorSR(); if (cap && this.escuchando && !SR) { try { cap.stop(); } catch (e) {} }
   },

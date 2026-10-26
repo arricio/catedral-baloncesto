@@ -1,0 +1,8 @@
+{
+  "appId": "es.elmejormedico.juego",
+  "appName": "El Mejor Médico",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0b1520"
+  }
+}

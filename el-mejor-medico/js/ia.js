@@ -102,6 +102,7 @@ export function construirPrompt({ pac, quien, nombreDoctor, historial, pregunta,
     persona,
     'Estás en la consulta del médico del Hospital San Marcos, en León (España). Hablas SIEMPRE en español de España (nada de expresiones latinoamericanas), en primera persona y de forma natural.',
     estilo,
+    pac.edad >= 13 || quien === 'acomp' ? 'Al médico le hablas siempre de usted («mire, doctor», «¿usted cree?»), nunca de tú.' : '',
     'NO conoces tu diagnóstico ni usas nombres de enfermedades técnicos salvo que el médico te los haya dicho. Cuentas lo que sientes, tu historia y tus preocupaciones. Puedes dudar, tener miedo o pedir explicaciones.',
     'Responde SOLO a lo que te acaban de decir, con 1 a 3 frases cortas. Nunca repitas la pregunta del médico. No hagas de médico, no inventes pruebas ni tratamientos que no te hayan mandado, no cambies los datos de tu historia y no te contradigas con lo que ya has dicho.',
     'Cuenta tu historia con tus propias palabras: los datos de abajo son lo que te pasa, no frases para copiar. Varía la forma de decir las cosas y no repitas frases que ya hayas dicho.',
@@ -109,6 +110,8 @@ export function construirPrompt({ pac, quien, nombreDoctor, historial, pregunta,
     'Tu historia (no la recites entera; usa solo lo que venga a cuento):',
     ...hechos(pac).map(h => `- ${h}`),
     tratamiento ? `Lo que el médico te ha dicho o recetado: ${tratamiento}` : '',
+    // los modelos pequeños olvidan lo dicho: se les recuerda explícitamente para que no se contradigan
+    ...(() => { const dicho = historial.filter(h => h.quien !== 'medico' && (esAcomp ? h.quien === 'acomp' : h.quien !== 'acomp')).slice(-6).map(h => `- «${h.texto}»`); return dicho.length ? ['Lo que YA has contado en esta consulta (es verdad y no puedes cambiarlo ni contradecirlo):', ...dicho] : []; })(),
     referencia ? `Datos que debe contener tu respuesta a esta pregunta (respétalos, pero dilos a tu manera, sin copiar la frase): ${referencia}` : '',
     'Le hablas al médico (o a la médica) de la consulta; no hace falta que digas su nombre.',
   ].filter(Boolean).join('\n');
@@ -129,6 +132,15 @@ export function limpiarRespuesta(t) {
 
 // ───────────────────────── Llamada al modelo ─────────────────────────
 async function llamar(cfg, mensajes) {
+  // IA dentro del móvil (aplicación de Android): Gemma 4 E2B con LiteRT-LM, sin red
+  if (cfg.modo === 'movil') {
+    const P = window.Capacitor?.Plugins?.IALocal;
+    if (!P) throw new Error('la IA del móvil sólo funciona en la aplicación de Android');
+    let tmr;
+    const limite = new Promise((_, no) => { tmr = setTimeout(() => no(Object.assign(new Error('tiempo'), { name: 'AbortError' })), Math.max(cfg.espera || 30, 60) * 1000); });
+    try { return (await Promise.race([P.generar({ mensajes, temperatura: 0.8, maxTokens: 120 }), limite])).texto || ''; }
+    finally { clearTimeout(tmr); }
+  }
   const ctl = new AbortController();
   const tmr = setTimeout(() => ctl.abort(), (cfg.espera || 30) * 1000);
   try {
@@ -184,6 +196,7 @@ export async function detectarOllama(url = IA_POR_DEFECTO.url) {
 }
 // Carga el modelo en memoria antes de la primera pregunta (si no, la primera respuesta tarda medio minuto)
 export function precalentar(cfg) {
+  if (cfg?.modo === 'movil') return window.Capacitor?.Plugins?.IALocal?.cargar({}).catch(() => {}) || Promise.resolve();
   if (cfg?.modo !== 'ollama') return Promise.resolve();
   return fetch(`${cfg.url.replace(/\/+$/, '')}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: cfg.modelo, messages: [], keep_alive: '30m' }) }).catch(() => {});
 }

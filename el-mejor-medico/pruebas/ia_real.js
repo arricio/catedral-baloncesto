@@ -37,6 +37,8 @@ const PREGUNTAS = {
     await pg.click('#int-ok');
     await pg.waitForSelector('#ch-sug:not([hidden])', { timeout: 30000 });
     await pg.waitForFunction(() => window.__juego.G.ajustes.ia.modo === 'ollama', null, { timeout: 10000 }).catch(() => {});
+    // MODELO=<nombre> prueba otro modelo instalado en Ollama (por ejemplo el mismo Gemma que usa el móvil)
+    if (process.env.MODELO) await pg.evaluate(async (m) => { const ia = window.__juego.G.ajustes.ia; ia.modelo = m; await (await import('./js/ia.js')).precalentar(ia); }, process.env.MODELO);
     const ia = await pg.evaluate(() => ({ ...window.__juego.G.ajustes.ia }));
     comprobar(`${P.n}: el juego detecta la IA local solo`, ia.modo === 'ollama', ia.modelo);
     const pac = await pg.evaluate(() => { const p = window.__juego.pac; return { nombre: `${p.nombre} ${p.apellidos}`, edad: p.edad, enf: p.enfId, acomp: p.acompanante }; });
@@ -57,7 +59,9 @@ const PREGUNTAS = {
     const pal = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zñ0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 2);
     const eco = charla.some((h, i) => { if (h.quien === 'medico' || !i) return false; const r = pal(h.texto), q = new Set(pal(charla[i - 1].texto)); return r.length && r.filter(w => q.has(w)).length / r.length > 0.6; });
     comprobar(`${P.n}: nunca repite la pregunta del médico`, !eco);
-    comprobar(`${P.n}: no dice el nombre técnico de su enfermedad`, !resp.some(h => h.texto.toLowerCase().includes(pac.enf.replace(/_/g, ' '))));
+    // «resfriado», «gripe», «piojos» o «herida» son palabras de la calle: un paciente puede decirlas
+    const coloquial = ['resfriado', 'gripe', 'piojos', 'herida'].includes(pac.enf);
+    comprobar(`${P.n}: no dice el nombre técnico de su enfermedad`, coloquial || !resp.some(h => h.texto.toLowerCase().includes(pac.enf.replace(/_/g, ' '))));
     comprobar(`${P.n}: respuestas en español y de longitud razonable`, resp.every(h => !/\b(the|and|doctor said|patient|I am|I have)\b/i.test(h.texto) && h.texto.length > 2 && h.texto.length < 340));
     await pg.screenshot({ path: `${S}/ia_${P.edad}${P.sexo}.png` });
     await pg.close();

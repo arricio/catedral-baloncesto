@@ -1,7 +1,30 @@
 // EL MEJOR MÉDICO — voces en español (síntesis de voz del dispositivo) y sonidos generados.
 
-const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
 let voces = [];
+// En la aplicación de Android, el WebView no trae voces: se usan las del sistema (VozNativaPlugin.kt).
+// Se imita la interfaz de speechSynthesis para que el resto del código sea el mismo.
+const vozNativa = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.() ? window.Capacitor.Plugins?.VozNativa : null;
+let nativas = [];
+const synthNativo = vozNativa && {
+  getVoices: () => nativas,
+  cancel: () => { vozNativa.parar().catch(() => {}); },
+  speak(u) {
+    const id = 'u' + Math.random().toString(36).slice(2);
+    let escucha = null;
+    vozNativa.addListener('palabra', (d) => { if (d.id === id) u.onboundary && u.onboundary({ name: 'word', charLength: d.largo }); }).then(h => { escucha = h; });
+    vozNativa.hablar({ texto: u.text, voz: u.voice?.name || null, tono: u.pitch, vel: u.rate, id })
+      .then(() => u.onend && u.onend(), () => u.onerror && u.onerror())
+      .finally(() => escucha?.remove());
+  },
+};
+if (vozNativa) vozNativa.voces().then(r => {
+  // sólo voces instaladas en el móvil (sin Internet); las de red, únicamente si no hay ninguna
+  const todas = (r.voces || []).map(v => ({ ...v, voiceURI: v.name }));
+  const locales = todas.filter(v => !v.red && v.instalada);
+  nativas = locales.length ? locales : todas;
+  cargarVoces(); synthNativo.onvoiceschanged?.();
+}).catch(() => {});
+const synth = synthNativo || (typeof window !== 'undefined' ? window.speechSynthesis : null);
 const FEM = /(monica|mónica|paulina|lucia|lucía|elena|laura|helena|conchita|marisol|esperanza|sabina|paloma|dalia|elvira|abril|ximena|hortensia|carmen|isabel|female|mujer|femenin|woman|es-es-x-eea|es-us-x-esc|es-es-x-eec)/i;
 const MAS = /(jorge|diego|juan|pablo|alvaro|álvaro|enrique|carlos|raul|raúl|jose|josé|antonio|alonso|jaime|gonzalo|male|hombre|masculin|man\b|es-es-x-eed|es-es-x-eef|es-us-x-esd|es-us-x-esf)/i;
 
@@ -104,7 +127,7 @@ export const Voz = {
       const sig = () => {
         if (this.quien !== quien) return res();
         if (i >= frases.length) { clearTimeout(vigilante); return fin(); }
-        const u = new SpeechSynthesisUtterance(frases[i++].trim());
+        const u = synthNativo ? { text: frases[i++].trim() } : new SpeechSynthesisUtterance(frases[i++].trim());
         u.lang = voz ? voz.lang : 'es-ES';
         if (voz) u.voice = voz;
         u.pitch = tonoFinal;
