@@ -1,5 +1,5 @@
 // El Mejor Médico: funciona sin conexión tras la primera visita.
-const VERSION = 'emm-v6';
+const VERSION = 'emm-v7';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './pwa-192.png', './pwa-512.png', './apple-touch-icon.png',
   './vendor/three.module.min.js', './vendor/RoomEnvironment.js', './vendor/RoundedBoxGeometry.js', './vendor/GLTFLoader.js', './vendor/SkeletonUtils.js', './vendor/BufferGeometryUtils.js', './modelos/personajes.glb', './modelos/pelo.glb',
   './js/juego.js', './js/escena.js', './js/datos.js', './js/audio.js', './js/imagenes.js', './js/cirugia.js', './js/ia.js', './js/dictado.js', './js/mando.js'];
