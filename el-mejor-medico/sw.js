@@ -1,5 +1,5 @@
 // El Mejor Médico: funciona sin conexión tras la primera visita.
-const VERSION = 'emm-v5';
+const VERSION = 'emm-v6';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './pwa-192.png', './pwa-512.png', './apple-touch-icon.png',
   './vendor/three.module.min.js', './vendor/RoomEnvironment.js', './vendor/RoundedBoxGeometry.js', './vendor/GLTFLoader.js', './vendor/SkeletonUtils.js', './vendor/BufferGeometryUtils.js', './modelos/personajes.glb', './modelos/pelo.glb',
   './js/juego.js', './js/escena.js', './js/datos.js', './js/audio.js', './js/imagenes.js', './js/cirugia.js', './js/ia.js', './js/dictado.js', './js/mando.js'];
@@ -17,6 +17,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   const propio = url.origin === location.origin;
   if (!propio && !FUENTES.test(req.url)) return;
+  if (url.pathname.includes('/ollama/')) return; // la IA del portátil nunca se guarda en caché
   // primero la red (para recibir actualizaciones); si no hay conexión, la copia guardada
   e.respondWith(fetch(req).then(res => {
     if (res.ok) { const copia = res.clone(); caches.open(VERSION).then(c => c.put(req, copia)); }

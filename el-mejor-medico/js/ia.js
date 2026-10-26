@@ -134,7 +134,7 @@ async function llamar(cfg, mensajes) {
   try {
     const base = cfg.url.replace(/\/+$/, '');
     if (cfg.modo === 'ollama') {
-      const r = await fetch(`${base}/api/chat`, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: cfg.modelo, messages: mensajes, stream: false, options: { temperature: 0.8, num_predict: 120 } }) });
+      const r = await fetch(`${base}/api/chat`, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: cfg.modelo, messages: mensajes, stream: false, keep_alive: '30m', options: { temperature: 0.8, num_predict: 120 } }) });
       if (!r.ok) throw new Error(`Ollama respondió ${r.status}`);
       const j = await r.json();
       return j.message?.content || '';
@@ -181,6 +181,11 @@ export async function detectarOllama(url = IA_POR_DEFECTO.url) {
     const j = await r.json();
     return (j.models || []).map(m => m.name);
   } catch (e) { return []; } finally { clearTimeout(tmr); }
+}
+// Carga el modelo en memoria antes de la primera pregunta (si no, la primera respuesta tarda medio minuto)
+export function precalentar(cfg) {
+  if (cfg?.modo !== 'ollama') return Promise.resolve();
+  return fetch(`${cfg.url.replace(/\/+$/, '')}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: cfg.modelo, messages: [], keep_alive: '30m' }) }).catch(() => {});
 }
 // modelo preferido entre los instalados: los que mejor hablan español con poca memoria
 export function elegirModelo(lista, actual) {

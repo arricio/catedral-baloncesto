@@ -7,7 +7,7 @@ import {
 } from './datos.js';
 import { Voz, Sonido, perfilVoz, grupoVoz } from './audio.js';
 import { Mundo, crearHumano, cargarModelos, ropaSin, ROPAS, PELOS_NOMBRES, BARBAS_NOMBRES, GAFAS_NOMBRES, texReceta } from './escena.js';
-import { IA_POR_DEFECTO, clasificar, intenciones, hablaDeTu, generarRespuesta, probarIA, respuestaGeneral, leerNatural, detectarOllama, elegirModelo } from './ia.js';
+import { IA_POR_DEFECTO, clasificar, intenciones, hablaDeTu, generarRespuesta, probarIA, respuestaGeneral, leerNatural, detectarOllama, elegirModelo, precalentar } from './ia.js';
 import { Dictado } from './dictado.js';
 import { Mando } from './mando.js';
 import { dibujarRx, dibujarTac, dibujarEco, dibujarEcg, dibujarGarganta, ecgValor as ecgVal } from './imagenes.js';
@@ -439,6 +439,7 @@ function ajustes() {
     <label class="fila">Modo <select id="aj-ia"><option value="predefinida">Predefinidas del juego (sin IA, sin Internet)</option><option value="ollama">IA local con Ollama (gratis, sin Internet)</option><option value="openai">IA local compatible con OpenAI (LM Studio, llama.cpp…)</option></select></label>
     <div id="aj-ia-cfg"><label class="campo">Dirección del servidor<input id="aj-url" value="${esc(ia.url)}" autocomplete="off"></label><label class="campo">Modelo<input id="aj-mod" value="${esc(ia.modelo)}" autocomplete="off"></label>
       <div class="botones"><button class="btn sec" id="aj-iap">Probar la conexión</button></div><p class="nota" id="aj-iar"></p></div>
+    <p class="nota">En el móvil: abre en el portátil <b>JUGAR-EN-EL-MOVIL.cmd</b> y, en el móvil, conectado a la misma wifi, la dirección que te muestra. El juego usará la IA del portátil sin configurar nada.</p>
     <p class="nota">En los subtítulos verás <i class="origen ia">IA</i> si la respuesta la ha generado la inteligencia artificial y <i class="origen pre">predefinida</i> si es una frase escrita en el juego (por ejemplo, cuando no hay IA o no contesta).</p>
     <div class="ficha-sec">MANDO Y CONTROLES</div>
     <p class="nota">${Mando.conectado ? `Mando conectado: ${esc(Mando.nombre)}` : 'No hay ningún mando conectado. Empareja el mando de Xbox por Bluetooth y pulsa cualquier botón.'}</p>
@@ -587,13 +588,23 @@ function introduccion() {
 // ───────────────────────── Ciclo del día ─────────────────────────
 // Si hay una IA local (Ollama) en el ordenador, los pacientes responden con ella sin tener que configurar nada.
 // Si el jugador eligió el modo a mano en Ajustes, se respeta su elección.
+// En el móvil, el juego se abre desde el portátil (JUGAR-EN-EL-MOVIL.cmd) y la IA llega por el puente /ollama de ese servidor.
+const puenteIA = () => /^https?:$/.test(location.protocol) ? `${location.origin}/ollama` : null;
 async function detectarIA() {
   const ia = G.ajustes.ia;
-  if (ia.manual || ia.modo !== 'predefinida') return;
-  const modelos = await detectarOllama(ia.url);
-  if (!modelos.length) return;
-  ia.modo = 'ollama'; ia.modelo = elegirModelo(modelos, ia.modelo); guardar(); actualizarCharla();
-  aviso(`IA local detectada (${ia.modelo}): los pacientes responderán con inteligencia artificial.`, 'bien');
+  if (ia.manual) return;
+  const candidatas = [...new Set([ia.url, puenteIA(), IA_POR_DEFECTO.url].filter(Boolean))];
+  for (const url of candidatas) {
+    const modelos = await detectarOllama(url);
+    if (!modelos.length) continue;
+    const nueva = ia.modo !== 'ollama' || ia.url !== url;
+    ia.modo = 'ollama'; ia.url = url; ia.modelo = elegirModelo(modelos, ia.modelo); guardar(); actualizarCharla();
+    precalentar(ia);
+    if (nueva) aviso(`IA ${url.endsWith('/ollama') && !/localhost|127\.0\.0\.1/.test(url) ? 'del portátil' : 'local'} detectada (${ia.modelo}): los pacientes responderán con inteligencia artificial.`, 'bien');
+    return;
+  }
+  // la IA que se encontró otro día ya no está (portátil apagado, otra wifi…): mejor no esperar en cada respuesta
+  if (ia.modo === 'ollama') { ia.modo = 'predefinida'; guardar(); actualizarCharla(); aviso('No se encuentra la IA: los pacientes usarán las respuestas predefinidas.', 'mal'); }
 }
 function empezarDia(continuar) {
   document.body.dataset.modo = 'juego';

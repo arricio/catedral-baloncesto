@@ -59,7 +59,7 @@ async function abrir(b, consulta, { ancho = 1200, alto = 700, tactil = false, sc
   return pg;
 }
 const estado = (pg) => pg.evaluate(() => ({ charla: window.__juego.pac.charla.map(h => ({ ...h })), voz: window.__juego.Voz.ultima, sub: document.querySelector('#subtitulo span')?.textContent || '' }));
-const usarIA = (pg) => pg.evaluate(() => { window.__juego.G.ajustes.ia = { modo: 'ollama', url: 'http://localhost:11435', modelo: 'prueba', espera: 10 }; });
+const usarIA = (pg) => pg.evaluate(() => { window.__juego.G.ajustes.ia = { modo: 'ollama', url: 'http://localhost:11435', modelo: 'prueba', espera: 10, manual: true }; });
 // mientras habla alguien, mide cuánto se abre y cierra su boca. El navegador automático dibuja muy pocos
 // fotogramas por segundo, así que se hace avanzar la animación del personaje a mano cada 50 ms.
 const medirBoca = (pg) => pg.evaluate(async () => {

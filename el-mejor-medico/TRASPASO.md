@@ -98,7 +98,7 @@ Hecho y probado con pruebas automáticas (`pruebas/charla.js`, 104 comprobacione
 
 Pendiente o limitado:
 - **Voces infantiles y de ancianos reales**: el sistema de voz del dispositivo no las tiene; ahora se simulan con la voz más parecida, tono y ritmo. Alternativas a valorar con el usuario: Piper (gratuito, local, sin voces infantiles en es-ES) o servicios de pago.
-- **IA en Android**: en el portátil ya funciona (ver arriba). En el móvil hay que decidir entre conectarse al Ollama del portátil por wifi (hay que arrancarlo con `OLLAMA_HOST=0.0.0.0` y `OLLAMA_ORIGINS` para el origen del juego), WebLLM dentro del móvil (WebGPU, por comprobar en el Xiaomi) o un servicio de pago.
+- **IA en el móvil por wifi (26/10/2026)**: `JUGAR-EN-EL-MOVIL.cmd` abre Ollama si está cerrado y arranca `herramientas/servidor-movil.js` (Node, sin dependencias, puerto 8080). Ese servidor sirve el juego a la red local y hace de puente hacia Ollama en `/ollama/…`. Así Ollama sigue escuchando sólo en el portátil, sin `OLLAMA_HOST` ni `OLLAMA_ORIGINS`, y el puente sólo deja pasar `/api/tags`, `/api/chat`, `/api/version` y `/v1/chat/completions`. No sirve `pruebas/` ni `herramientas/`. `detectarIA` prueba, por este orden, la URL guardada, `origen/ollama` y `localhost:11434`. Si un día no encuentra la IA que había detectado sola, vuelve a las predefinidas para no esperar en cada respuesta. `precalentar()` carga el modelo al detectarlo (`keep_alive` 30 min), porque en frío la primera respuesta tardaba unos 30 s. Prueba automática: `pruebas/movil_ia.js` (navegador de móvil simulado, IP de red del portátil, `localhost:11434` bloqueado). **Falta probarlo en el Xiaomi real**: la primera vez, Windows pregunta si deja a Node usar la red (hay que aceptar en redes privadas) y la red del portátil debe ser «privada». Por `http://IP` el micrófono y la instalación como app no funcionan en Chrome de Android (no es un origen seguro): se arregla en `chrome://flags/#unsafely-treat-insecure-origin-as-secure` añadiendo `http://IP-del-portátil:8080`. Otras opciones no elegidas: WebLLM dentro del móvil, o un servicio de pago (sólo con autorización).
 - **Instaladores**: faltan JDK y Android SDK (APK con Capacitor) y Electron o Tauri (EXE/MSIX). Pedir autorización antes de instalar. Ojo: el dictado del navegador no funciona dentro de Electron ni de WebView2; habría que usar el dictado de Windows (Windows + H) o un reconocedor local.
 - Caminar, sentarse y levantarse; caras, barbas, gafas, ropa y mobiliario en Blender (sección 5).
 - El médico se ve en primera persona: sólo se animan sus manos, no su cara.
@@ -108,7 +108,7 @@ Pendiente o limitado:
 ## 3. Tecnología actual (importante antes de tocar nada)
 
 - **Juego web en 3D** con **Three.js r160**, que está incluido en `vendor/` y no se descarga de ningún CDN. JavaScript con módulos ES y sin compilación: ni npm ni bundler en el juego.
-- **Aplicación instalable (PWA)** con `manifest.webmanifest`, iconos y `sw.js`. El service worker guarda en caché el juego y los modelos para usarlo sin conexión. La versión de caché actual es `emm-v5`; **súbela (emm-v6…) cada vez que cambies archivos**, o los móviles seguirán con la versión antigua.
+- **Aplicación instalable (PWA)** con `manifest.webmanifest`, iconos y `sw.js`. El service worker guarda en caché el juego y los modelos para usarlo sin conexión. La versión de caché actual es `emm-v6`; **súbela (emm-v7…) cada vez que cambies archivos**, o los móviles seguirán con la versión antigua.
 - **Voces:** API Web Speech del navegador (`speechSynthesis`), que elige una voz `es-ES` según el sexo y la edad del personaje. No hay audios grabados.
 - **Sonidos** sintetizados con WebAudio: corazón, respiración, crepitantes, sibilancias, monitor, alarmas, llanto de bebé, etc.
 - **Personajes:**
@@ -261,7 +261,7 @@ Requisitos: Node.js y Playwright (`npm i -g playwright` o en una carpeta aparte,
 
 ```bat
 cd el-mejor-medico
-python -m http.server 8766
+node herramientas\servidor-movil.js 8766
 :: en otra terminal (las capturas se guardan en la carpeta indicada):
 node pruebas\jugar.js C:\Temp\capturas            & rem consulta completa con paciente al azar
 set CASO=bronquiolitis& node pruebas\jugar.js C:\Temp\capturas
@@ -269,9 +269,10 @@ node pruebas\cir.js C:\Temp\capturas              & rem cirugía, planta y alta
 node pruebas\movil.js C:\Temp\capturas            & rem pantallas en formato móvil
 node pruebas\charla.js C:\Temp\capturas           & rem conversación por turnos, 7 edades, IA simulada, micro, mando, receta y móvil
 node pruebas\ia_real.js C:\Temp\capturas          & rem conversaciones con la IA real de Ollama (necesita Ollama en marcha)
+node pruebas\movil_ia.js C:\Temp\capturas         & rem móvil simulado usando la IA del portátil por la red (arranca su propio servidor en el 8090)
 ```
 
-Todas las pruebas usan `pruebas/turnos.js` para pulsar HABLAR MÉDICO y RESPONDER PACIENTE. En el ordenador del usuario no hay Python: se puede servir la carpeta con cualquier servidor estático de Node en el puerto 8766.
+Todas las pruebas usan `pruebas/turnos.js` para pulsar HABLAR MÉDICO y RESPONDER PACIENTE. En el ordenador del usuario no hay Python: la carpeta se sirve con `herramientas/servidor-movil.js`.
 
 Casos útiles para `CASO` o `?caso=`: `bronquiolitis`, `fractura_cadera`, `varicela`, `itu_confusion`, `apendicitis`, `colecistitis`.
 
