@@ -8,3 +8,4 @@ android/capacitor-cordova-android-plugins/build/
 *.keystore
 *.jks
 firma.properties
+herramientas/*.log
