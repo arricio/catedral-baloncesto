@@ -32,7 +32,7 @@ function puenteIA(req, res, ruta) {
 
 function archivo(req, res, ruta) {
   let f = path.normalize(path.join(RAIZ, decodeURIComponent(ruta)));
-  if (!f.startsWith(RAIZ) || /[\\/](pruebas|herramientas)([\\/]|$)/.test(f.slice(RAIZ.length))) { res.writeHead(404); return res.end(); }
+  if (!f.startsWith(RAIZ) || /[\\/](pruebas|herramientas|unreal-piloto|app-android)([\\/]|$)/.test(f.slice(RAIZ.length))) { res.writeHead(404); return res.end(); }
   if (ruta.endsWith('/')) f = path.join(f, 'index.html');
   fs.stat(f, (e, st) => {
     if (e || !st.isFile()) { res.writeHead(404); return res.end('No encontrado'); }
