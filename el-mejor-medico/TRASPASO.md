@@ -120,7 +120,7 @@ Pendiente o limitado:
 ## 3. Tecnología actual (importante antes de tocar nada)
 
 - **Juego web en 3D** con **Three.js r160**, que está incluido en `vendor/` y no se descarga de ningún CDN. JavaScript con módulos ES y sin compilación: ni npm ni bundler en el juego.
-- **Aplicación instalable (PWA)** con `manifest.webmanifest`, iconos y `sw.js`. El service worker guarda en caché el juego y los modelos para usarlo sin conexión. La versión de caché actual es `emm-v6`; **súbela (emm-v7…) cada vez que cambies archivos**, o los móviles seguirán con la versión antigua.
+- **Aplicación instalable (PWA)** con `manifest.webmanifest`, iconos y `sw.js`. El service worker guarda en caché el juego y los modelos para usarlo sin conexión. La versión de caché actual es `emm-v7`; **súbela (emm-v7…) cada vez que cambies archivos**, o los móviles seguirán con la versión antigua.
 - **Voces:** API Web Speech del navegador (`speechSynthesis`), que elige una voz `es-ES` según el sexo y la edad del personaje. No hay audios grabados.
 - **Sonidos** sintetizados con WebAudio: corazón, respiración, crepitantes, sibilancias, monitor, alarmas, llanto de bebé, etc.
 - **Personajes:**
