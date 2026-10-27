@@ -115,7 +115,25 @@ Pendiente o limitado:
   - Herramientas instaladas con permiso: VS 2022 Build Tools (MSVC 14.44, SDK 22621, .NET 4.8 SDK), NDK r27c y CMake 3.22.1. La instalación del .NET SDK se atascó con la ventana de administrador oculta; se relanzó con `Start-Process -Verb RunAs` y el usuario la aceptó (si vuelve a pasar: `Herramientas\instalar-net48-sdk.cmd` con doble clic).
   - Hecho y probado en Windows (versión empaquetada, `-EMMPrueba`): consulta con muebles CC0 de Poly Haven (unidos en Blender), luz, cámara calculada entre médico y paciente, interfaz, turnos, IA real (Ollama en el procesador: libera los 4 GB de la RTX 3050 para los gráficos y responde en menos de 1 s) y voces de Windows (Pablo, Laura, Helena).
   - Lecciones: Python del editor sólo funciona bien desde `Content/Python/init_unreal.py` con `EMM_TAREA` (el editor tiene que haber terminado de arrancar); `unreal.Rotator` en Python es (roll, pitch, yaw); los parámetros de textura del material base necesitan texturas por defecto del tipo correcto (si no, no compila y sale el material de cuadros); en el juego sin personaje hay que volver a poner la cámara tras crearse el espectador; las fotos fiables son las del juego empaquetado.
-  - Falta: MetaHumans (el autorrigging usa el servicio gratuito de Epic: el usuario tiene que iniciar sesión con su cuenta en el editor), conectar la boca y el parpadeo de `EMMHabla` a la cara del MetaHuman, animación sentada, mover el portátil de la mesa, el APK de Android (biblioteca `Nativo/emm-nativo` ya compila) y probarlo en el emulador.
+  - **MetaHumans (27/10/2026)**:
+    - El aviso «Imagen incorrecta» de `UnrealEditor-Fab.dll` fue un fallo puntual. Ocurrió una sola vez, el 26/10 a las 23:22, durante un arranque automático. La DLL y sus dependencias estaban bien y no se tocó la instalación.
+    - El usuario inició sesión en Epic: inicio por código de dispositivo, aprobado en Edge en la página «Continuar en este dispositivo».
+    - También instaló «MetaHuman Creator Core Data», que trae `Content/Optional` con 29 presets, pelo, barbas, la ropa básica y animaciones de plantilla.
+    - `Herramientas/crear_metahumans.py` duplica los presets (médico «Lorenzo», paciente «Vivian»). Usa siempre llamadas bloqueantes: esperar con ciclos de refresco hace que Unreal se cierre con el error «UpdateLevelStreaming… already inside».
+      - `EMM_FASE=preparar`: pide el rig `JOINTS_AND_BLEND_SHAPES` y las texturas `MetaHumanCharacterTextureRequestParams` con `blocking`.
+      - `EMM_FASE=construir`: hace `try_add_object_to_edit` y luego `build_meta_human` OPTIMIZED MEDIUM. Antes borra `Unpacked/<nombre>`, porque si no Unreal pregunta si sobrescribir y, sin nadie delante, cancela.
+      - Los Blueprints quedan en `/Game/MetaHumans/Personajes/Unpacked/MH_*/BP_MH_*`, y `crear_consulta.py` los coloca en lugar de los marcadores.
+    - **Animación** (`EMMCuerpoAnim`, C++):
+      - La clase de animación se le pone al componente «Body» al empezar.
+      - Hace la postura sentada (`Content/Datos/postura.json`: pelvis y giros locales; muslos y gemelos en el eje Z ±88°, brazos en el eje Y 35°), la respiración y la mirada.
+      - También envía las curvas `CTRL_expressions_*` (mandíbula, boca, parpadeo). La cara (ABP_Face) copia pose y curvas del cuerpo y RigLogic las aplica: comprobado con `-EMMBocaAbierta`.
+      - El MetaHuman mira hacia +Y de su malla: su giro es la dirección hacia el otro menos 90°.
+    - **Cámara**: «sobre el hombro» del médico, calculada en `EMMConsultaModo`.
+    - **Memoria de vídeo**: sombras virtuales desactivadas (`r.Shadow.Virtual.Enable=0`). Con eso ya no aparece el aviso de memoria de vídeo agotada.
+  - Falta:
+    - Bata del médico: la única ropa local es camiseta y pantalón corto.
+    - Ajustar las manos y el encuadre (el portátil aún tapa el lado izquierdo).
+    - El APK de Android (la biblioteca `Nativo/emm-nativo` ya compila) y probarlo en el emulador.
 - **Instaladores**: el APK ya se compila (arriba; falta la prueba en el Xiaomi). Falta Electron o Tauri (EXE/MSIX). Pedir autorización antes de instalar. Ojo: el dictado del navegador no funciona dentro de Electron ni de WebView2; habría que usar el dictado de Windows (Windows + H) o un reconocedor local.
 - Caminar, sentarse y levantarse; caras, barbas, gafas, ropa y mobiliario en Blender (sección 5).
 - El médico se ve en primera persona: sólo se animan sus manos, no su cara.

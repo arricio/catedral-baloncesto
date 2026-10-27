@@ -1,0 +1,12 @@
+{
+ "nota": "Postura sentada de los MetaHumans (EMMCuerpoAnim). pelvis: desplazamiento en cm (espacio del componente: Z arriba, Y hacia delante). giros: giro local de cada hueso (eje y grados).",
+ "pelvis": [0, -12, -46],
+ "giros": [
+  { "hueso": "thigh_l", "eje": [0, 0, 1], "grados": 88 },
+  { "hueso": "thigh_r", "eje": [0, 0, 1], "grados": 88 },
+  { "hueso": "calf_l", "eje": [0, 0, 1], "grados": -88 },
+  { "hueso": "calf_r", "eje": [0, 0, 1], "grados": -88 },
+  { "hueso": "upperarm_l", "eje": [0, 1, 0], "grados": 35 },
+  { "hueso": "upperarm_r", "eje": [0, 1, 0], "grados": 35 }
+ ]
+}

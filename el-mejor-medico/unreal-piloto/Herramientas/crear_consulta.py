@@ -247,7 +247,7 @@ colocar(mueble('dining_chair_02'), -70, 0, giro=-90, etiqueta='Silla medico')
 colocar(mueble('SchoolChair_01'), 145, -15, giro=90, etiqueta='Silla paciente')
 colocar(mueble('SchoolChair_01'), 165, 95, giro=110, etiqueta='Silla acompanante')
 colocar(mueble('drawer_cabinet'), -200, -185, giro=0, etiqueta='Cajonera')
-colocar(mueble('Shelf_01'), 215, -150, giro=-90, etiqueta='Estanteria')
+
 colocar(mueble('potted_plant_01'), 225, 185, etiqueta='Planta')
 colocar(mueble('potted_plant_02'), -220, 180, etiqueta='Planta 2')
 
@@ -256,10 +256,10 @@ alto_mesa = 75.0
 if mesa:
     o, e = mesa[0].get_actor_bounds(False)
     alto_mesa = o.z + e.z
-colocar(mueble('classic_laptop'), 20, 45, z_suelo=alto_mesa, giro=200, etiqueta='Portatil')
+colocar(mueble('classic_laptop'), 10, -60, z_suelo=alto_mesa, giro=250, etiqueta='Portatil')
 colocar(mueble('clipboard'), 35, -40, z_suelo=alto_mesa, giro=80, etiqueta='Carpeta')
 colocar(mueble('office_notepads'), 55, -15, z_suelo=alto_mesa, giro=10, etiqueta='Libretas')
-colocar(mueble('book_encyclopedia_set_01'), 215, -150, z_suelo=120, giro=-90, etiqueta='Libros')
+
 reloj = colocar(mueble('wall_clock'), L / 2 - 5, 0, z_suelo=200, giro=-90, etiqueta='Reloj')
 colocar(mueble('modern_ceiling_lamp_01'), 40, 0, z_suelo=H - 60, etiqueta='Lampara techo')
 
@@ -324,6 +324,18 @@ pac.tags = [unreal.Name('Paciente'), unreal.Name('Mujer')]
 pac.set_actor_label('Paciente (marcador)')
 for a in (med, pac):
     a.set_folder_path('Consulta/Personajes')
+
+# MetaHumans ya construidos (crear_metahumans.py): sustituyen a los marcadores
+for _nombre, _marcador, _etq in (('MH_Medico', med, ['Medico']), ('MH_Paciente', pac, ['Paciente', 'Mujer'])):
+    _ruta = f'/Game/MetaHumans/Personajes/Unpacked/{_nombre}/BP_{_nombre}'
+    if eal.does_asset_exist(_ruta):
+        _p = _marcador.get_actor_location()
+        _a = actores.spawn_actor_from_class(eal.load_blueprint_class(_ruta), unreal.Vector(_p.x, _p.y, 0))
+        _a.tags = [unreal.Name(e) for e in _etq]
+        _a.set_actor_label(_nombre)
+        _a.set_folder_path('Consulta/Personajes')
+        actores.destroy_actor(_marcador)
+        log(f'{_nombre} colocado')
 
 # de lado, a la altura de los ojos: se ven el médico y el paciente, uno frente al otro
 # desde la ventana: el médico a la izquierda, el paciente a la derecha y la luz de día a la espalda de la cámara

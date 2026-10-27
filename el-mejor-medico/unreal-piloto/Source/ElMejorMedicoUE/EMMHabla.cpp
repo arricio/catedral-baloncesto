@@ -1,4 +1,5 @@
 #include "EMMHabla.h"
+#include "Misc/CommandLine.h"
 #include "Components/AudioComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
@@ -90,6 +91,9 @@ void UEMMHabla::TickComponent(float Dt, ELevelTick TickType, FActorComponentTick
 			}
 		}
 	}
+	// prueba: -EMMBocaAbierta fuerza la boca abierta (para comprobar que los controles llegan a la cara)
+	static const bool bBocaAbierta = FParse::Param(FCommandLine::Get(), TEXT("EMMBocaAbierta"));
+	if (bBocaAbierta) { Ap = 1.f; Re = 0.f; }
 	// suavizado, para que la boca no tiemble
 	const float K = FMath::Clamp(Dt * 18.f, 0.f, 1.f);
 	Apertura = FMath::Lerp(Apertura, Ap, K);

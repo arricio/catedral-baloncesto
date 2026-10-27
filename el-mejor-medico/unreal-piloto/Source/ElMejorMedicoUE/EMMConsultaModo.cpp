@@ -3,6 +3,7 @@
 #include "EMMHabla.h"
 #include "EMMIA.h"
 #include "EMMVoz.h"
+#include "EMMCuerpoAnim.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -41,17 +42,37 @@ void AEMMConsultaModo::BeginPlay()
 		if (It->ActorHasTag(TEXT("Medico"))) ActorMedico = *It;
 		if (It->ActorHasTag(TEXT("Paciente"))) ActorPaciente = *It;
 	}
+	// MetaHumans: animación propia del cuerpo (sentados, respiración, mirada, boca) y uno frente al otro
+	if (ActorMedico && ActorPaciente)
+	{
+		int32 N = 0;
+		for (AActor* Yo : { ActorMedico, ActorPaciente })
+		{
+			AActor* Otro = Yo == ActorMedico ? ActorPaciente : ActorMedico;
+			// el MetaHuman mira hacia +Y de su malla: se gira 90° menos que la dirección hacia el otro
+			Yo->SetActorRotation(FRotator(0, (Otro->GetActorLocation() - Yo->GetActorLocation()).Rotation().Yaw - 90.f, 0));
+			TArray<USkeletalMeshComponent*> Mallas;
+			Yo->GetComponents(Mallas);
+			for (USkeletalMeshComponent* M : Mallas)
+				if (M->GetName().Contains(TEXT("Body")))
+				{
+					M->SetAnimInstanceClass(UEMMCuerpoAnim::StaticClass());
+					if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance())) { A->Interlocutor = Otro; A->Fase = 1.7f * N; }
+				}
+			++N;
+		}
+	}
 	// encuadre calculado: de lado, a la altura de las cabezas (sentados), viendo de frente a médico y paciente
 	if (ActorMedico && ActorPaciente)
 	{
 		const FVector M = ActorMedico->GetActorLocation(), Pp = ActorPaciente->GetActorLocation();
-		const FVector Centro((M.X + Pp.X) / 2, (M.Y + Pp.Y) / 2, 118.f);
-		FVector Lado = FVector::CrossProduct((Pp - M).GetSafeNormal2D(), FVector::UpVector);
+		// plano de dos «sobre el hombro» del médico: la paciente de tres cuartos y el médico de perfil
+		const FVector Dir = (Pp - M).GetSafeNormal2D();
+		FVector Lado = FVector::CrossProduct(Dir, FVector::UpVector);
 		if (Lado.Y < 0) Lado = -Lado;   // del lado de la ventana (+Y): la luz de día ilumina las caras
-		const float Distancia = FMath::Max(190.f, FVector::Dist2D(M, Pp) * 0.95f);
-		const FVector Pos = Centro + Lado * Distancia + FVector(0, 0, 22.f);
-		ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(Pos, (Centro - Pos).Rotation());
-		Cam->GetCameraComponent()->SetFieldOfView(70.f);
+		const FVector Centro = FMath::Lerp(M, Pp, 0.62f) + FVector(0, 0, 118.f - Pp.Z);
+		const FVector Pos = M - Dir * 70.f + Lado * 95.f + FVector(0, 0, 140.f - M.Z);		ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(Pos, (Centro - Pos).Rotation());
+		Cam->GetCameraComponent()->SetFieldOfView(52.f);
 		Cam->GetCameraComponent()->bConstrainAspectRatio = false;
 		Camara = Cam;
 	}
