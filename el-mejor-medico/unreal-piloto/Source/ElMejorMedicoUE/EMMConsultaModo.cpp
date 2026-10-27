@@ -4,6 +4,7 @@
 #include "EMMIA.h"
 #include "EMMVoz.h"
 #include "EMMCuerpoAnim.h"
+#include "EMMDictado.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -16,14 +17,52 @@
 #include "EngineUtils.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "TimerManager.h"
 
+// Tiñe la ropa del MetaHuman (camiseta y pantalón de la prenda básica) con los colores pedidos
+static void Vestir(AActor* A, const FLinearColor& Arriba, const FLinearColor& Abajo)
+{
+	if (!A) return;
+	TArray<USkeletalMeshComponent*> Mallas;
+	A->GetComponents(Mallas);
+	for (USkeletalMeshComponent* M : Mallas)
+	{
+		if (!M->GetSkeletalMeshAsset() || !M->GetSkeletalMeshAsset()->GetName().Contains(TEXT("Outfits"))) continue;
+		const TArray<FName> Ranuras = M->GetMaterialSlotNames();
+		for (int32 i = 0; i < M->GetNumMaterials(); ++i)
+		{
+			const FString Ranura = Ranuras.IsValidIndex(i) ? Ranuras[i].ToString() : FString();
+			const bool bArriba = Ranura.Contains(TEXT("Shirt"));
+			if (!bArriba && !Ranura.Contains(TEXT("Short"))) continue;
+			UMaterialInstanceDynamic* D = M->CreateDynamicMaterialInstance(i);
+			if (!D) continue;
+			for (const TCHAR* P : { TEXT("C_color"), TEXT("diffuse_color_1"), TEXT("diffuse_color_2"), TEXT("B_diffuse_color_1") })
+				D->SetVectorParameterValue(P, bArriba ? Arriba : Abajo);
+		}
+	}
+}
+
+// Ropa del paciente según la edad (y una variación fija por caso, para que no vistan todos igual)
+static void ColoresPaciente(const FEMMPaciente& P, FLinearColor& Arriba, FLinearColor& Abajo)
+{
+	const uint32 H = GetTypeHash(P.Id);
+	auto Elige = [H](std::initializer_list<FLinearColor> L, uint32 Sal) { return *(L.begin() + (H / Sal) % L.size()); };
+	if (P.Edad < 13.f)      { Arriba = Elige({ FLinearColor(0.75f, 0.12f, 0.1f), FLinearColor(0.95f, 0.7f, 0.1f), FLinearColor(0.15f, 0.45f, 0.8f), FLinearColor(0.2f, 0.6f, 0.3f) }, 1); Abajo = FLinearColor(0.08f, 0.12f, 0.25f); }
+	else if (P.Edad < 30.f) { Arriba = Elige({ FLinearColor(0.05f, 0.05f, 0.06f), FLinearColor(0.35f, 0.38f, 0.22f), FLinearColor(0.55f, 0.1f, 0.15f), FLinearColor(0.6f, 0.6f, 0.62f) }, 1); Abajo = FLinearColor(0.06f, 0.09f, 0.18f); }
+	else if (P.Edad < 65.f) { Arriba = Elige({ FLinearColor(0.08f, 0.12f, 0.25f), FLinearColor(0.45f, 0.42f, 0.38f), FLinearColor(0.3f, 0.06f, 0.1f), FLinearColor(0.15f, 0.25f, 0.2f) }, 1); Abajo = Elige({ FLinearColor(0.05f, 0.05f, 0.06f), FLinearColor(0.25f, 0.22f, 0.18f) }, 7); }
+	else                    { Arriba = Elige({ FLinearColor(0.35f, 0.25f, 0.18f), FLinearColor(0.55f, 0.5f, 0.42f), FLinearColor(0.35f, 0.08f, 0.12f), FLinearColor(0.25f, 0.3f, 0.35f) }, 1); Abajo = FLinearColor(0.18f, 0.16f, 0.14f); }
+}
+
 AEMMConsultaModo::AEMMConsultaModo()
 {
+	// La consulta empieza con el turno del médico
 	DefaultPawnClass = nullptr;   // la cámara es fija: la consulta se ve desde la mesa del médico
 }
 
@@ -32,6 +71,7 @@ UEMMIASubsystem* AEMMConsultaModo::IA() const { return GetGameInstance()->GetSub
 void AEMMConsultaModo::BeginPlay()
 {
 	Super::BeginPlay();
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida"));
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
 	// personajes y cámara del nivel
@@ -57,22 +97,40 @@ void AEMMConsultaModo::BeginPlay()
 				if (M->GetName().Contains(TEXT("Body")))
 				{
 					M->SetAnimInstanceClass(UEMMCuerpoAnim::StaticClass());
-					if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance())) { A->Interlocutor = Otro; A->Fase = 1.7f * N; }
+					if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance()))
+					{
+						A->Interlocutor = Otro; A->Fase = 1.7f * N;
+						// el paciente llega preocupado; el médico, atento y amable
+						if (Yo == ActorPaciente) A->Preocupacion = 0.6f; else A->Sonrisa = 0.45f;
+					}
 				}
 			++N;
 		}
 	}
-	// encuadre calculado: de lado, a la altura de las cabezas (sentados), viendo de frente a médico y paciente
+	// encuadre calculado: de lado, a la altura de las cabezas (sentados), viendo de frente a médico y paciente.
+	// Los números están en Content/Datos/escena.json para ajustarlos sin recompilar.
 	if (ActorMedico && ActorPaciente)
 	{
+		double Atras = 40, Lateral = 130, Alto = 150, Mezcla = 0.55, AltoMira = 112, Fov = 55;
+		{
+			FString J; TSharedPtr<FJsonObject> O, C;
+			if (FFileHelper::LoadFileToString(J, *(FPaths::ProjectContentDir() / TEXT("Datos/escena.json"))) &&
+				FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(J), O) && O.IsValid() && O->HasTypedField<EJson::Object>(TEXT("camara")))
+			{
+				C = O->GetObjectField(TEXT("camara"));
+				C->TryGetNumberField(TEXT("atras"), Atras); C->TryGetNumberField(TEXT("lado"), Lateral); C->TryGetNumberField(TEXT("alto"), Alto);
+				C->TryGetNumberField(TEXT("mezcla"), Mezcla); C->TryGetNumberField(TEXT("alto_mira"), AltoMira); C->TryGetNumberField(TEXT("fov"), Fov);
+			}
+		}
 		const FVector M = ActorMedico->GetActorLocation(), Pp = ActorPaciente->GetActorLocation();
-		// plano de dos «sobre el hombro» del médico: la paciente de tres cuartos y el médico de perfil
+		// plano de dos desde el lado de la ventana: el médico de perfil a la izquierda, el paciente de tres cuartos
 		const FVector Dir = (Pp - M).GetSafeNormal2D();
 		FVector Lado = FVector::CrossProduct(Dir, FVector::UpVector);
 		if (Lado.Y < 0) Lado = -Lado;   // del lado de la ventana (+Y): la luz de día ilumina las caras
-		const FVector Centro = FMath::Lerp(M, Pp, 0.62f) + FVector(0, 0, 118.f - Pp.Z);
-		const FVector Pos = M - Dir * 70.f + Lado * 95.f + FVector(0, 0, 140.f - M.Z);		ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(Pos, (Centro - Pos).Rotation());
-		Cam->GetCameraComponent()->SetFieldOfView(52.f);
+		const FVector Centro = FMath::Lerp(M, Pp, float(Mezcla)) + FVector(0, 0, AltoMira - Pp.Z);
+		const FVector Pos = M - Dir * Atras + Lado * Lateral + FVector(0, 0, Alto - M.Z);
+		ACameraActor* Cam = GetWorld()->SpawnActor<ACameraActor>(Pos, (Centro - Pos).Rotation());
+		Cam->GetCameraComponent()->SetFieldOfView(float(Fov));
 		Cam->GetCameraComponent()->bConstrainAspectRatio = false;
 		Camara = Cam;
 	}
@@ -103,9 +161,24 @@ void AEMMConsultaModo::BeginPlay()
 	Casos.RemoveAll([&](const FEMMPaciente& P) { return ActorPaciente && P.EsMujer() != bPacienteMujer; });
 	if (Casos.Num()) Paciente = Casos[FMath::RandRange(0, Casos.Num() - 1)];
 	HablaPaciente->Nombre = Paciente.Nombre.IsEmpty() ? TEXT("Paciente") : Paciente.Nombre;
-	HablaPaciente->bMujer = Paciente.EsMujer();
-	HablaPaciente->Tono = Paciente.Voz.Tono;
-	HablaPaciente->Velocidad = Paciente.Voz.Vel;
+	// voz según edad y sexo; el médico, voz adulta normal (distinta del paciente aunque sean del mismo sexo)
+	const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Paciente.EsMujer(), Paciente.Edad);
+	HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
+	const bool bMedicaMujer = ActorMedico && ActorMedico->ActorHasTag(TEXT("Mujer"));
+	const FEMMPerfilVoz VM = EMMVoz::PerfilPara(bMedicaMujer, 40.f);
+	Medico->bMujer = VM.bMujer; Medico->Tono = VM.Tono; Medico->Velocidad = VM.Vel; Medico->VozPreferida = VM.Preferida;
+	if (bMedicaMujer == VP.bMujer && VM.Preferida == VP.Preferida)
+	{
+		if (bMedicaMujer) Medico->VozPreferida = TEXT("Helena");
+		else Medico->Tono = 1.05f;
+	}
+	// ropa: pijama sanitario azul verdoso para el médico; el paciente, según su edad
+	Vestir(ActorMedico, FLinearColor(0.06f, 0.26f, 0.32f), FLinearColor(0.05f, 0.22f, 0.28f));
+	{
+		FLinearColor Arriba, Abajo;
+		ColoresPaciente(Paciente, Arriba, Abajo);
+		Vestir(ActorPaciente, Arriba, Abajo);
+	}
 
 	UI = CreateWidget<UEMMConsultaUI>(PC, UEMMConsultaUI::StaticClass());
 	UI->Modo = this;
@@ -118,7 +191,6 @@ void AEMMConsultaModo::BeginPlay()
 		PC->SetInputMode(Modo);
 	}
 	if (!Error.IsEmpty()) UI->Aviso(Error, false);
-	SugerenciasMedico();
 	Actualizar();
 
 	TWeakObjectPtr<AEMMConsultaModo> Yo(this);
@@ -156,7 +228,23 @@ void AEMMConsultaModo::PasoDePrueba()
 #if WITH_EDITOR
 	bCompilando = GShaderCompilingManager && GShaderCompilingManager->IsCompiling();
 #endif
-	if (PasoPrueba == 0) { if (T > 12 && !IA()->bCargando && (!bCompilando || T > 600)) { RegistroPrueba.Add(IA()->Descripcion()); Foto(TEXT("prueba_consulta")); Siguiente(); } }
+	if (PasoPrueba == 0)
+	{
+		if (T > 12 && !IA()->bCargando && (!bCompilando || T > 600))
+		{
+			RegistroPrueba.Add(IA()->Descripcion());
+			bSubtitulosAntes = UEMMConsultaUI::SubtitulosActivados();
+			RegistroPrueba.Add(FString::Printf(TEXT("Subtítulos guardados al empezar: %s"), bSubtitulosAntes ? TEXT("ON") : TEXT("OFF")));
+			Foto(TEXT("prueba_consulta"));
+			// micrófono: se arranca el dictado y se para durante las vistas de revisión (comprueba reconocedor y micrófono)
+			TWeakObjectPtr<AEMMConsultaModo> Yo(this);
+			const bool bEmpieza = EMMDictado::Empezar([](const FString&) {}, [Yo](const FString& Texto, const FString& Error) {
+				if (Yo.IsValid()) Yo->RegistroPrueba.Add(FString::Printf(TEXT("Dictado: %s (texto: «%s»)"), Error.IsEmpty() ? TEXT("funciona") : *Error, *Texto));
+			});
+			RegistroPrueba.Add(FString::Printf(TEXT("Dictado: %s"), bEmpieza ? TEXT("escuchando") : TEXT("no ha arrancado")));
+			Siguiente();
+		}
+	}
 	else if (PasoPrueba == 1)
 	{
 		// vistas de revisión del montaje (cámaras con la etiqueta «Revision»), 2 s cada una, y vuelta a la del juego
@@ -177,15 +265,32 @@ void AEMMConsultaModo::PasoDePrueba()
 				if (FMath::Fmod(T, 2.0) > 1.2 && !RegistroPrueba.Last().EndsWith(Nombre)) Foto(Nombre);
 			}
 		}
-		else { if (PC && Juego) PC->SetViewTargetWithBlend(Juego, 0.f); Siguiente(); }
-	}	else if (Ronda < 3)
+		else { if (PC && Juego) PC->SetViewTargetWithBlend(Juego, 0.f); EMMDictado::Parar(); Siguiente(); }
+	}
+	else if (Ronda < 3)
 	{
-		if (Fase == 0 && !bOcupado && !bTurnoPaciente) { RegistroPrueba.Add(FString::Printf(TEXT("MÉDICO: %s"), Preguntas[Ronda])); HablarMedico(Preguntas[Ronda]); Siguiente(); }
+		if (Fase == 0 && !bOcupado && !bTurnoPaciente && !EMMDictado::Escuchando())
+		{
+			// segunda pregunta: como si el jugador activara los subtítulos en CONFIGURACIÓN
+			if (Ronda == 1) UEMMConsultaUI::GuardarSubtitulos(true);
+			RegistroPrueba.Add(FString::Printf(TEXT("MÉDICO: %s"), Preguntas[Ronda])); HablarMedico(Preguntas[Ronda]); Siguiente();
+		}
 		else if (Fase == 1 && !bOcupado && bTurnoPaciente) { ResponderPaciente(); Siguiente(); }
 		else if (Fase == 2)
 		{
 			const bool bHabla = HablaPaciente->bHablando;
 			if (bHabla && !RegistroPrueba.Last().StartsWith(TEXT("[foto]")) && Ronda == 0) Foto(TEXT("prueba_paciente_hablando"));
+			// subtítulo a mitad de frase: debe llevar sólo lo que la voz ya ha dicho
+			if (bHabla && Ronda == 1 && !bFotoSubtitulos)
+			{
+				const FString Dicho = HablaPaciente->TextoDicho();
+				if (Dicho.Len() > 12)
+				{
+					bFotoSubtitulos = true;
+					RegistroPrueba.Add(FString::Printf(TEXT("Subtítulo a mitad de frase: «%s»"), *Dicho));
+					Foto(TEXT("prueba_subtitulos"));
+				}
+			}
 			if (!bOcupado && !bTurnoPaciente)
 			{
 				const FEMMLinea& L = Charla.Last();
@@ -198,6 +303,7 @@ void AEMMConsultaModo::PasoDePrueba()
 	else
 	{
 		GetWorldTimerManager().ClearTimer(TemporizadorPrueba);
+		UEMMConsultaUI::GuardarSubtitulos(bSubtitulosAntes);   // se deja la elección del jugador como estaba
 		RegistroPrueba.Add(FString::Printf(TEXT("Voces: %s"), *FString::Join(EMMVoz::VocesDisponibles(), TEXT(" | "))));
 		FFileHelper::SaveStringArrayToFile(RegistroPrueba, *(FPaths::ProjectSavedDir() / TEXT("Prueba.txt")), FFileHelper::EEncodingOptions::ForceUTF8);
 		FTimerHandle Fin;
@@ -205,17 +311,27 @@ void AEMMConsultaModo::PasoDePrueba()
 	}
 }
 
-void AEMMConsultaModo::SugerenciasMedico()
+void AEMMConsultaModo::Dictar()
 {
-	const bool bElla = Paciente.EsMujer();
-	UI->PonerSugerencias({
-		TEXT("Buenos días. ¿Qué le trae por aquí?"),
-		TEXT("¿Desde cuándo le pasa?"),
-		TEXT("¿Dónde le duele exactamente? ¿Cómo es el dolor?"),
-		TEXT("¿Ha tenido fiebre?"),
-		bElla ? TEXT("¿Es alérgica a algún medicamento?") : TEXT("¿Es alérgico a algún medicamento?"),
-		TEXT("¿Tiene alguna enfermedad o toma alguna medicación?"),
-	});
+	if (EMMDictado::Escuchando()) { EMMDictado::Parar(); return; }
+	if (bOcupado || bTurnoPaciente) return;
+	// lo dictado se añade a lo que ya hubiera escrito
+	const FString Previo = UI->TextoEscrito();
+	auto Unir = [Previo](const FString& T) { return Previo.IsEmpty() ? T : Previo + TEXT(" ") + T; };
+	TWeakObjectPtr<AEMMConsultaModo> Yo(this);
+	const bool bEmpieza = EMMDictado::Empezar(
+		[Yo, Unir](const FString& T) { if (Yo.IsValid()) Yo->UI->PonerTexto(Unir(T)); },
+		[Yo, Unir](const FString& T, const FString& Error) {
+			if (!Yo.IsValid()) return;
+			Yo->UI->PonerDictado(false);
+			if (!T.IsEmpty()) Yo->UI->PonerTexto(Unir(T));
+			if (!Error.IsEmpty()) Yo->UI->Aviso(FString::Printf(TEXT("Micrófono: %s. Puedes escribir la pregunta."), *Error), false);
+		});
+	if (bEmpieza)
+	{
+		UI->PonerDictado(true);
+		UI->Aviso(TEXT("Escuchando… Habla y pulsa PARAR al acabar. Revisa el texto y pulsa ENVIAR · HABLAR MÉDICO."), true);
+	}
 }
 
 void AEMMConsultaModo::Actualizar()
@@ -232,7 +348,7 @@ void AEMMConsultaModo::Actualizar()
 
 void AEMMConsultaModo::Decir(UEMMHabla* Quien, const FString& Nombre, const FString& Texto, bool bEsMedico, TFunction<void()> Despues)
 {
-	UI->PonerSubtitulo(Nombre, Texto, bEsMedico);
+	UI->PonerSubtitulo(Nombre, Quien, bEsMedico);
 	TWeakObjectPtr<AEMMConsultaModo> Yo(this);
 	Quien->Decir(Texto, [Yo, Despues](const FString& Error) {
 		if (!Yo.IsValid()) return;
@@ -245,7 +361,8 @@ void AEMMConsultaModo::Decir(UEMMHabla* Quien, const FString& Nombre, const FStr
 void AEMMConsultaModo::HablarMedico(const FString& Texto)
 {
 	if (bOcupado || bTurnoPaciente) return;
-	if (Texto.IsEmpty()) { UI->Aviso(TEXT("Escribe primero lo que quieres decir (o elige una pregunta sugerida)."), false); return; }
+	if (EMMDictado::Escuchando()) EMMDictado::Parar();
+	if (Texto.IsEmpty()) { UI->Aviso(TEXT("Escribe o dicta primero lo que quieres decir."), false); return; }
 	// el médico dice exactamente lo escrito
 	Charla.Add({ true, Texto, FString() });
 	UI->LimpiarTexto();

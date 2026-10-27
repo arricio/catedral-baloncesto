@@ -243,8 +243,8 @@ for nombre, c, t in [('Zocalo fondo', (L / 2 - 1, 0, 45), (2, A, 90)), ('Zocalo 
 
 # muebles: mesa entre médico y paciente
 mesa = colocar(mueble('metal_office_desk'), 40, 0, giro=90, etiqueta='Mesa')
-colocar(mueble('dining_chair_02'), -70, 0, giro=-90, etiqueta='Silla medico')
-colocar(mueble('SchoolChair_01'), 145, -15, giro=90, etiqueta='Silla paciente')
+colocar(mueble('dining_chair_02'), -50, 0, giro=-90, etiqueta='Silla medico')
+colocar(mueble('SchoolChair_01'), 128, -15, giro=90, etiqueta='Silla paciente')
 colocar(mueble('SchoolChair_01'), 165, 95, giro=110, etiqueta='Silla acompanante')
 colocar(mueble('drawer_cabinet'), -200, -185, giro=0, etiqueta='Cajonera')
 
@@ -256,9 +256,10 @@ alto_mesa = 75.0
 if mesa:
     o, e = mesa[0].get_actor_bounds(False)
     alto_mesa = o.z + e.z
-colocar(mueble('classic_laptop'), 10, -60, z_suelo=alto_mesa, giro=250, etiqueta='Portatil')
+# portátil pequeño en la esquina del médico, girado hacia él (no tapa al paciente)
+colocar(mueble('classic_laptop'), 12, -68, z_suelo=alto_mesa, giro=235, escala=0.6, etiqueta='Portatil')
 colocar(mueble('clipboard'), 35, -40, z_suelo=alto_mesa, giro=80, etiqueta='Carpeta')
-colocar(mueble('office_notepads'), 55, -15, z_suelo=alto_mesa, giro=10, etiqueta='Libretas')
+colocar(mueble('office_notepads'), 30, 18, z_suelo=alto_mesa, giro=10, escala=0.8, etiqueta='Libretas')
 
 reloj = colocar(mueble('wall_clock'), L / 2 - 5, 0, z_suelo=200, giro=-90, etiqueta='Reloj')
 colocar(mueble('modern_ceiling_lamp_01'), 40, 0, z_suelo=H - 60, etiqueta='Lampara techo')
@@ -314,11 +315,11 @@ pp.set_actor_label('Postproceso')
 
 # ───────────────────────── Personajes (de momento, marcadores) y cámara ─────────────────────────
 cil = eal.load_asset('/Engine/BasicShapes/Cylinder')
-med = actores.spawn_actor_from_object(cil, unreal.Vector(-60, 0, 90))
+med = actores.spawn_actor_from_object(cil, unreal.Vector(-40, 0, 90))
 med.set_actor_scale3d(unreal.Vector(0.45, 0.45, 1.75))
 med.tags = [unreal.Name('Medico')]
 med.set_actor_label('Medico (marcador)')
-pac = actores.spawn_actor_from_object(cil, unreal.Vector(140, -20, 85))
+pac = actores.spawn_actor_from_object(cil, unreal.Vector(123, -20, 85))
 pac.set_actor_scale3d(unreal.Vector(0.45, 0.45, 1.65))
 pac.tags = [unreal.Name('Paciente'), unreal.Name('Mujer')]
 pac.set_actor_label('Paciente (marcador)')

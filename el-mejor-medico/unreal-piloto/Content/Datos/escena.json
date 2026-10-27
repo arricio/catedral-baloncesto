@@ -1,0 +1,4 @@
+{
+ "nota": "Encuadre de la cámara del juego (EMMConsultaModo). atras: cm por detrás del médico; lado: cm hacia la ventana; alto: altura de la cámara; mezcla: punto al que mira entre médico (0) y paciente (1); alto_mira: altura de ese punto; fov: grados.",
+ "camara": { "atras": 10, "lado": 180, "alto": 150, "mezcla": 0.44, "alto_mira": 108, "fov": 55 }
+}

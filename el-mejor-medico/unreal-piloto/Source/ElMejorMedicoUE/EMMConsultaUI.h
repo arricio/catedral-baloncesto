@@ -1,6 +1,7 @@
 // EL MEJOR MÉDICO (Unreal): pantalla de la consulta, construida en C++ (sin recursos binarios).
-// Las mismas reglas que el juego web: el médico dice sólo lo escrito al pulsar ENVIAR · HABLAR MÉDICO,
-// y el paciente responde sólo al pulsar RESPONDER PACIENTE. Funciona con el dedo, el ratón y el mando de Xbox.
+// El jugador es el médico: escribe o dicta libremente (no hay preguntas sugeridas). El médico dice sólo lo escrito
+// al pulsar ENVIAR · HABLAR MÉDICO, y el paciente responde sólo al pulsar RESPONDER PACIENTE.
+// CONFIGURACIÓN: subtítulos ON/OFF (desactivados por defecto; la elección se guarda).
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,9 +11,9 @@
 class UButton;
 class UTextBlock;
 class UMultiLineEditableTextBox;
-class UVerticalBox;
 class UBorder;
 class AEMMConsultaModo;
+class UEMMHabla;
 
 UCLASS()
 class ELMEJORMEDICOUE_API UEMMConsultaUI : public UUserWidget
@@ -23,18 +24,24 @@ public:
 
 	void PonerEstado(const FString& Texto, bool bTurnoPaciente);
 	void PonerIA(const FString& Texto);
-	void PonerSubtitulo(const FString& Quien, const FString& Texto, bool bMedico);
+	// subtítulo de quien habla: el texto aparece a la vez que la voz (si los subtítulos están activados)
+	void PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico);
 	void QuitarSubtitulo();
 	void Aviso(const FString& Texto, bool bBien);
 	void PonerBotones(bool bMedico, bool bPaciente);
-	void PonerSugerencias(const TArray<FString>& Lista);
 	void PonerDescarga(const FString& Texto, bool bVisible);
+	void PonerDictado(bool bEscuchando);
 	FString TextoEscrito() const;
+	void PonerTexto(const FString& Texto);
 	void LimpiarTexto();
 	void EnfocarPrincipal();
 
+	static bool SubtitulosActivados();
+	static void GuardarSubtitulos(bool bActivos);
+
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void NativeTick(const FGeometry& Geometria, float Dt) override;
 
 private:
 	void Construir();
@@ -48,24 +55,24 @@ private:
 	UPROPERTY() TObjectPtr<UMultiLineEditableTextBox> Caja;
 	UPROPERTY() TObjectPtr<UButton> BotonMedico;
 	UPROPERTY() TObjectPtr<UButton> BotonPaciente;
-	UPROPERTY() TObjectPtr<UVerticalBox> Sugerencias;
+	UPROPERTY() TObjectPtr<UButton> BotonMicrofono;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaMicrofono;
 	UPROPERTY() TObjectPtr<UTextBlock> TextoAviso;
 	UPROPERTY() TObjectPtr<UBorder> CajaAviso;
 	UPROPERTY() TObjectPtr<UBorder> CajaDescarga;
 	UPROPERTY() TObjectPtr<UTextBlock> TextoDescarga;
 	UPROPERTY() TObjectPtr<UButton> BotonDescargar;
-	UPROPERTY() TArray<TObjectPtr<UButton>> BotonesSugerencia;
-	TArray<FString> TextosSugerencia;
+	UPROPERTY() TObjectPtr<UBorder> CajaAjustes;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaSubtitulos;
+	UPROPERTY() TObjectPtr<UEMMHabla> HablaSubtitulo;
 	FTimerHandle TemporizadorAviso;
 
 	UFUNCTION() void AlPulsarMedico();
 	UFUNCTION() void AlPulsarPaciente();
+	UFUNCTION() void AlPulsarMicrofono();
 	UFUNCTION() void AlPulsarDescargar();
-	UFUNCTION() void AlPulsarSugerencia0();
-	UFUNCTION() void AlPulsarSugerencia1();
-	UFUNCTION() void AlPulsarSugerencia2();
-	UFUNCTION() void AlPulsarSugerencia3();
-	UFUNCTION() void AlPulsarSugerencia4();
-	UFUNCTION() void AlPulsarSugerencia5();
-	void UsarSugerencia(int32 i);
+	UFUNCTION() void AlPulsarAjustes();
+	UFUNCTION() void AlPulsarSubtitulos();
+	UFUNCTION() void AlPulsarCerrarAjustes();
+	void RefrescarAjustes();
 };

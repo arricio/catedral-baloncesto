@@ -19,17 +19,42 @@ FEMMPerfilVoz UEMMHabla::Perfil() const
 	return P;
 }
 
-void UEMMHabla::Decir(const FString& Texto, TFunction<void(const FString&)> Fin)
+FString UEMMHabla::TextoDicho() const
+{
+	if (bSinVoz) return Texto;
+	if (!Audio.IsValid() || Texto.IsEmpty()) return FString();
+	const float T = float(FPlatformTime::Seconds() - Inicio);
+	int32 Hasta = 0;
+	if (Audio->Palabras.Num())
+	{
+		// hasta el final de la palabra que está sonando
+		for (const auto& P : Audio->Palabras) { if (P.Key <= T + 0.05f) Hasta = FMath::Max(Hasta, P.Value); else break; }
+	}
+	else if (Audio->Duracion > 0.f)
+	{
+		// sin marcas de palabras (Android): proporcional al tiempo, cortando en el siguiente espacio
+		Hasta = FMath::Clamp(int32(Texto.Len() * T / Audio->Duracion) + 1, 0, Texto.Len());
+		while (Hasta < Texto.Len() && !FChar::IsWhitespace(Texto[Hasta])) ++Hasta;
+	}
+	if (T >= Audio->Duracion) Hasta = Texto.Len();
+	// incluye la puntuación pegada a la palabra
+	while (Hasta < Texto.Len() && FChar::IsPunct(Texto[Hasta])) ++Hasta;
+	return Texto.Left(Hasta).TrimEnd();
+}
+
+void UEMMHabla::Decir(const FString& Frase, TFunction<void(const FString&)> Fin)
 {
 	Callar();
+	Texto = Frase;
 	AlTerminar = MoveTemp(Fin);
 	TWeakObjectPtr<UEMMHabla> Yo(this);
-	EMMVoz::Sintetizar(Texto, Perfil(), [Yo, Texto](TSharedPtr<FEMMAudio> A) {
+	EMMVoz::Sintetizar(Frase, Perfil(), [Yo, Frase](TSharedPtr<FEMMAudio> A) {
 		if (!Yo.IsValid()) return;
 		if (!A.IsValid() || !A->Error.IsEmpty() || !A->PCM.Num())
 		{
 			// sin voz: los subtítulos se quedan el tiempo de leerlos, y se avisa
-			const float Lectura = FMath::Clamp(Texto.Len() / 15.f, 2.f, 10.f);
+			Yo->bSinVoz = true;
+			const float Lectura = FMath::Clamp(Frase.Len() / 15.f, 2.f, 10.f);
 			const FString Error = A.IsValid() ? A->Error : TEXT("sin voz");
 			FTimerHandle T;
 			Yo->GetWorld()->GetTimerManager().SetTimer(T, FTimerDelegate::CreateWeakLambda(Yo.Get(), [Yo, Error]() { Yo->Terminar(Error); }), Lectura, false);
@@ -60,19 +85,21 @@ void UEMMHabla::Callar()
 	if (Sonido) { Sonido->Stop(); Sonido = nullptr; }
 	Audio.Reset();
 	bHablando = false;
+	bSinVoz = false;
 }
 
 void UEMMHabla::Terminar(const FString& Error)
 {
 	Callar();
-	Apertura = Redondez = Estiramiento = Cierre = 0.f;
+	Texto.Reset();
+	Apertura = Redondez = Estiramiento = Cierre = Mordida = 0.f;
 	if (AlTerminar) { auto F = MoveTemp(AlTerminar); AlTerminar = nullptr; F(Error); }
 }
 
 void UEMMHabla::TickComponent(float Dt, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(Dt, TickType, ThisTickFunction);
-	float Ap = 0.f, Re = 0.f, Es = 0.f, Ci = 0.f;
+	float Ap = 0.f, Re = 0.f, Es = 0.f, Ci = 0.f, Mo = 0.f;
 	if (Audio.IsValid())
 	{
 		const double T = FPlatformTime::Seconds() - Inicio;
@@ -81,13 +108,26 @@ void UEMMHabla::TickComponent(float Dt, ELevelTick TickType, FActorComponentTick
 		if (Audio->Apertura.Num())
 		{
 			Ap = Audio->Apertura[C];
-			// visemas de SAPI: 6–8 (o, u), 4–5 y 9–10 (e, i), 21 (m, b, p)
-			switch (Audio->Visema[C])
+			// visemas de SAPI (0 silencio … 21 p, b, m): cuánto baja la mandíbula y qué forma toman los labios
+			static const float Mandibula[22] = { 0.f, 1.f, 1.f, .8f, .7f, .5f, .35f, .35f, .6f, .9f, .7f, .9f, .6f, .4f, .45f, .2f, .3f, .3f, .15f, .35f, .45f, 0.f };
+			const uint8 V = C < Audio->Visema.Num() ? Audio->Visema[C] : 255;
+			if (V < 22)
 			{
-			case 6: case 7: case 8: Re = 0.8f; break;
-			case 1: case 4: case 5: case 9: case 10: Es = 0.6f; break;
-			case 21: Ci = 1.f; Ap *= 0.2f; break;
-			default: break;
+				Ap *= 0.3f + 0.7f * Mandibula[V];
+				switch (V)
+				{
+				case 7: Re = 1.f; break;                       // u
+				case 8: Re = 0.8f; break;                      // o
+				case 3: case 10: Re = 0.5f; break;
+				case 16: Re = 0.5f; break;                     // ch
+				case 13: Re = 0.35f; break;                    // r
+				case 6: Es = 0.8f; break;                      // i
+				case 4: case 15: Es = 0.5f; break;             // e, s
+				case 11: case 1: Es = 0.3f; break;
+				case 21: Ci = 1.f; Ap = 0.f; break;            // p, b, m
+				case 18: Mo = 1.f; Ap *= 0.5f; break;          // f, v
+				default: break;
+				}
 			}
 		}
 	}
@@ -100,6 +140,7 @@ void UEMMHabla::TickComponent(float Dt, ELevelTick TickType, FActorComponentTick
 	Redondez = FMath::Lerp(Redondez, Re, K);
 	Estiramiento = FMath::Lerp(Estiramiento, Es, K);
 	Cierre = FMath::Lerp(Cierre, Ci, K);
+	Mordida = FMath::Lerp(Mordida, Mo, K);
 	// parpadeo natural cada 2–6 s
 	ProximoParpadeo -= Dt;
 	if (ProximoParpadeo <= 0.f) { TiempoParpadeo = 0.f; ProximoParpadeo = FMath::FRandRange(2.f, 6.f); }

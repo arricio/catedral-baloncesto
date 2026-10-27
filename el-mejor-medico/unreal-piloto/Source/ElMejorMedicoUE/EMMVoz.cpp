@@ -104,19 +104,25 @@ static void SintetizarWindows(const FString& Texto, const FEMMPerfilVoz& P, FEMM
 	F.nBlockAlign = 2; F.nAvgBytesPerSec = 44100;
 	Flujo->SetBaseStream(Memoria, SPDFID_WaveFormatEx, &F);
 	Voz->SetOutput(Flujo, true);
-	Voz->SetInterest(SPFEI(SPEI_VISEME), SPFEI(SPEI_VISEME));
+	Voz->SetInterest(SPFEI(SPEI_VISEME) | SPFEI(SPEI_WORD_BOUNDARY), SPFEI(SPEI_VISEME) | SPFEI(SPEI_WORD_BOUNDARY));
 	// tono y velocidad con el XML de SAPI (-10..10)
 	const int32 Tono = FMath::Clamp(FMath::RoundToInt((P.Tono - 1.f) * 12.f), -10, 10);
 	const int32 Vel = FMath::Clamp(FMath::RoundToInt((P.Vel - 1.f) * 10.f), -10, 10);
 	FString Seguro = Texto.Replace(TEXT("&"), TEXT("y")).Replace(TEXT("<"), TEXT(" ")).Replace(TEXT(">"), TEXT(" "));
-	const FString Xml = FString::Printf(TEXT("<pitch absmiddle=\"%d\"><rate absspeed=\"%d\">%s</rate></pitch>"), Tono, Vel, *Seguro);
-	if (FAILED(Voz->Speak(*Xml, SPF_IS_XML, nullptr))) Voz->Speak(*Seguro, SPF_IS_NOT_XML, nullptr);
+	const FString Prefijo = FString::Printf(TEXT("<pitch absmiddle=\"%d\"><rate absspeed=\"%d\">"), Tono, Vel);
+	int32 Desfase = Prefijo.Len();   // las posiciones de las palabras cuentan también las etiquetas
+	if (FAILED(Voz->Speak(*(Prefijo + Seguro + TEXT("</rate></pitch>")), SPF_IS_XML, nullptr))) { Voz->Speak(*Seguro, SPF_IS_NOT_XML, nullptr); Desfase = 0; }
 
-	// visemas con su instante en el audio
+	// visemas y palabras con su instante en el audio
 	TArray<TPair<double, uint8>> Visemas;
 	SPEVENT Ev; ULONG Leidos = 0;
 	while (Voz->GetEvents(1, &Ev, &Leidos) == S_OK && Leidos == 1)
-		if (Ev.eEventId == SPEI_VISEME) Visemas.Add({ double(Ev.ullAudioStreamOffset) / F.nAvgBytesPerSec, uint8(LOWORD(Ev.lParam)) });
+	{
+		const double T = double(Ev.ullAudioStreamOffset) / F.nAvgBytesPerSec;
+		if (Ev.eEventId == SPEI_VISEME) Visemas.Add({ T, uint8(LOWORD(Ev.lParam)) });
+		else if (Ev.eEventId == SPEI_WORD_BOUNDARY)
+			A.Palabras.Add({ float(T), FMath::Clamp(int32(Ev.lParam) - Desfase + int32(Ev.wParam), 0, Texto.Len()) });
+	}
 
 	STATSTG Info = {};
 	Memoria->Stat(&Info, STATFLAG_NONAME);
@@ -175,6 +181,19 @@ TArray<FString> EMMVoz::VocesDisponibles()
 	if (SUCCEEDED(Hr)) CoUninitialize();
 #endif
 	return R;
+}
+
+FEMMPerfilVoz EMMVoz::PerfilPara(bool bMujer, float Edad)
+{
+	// Windows trae tres voces es-ES: Pablo (hombre), Laura y Helena (mujer). Los niños usan una voz de mujer
+	// más aguda y algo más rápida; los mayores, más grave y más pausada.
+	FEMMPerfilVoz P;
+	P.bMujer = bMujer;
+	if (Edad < 13.f)      { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Helena"); P.Tono = bMujer ? 1.75f : 1.6f; P.Vel = 1.05f; P.bMujer = true; }
+	else if (Edad < 18.f) { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Pablo");  P.Tono = bMujer ? 1.25f : 1.2f;  P.Vel = 1.05f; }
+	else if (Edad < 65.f) { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Pablo");  P.Tono = bMujer ? 1.f : 0.95f;   P.Vel = 1.f; }
+	else                  { P.Preferida = bMujer ? TEXT("Helena") : TEXT("Pablo"); P.Tono = bMujer ? 0.92f : 0.82f; P.Vel = 0.85f; }
+	return P;
 }
 
 void EMMVoz::Sintetizar(const FString& Texto, const FEMMPerfilVoz& Perfil, TFunction<void(TSharedPtr<FEMMAudio>)> Hecho)

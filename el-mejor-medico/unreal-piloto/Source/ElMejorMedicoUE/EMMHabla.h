@@ -29,18 +29,23 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Habla") float Redondez = 0.f;    // o, u
 	UPROPERTY(BlueprintReadOnly, Category = "Habla") float Estiramiento = 0.f; // e, i
 	UPROPERTY(BlueprintReadOnly, Category = "Habla") float Cierre = 0.f;      // m, b, p
+	UPROPERTY(BlueprintReadOnly, Category = "Habla") float Mordida = 0.f;     // f, v (labio inferior bajo los dientes)
 	UPROPERTY(BlueprintReadOnly, Category = "Habla") float Parpadeo = 0.f;    // 0..1
 	UPROPERTY(BlueprintReadOnly, Category = "Habla") bool bHablando = false;
 
 	// Sintetiza y dice la frase; Fin se llama al terminar (o si falla la voz, tras un tiempo de lectura)
-	void Decir(const FString& Texto, TFunction<void(const FString& Error)> Fin);
+	void Decir(const FString& Frase, TFunction<void(const FString& Error)> Fin);
 	void Callar();
 	FEMMPerfilVoz Perfil() const;
+	// Lo que la voz ya ha dicho de la frase actual (para los subtítulos); vacío si está callado
+	FString TextoDicho() const;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
 	TSharedPtr<FEMMAudio> Audio;
+	FString Texto;
+	bool bSinVoz = false;   // la voz falló: el subtítulo sale entero mientras dura la lectura
 	UPROPERTY() TObjectPtr<UAudioComponent> Sonido;
 	double Inicio = 0;
 	TFunction<void(const FString&)> AlTerminar;

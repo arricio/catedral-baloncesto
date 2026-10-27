@@ -21,6 +21,8 @@ public:
 	void HablarMedico(const FString& Texto);
 	void ResponderPaciente();
 	void DescargarModelo();
+	// micrófono: empieza o para el dictado; el texto va a la caja para revisarlo (el médico no habla solo)
+	void Dictar();
 
 	// estado (también para las pruebas automáticas)
 	const TArray<FEMMLinea>& Conversacion() const { return Charla; }
@@ -45,12 +47,12 @@ private:
 	int32 PasoPrueba = 0;
 	double InicioPaso = 0;
 	TArray<FString> RegistroPrueba;
+	bool bFotoSubtitulos = false, bSubtitulosAntes = false;
 	void PasoDePrueba();
 	void Foto(const FString& Nombre);
 
 	UEMMIASubsystem* IA() const;
 	void Actualizar();
-	void SugerenciasMedico();
 	FString Referencia(const FString& Pregunta) const;
 	void Decir(UEMMHabla* Quien, const FString& Nombre, const FString& Texto, bool bEsMedico, TFunction<void()> Despues);
 	void RevisarDescarga();

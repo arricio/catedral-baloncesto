@@ -1,5 +1,5 @@
 {
- "nota": "Postura sentada de los MetaHumans (EMMCuerpoAnim). pelvis: desplazamiento en cm (espacio del componente: Z arriba, Y hacia delante). giros: giro local de cada hueso (eje y grados).",
+ "nota": "Postura sentada de los MetaHumans (EMMCuerpoAnim). pelvis: desplazamiento en cm (espacio del componente: Z arriba, Y hacia delante). giros: giro de cada hueso (eje y grados); con \"espacio\": \"cuerpo\" el eje es del cuerpo (X lado, Y delante, Z arriba; +X lleva hacia delante lo que cuelga), si no, el eje local del hueso. Dedos: curvatura relajada.",
  "pelvis": [0, -12, -46],
  "giros": [
   { "hueso": "thigh_l", "eje": [0, 0, 1], "grados": 88 },
@@ -7,6 +7,34 @@
   { "hueso": "calf_l", "eje": [0, 0, 1], "grados": -88 },
   { "hueso": "calf_r", "eje": [0, 0, 1], "grados": -88 },
   { "hueso": "upperarm_l", "eje": [0, 1, 0], "grados": 35 },
-  { "hueso": "upperarm_r", "eje": [0, 1, 0], "grados": 35 }
+  { "hueso": "upperarm_r", "eje": [0, 1, 0], "grados": 35 },
+  { "hueso": "upperarm_l", "eje": [1, 0, 0], "grados": 10, "espacio": "cuerpo" },
+  { "hueso": "upperarm_r", "eje": [1, 0, 0], "grados": 10, "espacio": "cuerpo" },
+  { "hueso": "lowerarm_l", "eje": [1, 0, 0], "grados": 42, "espacio": "cuerpo" },
+  { "hueso": "lowerarm_r", "eje": [1, 0, 0], "grados": 42, "espacio": "cuerpo" },
+  { "hueso": "index_01_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "index_02_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "index_03_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "middle_01_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "middle_02_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "middle_03_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "ring_01_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "ring_02_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "ring_03_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "pinky_01_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "pinky_02_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "pinky_03_l", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "index_01_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "index_02_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "index_03_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "middle_01_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "middle_02_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "middle_03_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "ring_01_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "ring_02_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "ring_03_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "pinky_01_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "pinky_02_r", "eje": [0, 0, 1], "grados": 22 },
+  { "hueso": "pinky_03_r", "eje": [0, 0, 1], "grados": 22 }
  ]
 }

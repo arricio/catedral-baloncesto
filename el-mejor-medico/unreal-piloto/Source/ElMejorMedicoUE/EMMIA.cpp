@@ -80,6 +80,32 @@ FString UEMMIASubsystem::LimpiarRespuesta(const FString& T)
 	return S.TrimStartAndEnd();
 }
 
+// Los modelos pequeños confunden el género al hablar de sí mismos («estoy preocupado» dicho por una mujer).
+// Se corrige sólo lo que va detrás de un verbo en primera persona, con adjetivos conocidos, para no tocar
+// lo que dice de otras personas («mi hijo está cansado»).
+FString UEMMIASubsystem::CorregirGenero(const FString& T, bool bMujer)
+{
+	static const FString Patron = []() {
+		const TCHAR* Raices[] = { TEXT("preocupad"), TEXT("cansad"), TEXT("agotad"), TEXT("maread"), TEXT("asustad"), TEXT("nervios"), TEXT("hinchad"),
+			TEXT("resfriad"), TEXT("constipad"), TEXT("acatarrad"), TEXT("agobiad"), TEXT("angustiad"), TEXT("desesperad"), TEXT("tranquil"), TEXT("operad"),
+			TEXT("vacunad"), TEXT("alérgic"), TEXT("alergic"), TEXT("enferm"), TEXT("asmátic"), TEXT("diabétic"), TEXT("hipertens"), TEXT("dolorid"),
+			TEXT("debilitad"), TEXT("segur"), TEXT("convencid"), TEXT("hart"), TEXT("aburrid"), TEXT("estresad"), TEXT("deprimid"), TEXT("desanimad"),
+			TEXT("contagiad"), TEXT("quemad"), TEXT("lesionad"), TEXT("recuperad"), TEXT("curad"), TEXT("ingresad"), TEXT("jubilad"), TEXT("casad"),
+			TEXT("divorciad"), TEXT("viud"), TEXT("solter"), TEXT("sol"), TEXT("acostumbrad"), TEXT("obligad"), TEXT("molest"), TEXT("mojad"),
+			TEXT("dormid"), TEXT("despiert"), TEXT("atascad"), TEXT("hundid"), TEXT("baj"), TEXT("fastidiad"), TEXT("mism") };
+		TArray<FString> R; for (const TCHAR* X : Raices) R.Add(X);
+		return FString(TEXT("\\b(estoy|estaba|estuve|he estado|me siento|me sentía|me sentia|me he sentido|me encuentro|me encontraba|me noto|ando|andaba|soy|era|me quedé|me quede|me quedo|me pongo|me puse|me he puesto|vivo|yo)\\s+((?:muy|un poco|algo|bastante|tan|más|mas|súper|super|como|medio|demasiado)\\s+)?(")) +
+			FString::Join(R, TEXT("|")) + TEXT(")(o|a|os|as)\\b");
+	}();
+	FString S = T;
+	TArray<int32> Vocales;
+	FRegexMatcher M(FRegexPattern(Patron, ERegexPatternFlags::CaseInsensitive), T);
+	while (M.FindNext()) Vocales.Add(M.GetCaptureGroupBeginning(4));
+	for (int32 i : Vocales)
+		if (S.IsValidIndex(i)) S[i] = bMujer ? TEXT('a') : TEXT('o');
+	return S;
+}
+
 // ¿La respuesta sólo repite lo que ha dicho el médico? «No he tenido fiebre» comparte palabras pero contesta.
 bool UEMMIASubsystem::EsEco(const FString& Respuesta, const FString& Pregunta)
 {
@@ -220,16 +246,17 @@ void UEMMIASubsystem::Responder(const FEMMPaciente& P, const TArray<FEMMLinea>& 
 	if (Modo == EEMMModoIA::Predefinida) { Hecho({ Referencia, TEXT("predefinida"), FString(), 0 }); return; }
 	TArray<TPair<FString, FString>> M = ConstruirMensajes(P, Historial, Pregunta, Referencia);
 	TWeakObjectPtr<UEMMIASubsystem> Yo(this);
-	Llamar(M, [Yo, M, Pregunta, Referencia, Hecho, T0](bool bOk, const FString& Bruto, const FString& Error) mutable {
+	const bool bMujer = P.EsMujer();
+	Llamar(M, [Yo, M, Pregunta, Referencia, Hecho, T0, bMujer](bool bOk, const FString& Bruto, const FString& Error) mutable {
 		if (!Yo.IsValid()) return;
-		const FString Texto = LimpiarRespuesta(Bruto);
+		const FString Texto = CorregirGenero(LimpiarRespuesta(Bruto), bMujer);
 		if (bOk && !Texto.IsEmpty() && !EsEco(Texto, Pregunta)) { Hecho({ Texto, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 }); return; }
 		if (!bOk) { Hecho({ Referencia, TEXT("predefinida"), Error, 0 }); return; }
 		// si repite la pregunta o no dice nada, se le pide otra vez que conteste como paciente
 		M.Add({ TEXT("assistant"), Texto.IsEmpty() ? TEXT("...") : Texto });
 		M.Add({ TEXT("user"), TEXT("(Eso es repetir lo que ha dicho el médico. Contesta tú, como paciente, a su pregunta.)") });
-		Yo->Llamar(M, [Pregunta, Referencia, Hecho, T0](bool bOk2, const FString& Bruto2, const FString& Error2) {
-			const FString T2 = LimpiarRespuesta(Bruto2);
+		Yo->Llamar(M, [Pregunta, Referencia, Hecho, T0, bMujer](bool bOk2, const FString& Bruto2, const FString& Error2) {
+			const FString T2 = CorregirGenero(LimpiarRespuesta(Bruto2), bMujer);
 			if (bOk2 && !T2.IsEmpty() && !EsEco(T2, Pregunta)) Hecho({ T2, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 });
 			else Hecho({ Referencia, TEXT("predefinida"), bOk2 ? TEXT("la IA no ha dado una respuesta válida") : Error2, 0 });
 		});

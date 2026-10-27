@@ -128,12 +128,21 @@ Pendiente o limitado:
       - Hace la postura sentada (`Content/Datos/postura.json`: pelvis y giros locales; muslos y gemelos en el eje Z ±88°, brazos en el eje Y 35°), la respiración y la mirada.
       - También envía las curvas `CTRL_expressions_*` (mandíbula, boca, parpadeo). La cara (ABP_Face) copia pose y curvas del cuerpo y RigLogic las aplica: comprobado con `-EMMBocaAbierta`.
       - El MetaHuman mira hacia +Y de su malla: su giro es la dirección hacia el otro menos 90°.
-    - **Cámara**: «sobre el hombro» del médico, calculada en `EMMConsultaModo`.
+    - **Cámara**: plano de dos desde el lado de la ventana (médico de perfil a la izquierda, paciente de tres cuartos), calculada en `EMMConsultaModo` con los números de `Content/Datos/escena.json` (se ajusta sin recompilar).
     - **Memoria de vídeo**: sombras virtuales desactivadas (`r.Shadow.Virtual.Enable=0`). Con eso ya no aparece el aviso de memoria de vídeo agotada.
+  - **Petición de 9 puntos (27/10/2026), hecho y probado con `-EMMPrueba` en el editor**:
+    - «YO SOY EL MÉDICO»: sin preguntas sugeridas. Caja libre + MICRÓFONO (dictado SAPI en español de España, sin Internet: `EMMDictado`; el texto va a la caja para revisarlo) + ENVIAR · HABLAR MÉDICO + RESPONDER PACIENTE. Nadie habla solo.
+    - CONFIGURACIÓN › SUBTÍTULOS ON/OFF: desactivados por defecto, guardados en `GameUserSettings.ini` (sección `ElMejorMedico`), se cambian al momento. El subtítulo va palabra a palabra con la voz (marcas `SPEI_WORD_BOUNDARY` de SAPI; en Android, proporcional al tiempo) y está encima del panel, sin tapar caras. La prueba lo activa en la 2.ª pregunta y deja la elección como estaba.
+    - Boca: visemas de SAPI con apertura de mandíbula por visema, redondeo (o, u), estiramiento (e, i), labios juntos (p, b, m) y labio inferior mordido (f, v). Además: microsacadas de los ojos, asentimientos al hablar, cejas preocupadas en el paciente y sonrisa leve en el médico.
+    - Postura: `postura.json` admite `"espacio": "cuerpo"` (eje del cuerpo: X lado, Y delante, Z arriba). Antebrazos hacia delante a la altura de la mesa y dedos relajados (eje local Z 22° en cada falange).
+    - Ropa: sólo existe la prenda básica (camiseta y pantalón corto). Se tiñe en C++: pijama sanitario verde azulado para el médico; el paciente, colores según la edad (niño, joven, adulto, mayor) con variación fija por caso. **Para bata o pijama de verdad hace falta ropa de Fab: pedir permiso antes de descargar o aceptar nada.**
+    - Voces por edad y sexo (`EMMVoz::PerfilPara`): niños con voz de mujer más aguda, adolescentes, adultos y mayores (más graves y lentos). El médico usa otra voz o tono si coincide con el paciente.
+    - IA: `CorregirGenero` arregla los adjetivos sobre sí mismo detrás de un verbo en primera persona («estoy preocupado» → «preocupada»); la instrucción de género ya no lleva ejemplos (el modelo los copiaba).
+    - Montaje: sillas más cerca de la mesa, portátil al 60 % en la esquina del médico y las libretas sobre la mesa (antes flotaban fuera del borde).
+    - **Smart App Control** (activado, no se toca): a veces bloquea la DLL recién compilada (error 4551, política {0283ac0f-…}). Volver a intentarlo no basta; sí funciona recompilar con un cambio real de código (la decisión es por binario).
   - Falta:
-    - Bata del médico: la única ropa local es camiseta y pantalón corto.
-    - Ajustar las manos y el encuadre (el portátil aún tapa el lado izquierdo).
-    - El APK de Android (la biblioteca `Nativo/emm-nativo` ya compila) y probarlo en el emulador.
+    - Ropa clínica de verdad (Fab, con permiso del usuario).
+    - El APK de Android (la biblioteca `Nativo/emm-nativo` ya compila), con controles táctiles y dictado del móvil, y probarlo en el emulador y en el Xiaomi.
 - **Instaladores**: el APK ya se compila (arriba; falta la prueba en el Xiaomi). Falta Electron o Tauri (EXE/MSIX). Pedir autorización antes de instalar. Ojo: el dictado del navegador no funciona dentro de Electron ni de WebView2; habría que usar el dictado de Windows (Windows + H) o un reconocedor local.
 - Caminar, sentarse y levantarse; caras, barbas, gafas, ropa y mobiliario en Blender (sección 5).
 - El médico se ve en primera persona: sólo se animan sus manos, no su cara.
