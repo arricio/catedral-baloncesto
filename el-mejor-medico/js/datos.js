@@ -1085,7 +1085,7 @@ export const RECETARIO = [...parse(MED, 'med'), ...parse(OTROS, 'otro'), ...pars
 export const CAT_NOMBRE = { med: 'Medicamento', otro: 'Indicación', comida: 'Comida', bebida: 'Bebida' };
 
 // Si el médico escribe algo que no está en el recetario, se le intenta adivinar la naturaleza.
-const PISTAS = [
+export const PISTAS = [
   [/orujo|cona?c|brandy|\bron\b|whisky|vodka|ginebra|gin|tequila|anis|pacharan|licor|chupito|absenta|aguardiente|cubata|queimada|carajillo|mezcal|grappa|ratafia/, 'bebida', ['alcohol', 'alcohol_fuerte']],
   [/vino|cerveza|cana\b|sidra|vermu|sangria|calimocho|cava|champ|tinto|clarete|mosto|birra/, 'bebida', ['alcohol']],
   [/cola|fanta|refresco|kas\b|sprite|seven|7up|gaseosa|nestea|tonica|pepsi/, 'bebida', ['refresco', 'azucar']],

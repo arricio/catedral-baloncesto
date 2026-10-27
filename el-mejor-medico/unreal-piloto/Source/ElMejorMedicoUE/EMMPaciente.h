@@ -17,6 +17,11 @@ struct FEMMPaciente
 	FEMMVozPerfil Voz;
 	FString Sistema;                                 // instrucciones para la IA, sin historial
 	TMap<FString, TArray<FString>> Respuestas;       // respuestas predefinidas por intención
+	// para la evolución tras el tratamiento (datos.js › trat)
+	FString EnfId, Alergia;
+	TArray<TArray<FString>> TratMed;                 // grupos necesarios (vale cualquiera del grupo)
+	TArray<FString> TratBuena, TratEvitar, Antecedentes;
+	bool bFumador = false, bBebedor = false;
 
 	bool EsMujer() const { return Sexo == TEXT("m"); }
 	FString Respuesta(const FString& Intencion) const;
@@ -37,4 +42,7 @@ namespace EMMDatos
 	// Intenciones de la frase del médico (mismas expresiones que js/ia.js › INTENCIONES)
 	TArray<FString> Intenciones(const FString& Texto);
 	FString Normaliza(const FString& Texto);
+	// Naturaleza de lo recetado (como itemLibre/buscarReceta del juego web): etiquetas como «antibiotico», «alcohol»…
+	// Nombre recibe el producto reconocido del recetario, si lo hay.
+	TArray<FString> EtiquetasDe(const FString& Texto, FString* Nombre = nullptr);
 }

@@ -103,6 +103,16 @@ FString UEMMIASubsystem::CorregirGenero(const FString& T, bool bMujer)
 	while (M.FindNext()) Vocales.Add(M.GetCaptureGroupBeginning(4));
 	for (int32 i : Vocales)
 		if (S.IsValidIndex(i)) S[i] = bMujer ? TEXT('a') : TEXT('o');
+	// al médico se le habla de usted: los tuteos más frecuentes de los modelos pequeños
+	for (const TPair<const TCHAR*, const TCHAR*>& P : { TPair<const TCHAR*, const TCHAR*>(TEXT("me recetaste"), TEXT("me recetó")), { TEXT("me dijiste"), TEXT("me dijo") },
+		{ TEXT("me mandaste"), TEXT("me mandó") }, { TEXT("me diste"), TEXT("me dio") }, { TEXT("me pusiste"), TEXT("me puso") }, { TEXT("tú crees"), TEXT("usted cree") } })
+		S = S.Replace(P.Key, P.Value, ESearchCase::IgnoreCase);
+	// «no soy el único» / «la única»
+	for (const TCHAR* V : { TEXT("soy"), TEXT("era"), TEXT("fui") })
+	{
+		const FString El = FString::Printf(TEXT("%s el único"), V), La = FString::Printf(TEXT("%s la única"), V);
+		S = bMujer ? S.Replace(*El, *La, ESearchCase::IgnoreCase) : S.Replace(*La, *El, ESearchCase::IgnoreCase);
+	}
 	return S;
 }
 

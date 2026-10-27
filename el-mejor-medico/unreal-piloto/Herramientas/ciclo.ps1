@@ -30,6 +30,9 @@ if ($Empaquetar) {
   $p = Start-Process -FilePath "$UE\Build\BatchFiles\RunUAT.bat" -ArgumentList 'BuildCookRun', "-project=`"$Proyecto`"", '-platform=Win64', '-clientconfig=Development', '-build', '-cook', '-stage', '-pak', '-archive', "-archivedirectory=`"$(Join-Path $P 'Empaquetado')`"", '-unattended', '-utf8output', '-nop4' -RedirectStandardOutput $log -RedirectStandardError "$log.err" -WindowStyle Hidden -PassThru
   $p.WaitForExit()
   Get-Content $log | Select-String 'BUILD SUCCESSFUL|BUILD FAILED| Error:|LogCook: Error' | Select-Object -First 10
+  # Smart App Control (activado; no se desactiva) puede bloquear la DLL nueva del editor durante el «cook»
+  $cook = Get-ChildItem "$env:APPDATA\Unreal Engine\AutomationTool\Logs" -Recurse -Filter 'Cook*.txt' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  if ($cook -and $cook.LastWriteTime -gt $p.StartTime -and (Select-String -Path $cook.FullName -Pattern 'GetLastError=4551' -Quiet)) { 'BLOQUEADO por Smart App Control (4551): recompila con un cambio de código y vuelve a empaquetar' }
 }
 if ($ProbarPaquete) {
   $d = Join-Path $P 'Empaquetado\Windows'; $s = "$d\ElMejorMedicoUE\Saved"; $txt = "$s\Prueba.txt"

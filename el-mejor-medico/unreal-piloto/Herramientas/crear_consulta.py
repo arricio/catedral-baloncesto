@@ -3,6 +3,7 @@
 # construye la habitación con luz y cámara y guarda /Game/Mapas/Consulta.
 # Uso (con el editor cerrado):
 #   set EMM_CERRAR=1 && UnrealEditor.exe ElMejorMedicoUE.uproject -ExecutePythonScript=Herramientas/crear_consulta.py
+import math
 import os
 import unreal
 
@@ -253,13 +254,97 @@ colocar(mueble('potted_plant_02'), -220, 180, etiqueta='Planta 2')
 
 # objetos sobre la mesa (a la altura de su tablero)
 alto_mesa = 75.0
+borde_medico = 15.0   # x del borde de la mesa del lado del médico
 if mesa:
     o, e = mesa[0].get_actor_bounds(False)
     alto_mesa = o.z + e.z
-# portátil pequeño en la esquina del médico, girado hacia él (no tapa al paciente)
-colocar(mueble('classic_laptop'), 12, -68, z_suelo=alto_mesa, giro=235, escala=0.6, etiqueta='Portatil')
-colocar(mueble('clipboard'), 35, -40, z_suelo=alto_mesa, giro=80, etiqueta='Carpeta')
-colocar(mueble('office_notepads'), 30, 18, z_suelo=alto_mesa, giro=10, escala=0.8, etiqueta='Libretas')
+    borde_medico = o.x - e.x
+    log(f'mesa: x {o.x - e.x:.0f}..{o.x + e.x:.0f}, y {o.y - e.y:.0f}..{o.y + e.y:.0f}, tablero a {alto_mesa:.1f} cm')
+MEDICO_XY = (-40.0, 0.0)
+
+
+def frente_de_portatil(malla):
+    """Dirección (en la malla) hacia la que mira la pantalla: la pantalla es la parte alta, en el lado de la bisagra;
+    el usuario se sienta en el lado contrario, delante del teclado. Devuelve (ángulo del frente, ancho, fondo)."""
+    puntos = []
+    for s in range(malla.get_num_sections(0)):
+        datos = unreal.ProceduralMeshLibrary.get_section_from_static_mesh(malla, 0, s)
+        puntos += list(datos[0])
+    zmin = min(p.z for p in puntos); zmax = max(p.z for p in puntos)
+    altos = [p for p in puntos if p.z > zmin + 0.6 * (zmax - zmin)]
+    cx = sum(p.x for p in puntos) / len(puntos); cy = sum(p.y for p in puntos) / len(puntos)
+    hx = sum(p.x for p in altos) / len(altos); hy = sum(p.y for p in altos) / len(altos)
+    frente = math.atan2(-(hy - cy), -(hx - cx))   # del lado de la pantalla hacia el teclado
+    # el modelo está alineado con sus ejes: se redondea a 90° (el centro de la parte alta se desvía por los detalles)
+    frente = math.radians(round(math.degrees(frente) / 90.0) * 90.0)
+    # ancho (de lado a lado) y fondo, medidos en los ejes del frente
+    ux, uy = math.cos(frente), math.sin(frente)
+    largo = [p.x * ux + p.y * uy for p in puntos]
+    ancho = [-p.x * uy + p.y * ux for p in puntos]
+    log(f'portátil: pantalla hacia {math.degrees(frente):.0f}° de la malla, ancho {max(ancho) - min(ancho):.1f} cm, fondo {max(largo) - min(largo):.1f} cm, alto {zmax - zmin:.1f} cm')
+    return frente, max(ancho) - min(ancho), max(largo) - min(largo)
+
+
+# portátil delante del médico, con la pantalla mirándole y a tamaño real (unos 34 cm de ancho)
+portatil = mueble('classic_laptop')
+if portatil:
+    frente, ancho, fondo = frente_de_portatil(portatil[0])
+    escala = 34.0 / ancho if ancho > 1 else 0.6
+    # delante del médico, recto y a 14 cm del borde (las manos del médico no lo tocan)
+    px, py = borde_medico + fondo * escala * 0.5 + 14, -8.0
+    # el frente del portátil (teclado) apunta al médico, que mira hacia +X: giro = 180° − frente de la malla
+    hacia_medico = 180.0
+    giro = hacia_medico - math.degrees(frente)
+    colocar(portatil, px, py, z_suelo=alto_mesa, giro=giro, escala=escala, etiqueta='Portatil')
+    log(f'portátil en ({px:.0f}, {py:.0f}), giro {giro:.0f}°, escala {escala:.2f}')
+
+
+def material_color(nombre, color, rugosidad=0.8):
+    ruta_base = '/Game/Materiales/M_Color'
+    if eal.does_asset_exist(ruta_base):
+        base = eal.load_asset(ruta_base)
+    else:
+        base = herr.create_asset('M_Color', '/Game/Materiales', unreal.Material, unreal.MaterialFactoryNew())
+        c = mel.create_material_expression(base, unreal.MaterialExpressionVectorParameter, -400, 0)
+        c.set_editor_property('parameter_name', 'Color')
+        r = mel.create_material_expression(base, unreal.MaterialExpressionScalarParameter, -400, 200)
+        r.set_editor_property('parameter_name', 'Rugosidad')
+        r.set_editor_property('default_value', 0.8)
+        mel.connect_material_property(c, '', unreal.MaterialProperty.MP_BASE_COLOR)
+        mel.connect_material_property(r, '', unreal.MaterialProperty.MP_ROUGHNESS)
+        mel.recompile_material(base)
+        eal.save_loaded_asset(base)
+    ruta = f'/Game/Materiales/{nombre}'
+    mi = eal.load_asset(ruta) if eal.does_asset_exist(ruta) else herr.create_asset(nombre, '/Game/Materiales', unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
+    mi.set_editor_property('parent', base)
+    mel.set_material_instance_vector_parameter_value(mi, 'Color', unreal.LinearColor(color[0], color[1], color[2], 1))
+    mel.set_material_instance_scalar_parameter_value(mi, 'Rugosidad', rugosidad)
+    eal.save_loaded_asset(mi)
+    return mi
+
+
+def sobre_mesa(nombre, forma, x, y, tam, giro, material, z_extra=0.0, rot=None):
+    """Objeto plano apoyado exactamente en el tablero (tam en cm; el cubo y el cilindro básicos miden 100 cm)."""
+    m = eal.load_asset(f'/Engine/BasicShapes/{forma}')
+    a = actores.spawn_actor_from_object(m, unreal.Vector(x, y, alto_mesa + z_extra + tam[2] / 2), rot or unreal.Rotator(0, 0, giro))
+    a.set_actor_scale3d(unreal.Vector(tam[0] / 100, tam[1] / 100, tam[2] / 100))
+    a.static_mesh_component.set_material(0, material)
+    a.static_mesh_component.set_collision_profile_name('NoCollision')
+    a.set_actor_label(nombre)
+    a.set_folder_path('Consulta/Muebles')
+    return a
+
+
+# papeles, notas adhesivas y bolígrafo: en el lado del médico, lejos de los brazos del paciente
+M_PAPEL = material_color('MI_Papel', (0.86, 0.86, 0.83), 0.9)
+M_NOTA = material_color('MI_NotaAdhesiva', (0.95, 0.82, 0.18), 0.85)
+M_BOLI = material_color('MI_Boligrafo', (0.03, 0.06, 0.25), 0.35)
+for i, (dx, dy, g) in enumerate([(0, 0, 4), (0.6, -0.4, -2), (-0.5, 0.5, 9)]):
+    sobre_mesa(f'Folio {i + 1}', 'Cube', borde_medico + 18 + dx, 34 + dy, (21.0, 29.7, 0.12), 90 + g, M_PAPEL, z_extra=i * 0.13)
+sobre_mesa('Notas adhesivas (taco)', 'Cube', borde_medico + 10, 56, (7.6, 7.6, 0.9), 12, M_NOTA)
+sobre_mesa('Nota adhesiva', 'Cube', borde_medico + 24, 52, (7.6, 7.6, 0.06), -18, M_NOTA, z_extra=0.39)
+sobre_mesa('Boligrafo', 'Cylinder', borde_medico + 9, 22, (0.9, 0.9, 14.0), 0, M_BOLI, z_extra=-6.55, rot=unreal.Rotator(90, 0, 75))
+colocar(mueble('clipboard'), borde_medico + 40, 40, z_suelo=alto_mesa, giro=100, etiqueta='Carpeta')
 
 reloj = colocar(mueble('wall_clock'), L / 2 - 5, 0, z_suelo=200, giro=-90, etiqueta='Reloj')
 colocar(mueble('modern_ceiling_lamp_01'), 40, 0, z_suelo=H - 60, etiqueta='Lampara techo')
@@ -363,6 +448,24 @@ cc2.set_editor_property('ortho_width', 700.0)
 cc2.set_editor_property('constrain_aspect_ratio', False)
 
 plano.set_actor_label('Camara plano')
+
+
+def camara_revision(nombre, pos, mira, focal=24.0):
+    """Cámara sólo para comprobar el montaje en la prueba automática (foto «prueba_<nombre>»)."""
+    rot = unreal.MathLibrary.find_look_at_rotation(unreal.Vector(*pos), unreal.Vector(*mira))
+    c = actores.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(*pos), rot)
+    c.tags = [unreal.Name('Revision'), unreal.Name(nombre)]
+    c.set_actor_label(f'Camara {nombre}')
+    c.get_cine_camera_component().set_editor_property('current_focal_length', focal)
+    return c
+
+
+# el portátil desde los ojos del médico, desde el lado del paciente y la mesa desde arriba
+if portatil:
+    # lo que ve el médico: a la altura de sus ojos, justo delante de la cara
+    camara_revision('portatil_medico', (MEDICO_XY[0] + 22, MEDICO_XY[1], 124), (px, py, alto_mesa + 8), 18.0)
+    camara_revision('portatil_paciente', (150, 45, 135), (px, py, alto_mesa + 10), 22.0)
+camara_revision('mesa_arriba', (borde_medico + 35, 5, alto_mesa + 150), (borde_medico + 35, 6, alto_mesa), 16.0)
 plano.get_cine_camera_component().set_editor_property('current_focal_length', 14.0)
 
 ok = niveles.save_current_level()

@@ -5,6 +5,8 @@
 #include "EMMVoz.h"
 #include "EMMCuerpoAnim.h"
 #include "EMMDictado.h"
+#include "EMMRecetaUI.h"
+#include "EMMAgendaUI.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -71,7 +73,7 @@ UEMMIASubsystem* AEMMConsultaModo::IA() const { return GetGameInstance()->GetSub
 void AEMMConsultaModo::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida (subtítulos %s)"), UEMMConsultaUI::SubtitulosActivados() ? TEXT("ON") : TEXT("OFF"));
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida (subtítulos %s, día %d del calendario)"), UEMMConsultaUI::SubtitulosActivados() ? TEXT("ON") : TEXT("OFF"), FEMMHistorial::Get().Dia);
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
 	// personajes y cámara del nivel
@@ -152,37 +154,39 @@ void AEMMConsultaModo::BeginPlay()
 	};
 	Medico = Habla(ActorMedico);
 	HablaPaciente = Habla(ActorPaciente);
-	if (Medico->Nombre.IsEmpty()) Medico->Nombre = TEXT("Médico");
+	Medico->Nombre = TEXT("Dr. Prieto");
+	// voz del médico: adulta normal (en cada visita se cambia si coincide con la del paciente)
+	const FEMMPerfilVoz VM = EMMVoz::PerfilPara(ActorMedico && ActorMedico->ActorHasTag(TEXT("Mujer")), 40.f);
+	Medico->bMujer = VM.bMujer; Medico->Tono = VM.Tono; Medico->Velocidad = VM.Vel; Medico->VozPreferida = VM.Preferida;
 
-	// caso del juego con el sexo del MetaHuman paciente
-	TArray<FEMMPaciente> Casos; FString Error;
+	MHMedico = ActorMedico;
+	MHPaciente = ActorPaciente;
+	// ropa: pijama sanitario azul verdoso para el médico (el paciente se viste en cada visita)
+	Vestir(ActorMedico, FLinearColor(0.06f, 0.26f, 0.32f), FLinearColor(0.05f, 0.22f, 0.28f));
+
+	// casos del juego con el sexo del MetaHuman paciente
+	FString Error;
 	EMMDatos::CargarPacientes(Casos, Error);
 	const bool bPacienteMujer = ActorPaciente && ActorPaciente->ActorHasTag(TEXT("Mujer"));
 	Casos.RemoveAll([&](const FEMMPaciente& P) { return ActorPaciente && P.EsMujer() != bPacienteMujer; });
-	if (Casos.Num()) Paciente = Casos[FMath::RandRange(0, Casos.Num() - 1)];
-	HablaPaciente->Nombre = Paciente.Nombre.IsEmpty() ? TEXT("Paciente") : Paciente.Nombre;
-	// voz según edad y sexo; el médico, voz adulta normal (distinta del paciente aunque sean del mismo sexo)
-	const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Paciente.EsMujer(), Paciente.Edad);
-	HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
-	const bool bMedicaMujer = ActorMedico && ActorMedico->ActorHasTag(TEXT("Mujer"));
-	const FEMMPerfilVoz VM = EMMVoz::PerfilPara(bMedicaMujer, 40.f);
-	Medico->bMujer = VM.bMujer; Medico->Tono = VM.Tono; Medico->Velocidad = VM.Vel; Medico->VozPreferida = VM.Preferida;
-	if (bMedicaMujer == VP.bMujer && VM.Preferida == VP.Preferida)
-	{
-		if (bMedicaMujer) Medico->VozPreferida = TEXT("Helena");
-		else Medico->Tono = 1.05f;
-	}
-	// ropa: pijama sanitario azul verdoso para el médico; el paciente, según su edad
-	Vestir(ActorMedico, FLinearColor(0.06f, 0.26f, 0.32f), FLinearColor(0.05f, 0.22f, 0.28f));
-	{
-		FLinearColor Arriba, Abajo;
-		ColoresPaciente(Paciente, Arriba, Abajo);
-		Vestir(ActorPaciente, Arriba, Abajo);
-	}
 
 	UI = CreateWidget<UEMMConsultaUI>(PC, UEMMConsultaUI::StaticClass());
 	UI->Modo = this;
 	UI->AddToViewport();
+	UIRecetas = CreateWidget<UEMMRecetaUI>(PC, UEMMRecetaUI::StaticClass());
+	UIRecetas->Modo = this;
+	UIRecetas->AddToViewport(10);
+	UIAgenda = CreateWidget<UEMMAgendaUI>(PC, UEMMAgendaUI::StaticClass());
+	UIAgenda->Modo = this;
+	UIAgenda->AddToViewport(10);
+
+	// ficha clínica y calendario: si hoy hay una revisión, vuelve ese paciente; si no, uno nuevo
+	FEMMHistorial& H = FEMMHistorial::Get();
+	H.Cargar(FParse::Param(FCommandLine::Get(), TEXT("EMMPrueba")));
+	const FEMMFicha* Pendiente = H.RevisionPendiente();
+	const FEMMPaciente* Caso = Pendiente ? Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == Pendiente->CasoId; }) : nullptr;
+	if (Caso) IniciarVisita(*Caso);
+	else if (Casos.Num()) IniciarVisita(Casos[FMath::RandRange(0, Casos.Num() - 1)]);
 	if (PC)
 	{
 		PC->bShowMouseCursor = true;
@@ -210,6 +214,223 @@ void AEMMConsultaModo::BeginPlay()
 	}
 }
 
+// ───────────────────────── Visitas, recetas y seguimiento ─────────────────────────
+void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
+{
+	FEMMHistorial& H = FEMMHistorial::Get();
+	Paciente = Caso;
+	FEMMFicha& F = H.FichaDe(Paciente);
+	Visita = FEMMVisita();
+	Visita.Dia = H.Dia;
+	Visita.bRevision = F.Visitas.Num() > 0;
+	Charla.Reset();
+	bTurnoPaciente = bOcupado = bTerminada = false;
+	FraseEvolucion.Reset();
+	float Preocupacion = 0.6f;
+	FEMMEvolucion E;
+	if (Visita.bRevision)
+	{
+		// vuelve: su evolución depende de la enfermedad, la edad, lo recetado y si lo ha cumplido
+		E = EMMEvolucion::Calcular(Paciente, F, H.Dia);
+		Visita.Evolucion = E.Resumen;
+		FraseEvolucion = E.FrasePaciente;
+		Preocupacion = E.Preocupacion;
+		F.ProximaRevision = -1;   // la cita ya se está atendiendo
+	}
+	MemoriaPaciente = EMMEvolucion::Memoria(F, Visita.bRevision ? &E : nullptr, H.Dia);
+	H.Guardar();
+
+	// voz según edad y sexo; si coincide con la del médico, el médico cambia un poco la suya
+	HablaPaciente->Nombre = Paciente.Nombre.IsEmpty() ? TEXT("Paciente") : Paciente.Nombre;
+	const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Paciente.EsMujer(), Paciente.Edad);
+	HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
+	const bool bMedicaMujer = MHMedico.IsValid() && MHMedico->ActorHasTag(TEXT("Mujer"));
+	const FEMMPerfilVoz VM = EMMVoz::PerfilPara(bMedicaMujer, 40.f);
+	Medico->VozPreferida = VM.Preferida; Medico->Tono = VM.Tono;
+	if (bMedicaMujer == VP.bMujer && VM.Preferida == VP.Preferida)
+	{
+		if (bMedicaMujer) Medico->VozPreferida = TEXT("Helena");
+		else Medico->Tono = 1.05f;
+	}
+	// ropa según la edad y gesto según cómo llega
+	FLinearColor Arriba, Abajo;
+	ColoresPaciente(Paciente, Arriba, Abajo);
+	Vestir(MHPaciente.Get(), Arriba, Abajo);
+	if (MHPaciente.IsValid())
+	{
+		TArray<USkeletalMeshComponent*> Mallas;
+		MHPaciente->GetComponents(Mallas);
+		for (USkeletalMeshComponent* M : Mallas)
+			if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance())) { A->Preocupacion = Preocupacion; A->Sonrisa = Preocupacion < 0.2f ? 0.35f : 0.f; }
+	}
+	if (UI)
+	{
+		UI->PonerFecha(FString::Printf(TEXT("%s · %s · %s %s"), *FEMMHistorial::Fecha(H.Dia), Visita.bRevision ? TEXT("REVISIÓN") : TEXT("Primera consulta"), *Paciente.Nombre, *Paciente.Apellidos));
+		UI->LimpiarTexto();
+	}
+	if (UIRecetas) UIRecetas->Refrescar();
+	Actualizar();
+}
+
+FEMMPaciente AEMMConsultaModo::PacienteParaIA() const
+{
+	// las instrucciones del caso + lo que recuerda de otras consultas + lo que se le ha recetado hoy
+	FEMMPaciente P = Paciente;
+	TArray<FString> Extra;
+	if (!MemoriaPaciente.IsEmpty()) Extra.Add(MemoriaPaciente);
+	const FEMMFicha* F = FEMMHistorial::Get().Buscar(Paciente.Id);
+	TArray<FString> Hoy;
+	for (const FString& Id : Visita.Recetas)
+		if (const FEMMReceta* R = F ? F->Recetas.FindByPredicate([&](const FEMMReceta& X) { return X.Id == Id; }) : nullptr)
+			if (R->Estado == EEMMEstadoReceta::Entregada)
+				Hoy.Add(FString::Printf(TEXT("- %s, %s, %s, durante %s. %s"), *R->Medicamento, *R->Dosis, *R->Frecuencia, *R->Duracion, *R->Instrucciones));
+	if (Hoy.Num())
+	{
+		Extra.Add(TEXT("En esta consulta el médico te ha entregado estas recetas (puedes preguntar dudas sobre ellas):"));
+		Extra.Append(Hoy);
+	}
+	if (Extra.Num())
+	{
+		TArray<FString> Lineas;
+		P.Sistema.ParseIntoArray(Lineas, TEXT("\n"), false);
+		const FString Ultima = Lineas.Num() ? Lineas.Pop() : FString();
+		Lineas.Append(Extra);
+		Lineas.Add(Ultima);
+		P.Sistema = FString::Join(Lineas, TEXT("\n"));
+	}
+	return P;
+}
+
+void AEMMConsultaModo::Avisar(const FString& Texto, bool bBien) { if (UI) UI->Aviso(Texto, bBien); }
+
+void AEMMConsultaModo::AbrirRecetas()
+{
+	if (UIAgenda) UIAgenda->Cerrar();
+	if (UIRecetas) { if (UIRecetas->EstaAbierta()) UIRecetas->Cerrar(); else UIRecetas->Abrir(); }
+}
+
+void AEMMConsultaModo::AbrirAgenda()
+{
+	if (UIRecetas) UIRecetas->Cerrar();
+	if (UIAgenda) { if (UIAgenda->EstaAbierta()) UIAgenda->Cerrar(); else UIAgenda->Abrir(); }
+}
+
+FString AEMMConsultaModo::NuevaReceta()
+{
+	if (bTerminada) { Avisar(TEXT("La consulta ya está terminada: no se pueden hacer más recetas."), false); return FString(); }
+	FEMMHistorial& H = FEMMHistorial::Get();
+	FEMMFicha& F = H.FichaDe(Paciente);
+	FEMMReceta& R = F.Recetas.AddDefaulted_GetRef();
+	R.Id = H.NuevoIdReceta();
+	R.Dia = H.Dia;
+	Visita.Recetas.Add(R.Id);
+	const FString Id = R.Id;
+	H.Guardar();
+	return Id;
+}
+
+void AEMMConsultaModo::GuardarReceta(const FString& Id, const FString& Med, const FString& Dosis, const FString& Frec, const FString& Dur, const FString& Instr)
+{
+	FEMMFicha* F = Ficha();
+	FEMMReceta* R = F ? F->Receta(Id) : nullptr;
+	if (!R) return;
+	if (R->Estado == EEMMEstadoReceta::Entregada || R->Estado == EEMMEstadoReceta::Anulada) { Avisar(TEXT("Esta receta ya está entregada o anulada: no se puede modificar. Haz una nueva."), false); return; }
+	if (Med.TrimStartAndEnd().IsEmpty()) { Avisar(TEXT("Escribe o dicta primero el medicamento o tratamiento."), false); return; }
+	const bool bModificada = R->Estado == EEMMEstadoReceta::Guardada;
+	R->Medicamento = Med.TrimStartAndEnd(); R->Dosis = Dosis.TrimStartAndEnd(); R->Frecuencia = Frec.TrimStartAndEnd();
+	R->Duracion = Dur.TrimStartAndEnd(); R->Instrucciones = Instr.TrimStartAndEnd();
+	R->Etiquetas = EMMDatos::EtiquetasDe(R->Medicamento + TEXT(" ") + R->Instrucciones);
+	R->Riesgos = EMMEvolucion::Riesgos(Paciente, *R);
+	R->Estado = EEMMEstadoReceta::Guardada;
+	FEMMHistorial::Get().Guardar();
+	if (R->Riesgos.Num()) Avisar(FString::Printf(TEXT("Receta %s %s. La simulación detecta riesgos: %s"), *R->Id, bModificada ? TEXT("modificada") : TEXT("guardada"), *R->Riesgos[0]), false);
+	else Avisar(FString::Printf(TEXT("Receta %s %s en la ficha."), *R->Id, bModificada ? TEXT("modificada y guardada") : TEXT("guardada")), true);
+}
+
+void AEMMConsultaModo::AnularReceta(const FString& Id)
+{
+	FEMMFicha* F = Ficha();
+	FEMMReceta* R = F ? F->Receta(Id) : nullptr;
+	if (!R || R->Estado == EEMMEstadoReceta::Anulada) return;
+	R->Estado = EEMMEstadoReceta::Anulada;
+	FEMMHistorial::Get().Guardar();
+	Avisar(FString::Printf(TEXT("Receta %s anulada (queda en la ficha como anulada)."), *R->Id), true);
+}
+
+void AEMMConsultaModo::EntregarReceta(const FString& Id)
+{
+	FEMMFicha* F = Ficha();
+	FEMMReceta* R = F ? F->Receta(Id) : nullptr;
+	if (!R) return;
+	if (R->Estado != EEMMEstadoReceta::Guardada) { Avisar(TEXT("Guarda la receta antes de entregarla."), false); return; }
+	R->Estado = EEMMEstadoReceta::Entregada;
+	FEMMHistorial::Get().Guardar();
+	if (R->Riesgos.Num()) Avisar(FString::Printf(TEXT("Receta %s entregada a %s. AVISO DE LA SIMULACIÓN: %s"), *R->Id, *Paciente.Nombre, *R->Riesgos[0]), false);
+	else Avisar(FString::Printf(TEXT("Receta %s entregada a %s."), *R->Id, *Paciente.Nombre), true);
+}
+
+int32 AEMMConsultaModo::DiasTratamiento() const
+{
+	int32 Max = 0;
+	if (const FEMMFicha* F = FEMMHistorial::Get().Buscar(Paciente.Id))
+		for (const FString& Id : Visita.Recetas)
+			if (const FEMMReceta* R = F->Recetas.FindByPredicate([&](const FEMMReceta& X) { return X.Id == Id; }))
+				if (R->Estado == EEMMEstadoReceta::Entregada) Max = FMath::Max(Max, R->DiasDuracion());
+	return Max > 0 ? Max : 7;
+}
+
+void AEMMConsultaModo::TerminarConsulta(const FString& Diagnostico, const FString& Pruebas, int32 DiasRevision)
+{
+	if (bTerminada) return;
+	if (bOcupado) { Avisar(TEXT("Espera a que termine de hablar."), false); return; }
+	if (DiasRevision == 0) { Avisar(TEXT("Elige cuándo vuelve el paciente (o «Sin revisión»)."), false); return; }
+	FEMMHistorial& H = FEMMHistorial::Get();
+	FEMMFicha& F = H.FichaDe(Paciente);
+	// las recetas que se quedaron sin guardar no cuentan
+	for (const FString& Id : Visita.Recetas) if (FEMMReceta* R = F.Receta(Id); R && R->Estado == EEMMEstadoReceta::Borrador) R->Estado = EEMMEstadoReceta::Anulada;
+	Visita.Diagnostico = Diagnostico.TrimStartAndEnd();
+	Visita.Pruebas = Pruebas.TrimStartAndEnd();
+	Visita.Charla = Charla;
+	F.Visitas.Add(Visita);
+	F.ProximaRevision = DiasRevision > 0 ? H.Dia + DiasRevision : DiasRevision == -2 ? H.Dia + DiasTratamiento() : -1;
+	bTerminada = true;
+	H.Guardar();
+	if (EMMDictado::Escuchando()) EMMDictado::Parar();
+	Avisar(F.ProximaRevision > 0 ? FString::Printf(TEXT("Consulta guardada en la ficha. Revisión: %s."), *FEMMHistorial::Fecha(F.ProximaRevision)) : FString(TEXT("Consulta guardada en la ficha, sin revisión.")), true);
+	Actualizar();
+}
+
+void AEMMConsultaModo::AvanzarTiempo()
+{
+	FEMMHistorial& H = FEMMHistorial::Get();
+	const int32 Cita = H.ProximaCita();
+	if (!bTerminada) { Avisar(TEXT("Termina antes la consulta en la AGENDA."), false); return; }
+	if (Cita <= 0) { Avisar(TEXT("No hay citas programadas."), false); return; }
+	const int32 Pasan = FMath::Max(0, Cita - H.Dia);
+	H.Dia = FMath::Max(H.Dia, Cita);
+	const FEMMFicha* F = H.RevisionPendiente();
+	const FEMMPaciente* Caso = F ? Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == F->CasoId; }) : nullptr;
+	if (!Caso) { H.Guardar(); Avisar(TEXT("No se encuentra el caso de la cita."), false); return; }
+	IniciarVisita(*Caso);
+	if (UIAgenda) UIAgenda->Cerrar();
+	Avisar(FString::Printf(TEXT("Han pasado %d días. Hoy es %s y vuelve %s a revisión."), Pasan, *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre), true);
+}
+
+void AEMMConsultaModo::PacienteNuevo()
+{
+	FEMMHistorial& H = FEMMHistorial::Get();
+	H.Dia += 1;
+	// alguien que aún no tenga ficha; si ya los ha visto a todos, cualquiera sin cita pendiente
+	TArray<const FEMMPaciente*> Libres;
+	for (const FEMMPaciente& P : Casos) if (!H.Buscar(P.Id)) Libres.Add(&P);
+	if (!Libres.Num()) for (const FEMMPaciente& P : Casos) if (const FEMMFicha* F = H.Buscar(P.Id); F && F->ProximaRevision <= 0 && P.Id != Paciente.Id) Libres.Add(&P);
+	if (const FEMMFicha* F = H.RevisionPendiente())
+		if (const FEMMPaciente* Caso = Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == F->CasoId; })) { Libres = { Caso }; }
+	if (!Libres.Num()) { H.Dia -= 1; Avisar(TEXT("No hay más pacientes disponibles hoy."), false); return; }
+	IniciarVisita(*Libres[FMath::RandRange(0, Libres.Num() - 1)]);
+	Avisar(FString::Printf(TEXT("%s. Entra %s %s."), *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre, *Paciente.Apellidos), true);
+}
+
 void AEMMConsultaModo::Foto(const FString& Nombre)
 {
 	FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir() / TEXT("Capturas") / (Nombre + TEXT(".png")), true, false);
@@ -223,6 +444,7 @@ void AEMMConsultaModo::PasoDePrueba()
 	const double T = FPlatformTime::Seconds() - InicioPaso;
 	auto Siguiente = [this]() { ++PasoPrueba; InicioPaso = FPlatformTime::Seconds(); };
 	const int32 Ronda = (PasoPrueba - 2) / 3, Fase = (PasoPrueba - 2) % 3;
+	if (PasoPrueba >= 2) Fotogramas.Add(float(FApp::GetDeltaTime()));   // con la consulta en marcha (sin las vistas de revisión)
 	// con el editor, los sombreadores se compilan al jugar: hasta que terminan, se ven materiales provisionales
 	bool bCompilando = false;
 #if WITH_EDITOR
@@ -300,10 +522,101 @@ void AEMMConsultaModo::PasoDePrueba()
 		}
 		if (T > 180) { RegistroPrueba.Add(TEXT("ERROR: tiempo agotado")); PasoPrueba = 100; }
 	}
+	else if (PasoPrueba < 30)
+	{
+		// recetas, ficha, calendario y regreso del paciente, con los mismos botones que usa el jugador
+		const int32 K = PasoPrueba - 11;
+		FEMMFicha* F = Ficha();
+		auto Estado = [F](const FString& Id) { const FEMMReceta* R = F ? F->Receta(Id) : nullptr; return R ? FEMMReceta::TextoEstado(R->Estado) : FString(TEXT("?")); };
+		if (K == 0)
+		{
+			UIRecetas->Abrir();
+			struct FR { const TCHAR *M, *D, *Fr, *Du, *I; };
+			const FR Lista[] = {
+				{ TEXT("Amoxicilina 500 mg cápsulas"), TEXT("1 cápsula"), TEXT("cada 8 horas"), TEXT("7 días"), TEXT("Tomar con un vaso de agua. Completar el tratamiento aunque se encuentre mejor.") },
+				{ TEXT("Paracetamol 1 g comprimidos"), TEXT("1 comprimido"), TEXT("cada 6 horas si hay dolor o fiebre"), TEXT("5 días"), TEXT("No tomar más de 4 comprimidos al día.") },
+				{ TEXT("Vino tinto"), TEXT("1 litro"), TEXT("al día"), TEXT("14 días"), TEXT("Beber un litro de vino al día.") },
+				{ TEXT("Ibuprofeno 600 mg"), TEXT("1 comprimido"), TEXT("cada 8 horas"), TEXT("3 días"), TEXT("Con comida.") },
+			};
+			TArray<FString> Ids;
+			for (const FR& X : Lista)
+			{
+				UIRecetas->PulsarNueva();
+				Ids.Add(UIRecetas->Elegida());
+				UIRecetas->Escribir(X.M, X.D, X.Fr, X.Du, X.I);
+				UIRecetas->PulsarGuardar();
+			}
+			// modificar la segunda (paracetamol) antes de entregarla
+			UIRecetas->Refrescar(Ids[1]);
+			UIRecetas->Escribir(TEXT("Paracetamol 1 g comprimidos"), TEXT("1 comprimido"), TEXT("cada 8 horas si hay dolor o fiebre"), TEXT("5 días"), TEXT("No tomar más de 3 comprimidos al día."));
+			UIRecetas->PulsarGuardar();
+			for (int32 i : { 0, 1, 2 }) { UIRecetas->Refrescar(Ids[i]); UIRecetas->PulsarEntregar(); }
+			UIRecetas->Refrescar(Ids[3]); UIRecetas->PulsarAnular();
+			for (const FString& Id : Ids)
+				if (const FEMMReceta* R = F ? F->Receta(Id) : nullptr)
+					RegistroPrueba.Add(FString::Printf(TEXT("Receta %s: %s · %s %s %s · %s · etiquetas [%s]%s"), *R->Id, *R->Medicamento, *R->Dosis, *R->Frecuencia, *R->Duracion, *Estado(Id),
+						*FString::Join(R->Etiquetas, TEXT(",")), R->Riesgos.Num() ? *(TEXT(" · RIESGOS: ") + FString::Join(R->Riesgos, TEXT(" | "))) : TEXT("")));
+			UIRecetas->Refrescar(Ids[2]);   // la del vino, con su aviso
+			Siguiente();
+		}
+		else if (K == 1 && T > 1.5) { Foto(TEXT("prueba_receta")); Siguiente(); }
+		else if (K == 2 && T > 1.0)
+		{
+			UIRecetas->Cerrar();
+			UIAgenda->Abrir();
+			UIAgenda->Escribir(Paciente.Enfermedad, TEXT("Ninguna"));
+			UIAgenda->ElegirRevision(-2);   // al acabar el tratamiento
+			UIAgenda->PulsarTerminar();
+			// lo guardado en disco: se vuelve a leer el archivo
+			FString J; TSharedPtr<FJsonObject> O;
+			if (FFileHelper::LoadFileToString(J, *FEMMHistorial::Get().Ruta()) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(J), O) && O.IsValid())
+			{
+				const TSharedPtr<FJsonObject> Fi = O->GetArrayField(TEXT("fichas"))[0]->AsObject();
+				RegistroPrueba.Add(FString::Printf(TEXT("Ficha guardada en %s: %d recetas, %d visita(s), revisión el día %d (%s)"), *FPaths::GetCleanFilename(FEMMHistorial::Get().Ruta()),
+					Fi->GetArrayField(TEXT("recetas")).Num(), Fi->GetArrayField(TEXT("visitas")).Num(), int32(Fi->GetNumberField(TEXT("proximaRevision"))), *FEMMHistorial::Fecha(int32(Fi->GetNumberField(TEXT("proximaRevision"))))));
+			}
+			else RegistroPrueba.Add(TEXT("ERROR: no se ha guardado la ficha"));
+			Siguiente();
+		}
+		else if (K == 3 && T > 1.5) { Foto(TEXT("prueba_agenda")); Siguiente(); }
+		else if (K == 4 && T > 1.0)
+		{
+			UIAgenda->PulsarAvanzar();
+			RegistroPrueba.Add(FString::Printf(TEXT("AVANZAR TIEMPO: hoy es %s; vuelve %s (%s). Evolución: %s"), *FEMMHistorial::Fecha(FEMMHistorial::Get().Dia), *Paciente.Nombre, Visita.bRevision ? TEXT("revisión") : TEXT("NO es revisión"), *Visita.Evolucion));
+			Siguiente();
+		}
+		else if (K >= 5 && K <= 10)
+		{
+			// dos preguntas en la revisión: ¿recuerda el tratamiento y nota sus efectos?
+			static const TCHAR* Rev[] = { TEXT("Buenos días. ¿Cómo se encuentra desde la última consulta? ¿Se ha tomado lo que le receté?"), TEXT("¿Qué tal le ha sentado el vino que le receté?") };
+			const int32 R = (K - 5) / 3, Fa = (K - 5) % 3;
+			if (Fa == 0 && !bOcupado && !bTurnoPaciente && T > 1.0) { RegistroPrueba.Add(FString::Printf(TEXT("MÉDICO: %s"), Rev[R])); HablarMedico(Rev[R]); Siguiente(); }
+			else if (Fa == 1 && !bOcupado && bTurnoPaciente) { ResponderPaciente(); Siguiente(); }
+			else if (Fa == 2)
+			{
+				if (R == 0 && HablaPaciente->bHablando && !RegistroPrueba.Last().StartsWith(TEXT("[foto]"))) Foto(TEXT("prueba_revision"));
+				if (!bOcupado && !bTurnoPaciente)
+				{
+					const FEMMLinea& L = Charla.Last();
+					RegistroPrueba.Add(FString::Printf(TEXT("PACIENTE [%s]: %s"), *L.Origen, *L.Texto));
+					Siguiente();
+				}
+			}
+			if (T > 180) { RegistroPrueba.Add(TEXT("ERROR: tiempo agotado en la revisión")); PasoPrueba = 100; }
+		}
+		else if (K > 10) PasoPrueba = 100;
+	}
 	else
 	{
 		GetWorldTimerManager().ClearTimer(TemporizadorPrueba);
 		UEMMConsultaUI::GuardarSubtitulos(bSubtitulosAntes);   // se deja la elección del jugador como estaba
+		if (Fotogramas.Num())
+		{
+			Fotogramas.Sort();
+			float Suma = 0; for (float D : Fotogramas) Suma += D;
+			const float Media = Suma / Fotogramas.Num(), Peor = Fotogramas[FMath::Min(Fotogramas.Num() - 1, int32(Fotogramas.Num() * 0.95f))];
+			RegistroPrueba.Add(FString::Printf(TEXT("Rendimiento: %.0f fps de media, %.0f fps en el 5 %% peor (%d muestras; %s)"), 1.f / Media, 1.f / Peor, Fotogramas.Num(), *FPlatformMisc::GetPrimaryGPUBrand()));
+		}
 		RegistroPrueba.Add(FString::Printf(TEXT("Voces: %s"), *FString::Join(EMMVoz::VocesDisponibles(), TEXT(" | "))));
 		FFileHelper::SaveStringArrayToFile(RegistroPrueba, *(FPaths::ProjectSavedDir() / TEXT("Prueba.txt")), FFileHelper::EEncodingOptions::ForceUTF8);
 		FTimerHandle Fin;
@@ -314,7 +627,7 @@ void AEMMConsultaModo::PasoDePrueba()
 void AEMMConsultaModo::Dictar()
 {
 	if (EMMDictado::Escuchando()) { EMMDictado::Parar(); return; }
-	if (bOcupado || bTurnoPaciente) return;
+	if (bOcupado || bTurnoPaciente || bTerminada) return;
 	// lo dictado se añade a lo que ya hubiera escrito
 	const FString Previo = UI->TextoEscrito();
 	auto Unir = [Previo](const FString& T) { return Previo.IsEmpty() ? T : Previo + TEXT(" ") + T; };
@@ -338,12 +651,13 @@ void AEMMConsultaModo::Actualizar()
 {
 	if (!UI) return;
 	FString Estado;
-	if (bOcupado) Estado = bTurnoPaciente ? TEXT("El paciente está hablando…") : TEXT("Está hablando el médico…");
+	if (bTerminada) Estado = TEXT("Consulta terminada y guardada. En AGENDA · FICHA puedes avanzar el tiempo o recibir a otro paciente.");
+	else if (bOcupado) Estado = bTurnoPaciente ? TEXT("El paciente está hablando…") : TEXT("Está hablando el médico…");
 	else if (bTurnoPaciente) Estado = TEXT("Turno del paciente: pulsa RESPONDER PACIENTE.");
 	else Estado = TEXT("Turno del médico: escribe lo que quieres decir y pulsa ENVIAR · HABLAR MÉDICO.");
 	UI->PonerEstado(Estado, bTurnoPaciente);
 	UI->PonerIA(IA()->Descripcion());
-	UI->PonerBotones(!bOcupado && !bTurnoPaciente, !bOcupado && bTurnoPaciente);
+	UI->PonerBotones(!bTerminada && !bOcupado && !bTurnoPaciente, !bTerminada && !bOcupado && bTurnoPaciente);
 }
 
 void AEMMConsultaModo::Decir(UEMMHabla* Quien, const FString& Nombre, const FString& Texto, bool bEsMedico, TFunction<void()> Despues)
@@ -360,7 +674,7 @@ void AEMMConsultaModo::Decir(UEMMHabla* Quien, const FString& Nombre, const FStr
 
 void AEMMConsultaModo::HablarMedico(const FString& Texto)
 {
-	if (bOcupado || bTurnoPaciente) return;
+	if (bOcupado || bTurnoPaciente || bTerminada) return;
 	if (EMMDictado::Escuchando()) EMMDictado::Parar();
 	if (Texto.IsEmpty()) { UI->Aviso(TEXT("Escribe o dicta primero lo que quieres decir."), false); return; }
 	// el médico dice exactamente lo escrito
@@ -384,6 +698,12 @@ FString AEMMConsultaModo::Referencia(const FString& Pregunta) const
 	FString Id = Ints.Num() ? Ints[0] : TEXT("general");
 	if (Id == TEXT("saludo")) Id = TEXT("motivo");
 	if (Id == TEXT("acomp") || Id == TEXT("secreto") || Id == TEXT("presionar")) Id = TEXT("general");
+	// en una revisión, lo que importa es cómo ha ido desde la última consulta
+	if (Visita.bRevision && !FraseEvolucion.IsEmpty() && TArray<FString>({ TEXT("motivo"), TEXT("general"), TEXT("dolor"), TEXT("fiebre"), TEXT("extra"), TEXT("inicio") }).Contains(Id))
+	{
+		const bool bPrimera = !Charla.ContainsByPredicate([](const FEMMLinea& L) { return !L.bMedico; });
+		return (bPrimera ? FString(TEXT("Buenos días, doctor. ")) : FString()) + FraseEvolucion;
+	}
 	FString R = Paciente.Respuesta(Id);
 	int32 Anadidos = 0;
 	for (int32 i = 1; i < Ints.Num() && Anadidos < 2; ++i)
@@ -406,7 +726,7 @@ void AEMMConsultaModo::ResponderPaciente()
 	const FString Pregunta = Charla.Last().Texto;
 	TArray<FEMMLinea> Antes = Charla; Antes.Pop();
 	TWeakObjectPtr<AEMMConsultaModo> Yo(this);
-	IA()->Responder(Paciente, Antes, Pregunta, Referencia(Pregunta), [Yo](const FEMMRespuesta& R) {
+	IA()->Responder(PacienteParaIA(), Antes, Pregunta, Referencia(Pregunta), [Yo](const FEMMRespuesta& R) {
 		if (!Yo.IsValid()) return;
 		Yo->Charla.Add({ false, R.Texto, R.Origen });
 		if (R.Origen != TEXT("ia") && Yo->IA()->Modo != EEMMModoIA::Predefinida)

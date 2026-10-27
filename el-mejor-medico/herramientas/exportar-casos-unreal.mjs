@@ -4,7 +4,7 @@
 // predefinidas por intención, que son la referencia de la IA y la alternativa sin IA.
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { ENFERMEDADES, ENF, generarPaciente, dialogo, fraseHabitos, fraseAntecedentes, fraseAlergia, fmt, textoEdad } from '../js/datos.js';
+import { ENFERMEDADES, ENF, generarPaciente, dialogo, fraseHabitos, fraseAntecedentes, fraseAlergia, fmt, textoEdad, RECETARIO, PISTAS } from '../js/datos.js';
 import { construirPrompt, respuestaGeneral } from '../js/ia.js';
 
 const salida = process.argv[2];
@@ -32,7 +32,10 @@ for (const sexo of ['h', 'm']) {
     const lista = (arr) => (arr || []).map(t => fmt(t, p));
     pacientes.push({
       id: `${p.enfId}_${sexo}`, enfermedad: ENF[p.enfId].n, nombre: p.nombre, apellidos: p.apellidos, sexo, edad: p.edad, textoEdad: textoEdad(p.edad),
-      voz: p.voz, sistema,
+      voz: p.voz, sistema, enfId: p.enfId,
+      // para la evolución tras el tratamiento (seguimiento): qué necesita, qué le conviene y qué debe evitar
+      trat: { med: ENF[p.enfId].trat.med, buena: ENF[p.enfId].trat.buena, evitar: ENF[p.enfId].trat.evitar },
+      alergia: p.alergia || '', antecedentes: p.antecedentes || [], fumador: !!p.fumador, bebedor: !!p.bebedor,
       respuestas: {
         motivo: lista(d.motivo), inicio: lista(d.inicio), dolor: lista(d.dolor), fiebre: lista(d.fiebre), extra: lista(d.extra),
         habitos: varias(() => fmt(fraseHabitos(p), p)), antecedentes: varias(() => fraseAntecedentes(p)), alergia: varias(() => fmt(fraseAlergia(p), p)),
@@ -46,5 +49,8 @@ for (const sexo of ['h', 'm']) {
   }
 }
 mkdirSync(dirname(salida), { recursive: true });
-writeFileSync(salida, JSON.stringify({ version: 1, generado: new Date().toISOString(), pacientes }, null, 1));
+// recetario y pistas del texto libre (las mismas del juego web) para reconocer lo que el médico receta
+const recetario = RECETARIO.map(r => ({ n: r.n, cat: r.cat, tags: r.tags }));
+const pistas = PISTAS.map(([re, cat, tags]) => ({ re: re.source, cat, tags }));
+writeFileSync(salida, JSON.stringify({ version: 2, generado: new Date().toISOString(), pacientes, recetario, pistas }, null, 1));
 console.log(`${pacientes.length} pacientes exportados a ${salida}: ${pacientes.map(p => `${p.nombre} (${p.edad}, ${p.enfermedad})`).join(' · ')}`);

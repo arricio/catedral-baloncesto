@@ -1,4 +1,4 @@
-#include "EMMPaciente.h"
+﻿#include "EMMPaciente.h"
 #include "Dom/JsonObject.h"
 #include "Internationalization/Regex.h"
 #include "Misc/FileHelper.h"
@@ -42,6 +42,18 @@ bool EMMDatos::CargarPacientes(TArray<FEMMPaciente>& Salida, FString& Error)
 			TArray<FString>& L = P.Respuestas.FindOrAdd(FString(Par.Key));
 			for (const TSharedPtr<FJsonValue>& T : Par.Value->AsArray()) L.Add(T->AsString());
 		}
+		auto Lista = [](const TArray<TSharedPtr<FJsonValue>>& A) { TArray<FString> R; for (const auto& X : A) R.Add(X->AsString()); return R; };
+		O->TryGetStringField(TEXT("enfId"), P.EnfId);
+		O->TryGetStringField(TEXT("alergia"), P.Alergia);
+		O->TryGetBoolField(TEXT("fumador"), P.bFumador);
+		O->TryGetBoolField(TEXT("bebedor"), P.bBebedor);
+		if (const TArray<TSharedPtr<FJsonValue>>* A; O->TryGetArrayField(TEXT("antecedentes"), A)) P.Antecedentes = Lista(*A);
+		if (const TSharedPtr<FJsonObject>* Tr; O->TryGetObjectField(TEXT("trat"), Tr))
+		{
+			for (const auto& G : (*Tr)->GetArrayField(TEXT("med"))) P.TratMed.Add(Lista(G->AsArray()));
+			P.TratBuena = Lista((*Tr)->GetArrayField(TEXT("buena")));
+			P.TratEvitar = Lista((*Tr)->GetArrayField(TEXT("evitar")));
+		}
 		Salida.Add(MoveTemp(P));
 	}
 	return Salida.Num() > 0;
@@ -56,6 +68,63 @@ FString EMMDatos::Normaliza(const FString& Texto)
 	for (TCHAR& C : S)
 		for (int32 i = 0; De[i]; ++i) if (C == De[i]) { C = A[i]; break; }
 	return S.TrimStartAndEnd();
+}
+
+TArray<FString> EMMDatos::EtiquetasDe(const FString& Texto, FString* Nombre)
+{
+	// recetario y pistas del juego web, leídos una vez de casos.json
+	struct FItem { FString N; TArray<FString> Claves; TArray<FString> Tags; };
+	struct FPista { FString Re; TArray<FString> Tags; };
+	static TArray<FItem> Recetario;
+	static TArray<FPista> Pistas;
+	static bool bCargado = false;
+	if (!bCargado)
+	{
+		bCargado = true;
+		FString J; TSharedPtr<FJsonObject> Raiz;
+		if (FFileHelper::LoadFileToString(J, *(FPaths::ProjectContentDir() / TEXT("Datos/casos.json"))) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(J), Raiz) && Raiz.IsValid())
+		{
+			auto Lista = [](const TArray<TSharedPtr<FJsonValue>>& A) { TArray<FString> R; for (const auto& X : A) R.Add(X->AsString()); return R; };
+			if (const TArray<TSharedPtr<FJsonValue>>* A; Raiz->TryGetArrayField(TEXT("recetario"), A))
+				for (const auto& V : *A)
+				{
+					const TSharedPtr<FJsonObject> O = V->AsObject();
+					FItem I{ O->GetStringField(TEXT("n")), {}, Lista(O->GetArrayField(TEXT("tags"))) };
+					// claves: las palabras con sustancia del nombre; tienen que aparecer todas
+					// («Amoxicilina 500 mg» → amoxicilina; «Agua oxigenada» no salta sólo por «agua»)
+					FString N = Normaliza(I.N);
+					for (TCHAR& C : N) if (!FChar::IsAlpha(C)) C = ' ';
+					TArray<FString> Pal; N.ParseIntoArray(Pal, TEXT(" "));
+					for (const FString& P : Pal) if (P.Len() >= 4) I.Claves.AddUnique(P);
+					if (I.Claves.Num()) Recetario.Add(MoveTemp(I));
+				}
+			if (const TArray<TSharedPtr<FJsonValue>>* A; Raiz->TryGetArrayField(TEXT("pistas"), A))
+				for (const auto& V : *A)
+				{
+					const TSharedPtr<FJsonObject> O = V->AsObject();
+					Pistas.Add({ O->GetStringField(TEXT("re")), Lista(O->GetArrayField(TEXT("tags"))) });
+				}
+		}
+	}
+	FString T = TEXT(" ") + Normaliza(Texto) + TEXT(" ");
+	FString Palabras = T;
+	for (TCHAR& C : Palabras) if (!FChar::IsAlpha(C)) C = ' ';
+	TArray<FString> Lista; Palabras.ParseIntoArray(Lista, TEXT(" "));
+	const TSet<FString> Hay(Lista);
+	TArray<FString> Tags;
+	// primero el recetario (nombre concreto); después las pistas generales
+	for (const FItem& I : Recetario)
+		if (!I.Claves.ContainsByPredicate([&](const FString& K) { return !Hay.Contains(K); }))
+		{
+			for (const FString& X : I.Tags) Tags.AddUnique(X);
+			if (Nombre && Nombre->IsEmpty()) *Nombre = I.N;
+		}
+	for (const FPista& P : Pistas)
+	{
+		FRegexMatcher M(FRegexPattern(P.Re), T);
+		if (M.FindNext()) for (const FString& X : P.Tags) Tags.AddUnique(X);
+	}
+	return Tags;
 }
 
 TArray<FString> EMMDatos::Intenciones(const FString& Texto)

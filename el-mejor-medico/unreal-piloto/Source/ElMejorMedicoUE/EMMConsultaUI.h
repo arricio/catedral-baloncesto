@@ -24,6 +24,7 @@ public:
 
 	void PonerEstado(const FString& Texto, bool bTurnoPaciente);
 	void PonerIA(const FString& Texto);
+	void PonerFecha(const FString& Texto);
 	// subtítulo de quien habla: el texto aparece a la vez que la voz (si los subtítulos están activados)
 	void PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico);
 	void QuitarSubtitulo();
@@ -49,6 +50,7 @@ private:
 
 	UPROPERTY() TObjectPtr<UTextBlock> Estado;
 	UPROPERTY() TObjectPtr<UTextBlock> EstadoIA;
+	UPROPERTY() TObjectPtr<UTextBlock> TextoFecha;
 	UPROPERTY() TObjectPtr<UBorder> CajaSubtitulo;
 	UPROPERTY() TObjectPtr<UTextBlock> SubQuien;
 	UPROPERTY() TObjectPtr<UTextBlock> SubTexto;
@@ -72,6 +74,8 @@ private:
 	UFUNCTION() void AlPulsarMicrofono();
 	UFUNCTION() void AlPulsarDescargar();
 	UFUNCTION() void AlPulsarAjustes();
+	UFUNCTION() void AlPulsarRecetar();
+	UFUNCTION() void AlPulsarAgenda();
 	UFUNCTION() void AlPulsarSubtitulos();
 	UFUNCTION() void AlPulsarCerrarAjustes();
 	void RefrescarAjustes();

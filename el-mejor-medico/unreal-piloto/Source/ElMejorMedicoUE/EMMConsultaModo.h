@@ -1,13 +1,17 @@
 // EL MEJOR MÉDICO (Unreal): la consulta. Busca en el nivel la cámara («CamaraConsulta»), al médico («Medico»)
 // y al paciente («Paciente», con «Mujer» u «Hombre»), elige un caso del juego y lleva los turnos de la conversación.
+// También lleva las recetas, la ficha clínica persistente, el calendario y el regreso de los pacientes a revisión.
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "EMMPaciente.h"
+#include "EMMHistorial.h"
 #include "EMMConsultaModo.generated.h"
 
 class UEMMConsultaUI;
+class UEMMRecetaUI;
+class UEMMAgendaUI;
 class UEMMHabla;
 class UEMMIASubsystem;
 
@@ -23,6 +27,30 @@ public:
 	void DescargarModelo();
 	// micrófono: empieza o para el dictado; el texto va a la caja para revisarlo (el médico no habla solo)
 	void Dictar();
+	void AbrirRecetas();
+	void AbrirAgenda();
+	void Avisar(const FString& Texto, bool bBien);
+
+	// recetas de esta consulta (una por medicamento o tratamiento)
+	TArray<FString> RecetasVisita() const { return Visita.Recetas; }
+	FString NuevaReceta();
+	void GuardarReceta(const FString& Id, const FString& Medicamento, const FString& Dosis, const FString& Frecuencia, const FString& Duracion, const FString& Instrucciones);
+	void AnularReceta(const FString& Id);
+	void EntregarReceta(const FString& Id);
+	int32 DiasTratamiento() const;   // lo que dura el tratamiento entregado (para la revisión)
+	FString NombreMedico() const { return TEXT("Dr. Lorenzo Prieto Alonso"); }
+	FString ColegiadoMedico() const { return TEXT("24/28-417"); }
+	FString FirmaMedico() const { return TEXT("L. Prieto A."); }
+
+	// ficha clínica, calendario y seguimiento
+	FEMMFicha* Ficha() { return FEMMHistorial::Get().Buscar(Paciente.Id); }
+	bool EsRevision() const { return Visita.bRevision; }
+	bool ConsultaTerminada() const { return bTerminada; }
+	FString EvolucionActual() const { return Visita.Evolucion; }
+	// dias > 0: revisión en esos días; -2: al acabar el tratamiento; -1: sin revisión
+	void TerminarConsulta(const FString& Diagnostico, const FString& Pruebas, int32 DiasRevision);
+	void AvanzarTiempo();
+	void PacienteNuevo();
 
 	// estado (también para las pruebas automáticas)
 	const TArray<FEMMLinea>& Conversacion() const { return Charla; }
@@ -34,12 +62,20 @@ protected:
 
 private:
 	UPROPERTY() TObjectPtr<UEMMConsultaUI> UI;
+	UPROPERTY() TObjectPtr<UEMMRecetaUI> UIRecetas;
+	UPROPERTY() TObjectPtr<UEMMAgendaUI> UIAgenda;
 	UPROPERTY() TObjectPtr<UEMMHabla> Medico;
 	UPROPERTY() TObjectPtr<UEMMHabla> HablaPaciente;
+	TWeakObjectPtr<AActor> MHMedico, MHPaciente;
+	TArray<FEMMPaciente> Casos;
 	FEMMPaciente Paciente;
 	TArray<FEMMLinea> Charla;
+	FEMMVisita Visita;            // la consulta en curso (pasa a la ficha al terminarla)
+	FString MemoriaPaciente;       // lo que recuerda de las consultas anteriores (para la IA)
+	FString FraseEvolucion;        // cómo dice que está al volver (referencia de las respuestas)
 	bool bTurnoPaciente = false;
 	bool bOcupado = false;
+	bool bTerminada = false;
 	FTimerHandle TemporizadorDescarga;
 
 	// Prueba automática (-EMMPrueba): fotos, conversación real con la IA y registro en Saved/Prueba.txt
@@ -48,10 +84,13 @@ private:
 	double InicioPaso = 0;
 	TArray<FString> RegistroPrueba;
 	bool bFotoSubtitulos = false, bSubtitulosAntes = false;
+	TArray<float> Fotogramas;   // duración de los fotogramas (rendimiento), muestreada durante la prueba
 	void PasoDePrueba();
 	void Foto(const FString& Nombre);
 
 	UEMMIASubsystem* IA() const;
+	void IniciarVisita(const FEMMPaciente& Caso);
+	FEMMPaciente PacienteParaIA() const;
 	void Actualizar();
 	FString Referencia(const FString& Pregunta) const;
 	void Decir(UEMMHabla* Quien, const FString& Nombre, const FString& Texto, bool bEsMedico, TFunction<void()> Despues);

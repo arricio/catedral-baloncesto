@@ -81,15 +81,26 @@ void UEMMConsultaUI::Construir()
 
 	// Arriba a la izquierda: de dónde salen las respuestas (IA del ordenador, del móvil o predefinidas)
 	UBorder* CajaIA = Recuadro(WidgetTree, Panel, 10.f);
+	UVerticalBox* VIA = WidgetTree->ConstructWidget<UVerticalBox>();
 	EstadoIA = Texto(WidgetTree, TEXT("Buscando la IA…"), 15.f, FLinearColor(0.75f, 0.85f, 1.f));
-	CajaIA->SetContent(EstadoIA);
+	TextoFecha = Texto(WidgetTree, TEXT(""), 14.f, FLinearColor(1.f, 0.9f, 0.65f), true);
+	VIA->AddChildToVerticalBox(TextoFecha);
+	VIA->AddChildToVerticalBox(EstadoIA);
+	CajaIA->SetContent(VIA);
 	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(CajaIA)) { S->SetAnchors(FAnchors(0, 0)); S->SetPosition(FVector2D(24, 20)); S->SetAutoSize(true); }
 
-	// Arriba a la derecha: CONFIGURACIÓN
-	UTextBlock* EAj;
+	// Arriba a la derecha: RECETAR, AGENDA · FICHA y CONFIGURACIÓN
+	UHorizontalBox* Arriba = WidgetTree->ConstructWidget<UHorizontalBox>();
+	UTextBlock* EAj; UTextBlock* ERec; UTextBlock* EAg;
+	UButton* BotonRecetar = CrearBoton(TEXT("RECETAR"), FLinearColor(0.15f, 0.45f, 0.10f), ERec, 16.f);
+	UButton* BotonAgenda = CrearBoton(TEXT("AGENDA · FICHA"), Azul, EAg, 16.f);
 	UButton* BotonAjustes = CrearBoton(TEXT("CONFIGURACIÓN"), Gris, EAj, 15.f);
+	BotonRecetar->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarRecetar);
+	BotonAgenda->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarAgenda);
 	BotonAjustes->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarAjustes);
-	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(BotonAjustes)) { S->SetAnchors(FAnchors(1, 0)); S->SetAlignment(FVector2D(1, 0)); S->SetPosition(FVector2D(-24, 20)); S->SetAutoSize(true); }
+	for (UButton* B : { BotonRecetar, BotonAgenda, BotonAjustes })
+		if (UHorizontalBoxSlot* R = Arriba->AddChildToHorizontalBox(B)) R->SetPadding(FMargin(8, 0, 0, 0));
+	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(Arriba)) { S->SetAnchors(FAnchors(1, 0)); S->SetAlignment(FVector2D(1, 0)); S->SetPosition(FVector2D(-24, 20)); S->SetAutoSize(true); }
 
 	// Avisos, arriba en el centro (breves)
 	CajaAviso = Recuadro(WidgetTree, FLinearColor(0.05f, 0.08f, 0.05f, 0.9f), 10.f);
@@ -200,7 +211,10 @@ void UEMMConsultaUI::PonerEstado(const FString& T, bool bTurnoPaciente)
 	Estado->SetText(FText::FromString(T));
 	Estado->SetColorAndOpacity(FSlateColor(bTurnoPaciente ? FLinearColor(1.f, 0.8f, 0.4f) : FLinearColor(0.7f, 0.85f, 1.f)));
 }
-void UEMMConsultaUI::PonerIA(const FString& T) { EstadoIA->SetText(FText::FromString(T)); }
+void UEMMConsultaUI::PonerIA(const FString& T) { EstadoIA->SetText(FText::FromString(T + TEXT(" · piloto Unreal 0.3"))); }
+void UEMMConsultaUI::PonerFecha(const FString& T) { TextoFecha->SetText(FText::FromString(T)); }
+void UEMMConsultaUI::AlPulsarRecetar() { if (Modo.IsValid()) Modo->AbrirRecetas(); }
+void UEMMConsultaUI::AlPulsarAgenda() { if (Modo.IsValid()) Modo->AbrirAgenda(); }
 void UEMMConsultaUI::PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico)
 {
 	// FText::ToUpper usa las reglas del idioma (FString::ToUpper deja «ó» en minúscula)
