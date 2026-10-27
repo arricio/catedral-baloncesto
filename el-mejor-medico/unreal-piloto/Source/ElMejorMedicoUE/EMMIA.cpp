@@ -33,8 +33,9 @@ TArray<TPair<FString, FString>> UEMMIASubsystem::ConstruirMensajes(const FEMMPac
 	}
 	// los modelos pequeños se equivocan con el género: se les recuerda
 	Lineas.Add(P.EsMujer()
-		? TEXT("Eres una mujer: habla de ti siempre en femenino («estoy cansada», «soy la única», «preocupada»).")
-		: TEXT("Eres un hombre: habla de ti siempre en masculino («estoy cansado», «soy el único», «preocupado»)."));
+		// sin frases de ejemplo: el modelo las copia tal cual en la respuesta
+		? TEXT("Eres una mujer: cuando hables de ti, usa siempre el género femenino.")
+		: TEXT("Eres un hombre: cuando hables de ti, usa siempre el género masculino."));
 	if (!Referencia.IsEmpty())
 		Lineas.Add(FString::Printf(TEXT("Datos que debe contener tu respuesta a esta pregunta (respétalos, pero dilos a tu manera, sin copiar la frase): %s"), *Referencia));
 	Lineas.Add(Ultima);
