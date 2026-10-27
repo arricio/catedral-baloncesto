@@ -203,7 +203,8 @@ void UEMMConsultaUI::PonerEstado(const FString& T, bool bTurnoPaciente)
 void UEMMConsultaUI::PonerIA(const FString& T) { EstadoIA->SetText(FText::FromString(T)); }
 void UEMMConsultaUI::PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico)
 {
-	SubQuien->SetText(FText::FromString(Quien.ToUpper()));
+	// FText::ToUpper usa las reglas del idioma (FString::ToUpper deja «ó» en minúscula)
+	SubQuien->SetText(FText::FromString(Quien).ToUpper());
 	SubQuien->SetColorAndOpacity(FSlateColor(bMedico ? FLinearColor(0.45f, 0.75f, 1.f) : FLinearColor(1.f, 0.75f, 0.35f)));
 	HablaSubtitulo = Habla;
 }

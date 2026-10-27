@@ -34,8 +34,14 @@ if ($Empaquetar) {
 if ($ProbarPaquete) {
   $d = Join-Path $P 'Empaquetado\Windows'; $s = "$d\ElMejorMedicoUE\Saved"; $txt = "$s\Prueba.txt"
   Remove-Item $txt -ErrorAction SilentlyContinue
+  $inicio = Get-Date
   Start-Process "$d\ElMejorMedicoUE.exe" -ArgumentList '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba' | Out-Null
-  for ($i = 0; $i -lt 180; $i++) { Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break } }
+  for ($i = 0; $i -lt 180; $i++) {
+    Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break }
+    # Smart App Control (activado; no se desactiva) puede bloquear un binario nuevo: se avisa en vez de esperar
+    $bloqueo = Get-WinEvent -LogName 'Microsoft-Windows-CodeIntegrity/Operational' -MaxEvents 20 -ErrorAction SilentlyContinue | Where-Object { $_.Id -eq 3077 -and $_.TimeCreated -gt $inicio -and $_.Message -like '*Empaquetado*' }
+    if ($bloqueo) { Get-Process ElMejorMedicoUE* -ErrorAction SilentlyContinue | Stop-Process -Force; 'BLOQUEADO por Smart App Control: vuelve a empaquetar con un cambio de código'; break }
+  }
   if (Test-Path $txt) { Get-Content $txt -Encoding utf8 } else { 'La prueba no ha terminado' }
 }
 if ($Probar) {

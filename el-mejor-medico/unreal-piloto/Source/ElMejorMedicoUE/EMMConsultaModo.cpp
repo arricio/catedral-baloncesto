@@ -71,7 +71,7 @@ UEMMIASubsystem* AEMMConsultaModo::IA() const { return GetGameInstance()->GetSub
 void AEMMConsultaModo::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida"));
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida (subtítulos %s)"), UEMMConsultaUI::SubtitulosActivados() ? TEXT("ON") : TEXT("OFF"));
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
 	// personajes y cámara del nivel

@@ -95,7 +95,7 @@ bool EMMDictado::Empezar(TFunction<void(const FString&)> AlTexto, TFunction<void
 #endif
 		GEscuchando = false;
 		// primera letra en mayúscula, como se escribe
-		if (Dicho.Len()) Dicho[0] = FChar::ToUpper(Dicho[0]);
+		if (Dicho.Len()) Dicho = FText::FromString(Dicho.Left(1)).ToUpper().ToString() + Dicho.Mid(1);
 		AsyncTask(ENamedThreads::GameThread, [AlTerminar, Dicho, Error]() { AlTerminar(Dicho, Error); });
 	});
 	return true;
