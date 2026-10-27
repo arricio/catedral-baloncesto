@@ -2,8 +2,38 @@
 
 Informe para continuar el desarrollo en una sesión **local** de Claude Code (portátil Lenovo Legion con Windows, con Blender 5.2.2 LTS y Unreal Engine 5.8 conectados por MCP) sin empezar de cero.
 
-Fecha del traspaso: 25 de octubre de 2026.
-Último commit subido: `753e93d EL MEJOR MÉDICO: peinados modelados en Blender`. Este informe y la carpeta `pruebas/` van en el commit siguiente.
+Fecha del traspaso: 25 de octubre de 2026 (actualizado el 27 de octubre de 2026).
+
+---
+
+## ▶ PUNTO EXACTO PARA CONTINUAR (27/10/2026, guardado antes de agotar el uso semanal)
+
+**Estado guardado y verificado**
+- GitHub, rama `claude/medical-simulator-game-ruh821`: la copia local y la remota coinciden (sin cambios pendientes). Últimos commits: `565eb2c` (ejecutable verificado, rendimiento, Smart App Control) y `bc61d4f` (recetas, ficha, calendario, seguimiento, portátil y mesa).
+- Juego **Three.js** (el juego principal): intacto y funcionando. Sus pruebas `pruebas/cir.js` y `pruebas/jugar.js` pasan (27/10). El APK 1.0.1 sigue igual.
+- **Piloto Unreal 5.8**: proyecto completo en `C:\Users\arric\ElMejorMedicoUE` (fuera de git porque los MetaHumans, los mapas y los binarios pesan mucho). El código, la configuración, los datos y las herramientas están copiados en `unreal-piloto/` (con `Herramientas\copiar-a-repositorio.ps1`, sin diferencias el 27/10). **No borrar esa carpeta**: los MetaHumans `MH_Medico`/`MH_Paciente` y el nivel `/Game/Mapas/Consulta` sólo están ahí. El nivel se puede rehacer con `crear_consulta.py` y los MetaHumans con `crear_metahumans.py` (necesitan sesión de Epic).
+- Ejecutable de Windows verificado: `C:\Users\arric\ElMejorMedicoUE\Empaquetado\Windows\ElMejorMedicoUE.exe` (prueba automática completa correcta; 30 fps de media en la RTX 3050).
+
+**Qué funciona ya en el piloto Unreal (probado en el ejecutable)**
+Consulta con médico y paciente MetaHuman sentados, animación (respiración, mirada, microsacadas, asentimientos, boca con visemas, parpadeo, expresión de fondo, manos relajadas), ropa teñida (pijama sanitario del médico), voces es-ES por edad y sexo, IA local (Ollama en el procesador) con corrección de género y de tuteo, el jugador es el médico (escribir o dictar; nadie habla solo), subtítulos ON/OFF (OFF por defecto), portátil delante del médico mirándole, mesa ordenada sin objetos flotando, recetas (una por medicamento, guardar, modificar, anular, entregar, avisos de riesgo), ficha clínica persistente, calendario, revisiones, avance del tiempo y regreso del paciente con evolución y memoria.
+
+**Por dónde seguir (en este orden, salvo que el usuario diga otra cosa)**
+1. Preguntar al usuario si sigue con **Android** (Xiaomi 17 Ultra, controles táctiles) o antes con la **ropa clínica de Fab** (pedir permiso antes de descargar o aceptar nada).
+2. Android del piloto: la biblioteca `Nativo/emm-nativo` (LiteRT-LM, TextToSpeech) ya compila; falta empaquetar el APK de Unreal, el dictado en Android (`EMMDictado` sólo funciona en Windows; en Android usar `SpeechRecognizer` por JNI), interfaz táctil (los paneles son UMG y ya se pueden tocar; revisar tamaños) y probar en el emulador `emm36` y en el Xiaomi (sin desactivar Play Protect).
+
+**Errores y pendientes conocidos**
+- Smart App Control (activado; el usuario NO quiere desactivarlo) bloquea a veces binarios nuevos (error 4551). Solución: recompilar con un cambio real de código y volver a empaquetar. `ciclo.ps1` lo detecta y avisa.
+- Sólo hay un MetaHuman paciente (mujer adulta): todos los pacientes del piloto son mujeres adultas. Faltan MetaHumans de hombre, niño y mayor.
+- Ropa: sólo existe la prenda básica (camiseta y pantalón corto), teñida. Falta bata o pijama de verdad (Fab, con permiso).
+- La pantalla del portátil está apagada (se podría mostrar la historia clínica).
+- La IA pequeña a veces repite casi la misma frase en dos respuestas seguidas de la revisión.
+- El dictado de Windows coge ruido del ambiente si nadie habla (normal; el texto se revisa antes de enviarlo).
+
+**Cómo comprobar que todo sigue bien al volver** (con el editor de Unreal cerrado)
+```
+powershell -File C:\Users\arric\ElMejorMedicoUE\Herramientas\ciclo.ps1 -ProbarPaquete
+```
+Debe acabar con la línea «Voces: …» después de la revisión de la paciente. Fotos en `Empaquetado\Windows\ElMejorMedicoUE\Saved\Capturas`.
 
 ---
 
