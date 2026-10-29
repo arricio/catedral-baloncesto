@@ -38,7 +38,8 @@ if ($ProbarPaquete) {
   $d = Join-Path $P 'Empaquetado\Windows'; $s = "$d\ElMejorMedicoUE\Saved"; $txt = "$s\Prueba.txt"
   Remove-Item $txt -ErrorAction SilentlyContinue
   $inicio = Get-Date
-  Start-Process "$d\ElMejorMedicoUE.exe" -ArgumentList '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba' | Out-Null
+  $extraP = if ($Todos) { '-EMMTodos' } else { '-nada' }
+  Start-Process "$d\ElMejorMedicoUE.exe" -ArgumentList '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extraP | Out-Null
   for ($i = 0; $i -lt 180; $i++) {
     Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break }
     # Smart App Control (activado; no se desactiva) puede bloquear un binario nuevo: se avisa en vez de esperar

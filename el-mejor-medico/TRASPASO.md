@@ -6,6 +6,14 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 29 de octubre de 2026)
 
 ---
 
+## ▶ ÚLTIMO PUNTO (29/10/2026, noche) — LEER PRIMERO
+
+- Presupuesto 0 €: nunca proponer compras.
+- **17 pacientes distintos funcionando** (prueba `ciclo.ps1 -Probar -Todos` en el editor): cada uno con su cara MetaHuman, voz Piper, carácter, caso, ficha guardada y regreso recordando la visita. Plantilla de personas en `historial.json`; ampliable sin recompilar (MetaHuman nuevo con `crear_metahumans.py` y `EMM_SOLO`, de uno en uno por memoria, + línea en `personajes.json`).
+- **Voces Piper dentro del juego** (NNE, sin programas externos): `EMMPiper`, `EMMFonetica`, `Content/Datos/voces.json`, modelos en `/Game/Voces` (`importar_voces.py`). 3 voces de hombre y 3 de mujer (las MLS son de mujer, ~200 Hz). Créditos CC BY en CONFIGURACIÓN. Android: falta (NNERuntimeORT no existe para Android; usar ONNX Runtime de Microsoft en la biblioteca Kotlin).
+- **Sin verificar**: el ejecutable empaquetado con los 17 pacientes (`ciclo.ps1 -Empaquetar` y `-ProbarPaquete -Todos` quedaron lanzados al agotarse el uso). Rendimiento en el editor con los 17: 24 fps (incluye compilación de sombreadores de cada personaje nuevo).
+- **Niños (gratis)**: MPFB2 (MakeHuman para Blender, código GPL, recursos CC0) YA está instalado en Blender con pieles jóvenes, peinados y ropa. En la escena `EMM_Ninos` se estaba creando un niño de 7 y una niña de 4 años con esqueleto «game engine» (mismos nombres de huesos que nuestra animación). Faltaba: en `deserialize_from_dict`, «eyes» debe ser `high-poly/high-poly.mhclo` (malla), no el color; luego exportar a FBX, importar en Unreal, adaptar `EMMCuerpoAnim` (boca con formas, no curvas MetaHuman) y sentar al acompañante.
+- Pendientes anteriores: ropa gratuita de Epic en Fab (el usuario debe añadirla a su biblioteca), Celeste sin melena, opción «derivar a urgencias», Android.
 ## ▶ PUNTO EXACTO PARA CONTINUAR (29/10/2026)
 
 **Estado guardado**
