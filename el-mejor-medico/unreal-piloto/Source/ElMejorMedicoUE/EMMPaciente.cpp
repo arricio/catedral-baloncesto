@@ -60,6 +60,9 @@ bool EMMDatos::CargarPacientes(TArray<FEMMPaciente>& Salida, FString& Error)
 		O->TryGetBoolField(TEXT("hablaAcomp"), P.bHablaAcomp);
 		O->TryGetBoolField(TEXT("bebe"), P.bBebe);
 		O->TryGetBoolField(TEXT("cronica"), P.bCronica);
+		O->TryGetStringField(TEXT("destino"), P.Destino);
+		O->TryGetStringField(TEXT("prioridad"), P.Prioridad);
+		O->TryGetStringField(TEXT("cirugia"), P.Cirugia);
 		O->TryGetNumberField(TEXT("grav"), P.Grav);
 		auto Numeros = [](const TSharedPtr<FJsonObject>& J, TMap<FString, float>& M) { for (const auto& X : J->Values) M.Add(FString(X.Key), float(X.Value->AsNumber())); };
 		auto Textos = [](const TSharedPtr<FJsonObject>& J, TMap<FString, FString>& M) { for (const auto& X : J->Values) M.Add(FString(X.Key), X.Value->AsString()); };

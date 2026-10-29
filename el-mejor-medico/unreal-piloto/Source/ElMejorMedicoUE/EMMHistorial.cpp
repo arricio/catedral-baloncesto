@@ -102,6 +102,8 @@ void FEMMHistorial::Cargar(bool bPrueba)
 			FEMMVisita X;
 			X.Dia = int32(V->GetNumberField(TEXT("dia"))); X.bRevision = V->GetBoolField(TEXT("revision"));
 			V->TryGetBoolField(TEXT("anticipada"), X.bAnticipada);
+			V->TryGetStringField(TEXT("destino"), X.Destino);
+			V->TryGetStringField(TEXT("seguridad"), X.Seguridad);
 			X.Diagnostico = V->GetStringField(TEXT("diagnostico")); X.Pruebas = V->GetStringField(TEXT("pruebas"));
 			X.Evolucion = V->GetStringField(TEXT("evolucion")); X.Recetas = ListaDe(V, TEXT("recetas"));
 			for (const auto& VL : V->GetArrayField(TEXT("charla")))
@@ -151,6 +153,8 @@ bool FEMMHistorial::Guardar() const
 			TSharedRef<FJsonObject> V = MakeShared<FJsonObject>();
 			V->SetNumberField(TEXT("dia"), X.Dia); V->SetStringField(TEXT("fecha"), Fecha(X.Dia)); V->SetBoolField(TEXT("revision"), X.bRevision);
 			V->SetBoolField(TEXT("anticipada"), X.bAnticipada);
+			V->SetStringField(TEXT("destino"), X.Destino);
+			V->SetStringField(TEXT("seguridad"), X.Seguridad);
 			V->SetStringField(TEXT("diagnostico"), X.Diagnostico); V->SetStringField(TEXT("pruebas"), X.Pruebas);
 			V->SetStringField(TEXT("evolucion"), X.Evolucion); V->SetArrayField(TEXT("recetas"), ListaJson(X.Recetas));
 			TArray<TSharedPtr<FJsonValue>> LC;
@@ -279,6 +283,47 @@ TArray<FString> EMMEvolucion::Riesgos(const FEMMPaciente& P, const FEMMReceta& R
 	return L;
 }
 
+TArray<FString> EMMEvolucion::SignosAlarma(const FEMMPaciente& P)
+{
+	TArray<FString> L;
+	auto C = [&P](const TCHAR* K) { const float* X = P.Constantes.Find(K); return X ? *X : -1.f; };
+	const float Sat = C(TEXT("sat")), Tas = C(TEXT("tas")), Fc = C(TEXT("fc")), Temp = C(TEXT("temp")), Fr = C(TEXT("fr"));
+	if (Sat > 0 && Sat < 92.f) L.Add(FString::Printf(TEXT("Saturación de oxígeno %.0f %% (baja)"), Sat));
+	if (Tas > 0 && Tas < 90.f) L.Add(FString::Printf(TEXT("Tensión sistólica %.0f mmHg (hipotensión)"), Tas));
+	if (Tas >= 180.f) L.Add(FString::Printf(TEXT("Tensión sistólica %.0f mmHg (muy alta)"), Tas));
+	if (Fc >= 120.f) L.Add(FString::Printf(TEXT("Pulso %.0f lpm (taquicardia)"), Fc));
+	if (Fc > 0 && Fc < 45.f) L.Add(FString::Printf(TEXT("Pulso %.0f lpm (bradicardia)"), Fc));
+	if (Temp >= 39.5f || (Temp >= 38.5f && P.Edad >= 75.f)) L.Add(FString::Printf(TEXT("Temperatura %.1f °C"), Temp));
+	if (Fr >= 26.f && P.Edad >= 7.f) L.Add(FString::Printf(TEXT("Respiración %.0f rpm (rápida)"), Fr));
+	return L;
+}
+
+FString EMMEvolucion::NombreDestino(const FString& D)
+{
+	if (D == TEXT("urgencias")) return TEXT("derivado a urgencias");
+	if (D == TEXT("ingreso")) return TEXT("ingreso hospitalario");
+	if (D == TEXT("cirugia")) return TEXT("derivado a cirugía");
+	return TEXT("alta a domicilio");
+}
+
+FString EMMEvolucion::ValorarDestino(const FEMMPaciente& P, const FString& D, int32& Nivel)
+{
+	static const TMap<FString, FString> Cir = { { TEXT("apendicectomia"), TEXT("apendicectomía") }, { TEXT("colecistectomia"), TEXT("extirpación de la vesícula") },
+		{ TEXT("reseccion"), TEXT("cirugía torácica") }, { TEXT("hernioplastia"), TEXT("cirugía de la hernia") }, { TEXT("osteosintesis"), TEXT("cirugía de la fractura") } };
+	const bool bNecesitaHospital = P.Destino == TEXT("hospitalizar") || P.Destino == TEXT("cirugia");
+	const bool bUrgente = P.Prioridad == TEXT("alta") || P.Grav >= 4;
+	const FString Lo = P.Destino == TEXT("cirugia") ? (Cir.Contains(P.Cirugia) ? Cir[P.Cirugia] : FString(TEXT("cirugía"))) : FString(TEXT("ingreso hospitalario"));
+	if (bNecesitaHospital && D == TEXT("casa"))
+	{
+		Nivel = 2;
+		return FString::Printf(TEXT("AVISO DE SEGURIDAD: necesitaba %s%s y se le ha mandado a casa."), *Lo, bUrgente ? TEXT(" urgente") : TEXT(""));
+	}
+	if (bNecesitaHospital) { Nivel = 0; return FString::Printf(TEXT("Decisión correcta: necesitaba %s."), *Lo); }
+	if (D != TEXT("casa")) { Nivel = 1; return TEXT("Derivación innecesaria: podía tratarse en la consulta (ocupa urgencias sin necesidad)."); }
+	Nivel = 0;
+	return TEXT("Alta a domicilio adecuada.");
+}
+
 FEMMEvolucion EMMEvolucion::Calcular(const FEMMPaciente& P, const FEMMFicha& F, int32 Hoy)
 {
 	FEMMEvolucion E;
@@ -332,6 +377,24 @@ FEMMEvolucion EMMEvolucion::Calcular(const FEMMPaciente& P, const FEMMFicha& F, 
 	if (bAlcohol) Nivel = FMath::Min(3, Nivel + (Tags.Contains(TEXT("alcohol_fuerte")) || bAntibiotico ? 2 : 1));
 	if (P.EnfId == TEXT("neumonia") && !bAntibiotico && E.Dias >= 4) Nivel = 4;
 	if ((P.EnfId == TEXT("faringitis") || P.EnfId == TEXT("otitis")) && !bAntibiotico && E.Dias >= 10 && Azar.FRand() < 0.35f) Nivel = FMath::Max(Nivel, 3);
+	// el destino que decidió el médico: si necesitaba hospital y fue al hospital, lo tratan allí; si se fue a casa,
+	// se complica (antes cuanto más urgente era)
+	const FString Destino = V ? V->Destino : FString(TEXT("casa"));
+	const bool bNecesitaHospital = P.Destino == TEXT("hospitalizar") || P.Destino == TEXT("cirugia");
+	const bool bUrgente = P.Prioridad == TEXT("alta") || P.Grav >= 4;
+	const bool bHospital = V && Destino != TEXT("casa") && bNecesitaHospital;
+	const bool bSinHospital = V && Destino == TEXT("casa") && bNecesitaHospital;
+	if (bHospital)
+	{
+		Nivel = E.Dias >= Curacion * 0.8f ? 0 : 1;
+		if (bAlcohol) Nivel = FMath::Min(3, Nivel + 1);
+	}
+	else if (bSinHospital && E.Dias >= 1)
+	{
+		Nivel = FMath::Max(Nivel, bUrgente ? 4 : 3);
+		int32 N = 0;
+		E.Riesgos.AddUnique(ValorarDestino(P, Destino, N));
+	}
 	if (bAlergia) Nivel = 4;
 	E.Estado = Niveles[Nivel];
 
@@ -349,13 +412,16 @@ FEMMEvolucion EMMEvolucion::Calcular(const FEMMPaciente& P, const FEMMFicha& F, 
 	}
 	if (E.Cumplimiento < 0.75f && Entregadas.Num()) Frase.Add(TEXT("Le confieso que algunos días se me olvidó tomarlo."));
 	if (bAlcohol) Frase.Add(FString::Printf(TEXT("Lo del alcohol lo he hecho como usted me dijo, pero tengo el estómago fatal, duermo mal y me noto más cansad%s."), o));
-	if (!Entregadas.Num() && V) Frase.Add(TEXT("Como no me mandó nada, he ido aguantando como he podido."));
+	if (bHospital) Frase.Insert(P.Destino == TEXT("cirugia") ? FString(TEXT("Me operaron en el hospital y ya me han dado el alta.")) : FString::Printf(TEXT("Estuve ingresad%s unos días en el hospital y ya me han dado el alta."), o), 0);
+	else if (bSinHospital && Nivel >= 3) Frase.Add(TEXT("Me puse tan mal que tuvieron que llevarme a urgencias, y allí me dijeron que debería haber ido mucho antes."));
+	else if (!Entregadas.Num() && V) Frase.Add(TEXT("Como no me mandó nada, he ido aguantando como he podido."));
 	E.FrasePaciente = FString::Join(Frase, TEXT(" "));
 
 	static const TCHAR* NombreNivel[] = { TEXT("Recuperación completa"), TEXT("Mejoría parcial"), TEXT("Sin cambios"), TEXT("Empeoramiento"), TEXT("Complicación") };
 	E.Resumen = FString::Printf(TEXT("%s a los %d días. Cumplimiento %s (%d %%)."), NombreNivel[Nivel], E.Dias,
 		E.Cumplimiento >= 0.85f ? TEXT("alto") : E.Cumplimiento >= 0.7f ? TEXT("parcial") : TEXT("bajo"), FMath::RoundToInt(E.Cumplimiento * 100.f));
-	if (Faltan.Num() && Nivel > 0) E.Resumen += TEXT(" Faltó en el tratamiento: ") + FString::Join(Faltan, TEXT(", ")).Replace(TEXT("_"), TEXT(" ")) + TEXT(".");
+	if (V) E.Resumen += TEXT(" Destino: ") + NombreDestino(Destino) + TEXT(".");
+	if (Faltan.Num() && Nivel > 0 && !bHospital) E.Resumen += TEXT(" Faltó en el tratamiento: ") + FString::Join(Faltan, TEXT(", ")).Replace(TEXT("_"), TEXT(" ")) + TEXT(".");
 	if (E.Riesgos.Num()) E.Resumen += TEXT(" Riesgos: ") + FString::Join(E.Riesgos, TEXT(" "));
 	static const float Preoc[] = { 0.05f, 0.3f, 0.55f, 0.85f, 1.f };
 	E.Preocupacion = Preoc[Nivel];

@@ -1,4 +1,4 @@
-// EL MEJOR MÉDICO (Unreal): la consulta. Busca en el nivel la cámara («CamaraConsulta»), al médico («Medico»)
+﻿// EL MEJOR MÉDICO (Unreal): la consulta. Busca en el nivel la cámara («CamaraConsulta»), al médico («Medico»)
 // y al paciente («Paciente», con «Mujer» u «Hombre»), elige un caso del juego y lleva los turnos de la conversación.
 // También lleva las recetas, la ficha clínica persistente, el calendario y el regreso de los pacientes a revisión.
 #pragma once
@@ -56,7 +56,7 @@ public:
 	bool ConsultaTerminada() const { return bTerminada; }
 	FString EvolucionActual() const { return Visita.Evolucion; }
 	// dias > 0: revisión en esos días; -2: al acabar el tratamiento; -1: sin revisión
-	void TerminarConsulta(const FString& Diagnostico, const FString& Pruebas, int32 DiasRevision);
+	void TerminarConsulta(const FString& Diagnostico, const FString& Pruebas, int32 DiasRevision, const FString& Destino = TEXT("casa"));
 	void AvanzarTiempo();
 	void PacienteNuevo();
 

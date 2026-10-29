@@ -1,4 +1,4 @@
-// EL MEJOR MÉDICO (Unreal): pantalla de la consulta, construida en C++ (sin recursos binarios).
+﻿// EL MEJOR MÉDICO (Unreal): pantalla de la consulta, construida en C++ (sin recursos binarios).
 // El jugador es el médico: escribe o dicta libremente (no hay preguntas sugeridas). El médico dice sólo lo escrito
 // al pulsar ENVIAR · HABLAR MÉDICO, y el paciente responde sólo al pulsar RESPONDER PACIENTE.
 // CONFIGURACIÓN: subtítulos ON/OFF (desactivados por defecto; la elección se guarda).
@@ -39,6 +39,11 @@ public:
 
 	static bool SubtitulosActivados();
 	static void GuardarSubtitulos(bool bActivos);
+	// calidad gráfica: 0 rápida, 1 equilibrada (por defecto), 2 alta; «-EMMCalidad=N» la fuerza sin guardarla
+	static int32 CalidadGrafica();
+	static void GuardarCalidad(int32 Nivel);
+	static void AplicarCalidad(int32 Nivel);
+	static FString NombreCalidad(int32 Nivel);
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
@@ -68,6 +73,7 @@ private:
 	UPROPERTY() TObjectPtr<UButton> BotonDescargar;
 	UPROPERTY() TObjectPtr<UBorder> CajaAjustes;
 	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaSubtitulos;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaCalidad;
 	UPROPERTY() TObjectPtr<UEMMHabla> HablaSubtitulo;
 	FTimerHandle TemporizadorAviso;
 
@@ -80,6 +86,7 @@ private:
 	UFUNCTION() void AlPulsarAgenda();
 	UFUNCTION() void AlPulsarPortatil();
 	UFUNCTION() void AlPulsarSubtitulos();
+	UFUNCTION() void AlPulsarCalidad();
 	UFUNCTION() void AlPulsarCerrarAjustes();
 	void RefrescarAjustes();
 };

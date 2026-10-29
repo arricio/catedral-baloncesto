@@ -29,6 +29,7 @@ public:
 	// para la prueba automática
 	void Escribir(const FString& Diagnostico, const FString& Pruebas);
 	void ElegirRevision(int32 Dias) { DiasRevision = Dias; Refrescar(); }
+	void ElegirDestino(const FString& D) { Destino = D; Refrescar(); }
 	void PulsarTerminar() { AlTerminar(); }
 	void PulsarAvanzar() { AlAvanzar(); }
 
@@ -41,11 +42,14 @@ private:
 	void Construir();
 	UButton* Boton(const FString& Texto, const FLinearColor& Color, float Tam = 15.f);
 	int32 DiasRevision = 0;   // 0: sin elegir; -1: sin revisión; -2: según el tratamiento
+	FString Destino = TEXT("casa");   // casa, urgencias, ingreso o cirugia
 
 	UPROPERTY() TObjectPtr<UTextBlock> Hoy;
 	UPROPERTY() TObjectPtr<UTextBlock> TextoFicha;
 	UPROPERTY() TObjectPtr<UTextBlock> TextoCitas;
 	UPROPERTY() TObjectPtr<UTextBlock> TextoRevision;
+	UPROPERTY() TObjectPtr<UTextBlock> TextoTriaje;
+	UPROPERTY() TObjectPtr<UTextBlock> TextoDestino;
 	UPROPERTY() TObjectPtr<UTextBlock> TituloMes;
 	UPROPERTY() TObjectPtr<UUniformGridPanel> Mes;
 	UPROPERTY() TObjectPtr<UEditableTextBox> Diagnostico;
@@ -55,6 +59,7 @@ private:
 	UPROPERTY() TObjectPtr<UButton> BotonNuevo;
 
 	UFUNCTION() void AlIntervalo();
+	UFUNCTION() void AlDestino();
 	UFUNCTION() void AlTerminar();
 	UFUNCTION() void AlAvanzar();
 	UFUNCTION() void AlNuevo();

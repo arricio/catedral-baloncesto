@@ -4,7 +4,8 @@
 #   -Probar       abre el juego (1600×900) con la prueba automática: fotos en Saved/Capturas y conversación en Saved/Prueba.txt
 #   -Empaquetar   empaqueta la versión de Windows en Empaquetado/Windows (sombreadores ya compilados)
 #   -ProbarPaquete  la prueba automática con el juego empaquetado (lo que recibirá el usuario)
-param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos)
+#   -Calidad N    fuerza la calidad gráfica en la prueba (0 rápida, 1 equilibrada, 2 alta) sin tocar la guardada
+param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1)
 $ErrorActionPreference = 'Stop'
 $UE = 'C:\Program Files\Epic Games\UE_5.8\Engine'
 $P = Split-Path $PSScriptRoot
@@ -39,7 +40,8 @@ if ($ProbarPaquete) {
   Remove-Item $txt -ErrorAction SilentlyContinue
   $inicio = Get-Date
   $extraP = if ($Todos) { '-EMMTodos' } else { '-nada' }
-  Start-Process "$d\ElMejorMedicoUE.exe" -ArgumentList '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extraP | Out-Null
+  $cal = if ($Calidad -ge 0) { "-EMMCalidad=$Calidad" } else { '-nada' }
+  Start-Process "$d\ElMejorMedicoUE.exe" -ArgumentList '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extraP, $cal | Out-Null
   for ($i = 0; $i -lt 180; $i++) {
     Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break }
     # Smart App Control (activado; no se desactiva) puede bloquear un binario nuevo: se avisa en vez de esperar
@@ -52,7 +54,8 @@ if ($Probar) {
   $txt = Join-Path $P 'Saved\Prueba.txt'
   Remove-Item $txt -ErrorAction SilentlyContinue
   $extra = if ($Montaje) { '-EMMSoloMontaje' } elseif ($Todos) { '-EMMTodos' } else { '-nada' }
-  Start-Process "$UE\Binaries\Win64\UnrealEditor.exe" -ArgumentList "`"$Proyecto`"", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extra, '-nosplash', '-unattended' | Out-Null
+  $cal = if ($Calidad -ge 0) { "-EMMCalidad=$Calidad" } else { '-nada' }
+  Start-Process "$UE\Binaries\Win64\UnrealEditor.exe" -ArgumentList "`"$Proyecto`"", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extra, $cal, '-nosplash', '-unattended' | Out-Null
   for ($i = 0; $i -lt 540; $i++) { Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break } }
   if (Test-Path $txt) { Get-Content $txt -Encoding utf8 } else { 'La prueba no ha terminado' }
 }

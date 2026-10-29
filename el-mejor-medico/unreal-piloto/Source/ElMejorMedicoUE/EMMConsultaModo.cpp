@@ -83,7 +83,8 @@ UEMMIASubsystem* AEMMConsultaModo::IA() const { return GetGameInstance()->GetSub
 void AEMMConsultaModo::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida (subtítulos %s, día %d del calendario)"), UEMMConsultaUI::SubtitulosActivados() ? TEXT("ON") : TEXT("OFF"), FEMMHistorial::Get().Dia);
+	UEMMConsultaUI::AplicarCalidad(UEMMConsultaUI::CalidadGrafica());
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida (subtítulos %s, día %d del calendario, %d casos)"), UEMMConsultaUI::SubtitulosActivados() ? TEXT("ON") : TEXT("OFF"), FEMMHistorial::Get().Dia, Casos.Num());
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
 	// personajes y cámara del nivel
@@ -669,7 +670,7 @@ int32 AEMMConsultaModo::DiasTratamiento() const
 	return Max > 0 ? Max : 7;
 }
 
-void AEMMConsultaModo::TerminarConsulta(const FString& Diagnostico, const FString& Pruebas, int32 DiasRevision)
+void AEMMConsultaModo::TerminarConsulta(const FString& Diagnostico, const FString& Pruebas, int32 DiasRevision, const FString& Destino)
 {
 	if (bTerminada) return;
 	if (bOcupado) { Avisar(TEXT("Espera a que termine de hablar."), false); return; }
@@ -681,13 +682,27 @@ void AEMMConsultaModo::TerminarConsulta(const FString& Diagnostico, const FStrin
 	Visita.Diagnostico = Diagnostico.TrimStartAndEnd();
 	Visita.Pruebas = Pruebas.TrimStartAndEnd();
 	Visita.Charla = Charla;
+	// destino del paciente y su valoración de seguridad (un infarto o una apendicitis no se mandan a casa)
+	Visita.Destino = Destino.IsEmpty() ? FString(TEXT("casa")) : Destino;
+	int32 NivelSeguridad = 0;
+	Visita.Seguridad = EMMEvolucion::ValorarDestino(Paciente, Visita.Destino, NivelSeguridad);
 	F.Visitas.Add(Visita);
 	F.ProximaRevision = DiasRevision > 0 ? H.Dia + DiasRevision : DiasRevision == -2 ? H.Dia + DiasTratamiento() : -1;
+	// si se fue a casa necesitando hospital, vuelve en cuanto empeora aunque no tenga cita
+	if (NivelSeguridad == 2 && F.ProximaRevision <= 0) F.ProximaRevision = H.Dia + 3;
 	bTerminada = true;
 	H.Guardar();
 	if (EMMDictado::Escuchando()) EMMDictado::Parar();
-	Avisar(F.ProximaRevision > 0 ? FString::Printf(TEXT("Consulta guardada en la ficha. Revisión: %s."), *FEMMHistorial::Fecha(F.ProximaRevision)) : FString(TEXT("Consulta guardada en la ficha, sin revisión.")), true);
+	const FString Cita = F.ProximaRevision > 0 ? FString::Printf(TEXT("Revisión: %s."), *FEMMHistorial::Fecha(F.ProximaRevision)) : FString(TEXT("Sin revisión."));
+	Avisar(FString::Printf(TEXT("Consulta guardada (%s). %s %s"), *EMMEvolucion::NombreDestino(Visita.Destino), *Visita.Seguridad, *Cita), NivelSeguridad == 0);
 	Actualizar();
+}
+
+// signos de alarma del triaje para el aviso de entrada (vacío si no hay)
+static FString AvisoTriaje(const FEMMPaciente& P)
+{
+	const TArray<FString> A = EMMEvolucion::SignosAlarma(P);
+	return A.Num() ? TEXT(" ALERTA DE TRIAJE: ") + FString::Join(A, TEXT(" · ")) + TEXT(".") : FString();
 }
 
 void AEMMConsultaModo::AvanzarTiempo()
@@ -725,9 +740,10 @@ void AEMMConsultaModo::AvanzarTiempo()
 		MemoriaPaciente = TEXT("Has pedido cita ANTES de la fecha de revisión porque te encuentras peor; empieza contándolo.\n") + MemoriaPaciente;
 	}
 	if (UIAgenda) UIAgenda->Cerrar();
-	Avisar(bAnticipada
+	const FString Triaje = AvisoTriaje(Paciente);
+	Avisar((bAnticipada
 		? FString::Printf(TEXT("Han pasado %d días. %s ha pedido cita antes de tiempo: se encuentra peor (%s)."), Pasan, *Paciente.Nombre, *FEMMHistorial::Fecha(H.Dia))
-		: FString::Printf(TEXT("Han pasado %d días. Hoy es %s y vuelve %s a revisión."), Pasan, *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre), !bAnticipada);
+		: FString::Printf(TEXT("Han pasado %d días. Hoy es %s y vuelve %s a revisión."), Pasan, *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre)) + Triaje, !bAnticipada && Triaje.IsEmpty());
 }
 
 void AEMMConsultaModo::PacienteNuevo()
@@ -739,7 +755,8 @@ void AEMMConsultaModo::PacienteNuevo()
 	const FEMMFicha* Cita = H.RevisionPendiente();
 	if (!(Cita && PacienteDeFicha(*Cita, Siguiente)) && !ElegirPacienteNuevo(Siguiente)) { H.Dia -= 1; Avisar(TEXT("No hay más pacientes disponibles hoy."), false); return; }
 	IniciarVisita(Siguiente);
-	Avisar(FString::Printf(TEXT("%s. Entra %s %s."), *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre, *Paciente.Apellidos), true);
+	const FString Triaje = AvisoTriaje(Paciente);
+	Avisar(FString::Printf(TEXT("%s. Entra %s %s."), *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre, *Paciente.Apellidos) + Triaje, Triaje.IsEmpty());
 }
 
 void AEMMConsultaModo::Foto(const FString& Nombre)
@@ -783,7 +800,9 @@ void AEMMConsultaModo::PasoDePrueba()
 				if (!bOcupado && !bTurnoPaciente)
 				{
 					RegistroPrueba.Add(FString::Printf(TEXT("PACIENTE [%s]: %s"), *Charla.Last().Origen, *Charla.Last().Texto));
-					TerminarConsulta(Paciente.Enfermedad, FString(), 7 + I);   // revisiones escalonadas
+					TerminarConsulta(Paciente.Enfermedad, FString(), 7 + I, Paciente.Destino == TEXT("casa") ? TEXT("casa") : TEXT("urgencias"));   // revisiones escalonadas
+					if (const FEMMFicha* Fi = Ficha(); Fi && Fi->UltimaVisita())
+						RegistroPrueba.Add(FString::Printf(TEXT("DESTINO: %s · %s%s"), *EMMEvolucion::NombreDestino(Fi->UltimaVisita()->Destino), *Fi->UltimaVisita()->Seguridad, *AvisoTriaje(Paciente)));
 					Siguiente();
 				}
 				if (T > 120) { RegistroPrueba.Add(TEXT("ERROR: tiempo agotado")); Siguiente(); }
@@ -797,6 +816,34 @@ void AEMMConsultaModo::PasoDePrueba()
 			int32 ConFicha = 0; for (const FEMMPersona& P : H.Plantilla) if (H.Buscar(P.Id)) ++ConFicha;
 			TSet<FString> Caras; for (const FEMMPersona& P : H.Plantilla) Caras.Add(P.Personaje);
 			RegistroPrueba.Add(FString::Printf(TEXT("RESUMEN: %d personas en la plantilla, %d caras distintas, %d con ficha guardada"), H.Plantilla.Num(), Caras.Num(), ConFicha));
+			// seguridad de urgencias en todos los casos: quien necesita hospital y se va a casa debe dar aviso y
+			// empeorar; derivado, debe volver de alta; y quien no lo necesita no debe dar aviso por ir a casa
+			{
+				int32 Hosp = 0, Fallos = 0, ConAlarma = 0;
+				for (const FEMMPaciente& C : Casos)
+				{
+					if (EMMEvolucion::SignosAlarma(C).Num()) ++ConAlarma;
+					int32 NCasa = 0, NDerivar = 0;
+					EMMEvolucion::ValorarDestino(C, TEXT("casa"), NCasa);
+					EMMEvolucion::ValorarDestino(C, TEXT("urgencias"), NDerivar);
+					const bool bNecesita = C.Destino != TEXT("casa");
+					FEMMFicha Fx; FEMMVisita Vx; Vx.Dia = 1;
+					Vx.Destino = TEXT("casa"); Fx.Visitas = { Vx };
+					const FEMMEvolucion EnCasa = EMMEvolucion::Calcular(C, Fx, 4);
+					Fx.Visitas[0].Destino = TEXT("urgencias");
+					const FEMMEvolucion Derivado = EMMEvolucion::Calcular(C, Fx, 15);
+					bool bMal = false;
+					if (bNecesita)
+					{
+						++Hosp;
+						bMal = NCasa != 2 || NDerivar != 0 || !(EnCasa.Estado == TEXT("peor") || EnCasa.Estado == TEXT("complicacion")) || Derivado.Estado == TEXT("complicacion") || Derivado.Estado == TEXT("peor");
+					}
+					else bMal = NCasa != 0 || NDerivar != 1;
+					if (bMal && ++Fallos <= 5)
+						RegistroPrueba.Add(FString::Printf(TEXT("ERROR SEGURIDAD: %s (%s, %s) casa=%d derivar=%d · en casa: %s · derivado: %s"), *C.Id, *C.Destino, *C.Prioridad, NCasa, NDerivar, *EnCasa.Estado, *Derivado.Estado));
+				}
+				RegistroPrueba.Add(FString::Printf(TEXT("SEGURIDAD: %d casos, %d necesitan hospital o cirugía, %d con alerta de triaje, %d fallos"), Casos.Num(), Hosp, ConAlarma, Fallos));
+			}
 			AvanzarTiempo();
 			RegistroPrueba.Add(FString::Printf(TEXT("VUELVE %s %s (%s) el %s; revisión=%s"), *Paciente.Nombre, *Paciente.Apellidos, *Paciente.Id, *FEMMHistorial::Fecha(H.Dia), Visita.bRevision ? TEXT("sí") : TEXT("no")));
 			Siguiente();
@@ -823,6 +870,7 @@ void AEMMConsultaModo::PasoDePrueba()
 			{
 				const FString Frase = TEXT("Buenos días, doctor. Me duele mucho la garganta desde hace tres días y tengo 38,5 de fiebre.");
 				RegistroPrueba.Add(TEXT("Fonemas: ") + EMMFonetica::Fonemas(Frase));
+				RegistroPrueba.Add(TEXT("Fonemas (abreviaturas y enlaces): ") + EMMFonetica::Fonemas(TEXT("El Dr. García le da ibuprofeno 600 mg/8 h y/o paracetamol; 38,5 °C, ECG normal. Vuelva el 2.º día a las 8:30, con dolor o sin él; un beso, con gripe.")));
 				for (const EMMPiper::FVozPiper& V : EMMPiper::Voces())
 				{
 					FEMMPerfilVoz Pf; Pf.Piper = V.Id;
@@ -1086,7 +1134,7 @@ void AEMMConsultaModo::PasoDePrueba()
 			Fotogramas.Sort();
 			float Suma = 0; for (float D : Fotogramas) Suma += D;
 			const float Media = Suma / Fotogramas.Num(), Peor = Fotogramas[FMath::Min(Fotogramas.Num() - 1, int32(Fotogramas.Num() * 0.95f))];
-			RegistroPrueba.Add(FString::Printf(TEXT("Rendimiento: %.0f fps de media, %.0f fps en el 5 %% peor (%d muestras; %s)"), 1.f / Media, 1.f / Peor, Fotogramas.Num(), *FPlatformMisc::GetPrimaryGPUBrand()));
+			RegistroPrueba.Add(FString::Printf(TEXT("Rendimiento: %.0f fps de media, %.0f fps en el 5 %% peor (%d muestras; %s; calidad %s)"), 1.f / Media, 1.f / Peor, Fotogramas.Num(), *FPlatformMisc::GetPrimaryGPUBrand(), *UEMMConsultaUI::NombreCalidad(UEMMConsultaUI::CalidadGrafica())));
 		}
 		RegistroPrueba.Add(FString::Printf(TEXT("Voces: %s"), *FString::Join(EMMVoz::VocesDisponibles(), TEXT(" | "))));
 		FFileHelper::SaveStringArrayToFile(RegistroPrueba, *(FPaths::ProjectSavedDir() / TEXT("Prueba.txt")), FFileHelper::EEncodingOptions::ForceUTF8);

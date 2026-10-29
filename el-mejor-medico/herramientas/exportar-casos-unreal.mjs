@@ -4,6 +4,9 @@
 // acompañante si viene con alguien), las respuestas predefinidas por intención, sus constantes, analítica y resultados
 // de pruebas, y lo que su enfermedad necesita y debe evitar (para la evolución tras el tratamiento).
 // Se exportan todas las enfermedades y edades: el juego en Unreal sólo elige los casos para los que tiene personaje.
+// azar con semilla fija: exportar otra vez da los mismos pacientes (mismos nombres y edades para las partidas guardadas)
+let semilla = 20261029;
+Math.random = () => { semilla = (semilla + 0x6D2B79F5) | 0; let t = Math.imul(semilla ^ (semilla >>> 15), 1 | semilla); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { ENFERMEDADES, ENF, SANGRE, ORINA, generarPaciente, dialogo, fraseHabitos, fraseAntecedentes, fraseAlergia, fmt, textoEdad, RECETARIO, PISTAS } from '../js/datos.js';
@@ -41,6 +44,8 @@ for (const e of ENFERMEDADES) {
         acompanante: p.acompanante || '', hablaAcomp: !!(ENF[p.enfId].respondeAcomp || p.edad < 7), bebe: p.edad < 2,
         grav: ENF[p.enfId].grav, cronica: CRONICAS.includes(p.enfId),
         trat: { med: ENF[p.enfId].trat.med, buena: ENF[p.enfId].trat.buena, evitar: ENF[p.enfId].trat.evitar },
+        // qué necesita: casa, hospitalizar o cirugia (y cuál), con su prioridad (baja, media, alta)
+        destino: ENF[p.enfId].trat.accion, prioridad: ENF[p.enfId].trat.prio, cirugia: ENF[p.enfId].trat.cir || '',
         alergia: p.alergia || '', antecedentes: p.antecedentes || [], fumador: !!p.fumador, bebedor: !!p.bebedor,
         // constantes, analítica y resultados de pruebas (los mismos que verá el juego web)
         constantes: p.vit, sangre: p.sangre, orina: p.orina,

@@ -160,6 +160,9 @@ TArray<UEMMPantallaUI::FTarjeta> UEMMPantallaUI::Contenido() const
 	{
 	case EEMMPestana::Paciente:
 	{
+		// lo primero que se ve: los signos de alarma del triaje (un paciente grave no puede esperar)
+		const TArray<FString> Alarma = EMMEvolucion::SignosAlarma(P);
+		if (Alarma.Num()) T.Add({ TEXT("ALERTA DE TRIAJE · VALORAR URGENCIAS"), FString::Join(Alarma, TEXT("\n")), Rojo, true });
 		T.Add({ TEXT("DATOS DEL PACIENTE"), FString::Printf(TEXT("%s %s\n%s · %s\nNº historia: %s%s"), *P.Nombre, *P.Apellidos, *P.TextoEdad, P.EsMujer() ? TEXT("mujer") : TEXT("hombre"),
 			F ? *F->NumeroHistoria : TEXT("—"), P.Acompanante.IsEmpty() ? TEXT("") : *(TEXT("\nViene con ") + P.Acompanante.Replace(TEXT("su "), TEXT("su ")))), Tinta });
 		T.Add({ TEXT("ALERGIAS"), P.Alergia.IsEmpty() ? FString(TEXT("No conocidas")) : P.Alergia == TEXT("aine") ? FString(TEXT("ANTIINFLAMATORIOS (AINE)")) : P.Alergia.ToUpper(), P.Alergia.IsEmpty() ? Verde : Rojo });
@@ -198,6 +201,8 @@ TArray<UEMMPantallaUI::FTarjeta> UEMMPantallaUI::Contenido() const
 				FString S = FString::Printf(TEXT("Diagnóstico: %s"), X.Diagnostico.IsEmpty() ? TEXT("(sin anotar)") : *X.Diagnostico);
 				if (!X.Evolucion.IsEmpty()) S += TEXT("\nEvolución: ") + X.Evolucion;
 				if (!X.Pruebas.IsEmpty()) S += TEXT("\nPruebas: ") + X.Pruebas;
+				S += TEXT("\nDestino: ") + EMMEvolucion::NombreDestino(X.Destino);
+				if (X.Seguridad.StartsWith(TEXT("AVISO"))) S += TEXT("\n(!) ") + X.Seguridad;
 				for (const FString& Id : X.Recetas) if (const FEMMReceta* R = F->Recetas.FindByPredicate([&](const FEMMReceta& Y) { return Y.Id == Id; })) S += TEXT("\n• ") + R->Medicamento + TEXT(" (") + FEMMReceta::TextoEstado(R->Estado).ToLower() + TEXT(")");
 				T.Add({ FString::Printf(TEXT("%s · %s"), *FEMMHistorial::Fecha(X.Dia).ToUpper(), X.bAnticipada ? TEXT("REVISIÓN ANTICIPADA (empeoraba)") : X.bRevision ? TEXT("REVISIÓN") : TEXT("PRIMERA CONSULTA")), S, X.bAnticipada ? Ambar : Tinta, true });
 			}

@@ -6,14 +6,25 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 29 de octubre de 2026)
 
 ---
 
-## ▶ ÚLTIMO PUNTO (29/10/2026, noche) — LEER PRIMERO
+## ▶ ÚLTIMO PUNTO (29/10/2026, noche, 2.ª parte) — LEER PRIMERO
+
+- **Seguridad de urgencias (hecho y probado en el editor, `-Probar -Todos`)**:
+  - `casos.json` lleva lo que necesita cada caso (`destino`: casa / hospitalizar / cirugia, `prioridad`, `cirugia`), sacado de `trat.accion` del juego web. El exportador usa azar con semilla fija (20261029): exportar otra vez da los mismos pacientes. Copia del anterior: `ElMejorMedicoUE\Copias\casos_v3_2026-10-29.json`.
+  - AGENDA · FICHA: botones «Alta a domicilio / Derivar a URGENCIAS / Ingreso hospitalario / Derivar a CIRUGÍA». Al guardar, la ficha anota el destino y su valoración (`EMMEvolucion::ValorarDestino`: correcta, innecesaria o **AVISO DE SEGURIDAD** si se manda a casa a quien necesitaba hospital, que además vuelve en 3 días y empeora).
+  - **Alerta de triaje** (`EMMEvolucion::SignosAlarma`: saturación < 92, sistólica < 90 o ≥ 180, pulso ≥ 120 o < 45, fiebre ≥ 39,5 (≥ 38,5 si 75+), respiración ≥ 26): tarjeta roja en el portátil, línea roja en la agenda y aviso al entrar el paciente.
+  - Prueba: 120 casos con personaje, 37 necesitan hospital o cirugía, 12 con alerta de triaje, **0 fallos** (mandados a casa empeoran y dan aviso; derivados vuelven de alta; los leves no dan aviso por ir a casa).
+- **Voces**: el fonetizador lee abreviaturas («Dr.», «Sra.», «Ud.»), unidades tras un número (mg, ml, h, mmHg, lpm, °C), siglas deletreadas (ECG, PCR…), horas («8:30»), ordinales («2.º»), fracciones («1/2» = medio), «cada 8 h», «y/o», y enlaces entre palabras («un beso» [m], «con gripe» [ŋ], «con dolor» [d]). Las 6 voces sintetizan en 0,17–0,30 s.
+- **Calidad gráfica** en CONFIGURACIÓN (RÁPIDA / EQUILIBRADA por defecto / ALTA), guardada en GameUserSettings; `ciclo.ps1 -Calidad N` la fuerza en las pruebas. Equilibrada: resolución interna 77 % con TSR y Lumen, sombras, reflejos y posproceso en nivel 2. Medido en el editor con los 17 pacientes: ALTA 24 fps de media (y el motor avisa de **memoria de vídeo agotada**, 66 MB por encima de los 4 GB de la RTX 3050), EQUILIBRADA 26 fps sin ese aviso y con imagen prácticamente igual; el 5 % peor sigue en 22 fps (cambios de personaje). Para llegar a 30 fps: reducir la memoria de vídeo de los MetaHumans (LOD y texturas de 8K a 2K, pelo en tarjetas a distancia) y precargar el siguiente personaje.
+- **Ejecutable nuevo BLOQUEADO por Smart App Control** (3 intentos con cambios de código el 29/10; no se desactiva). `Empaquetado\Windows` contiene ese paquete nuevo sin verificar; **la última versión funcional verificada está en `C:\Users\arric\ElMejorMedicoUE\Copias\Windows_17pacientes_2026-10-29`** (no borrar). Volver a intentar `-Empaquetar` y `-ProbarPaquete -Todos` otro día (la reputación de Smart App Control cambia).
+
+## ▶ ÚLTIMO PUNTO (29/10/2026, noche)
 
 - Presupuesto 0 €: nunca proponer compras.
 - **17 pacientes distintos funcionando** (prueba `ciclo.ps1 -Probar -Todos` en el editor): cada uno con su cara MetaHuman, voz Piper, carácter, caso, ficha guardada y regreso recordando la visita. Plantilla de personas en `historial.json`; ampliable sin recompilar (MetaHuman nuevo con `crear_metahumans.py` y `EMM_SOLO`, de uno en uno por memoria, + línea en `personajes.json`).
 - **Voces Piper dentro del juego** (NNE, sin programas externos): `EMMPiper`, `EMMFonetica`, `Content/Datos/voces.json`, modelos en `/Game/Voces` (`importar_voces.py`). 3 voces de hombre y 3 de mujer (las MLS son de mujer, ~200 Hz). Créditos CC BY en CONFIGURACIÓN. Android: falta (NNERuntimeORT no existe para Android; usar ONNX Runtime de Microsoft en la biblioteca Kotlin).
 - **Ejecutable de Windows verificado con los 17 pacientes** (`ciclo.ps1 -Empaquetar` y `-ProbarPaquete -Todos`, 29/10/2026): empaquetado correcto, 17 caras distintas, 17 fichas guardadas y regreso de Visitación (P08) a revisión el 8/1/2027 recordando su visita. Rendimiento: 27 fps de media y 25 fps en el 5 % peor (RTX 3050 portátil); objetivo: volver a 30 fps o más. Esta es la **última versión funcional**: commit de GitHub posterior a `34ed96a`; ejecutable en `C:\Users\arric\ElMejorMedicoUE\Empaquetado\Windows\ElMejorMedicoUE.exe`.
 - **Niños (gratis)**: MPFB2 (MakeHuman para Blender, código GPL, recursos CC0) YA está instalado en Blender con pieles jóvenes, peinados y ropa. En la escena `EMM_Ninos` se estaba creando un niño de 7 y una niña de 4 años con esqueleto «game engine» (mismos nombres de huesos que nuestra animación). Faltaba: en `deserialize_from_dict`, «eyes» debe ser `high-poly/high-poly.mhclo` (malla), no el color; luego exportar a FBX, importar en Unreal, adaptar `EMMCuerpoAnim` (boca con formas, no curvas MetaHuman) y sentar al acompañante.
-- Pendientes anteriores: ropa gratuita de Epic en Fab (el usuario debe añadirla a su biblioteca), Celeste sin melena, opción «derivar a urgencias», Android.
+- Pendientes anteriores: ropa gratuita de Epic en Fab (el usuario debe añadirla a su biblioteca), Celeste sin melena, Android («derivar a urgencias» ya hecho: ver arriba).
 ## ▶ PUNTO EXACTO PARA CONTINUAR (29/10/2026)
 
 **Estado guardado**

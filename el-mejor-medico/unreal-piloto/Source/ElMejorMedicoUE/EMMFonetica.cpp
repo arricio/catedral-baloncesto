@@ -1,4 +1,4 @@
-#include "EMMFonetica.h"
+﻿#include "EMMFonetica.h"
 
 namespace
 {
@@ -159,13 +159,14 @@ namespace
 	}
 
 	// AFI de la palabra, con alófonos según lo que hay alrededor
-	FString Afi(const TArray<FSeg>& S, bool bTrasPausa)
+	// Previo: último fonema de la palabra anterior (sin pausa en medio): «con dolor» → [d], «el dedo» → [d], «la boca» → [β]
+	FString Afi(const TArray<FSeg>& S, bool bTrasPausa, const FString& Previo)
 	{
 		FString R;
 		for (int32 k = 0; k < S.Num(); ++k)
 		{
 			const FSeg& X = S[k];
-			const FString Ant = k > 0 ? S[k - 1].Fon : FString();
+			const FString Ant = k > 0 ? S[k - 1].Fon : Previo;
 			const FString Sig = k + 1 < S.Num() ? S[k + 1].Fon : FString();
 			if (X.bVocal)
 			{
@@ -183,6 +184,121 @@ namespace
 			else if (X.Fon == TEXT("n") && (Sig == TEXT("b") || Sig == TEXT("p") || Sig == TEXT("m"))) R += TEXT("m");
 			else if (X.Fon == TEXT("s") && (Sig == TEXT("b") || Sig == TEXT("d") || Sig == TEXT("g") || Sig == TEXT("m") || Sig == TEXT("n") || Sig == TEXT("l"))) R += TEXT("z");
 			else R += X.Fon;
+		}
+		return R;
+	}
+}
+
+namespace
+{
+	bool EsLetra(TCHAR C) { return FChar::IsAlpha(C) || EsVocal(FChar::ToLower(C)) || C == TEXT('ñ') || C == TEXT('Ñ'); }
+
+	FString Ordinal(int32 N, bool bFem)
+	{
+		static const TCHAR* O[] = { TEXT(""), TEXT("primer"), TEXT("segund"), TEXT("tercer"), TEXT("cuart"), TEXT("quint"), TEXT("sext"), TEXT("séptim"), TEXT("octav"), TEXT("noven"), TEXT("décim") };
+		if (N < 1 || N > 10) return Numero(N);
+		return FString(O[N]) + (bFem ? TEXT("a") : TEXT("o"));
+	}
+
+	// Lo que el modelo no sabe leer tal cual: «Dr.», «mg», «ECG», «8:30», «1.º», «1/2», «cada 8 h»…
+	FString Normalizar(const FString& Original)
+	{
+		static const TMap<FString, FString> Abrev = { { TEXT("Dr"), TEXT("doctor") }, { TEXT("Dra"), TEXT("doctora") }, { TEXT("Sr"), TEXT("señor") }, { TEXT("Sra"), TEXT("señora") },
+			{ TEXT("Ud"), TEXT("usted") }, { TEXT("Uds"), TEXT("ustedes") }, { TEXT("Vd"), TEXT("usted") }, { TEXT("etc"), TEXT("etcétera") }, { TEXT("aprox"), TEXT("aproximadamente") },
+			{ TEXT("núm"), TEXT("número") }, { TEXT("tel"), TEXT("teléfono") } };
+		// sólo detrás de un número: «500 mg», «38 °C», «cada 8 h»
+		static const TMap<FString, FString> Unidades = { { TEXT("mg"), TEXT("miligramos") }, { TEXT("g"), TEXT("gramos") }, { TEXT("mcg"), TEXT("microgramos") }, { TEXT("ml"), TEXT("mililitros") },
+			{ TEXT("kg"), TEXT("kilos") }, { TEXT("cm"), TEXT("centímetros") }, { TEXT("mm"), TEXT("milímetros") }, { TEXT("mmHg"), TEXT("milímetros de mercurio") }, { TEXT("lpm"), TEXT("latidos por minuto") },
+			{ TEXT("rpm"), TEXT("respiraciones por minuto") }, { TEXT("h"), TEXT("horas") }, { TEXT("min"), TEXT("minutos") }, { TEXT("UI"), TEXT("unidades") }, { TEXT("gotas"), TEXT("gotas") } };
+		// siglas que se deletrean (las que se leen como palabra, TAC, UCI, AINE, EPOC…, se dejan)
+		static const TSet<FString> Deletrear = { TEXT("ECG"), TEXT("PCR"), TEXT("IMC"), TEXT("SNS"), TEXT("DNI"), TEXT("ORL"), TEXT("VIH"), TEXT("ITU"), TEXT("HTA"), TEXT("IAM"), TEXT("TEP"),
+			TEXT("RX"), TEXT("RM"), TEXT("EEG"), TEXT("ACV"), TEXT("PSA"), TEXT("TSH"), TEXT("INR"), TEXT("ADN"), TEXT("ARN") };
+		static const TMap<TCHAR, FString> Letras = { { TEXT('A'), TEXT("a") }, { TEXT('B'), TEXT("be") }, { TEXT('C'), TEXT("ce") }, { TEXT('D'), TEXT("de") }, { TEXT('E'), TEXT("e") },
+			{ TEXT('F'), TEXT("efe") }, { TEXT('G'), TEXT("ge") }, { TEXT('H'), TEXT("hache") }, { TEXT('I'), TEXT("i") }, { TEXT('J'), TEXT("jota") }, { TEXT('K'), TEXT("ka") },
+			{ TEXT('L'), TEXT("ele") }, { TEXT('M'), TEXT("eme") }, { TEXT('N'), TEXT("ene") }, { TEXT('Ñ'), TEXT("eñe") }, { TEXT('O'), TEXT("o") }, { TEXT('P'), TEXT("pe") },
+			{ TEXT('Q'), TEXT("cu") }, { TEXT('R'), TEXT("erre") }, { TEXT('S'), TEXT("ese") }, { TEXT('T'), TEXT("te") }, { TEXT('U'), TEXT("u") }, { TEXT('V'), TEXT("uve") },
+			{ TEXT('W'), TEXT("uve doble") }, { TEXT('X'), TEXT("equis") }, { TEXT('Y'), TEXT("i griega") }, { TEXT('Z'), TEXT("zeta") } };
+		const FString Texto = Original.Replace(TEXT("y/o"), TEXT("o"));
+		const int32 N = Texto.Len();
+		FString R;
+		bool bTrasNumero = false;   // hay un número justo antes (sólo espacios en medio)
+		for (int32 i = 0; i < N;)
+		{
+			const TCHAR C = Texto[i];
+			if (EsLetra(C))
+			{
+				int32 j = i;
+				while (j < N && EsLetra(Texto[j])) ++j;
+				const FString W = Texto.Mid(i, j - i);
+				FString Sale = W;
+				if (j < N && Texto[j] == TEXT('.') && Abrev.Contains(W)) { Sale = Abrev[W]; ++j; }
+				else if (bTrasNumero && Unidades.Contains(W)) Sale = Unidades[W];
+				else if (Deletrear.Contains(W))
+				{
+					TArray<FString> L;
+					for (TCHAR X : W) if (const FString* Y = Letras.Find(X)) L.Add(*Y);
+					Sale = FString::Join(L, TEXT(" "));
+				}
+				R += Sale; bTrasNumero = false; i = j;
+				continue;
+			}
+			if (FChar::IsDigit(C))
+			{
+				int32 j = i;
+				while (j < N && FChar::IsDigit(Texto[j])) ++j;
+				const int32 V = FCString::Atoi(*Texto.Mid(i, j - i));
+				// 8:30 → «ocho y treinta»; 8:00 → «ocho en punto»
+				if (j + 2 < N && Texto[j] == TEXT(':') && FChar::IsDigit(Texto[j + 1]) && FChar::IsDigit(Texto[j + 2]) && V < 24)
+				{
+					const int32 M = FCString::Atoi(*Texto.Mid(j + 1, 2));
+					R += Numero(V) + (M ? TEXT(" y ") + Numero(M) : FString(TEXT(" en punto")));
+					i = j + 3; bTrasNumero = false;
+					continue;
+				}
+				// 1/2 → «medio»; 8/12 → «ocho o doce»
+				if (j + 1 < N && Texto[j] == TEXT('/') && FChar::IsDigit(Texto[j + 1]))
+				{
+					int32 k = j + 1;
+					while (k < N && FChar::IsDigit(Texto[k])) ++k;
+					const int32 D = FCString::Atoi(*Texto.Mid(j + 1, k - j - 1));
+					R += V == 1 && D == 2 ? FString(TEXT("medio")) : V == 1 && D == 4 ? FString(TEXT("un cuarto")) : Numero(V) + TEXT(" o ") + Numero(D);
+					i = k; bTrasNumero = true;
+					continue;
+				}
+				// 1.º, 1º, 2.ª → ordinales
+				int32 k = j;
+				if (k < N && Texto[k] == TEXT('.') && k + 1 < N && (Texto[k + 1] == TEXT('º') || Texto[k + 1] == TEXT('ª'))) ++k;
+				if (k < N && (Texto[k] == TEXT('º') || Texto[k] == TEXT('ª')) && !(k + 1 < N && Texto[k + 1] == TEXT('C')))
+				{
+					R += Ordinal(V, Texto[k] == TEXT('ª'));
+					i = k + 1; bTrasNumero = false;
+					continue;
+				}
+				// el número (con decimales) lo pasa a letra NumerosEnLetra
+				R += Texto.Mid(i, j - i);
+				i = j; bTrasNumero = true;
+				continue;
+			}
+			if (C == TEXT('°') || C == TEXT('º'))
+			{
+				R += TEXT(" grados");
+				i += (i + 1 < N && Texto[i + 1] == TEXT('C')) ? 2 : 1;
+				bTrasNumero = false;
+				continue;
+			}
+			if (C == TEXT('/'))   // «1 comprimido/8 h» → cada; «y/o» → o
+			{
+				int32 k = i + 1;
+				while (k < N && FChar::IsWhitespace(Texto[k])) ++k;
+				R += k < N && FChar::IsDigit(Texto[k]) ? TEXT(" cada ") : TEXT(" o ");
+				++i;
+				continue;
+			}
+			if (C == TEXT('+')) { R += TEXT(" más "); ++i; bTrasNumero = false; continue; }
+			// los decimales siguen siendo número: «38,5 °C»
+			if (!(FChar::IsWhitespace(C) || ((C == TEXT(',') || C == TEXT('.')) && bTrasNumero && i + 1 < N && FChar::IsDigit(Texto[i + 1])))) bTrasNumero = false;
+			R.AppendChar(C);
+			++i;
 		}
 		return R;
 	}
@@ -213,17 +329,32 @@ FString EMMFonetica::NumerosEnLetra(const FString& Texto)
 
 FString EMMFonetica::Fonemas(const FString& Texto)
 {
-	FString T = NumerosEnLetra(Texto).ToLower();
+	FString T = NumerosEnLetra(Normalizar(Texto)).ToLower();
 	T.ReplaceInline(TEXT("%"), TEXT(" por ciento"));
 	FString R;
 	bool bTrasPausa = true;
-	FString Palabra;
+	FString Palabra, Previo;
 	auto Cerrar = [&]() {
 		if (Palabra.IsEmpty()) return;
 		TArray<FSeg> S = Segmentos(Palabra);
 		Silabas(S, Palabra);
-		const FString A = Afi(S, bTrasPausa);
-		if (!A.IsEmpty()) { if (!R.IsEmpty() && !R.EndsWith(TEXT(" "))) R += TEXT(" "); R += A; }
+		const FString A = Afi(S, bTrasPausa, bTrasPausa ? FString() : Previo);
+		if (!A.IsEmpty())
+		{
+			// entre palabras seguidas: «un beso» → [m], «con gripe» → [ŋ], «los dedos» → [z]
+			if (!bTrasPausa && S.Num() && !S[0].bVocal && R.EndsWith(TEXT(" ")))
+			{
+				const FString& P = S[0].Fon;
+				const int32 U = R.Len() - 2;
+				if (U >= 0 && R[U] == TEXT('n') && (P == TEXT("b") || P == TEXT("p") || P == TEXT("m"))) R[U] = TEXT('m');
+				else if (U >= 0 && R[U] == TEXT('n') && (P == TEXT("k") || P == TEXT("g") || P == TEXT("x"))) R[U] = TEXT('ŋ');
+				else if (U >= 0 && R[U] == TEXT('s') && (P == TEXT("b") || P == TEXT("d") || P == TEXT("g") || P == TEXT("m") || P == TEXT("n") || P == TEXT("l"))) R[U] = TEXT('z');
+			}
+			if (!R.IsEmpty() && !R.EndsWith(TEXT(" "))) R += TEXT(" ");
+			R += A;
+			R += TEXT(" ");
+		}
+		Previo = S.Num() ? S.Last().Fon : FString();
 		bTrasPausa = false;
 		Palabra.Reset();
 	};
@@ -235,10 +366,11 @@ FString EMMFonetica::Fonemas(const FString& Texto)
 		// signos: pausa (y entonación) que entiende el modelo; ¿ ¡ « » se quitan
 		if (C == TEXT(',') || C == TEXT('.') || C == TEXT(';') || C == TEXT(':') || C == TEXT('?') || C == TEXT('!'))
 		{
+			R.TrimEndInline();
 			R += FString(1, &C);
 			bTrasPausa = true;
 		}
-		else if (C == TEXT('-') || C == TEXT('…')) { R += TEXT(","); bTrasPausa = true; }
+		else if (C == TEXT('-') || C == TEXT('…')) { R.TrimEndInline(); R += TEXT(","); bTrasPausa = true; }
 		else if (!R.IsEmpty() && !R.EndsWith(TEXT(" "))) R += TEXT(" ");
 	}
 	Cerrar();

@@ -27,6 +27,8 @@ struct FEMMVisita
 	int32 Dia = 1;
 	bool bRevision = false;
 	bool bAnticipada = false;   // el paciente pidió cita antes de tiempo porque empeoraba
+	FString Destino = TEXT("casa");   // casa, urgencias, ingreso o cirugia (decisión del médico)
+	FString Seguridad;          // valoración de la decisión (correcta, innecesaria o peligrosa)
 	FString Diagnostico, Pruebas;
 	FString Evolucion;          // en las revisiones: cómo llegó (resumen médico)
 	TArray<FEMMLinea> Charla;
@@ -98,6 +100,12 @@ namespace EMMEvolucion
 	TArray<FString> Riesgos(const FEMMPaciente& P, const FEMMReceta& R);
 	// Cómo está el paciente cuando vuelve, según su enfermedad, edad, antecedentes, lo recetado y el cumplimiento
 	FEMMEvolucion Calcular(const FEMMPaciente& P, const FEMMFicha& F, int32 Hoy);
+	// Signos de alarma en las constantes de hoy (triaje de enfermería): vacío si no hay ninguno
+	TArray<FString> SignosAlarma(const FEMMPaciente& P);
+	// Valoración de seguridad de la decisión del médico (casa, urgencias, ingreso, cirugia).
+	// Nivel: 0 correcta, 1 innecesaria (sin daño), 2 peligrosa (necesitaba hospital y se fue a casa)
+	FString ValorarDestino(const FEMMPaciente& P, const FString& Destino, int32& Nivel);
+	FString NombreDestino(const FString& Destino);
 	// Lo que el paciente recuerda de las consultas anteriores (para las instrucciones de la IA)
 	FString Memoria(const FEMMFicha& F, const FEMMEvolucion* E, int32 Hoy);
 }

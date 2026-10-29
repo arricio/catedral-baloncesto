@@ -1,4 +1,4 @@
-#include "EMMConsultaUI.h"
+﻿#include "EMMConsultaUI.h"
 #include "EMMConsultaModo.h"
 #include "EMMHabla.h"
 #include "Blueprint/WidgetTree.h"
@@ -13,6 +13,8 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "HAL/IConsoleManager.h"
+#include "Misc/CommandLine.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Styling/CoreStyle.h"
 #include "TimerManager.h"
@@ -56,6 +58,37 @@ void UEMMConsultaUI::GuardarSubtitulos(bool bActivos)
 {
 	GConfig->SetBool(Seccion, TEXT("Subtitulos"), bActivos, GGameUserSettingsIni);
 	GConfig->Flush(false, GGameUserSettingsIni);
+}
+
+int32 UEMMConsultaUI::CalidadGrafica()
+{
+	int32 N = 1;
+	if (!FParse::Value(FCommandLine::Get(), TEXT("EMMCalidad="), N)) GConfig->GetInt(Seccion, TEXT("Calidad"), N, GGameUserSettingsIni);
+	return FMath::Clamp(N, 0, 2);
+}
+void UEMMConsultaUI::GuardarCalidad(int32 Nivel)
+{
+	GConfig->SetInt(Seccion, TEXT("Calidad"), FMath::Clamp(Nivel, 0, 2), GGameUserSettingsIni);
+	GConfig->Flush(false, GGameUserSettingsIni);
+}
+FString UEMMConsultaUI::NombreCalidad(int32 Nivel) { return Nivel == 0 ? TEXT("RÁPIDA") : Nivel == 2 ? TEXT("ALTA") : TEXT("EQUILIBRADA"); }
+void UEMMConsultaUI::AplicarCalidad(int32 Nivel)
+{
+	// la cámara está quieta y la escena es pequeña: lo que más cuesta es la resolución interna, Lumen y las sombras.
+	// TSR reconstruye la imagen a resolución completa, así que bajar la interna apenas se nota en las caras.
+	struct FValor { const TCHAR* Nombre; int32 Rapida, Equilibrada, Alta; };
+	static const FValor Valores[] = {
+		{ TEXT("r.ScreenPercentage"), 60, 77, 100 },
+		{ TEXT("sg.GlobalIlluminationQuality"), 1, 2, 3 },
+		{ TEXT("sg.ReflectionQuality"), 1, 2, 3 },
+		{ TEXT("sg.ShadowQuality"), 1, 2, 3 },
+		{ TEXT("sg.PostProcessQuality"), 1, 2, 3 },
+		{ TEXT("sg.EffectsQuality"), 1, 2, 3 },
+	};
+	for (const FValor& V : Valores)
+		if (IConsoleVariable* C = IConsoleManager::Get().FindConsoleVariable(V.Nombre))
+			C->Set(Nivel == 0 ? V.Rapida : Nivel == 2 ? V.Alta : V.Equilibrada, ECVF_SetByGameSetting);
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Calidad gráfica: %s (nivel %d)"), *NombreCalidad(Nivel), Nivel);
 }
 
 TSharedRef<SWidget> UEMMConsultaUI::RebuildWidget()
@@ -167,6 +200,11 @@ void UEMMConsultaUI::Construir()
 	EtiquetaSubtitulos = ESub;
 	BotonSub->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarSubtitulos);
 	if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(BotonSub)) S->SetPadding(FMargin(0, 14, 0, 0));
+	UTextBlock* ECal = nullptr;
+	UButton* BotonCal = CrearBoton(TEXT(""), Gris, ECal, 18.f);
+	EtiquetaCalidad = ECal;
+	BotonCal->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarCalidad);
+	if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(BotonCal)) S->SetPadding(FMargin(0, 8, 0, 0));
 	// créditos obligatorios de las voces (licencias CC BY) y aviso de simulación
 	UTextBlock* Creditos = Texto(WidgetTree, TEXT("Créditos de voces: corpus Sharvard (Aubanel, García Lecumberri y Cooke), CC BY 3.0; Multilingual LibriSpeech (OpenSLR 94), CC BY 4.0; davefx (CC0); carlfm (dominio público). Modelos Piper (MIT).\nSimulación: pacientes, médicos, centro y recetas ficticios, sin validez médica."), 11.f, FLinearColor(0.7f, 0.75f, 0.85f));
 	Creditos->SetWrapTextAt(430.f);
@@ -198,6 +236,7 @@ void UEMMConsultaUI::Construir()
 void UEMMConsultaUI::RefrescarAjustes()
 {
 	EtiquetaSubtitulos->SetText(FText::FromString(SubtitulosActivados() ? TEXT("SUBTÍTULOS: ON") : TEXT("SUBTÍTULOS: OFF")));
+	EtiquetaCalidad->SetText(FText::FromString(TEXT("CALIDAD GRÁFICA: ") + NombreCalidad(CalidadGrafica())));
 }
 
 void UEMMConsultaUI::NativeTick(const FGeometry& Geometria, float Dt)
@@ -286,6 +325,14 @@ void UEMMConsultaUI::AlPulsarMedico() { if (Modo.IsValid()) Modo->HablarMedico(T
 void UEMMConsultaUI::AlPulsarPaciente() { if (Modo.IsValid()) Modo->ResponderPaciente(); }
 void UEMMConsultaUI::AlPulsarMicrofono() { if (Modo.IsValid()) Modo->Dictar(); }
 void UEMMConsultaUI::AlPulsarDescargar() { if (Modo.IsValid()) Modo->DescargarModelo(); }
+void UEMMConsultaUI::AlPulsarCalidad()
+{
+	const int32 N = (CalidadGrafica() + 1) % 3;   // equilibrada → alta → rápida → equilibrada
+	GuardarCalidad(N);
+	AplicarCalidad(N);
+	RefrescarAjustes();
+}
+
 void UEMMConsultaUI::AlPulsarAjustes()
 {
 	RefrescarAjustes();

@@ -88,6 +88,9 @@ void UEMMAgendaUI::Construir()
 	UVerticalBox* Der = WidgetTree->ConstructWidget<UVerticalBox>();
 	if (UHorizontalBoxSlot* R = Columnas->AddChildToHorizontalBox(Der)) { FSlateChildSize T(ESlateSizeRule::Fill); T.Value = 0.55f; R->SetSize(T); }
 	Der->AddChildToVerticalBox(Texto(WidgetTree, TEXT("ESTA CONSULTA"), 17.f, FLinearColor::White, true));
+	// triaje de enfermería: signos de alarma en las constantes de hoy (en rojo; vacío si no hay)
+	TextoTriaje = Texto(WidgetTree, TEXT(""), 14.f, FLinearColor(1.f, 0.35f, 0.3f), true);
+	if (UVerticalBoxSlot* R = Der->AddChildToVerticalBox(TextoTriaje)) R->SetPadding(FMargin(0, 4, 0, 0));
 	Diagnostico = WidgetTree->ConstructWidget<UEditableTextBox>();
 	Diagnostico->SetHintText(FText::FromString(TEXT("Diagnóstico (lo escribes tú)")));
 	Pruebas = WidgetTree->ConstructWidget<UEditableTextBox>();
@@ -109,6 +112,20 @@ void UEMMAgendaUI::Construir()
 		Envoltura->AddChildToWrapBox(B);
 	}
 	if (UVerticalBoxSlot* R = Der->AddChildToVerticalBox(Envoltura)) R->SetPadding(FMargin(0, 4, 0, 0));
+	// a dónde va el paciente: decisión de seguridad (el juego avisa si se manda a casa a quien necesitaba hospital)
+	Der->AddChildToVerticalBox(Texto(WidgetTree, TEXT("Destino del paciente:"), 14.f, Claro, true));
+	UWrapBox* Destinos = WidgetTree->ConstructWidget<UWrapBox>();
+	Destinos->SetInnerSlotPadding(FVector2D(6, 6));
+	for (const TPair<FString, FString>& P : TArray<TPair<FString, FString>>{ { TEXT("Alta a domicilio"), TEXT("casa") }, { TEXT("Derivar a URGENCIAS"), TEXT("urgencias") }, { TEXT("Ingreso hospitalario"), TEXT("ingreso") }, { TEXT("Derivar a CIRUGÍA"), TEXT("cirugia") } })
+	{
+		UButton* B = Boton(P.Key, P.Value == TEXT("casa") ? FLinearColor(0.10f, 0.14f, 0.2f) : FLinearColor(0.42f, 0.08f, 0.08f), 13.f);
+		B->SetToolTipText(FText::FromString(TEXT("destino:") + P.Value));
+		B->OnClicked.AddDynamic(this, &UEMMAgendaUI::AlDestino);
+		Destinos->AddChildToWrapBox(B);
+	}
+	if (UVerticalBoxSlot* R = Der->AddChildToVerticalBox(Destinos)) R->SetPadding(FMargin(0, 4, 0, 0));
+	TextoDestino = Texto(WidgetTree, TEXT(""), 14.f, FLinearColor(0.6f, 1.f, 0.6f), true);
+	if (UVerticalBoxSlot* R = Der->AddChildToVerticalBox(TextoDestino)) R->SetPadding(FMargin(0, 4, 0, 0));
 	TextoRevision = Texto(WidgetTree, TEXT(""), 14.f, FLinearColor(0.6f, 1.f, 0.6f), true);
 	if (UVerticalBoxSlot* R = Der->AddChildToVerticalBox(TextoRevision)) R->SetPadding(FMargin(0, 6, 0, 0));
 	BotonTerminar = Boton(TEXT("TERMINAR CONSULTA Y GUARDAR EN LA FICHA"), FLinearColor(0.12f, 0.33f, 0.62f), 16.f);
@@ -197,6 +214,14 @@ void UEMMAgendaUI::Refrescar()
 	else if (DiasRevision > 0) Rev = FString::Printf(TEXT("Revisión el %s."), *FEMMHistorial::Fecha(H.Dia + DiasRevision));
 	else Rev = TEXT("Elige cuándo vuelve el paciente.");
 	TextoRevision->SetText(FText::FromString(Rev));
+	const TArray<FString> Alarma = EMMEvolucion::SignosAlarma(P);
+	TextoTriaje->SetText(FText::FromString(Alarma.Num() ? TEXT("ALERTA DE TRIAJE: ") + FString::Join(Alarma, TEXT(" · ")) : FString()));
+	TextoTriaje->SetVisibility(Alarma.Num() ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	const FEMMVisita* Hecha = Modo->ConsultaTerminada() && F ? F->UltimaVisita() : nullptr;
+	TextoDestino->SetText(FText::FromString(Hecha ? FString::Printf(TEXT("Destino: %s. %s"), *EMMEvolucion::NombreDestino(Hecha->Destino), *Hecha->Seguridad) : FString::Printf(TEXT("Destino: %s."), *EMMEvolucion::NombreDestino(Destino))));
+	int32 NivelHecho = 0;
+	if (Hecha) EMMEvolucion::ValorarDestino(P, Hecha->Destino, NivelHecho);
+	TextoDestino->SetColorAndOpacity(FSlateColor(NivelHecho == 2 ? FLinearColor(1.f, 0.35f, 0.3f) : NivelHecho == 1 ? FLinearColor(1.f, 0.8f, 0.3f) : FLinearColor(0.6f, 1.f, 0.6f)));
 	BotonTerminar->SetIsEnabled(!Modo->ConsultaTerminada());
 	BotonAvanzar->SetIsEnabled(Modo->ConsultaTerminada() && H.ProximaCita() > 0);
 	BotonNuevo->SetIsEnabled(Modo->ConsultaTerminada());
@@ -242,9 +267,22 @@ void UEMMAgendaUI::AlIntervalo()
 	TArray<UWidget*> Botones;
 	WidgetTree->GetAllWidgets(Botones);
 	for (UWidget* W : Botones)
-		if (UButton* B = Cast<UButton>(W); B && (B->IsHovered() || B->IsPressed()) && !B->GetToolTipText().IsEmpty())
+		if (UButton* B = Cast<UButton>(W); B && (B->IsHovered() || B->IsPressed()) && !B->GetToolTipText().IsEmpty() && !B->GetToolTipText().ToString().StartsWith(TEXT("destino:")))
 		{
 			DiasRevision = FCString::Atoi(*B->GetToolTipText().ToString());
+			break;
+		}
+	Refrescar();
+}
+
+void UEMMAgendaUI::AlDestino()
+{
+	TArray<UWidget*> Botones;
+	WidgetTree->GetAllWidgets(Botones);
+	for (UWidget* W : Botones)
+		if (UButton* B = Cast<UButton>(W); B && (B->IsHovered() || B->IsPressed()) && B->GetToolTipText().ToString().StartsWith(TEXT("destino:")))
+		{
+			Destino = B->GetToolTipText().ToString().RightChop(8);
 			break;
 		}
 	Refrescar();
@@ -253,14 +291,14 @@ void UEMMAgendaUI::AlIntervalo()
 void UEMMAgendaUI::AlTerminar()
 {
 	if (!Modo.IsValid()) return;
-	Modo->TerminarConsulta(Diagnostico->GetText().ToString(), Pruebas->GetText().ToString(), DiasRevision);
+	Modo->TerminarConsulta(Diagnostico->GetText().ToString(), Pruebas->GetText().ToString(), DiasRevision, Destino);
 	Refrescar();
 }
 
 void UEMMAgendaUI::AlAvanzar()
 {
 	if (!Modo.IsValid()) return;
-	DiasRevision = 0;
+	DiasRevision = 0; Destino = TEXT("casa");
 	Diagnostico->SetText(FText::GetEmpty()); Pruebas->SetText(FText::GetEmpty());
 	Modo->AvanzarTiempo();
 	Refrescar();
@@ -269,7 +307,7 @@ void UEMMAgendaUI::AlAvanzar()
 void UEMMAgendaUI::AlNuevo()
 {
 	if (!Modo.IsValid()) return;
-	DiasRevision = 0;
+	DiasRevision = 0; Destino = TEXT("casa");
 	Diagnostico->SetText(FText::GetEmpty()); Pruebas->SetText(FText::GetEmpty());
 	Modo->PacienteNuevo();
 	Cerrar();

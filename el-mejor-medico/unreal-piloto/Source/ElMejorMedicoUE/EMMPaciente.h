@@ -26,6 +26,8 @@ struct FEMMPaciente
 	// quién viene y quién habla, carácter y gravedad
 	FString Personalidad, Acompanante, SistemaAcomp;   // SistemaAcomp: instrucciones de la IA para el acompañante
 	bool bHablaAcomp = false, bBebe = false, bCronica = false;
+	// lo que necesita de verdad: «casa», «hospitalizar» o «cirugia» (y cuál), y su prioridad (baja, media, alta)
+	FString Destino = TEXT("casa"), Prioridad = TEXT("baja"), Cirugia;
 	int32 Grav = 1;
 	// exploración y pruebas (las del juego web, coherentes con la enfermedad)
 	TMap<FString, float> Constantes;                 // temp, tas, tad, fc, sat, fr
