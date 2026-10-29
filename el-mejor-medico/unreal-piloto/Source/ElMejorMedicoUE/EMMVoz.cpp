@@ -1,4 +1,5 @@
 #include "EMMVoz.h"
+#include "EMMPiper.h"
 #include "Async/Async.h"
 #include "HAL/PlatformFileManager.h"
 #include "Misc/FileHelper.h"
@@ -209,6 +210,13 @@ FEMMPerfilVoz EMMVoz::PerfilPara(bool bMujer, float Edad, uint32 Semilla)
 		// mujeres adultas: unas con Laura y otras con Helena
 		if (bMujer && E >= 18.f && E < 65.f && (Semilla / 117u) % 3u == 0) P.Preferida = TEXT("Helena");
 	}
+	// voz neuronal Piper de su sexo (los niños, de mujer más aguda), fija para cada persona
+	if (EMMPiper::Disponible())
+	{
+		TArray<FString> Candidatas;
+		for (const EMMPiper::FVozPiper& V : EMMPiper::Voces()) if (V.Sexo == (P.bMujer ? TEXT("m") : TEXT("h"))) Candidatas.Add(V.Id);
+		if (Candidatas.Num()) P.Piper = Candidatas[(Semilla / 7u) % uint32(Candidatas.Num())];
+	}
 	return P;
 }
 
@@ -216,6 +224,13 @@ void EMMVoz::Sintetizar(const FString& Texto, const FEMMPerfilVoz& Perfil, TFunc
 {
 	AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [Texto, Perfil, Hecho]() {
 		TSharedPtr<FEMMAudio> A = MakeShared<FEMMAudio>();
+		// voz neuronal Piper si la persona tiene una y está disponible; si falla, la del sistema
+		if (!Perfil.Piper.IsEmpty() && EMMPiper::Sintetizar(Texto, Perfil, *A))
+		{
+			AsyncTask(ENamedThreads::GameThread, [A, Hecho]() { Hecho(A); });
+			return;
+		}
+		A = MakeShared<FEMMAudio>();
 #if PLATFORM_WINDOWS
 		SintetizarWindows(Texto, Perfil, *A);
 #elif PLATFORM_ANDROID

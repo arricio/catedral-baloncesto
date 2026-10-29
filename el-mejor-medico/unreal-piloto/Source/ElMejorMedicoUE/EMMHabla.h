@@ -23,6 +23,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Habla") float Tono = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Habla") float Velocidad = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Habla") FString VozPreferida;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Habla") FString VozPiper;   // voz neuronal (voces.json)
 
 	// Valores para la cara (los lee la animación facial)
 	UPROPERTY(BlueprintReadOnly, Category = "Habla") float Apertura = 0.f;    // 0..1

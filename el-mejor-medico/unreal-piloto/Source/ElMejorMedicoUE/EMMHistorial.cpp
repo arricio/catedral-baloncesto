@@ -61,12 +61,18 @@ namespace
 void FEMMHistorial::Cargar(bool bPrueba)
 {
 	RutaArchivo = FPaths::ProjectSavedDir() / TEXT("Historial") / (bPrueba ? TEXT("historial_prueba.json") : TEXT("historial.json"));
-	Dia = 1; SiguienteReceta = 1; Fichas.Reset();
+	Dia = 1; SiguienteReceta = 1; Fichas.Reset(); Plantilla.Reset();
 	if (bPrueba) return;   // la prueba empieza siempre de cero
 	FString J; TSharedPtr<FJsonObject> Raiz;
 	if (!FFileHelper::LoadFileToString(J, *RutaArchivo) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(J), Raiz) || !Raiz.IsValid()) return;
 	Dia = FMath::Max(1, int32(Raiz->GetNumberField(TEXT("dia"))));
 	SiguienteReceta = FMath::Max(1, int32(Raiz->GetNumberField(TEXT("siguienteReceta"))));
+	if (const TArray<TSharedPtr<FJsonValue>>* LP; Raiz->TryGetArrayField(TEXT("plantilla"), LP))
+		for (const auto& V : *LP)
+		{
+			const TSharedPtr<FJsonObject> O = V->AsObject();
+			Plantilla.Add({ O->GetStringField(TEXT("id")), O->GetStringField(TEXT("personaje")), O->GetStringField(TEXT("casoInicial")) });
+		}
 	for (const auto& VF : Raiz->GetArrayField(TEXT("fichas")))
 	{
 		const TSharedPtr<FJsonObject> O = VF->AsObject();
@@ -74,6 +80,9 @@ void FEMMHistorial::Cargar(bool bPrueba)
 		F.CasoId = O->GetStringField(TEXT("caso")); F.Nombre = O->GetStringField(TEXT("nombre")); F.Apellidos = O->GetStringField(TEXT("apellidos"));
 		F.Sexo = O->GetStringField(TEXT("sexo")); F.Enfermedad = O->GetStringField(TEXT("enfermedad")); F.TextoEdad = O->GetStringField(TEXT("edad"));
 		F.NumeroHistoria = O->GetStringField(TEXT("historia"));
+		O->TryGetStringField(TEXT("casoActual"), F.CasoActual);
+		O->TryGetStringField(TEXT("personaje"), F.Personaje);
+		if (F.CasoActual.IsEmpty()) F.CasoActual = F.CasoId;
 		F.ProximaRevision = int32(O->GetNumberField(TEXT("proximaRevision")));
 		for (const auto& VR : O->GetArrayField(TEXT("recetas")))
 		{
@@ -120,6 +129,8 @@ bool FEMMHistorial::Guardar() const
 		O->SetStringField(TEXT("caso"), F.CasoId); O->SetStringField(TEXT("nombre"), F.Nombre); O->SetStringField(TEXT("apellidos"), F.Apellidos);
 		O->SetStringField(TEXT("sexo"), F.Sexo); O->SetStringField(TEXT("enfermedad"), F.Enfermedad); O->SetStringField(TEXT("edad"), F.TextoEdad);
 		O->SetStringField(TEXT("historia"), F.NumeroHistoria);
+		O->SetStringField(TEXT("casoActual"), F.CasoActual);
+		O->SetStringField(TEXT("personaje"), F.Personaje);
 		O->SetNumberField(TEXT("proximaRevision"), F.ProximaRevision);
 		TArray<TSharedPtr<FJsonValue>> LR;
 		for (const FEMMReceta& X : F.Recetas)
@@ -156,6 +167,14 @@ bool FEMMHistorial::Guardar() const
 		LF.Add(MakeShared<FJsonValueObject>(O));
 	}
 	Raiz->SetArrayField(TEXT("fichas"), LF);
+	TArray<TSharedPtr<FJsonValue>> LP;
+	for (const FEMMPersona& P : Plantilla)
+	{
+		TSharedRef<FJsonObject> O = MakeShared<FJsonObject>();
+		O->SetStringField(TEXT("id"), P.Id); O->SetStringField(TEXT("personaje"), P.Personaje); O->SetStringField(TEXT("casoInicial"), P.CasoInicial);
+		LP.Add(MakeShared<FJsonValueObject>(O));
+	}
+	Raiz->SetArrayField(TEXT("plantilla"), LP);
 	FString J;
 	TSharedRef<TJsonWriter<>> W = TJsonWriterFactory<>::Create(&J);
 	FJsonSerializer::Serialize(Raiz, W);

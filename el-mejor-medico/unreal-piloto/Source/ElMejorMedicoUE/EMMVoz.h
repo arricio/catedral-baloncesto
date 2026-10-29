@@ -11,6 +11,7 @@ struct FEMMPerfilVoz
 	float Tono = 1.f;   // 1 normal; > 1 más agudo
 	float Vel = 1.f;    // 1 normal
 	FString Preferida;  // nombre de voz preferido (p. ej. "Pablo"), si existe
+	FString Piper;      // voz neuronal Piper (id de voces.json); vacía: voces del sistema
 };
 
 struct FEMMAudio

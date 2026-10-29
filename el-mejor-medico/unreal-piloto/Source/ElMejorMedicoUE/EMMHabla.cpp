@@ -15,7 +15,7 @@ UEMMHabla::UEMMHabla()
 FEMMPerfilVoz UEMMHabla::Perfil() const
 {
 	FEMMPerfilVoz P;
-	P.bMujer = bMujer; P.Tono = Tono; P.Vel = Velocidad; P.Preferida = VozPreferida;
+	P.bMujer = bMujer; P.Tono = Tono; P.Vel = Velocidad; P.Preferida = VozPreferida; P.Piper = VozPiper;
 	return P;
 }
 

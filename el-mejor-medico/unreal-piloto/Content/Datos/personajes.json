@@ -8,6 +8,15 @@
   { "nombre": "Celeste", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Celeste/BP_MH_P_Celeste.BP_MH_P_Celeste_C", "sexo": "m", "edad": [14, 22] },
   { "nombre": "Vivian", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_Paciente/BP_MH_Paciente.BP_MH_Paciente_C", "sexo": "m", "edad": [23, 40] },
   { "nombre": "Lani", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Lani/BP_MH_P_Lani.BP_MH_P_Lani_C", "sexo": "m", "edad": [41, 64] },
-  { "nombre": "Grace", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Grace/BP_MH_P_Grace.BP_MH_P_Grace_C", "sexo": "m", "edad": [65, 99] }
+  { "nombre": "Grace", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Grace/BP_MH_P_Grace.BP_MH_P_Grace_C", "sexo": "m", "edad": [65, 99] },
+  { "nombre": "Kelvin", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Kelvin/BP_MH_P_Kelvin.BP_MH_P_Kelvin_C", "sexo": "h", "edad": [18, 36] },
+  { "nombre": "Omari", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Omari/BP_MH_P_Omari.BP_MH_P_Omari_C", "sexo": "h", "edad": [20, 38] },
+  { "nombre": "Orlando", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Orlando/BP_MH_P_Orlando.BP_MH_P_Orlando_C", "sexo": "h", "edad": [28, 50] },
+  { "nombre": "Jorge", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Jorge/BP_MH_P_Jorge.BP_MH_P_Jorge_C", "sexo": "h", "edad": [40, 64] },
+  { "nombre": "Aoi", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Aoi/BP_MH_P_Aoi.BP_MH_P_Aoi_C", "sexo": "h", "edad": [40, 64] },
+  { "nombre": "Sunita", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Sunita/BP_MH_P_Sunita.BP_MH_P_Sunita_C", "sexo": "m", "edad": [18, 35] },
+  { "nombre": "Jelena", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Jelena/BP_MH_P_Jelena.BP_MH_P_Jelena_C", "sexo": "m", "edad": [20, 40] },
+  { "nombre": "Etta", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Etta/BP_MH_P_Etta.BP_MH_P_Etta_C", "sexo": "m", "edad": [25, 50] },
+  { "nombre": "Sookja", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Sookja/BP_MH_P_Sookja.BP_MH_P_Sookja_C", "sexo": "m", "edad": [65, 99] }
  ]
 }

@@ -167,6 +167,10 @@ void UEMMConsultaUI::Construir()
 	EtiquetaSubtitulos = ESub;
 	BotonSub->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarSubtitulos);
 	if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(BotonSub)) S->SetPadding(FMargin(0, 14, 0, 0));
+	// créditos obligatorios de las voces (licencias CC BY) y aviso de simulación
+	UTextBlock* Creditos = Texto(WidgetTree, TEXT("Créditos de voces: corpus Sharvard (Aubanel, García Lecumberri y Cooke), CC BY 3.0; Multilingual LibriSpeech (OpenSLR 94), CC BY 4.0; davefx (CC0); carlfm (dominio público). Modelos Piper (MIT).\nSimulación: pacientes, médicos, centro y recetas ficticios, sin validez médica."), 11.f, FLinearColor(0.7f, 0.75f, 0.85f));
+	Creditos->SetWrapTextAt(430.f);
+	if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(Creditos)) S->SetPadding(FMargin(0, 12, 0, 0));
 	UTextBlock* ECerrar;
 	UButton* BotonCerrar = CrearBoton(TEXT("CERRAR"), Azul, ECerrar, 16.f);
 	BotonCerrar->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarCerrarAjustes);

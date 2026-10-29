@@ -33,9 +33,21 @@ struct FEMMVisita
 	TArray<FString> Recetas;    // Id de las recetas hechas en esta visita
 };
 
+// Una persona de la partida: un personaje (su cara) con su identidad fija. Puede venir varias veces y con
+// enfermedades distintas; su ficha guarda todo.
+struct FEMMPersona
+{
+	FString Id;          // «P01»…
+	FString Personaje;   // nombre en personajes.json
+	FString CasoInicial; // caso con el que se presenta la primera vez
+};
+
 struct FEMMFicha
 {
-	FString CasoId, Nombre, Apellidos, Sexo, Enfermedad, TextoEdad, NumeroHistoria;
+	FString CasoId;      // la persona (FEMMPersona::Id); en partidas antiguas, el caso
+	FString CasoActual;  // caso (enfermedad) de su última visita
+	FString Personaje;
+	FString Nombre, Apellidos, Sexo, Enfermedad, TextoEdad, NumeroHistoria;
 	TArray<FEMMVisita> Visitas;
 	TArray<FEMMReceta> Recetas;
 	int32 ProximaRevision = -1; // día del juego; -1 sin cita
@@ -61,6 +73,7 @@ public:
 	int32 Dia = 1;              // día del juego (1 = lunes 4 de enero de 2027)
 	int32 SiguienteReceta = 1;
 	TArray<FEMMFicha> Fichas;
+	TArray<FEMMPersona> Plantilla;   // las personas de la partida (una por personaje)
 
 	static FEMMHistorial& Get();
 	// bPrueba: la prueba automática usa su propio archivo y empieza de cero (no toca la partida del jugador)

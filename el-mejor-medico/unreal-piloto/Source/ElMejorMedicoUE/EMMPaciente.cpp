@@ -24,7 +24,7 @@ bool EMMDatos::CargarPacientes(TArray<FEMMPaciente>& Salida, FString& Error)
 	{
 		const TSharedPtr<FJsonObject> O = V->AsObject();
 		FEMMPaciente P;
-		P.Id = O->GetStringField(TEXT("id"));
+		P.Id = O->GetStringField(TEXT("id")); P.Caso = P.Id;
 		P.Enfermedad = O->GetStringField(TEXT("enfermedad"));
 		P.Nombre = O->GetStringField(TEXT("nombre"));
 		P.Apellidos = O->GetStringField(TEXT("apellidos"));

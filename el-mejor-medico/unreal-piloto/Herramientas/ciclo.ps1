@@ -1,10 +1,10 @@
-# EL MEJOR MÉDICO (Unreal): ciclo de trabajo en el portátil.
+﻿# EL MEJOR MÉDICO (Unreal): ciclo de trabajo en el portátil.
 #   -Compilar     compila el C++ del editor
 #   -Tarea x.py   ejecuta Herramientas/x.py dentro del editor (se cierra solo)
 #   -Probar       abre el juego (1600×900) con la prueba automática: fotos en Saved/Capturas y conversación en Saved/Prueba.txt
 #   -Empaquetar   empaqueta la versión de Windows en Empaquetado/Windows (sombreadores ya compilados)
 #   -ProbarPaquete  la prueba automática con el juego empaquetado (lo que recibirá el usuario)
-param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje)
+param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos)
 $ErrorActionPreference = 'Stop'
 $UE = 'C:\Program Files\Epic Games\UE_5.8\Engine'
 $P = Split-Path $PSScriptRoot
@@ -50,8 +50,8 @@ if ($ProbarPaquete) {
 if ($Probar) {
   $txt = Join-Path $P 'Saved\Prueba.txt'
   Remove-Item $txt -ErrorAction SilentlyContinue
-  $extra = if ($Montaje) { '-EMMSoloMontaje' } else { '-nada' }
+  $extra = if ($Montaje) { '-EMMSoloMontaje' } elseif ($Todos) { '-EMMTodos' } else { '-nada' }
   Start-Process "$UE\Binaries\Win64\UnrealEditor.exe" -ArgumentList "`"$Proyecto`"", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extra, '-nosplash', '-unattended' | Out-Null
-  for ($i = 0; $i -lt 180; $i++) { Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break } }
+  for ($i = 0; $i -lt 540; $i++) { Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break } }
   if (Test-Path $txt) { Get-Content $txt -Encoding utf8 } else { 'La prueba no ha terminado' }
 }

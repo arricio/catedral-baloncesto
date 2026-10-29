@@ -25,6 +25,16 @@ PERSONAJES = {
     'MH_P_Lani': ('Lani', []),          # mujer de mediana edad
     'MH_P_Walter': ('Walter', []),      # anciano
     'MH_P_Grace': ('Grace', []),        # anciana
+    # segunda tanda (mínimo de 16 pacientes distintos)
+    'MH_P_Kelvin': ('Kelvin', []),      # hombre joven
+    'MH_P_Omari': ('Omari', []),        # hombre joven
+    'MH_P_Orlando': ('Orlando', []),    # hombre adulto
+    'MH_P_Jorge': ('Jorge', []),        # hombre de mediana edad
+    'MH_P_Aoi': ('Aoi', []),            # hombre de mediana edad
+    'MH_P_Sunita': ('Sunita', []),      # mujer joven
+    'MH_P_Jelena': ('Jelena', []),      # mujer joven
+    'MH_P_Etta': ('Etta', []),          # mujer adulta
+    'MH_P_Sookja': ('Sook-ja', []),     # anciana
 }
 # EMM_SOLO=MH_P_Mateo,MH_P_Grace…: sólo esos (para no rehacer los que ya están construidos)
 SOLO = [x for x in os.environ.get('EMM_SOLO', '').split(',') if x]

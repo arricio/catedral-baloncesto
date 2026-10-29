@@ -9,7 +9,7 @@ public class ElMejorMedicoUE : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AudioMixer" });
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "HTTP", "Json", "JsonUtilities", "Projects", "RenderCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "HTTP", "Json", "JsonUtilities", "Projects", "RenderCore", "NNE" });
 		if (Target.bBuildEditor) PrivateDependencyModuleNames.Add("Engine");
 
 		if (Target.Platform == UnrealTargetPlatform.Win64)

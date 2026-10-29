@@ -5,6 +5,8 @@
 #include "EMMVoz.h"
 #include "EMMCuerpoAnim.h"
 #include "EMMDictado.h"
+#include "EMMPiper.h"
+#include "EMMFonetica.h"
 #include "EMMRecetaUI.h"
 #include "EMMAgendaUI.h"
 #include "Components/WidgetComponent.h"
@@ -184,10 +186,10 @@ void AEMMConsultaModo::BeginPlay()
 	// ficha clínica y calendario: si hoy hay una revisión, vuelve ese paciente; si no, uno nuevo
 	FEMMHistorial& H = FEMMHistorial::Get();
 	H.Cargar(FParse::Param(FCommandLine::Get(), TEXT("EMMPrueba")));
-	const FEMMFicha* Pendiente = H.RevisionPendiente();
-	const FEMMPaciente* Caso = Pendiente ? Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == Pendiente->CasoId; }) : nullptr;
-	if (Caso) IniciarVisita(*Caso);
-	else if (Casos.Num()) IniciarVisita(Casos[FMath::RandRange(0, Casos.Num() - 1)]);
+	ConstruirPlantilla();
+	FEMMPaciente Primero;
+	if (const FEMMFicha* Pendiente = H.RevisionPendiente(); Pendiente && PacienteDeFicha(*Pendiente, Primero)) IniciarVisita(Primero);
+	else if (ElegirPacienteNuevo(Primero)) IniciarVisita(Primero);
 	if (PC)
 	{
 		PC->bShowMouseCursor = true;
@@ -260,8 +262,103 @@ void AEMMConsultaModo::CargarPersonajes(AActor* PacienteDelNivel)
 	if (PacienteDelNivel) PersonajeActual = PacienteDelNivel->GetClass()->GetPathName();
 }
 
+void AEMMConsultaModo::ConstruirPlantilla()
+{
+	// cada personaje es una persona con su cara: se le asigna un caso de su sexo y edad, intentando no repetir
+	// enfermedad. Se guarda en el historial: en la partida siguiente son las mismas personas.
+	FEMMHistorial& H = FEMMHistorial::Get();
+	TSet<FString> Ocupados, CasosUsados, Enfermedades;
+	for (const FEMMPersona& P : H.Plantilla)
+	{
+		Ocupados.Add(P.Personaje); CasosUsados.Add(P.CasoInicial);
+		if (const FEMMPaciente* C = Casos.FindByPredicate([&](const FEMMPaciente& X) { return X.Id == P.CasoInicial; })) Enfermedades.Add(C->EnfId);
+	}
+	FRandomStream Azar(FParse::Param(FCommandLine::Get(), TEXT("EMMPrueba")) ? 1234 : int32(FDateTime::Now().GetTicks() & 0x7fffffff));
+	for (const FEMMPersonaje& X : Personajes)
+	{
+		if (Ocupados.Contains(X.Nombre)) continue;
+		TArray<const FEMMPaciente*> Validos, Nuevos;
+		for (const FEMMPaciente& C : Casos)
+			if (C.Sexo == X.Sexo && C.Edad >= X.EdadMin && C.Edad <= X.EdadMax && !CasosUsados.Contains(C.Id))
+			{
+				Validos.Add(&C);
+				if (!Enfermedades.Contains(C.EnfId)) Nuevos.Add(&C);
+			}
+		const TArray<const FEMMPaciente*>& L = Nuevos.Num() ? Nuevos : Validos;
+		if (!L.Num()) { UE_LOG(LogTemp, Warning, TEXT("[EMM] Sin caso para el personaje %s"), *X.Nombre); continue; }
+		const FEMMPaciente* C = L[Azar.RandRange(0, L.Num() - 1)];
+		H.Plantilla.Add({ FString::Printf(TEXT("P%02d"), H.Plantilla.Num() + 1), X.Nombre, C->Id });
+		CasosUsados.Add(C->Id); Enfermedades.Add(C->EnfId);
+	}
+	H.Guardar();
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Plantilla: %d personas"), H.Plantilla.Num());
+}
+
+FEMMPaciente AEMMConsultaModo::PacienteDe(const FEMMPersona& Persona, const FEMMPaciente& Caso, const FEMMFicha* Ficha) const
+{
+	FEMMPaciente P = Caso;
+	P.Id = Persona.Id;
+	P.Caso = Caso.Id;
+	// la misma persona con otra enfermedad: conserva su nombre y su edad
+	if (Ficha && !Ficha->Nombre.IsEmpty() && (Ficha->Nombre != Caso.Nombre || Ficha->Apellidos != Caso.Apellidos))
+	{
+		auto Cambiar = [&](FString& S) {
+			S.ReplaceInline(*(Caso.Nombre + TEXT(" ") + Caso.Apellidos), *(Ficha->Nombre + TEXT(" ") + Ficha->Apellidos), ESearchCase::CaseSensitive);
+			S.ReplaceInline(*Caso.Nombre, *Ficha->Nombre, ESearchCase::CaseSensitive);
+			if (!Ficha->TextoEdad.IsEmpty()) S.ReplaceInline(*Caso.TextoEdad, *Ficha->TextoEdad, ESearchCase::CaseSensitive);
+		};
+		Cambiar(P.Sistema); Cambiar(P.SistemaAcomp);
+		for (auto& R : P.Respuestas) for (FString& S : R.Value) Cambiar(S);
+		P.Nombre = Ficha->Nombre; P.Apellidos = Ficha->Apellidos;
+		if (!Ficha->TextoEdad.IsEmpty()) { P.TextoEdad = Ficha->TextoEdad; P.Edad = FMath::Max(1.f, FCString::Atof(*Ficha->TextoEdad)); }
+	}
+	return P;
+}
+
+bool AEMMConsultaModo::PacienteDeFicha(const FEMMFicha& F, FEMMPaciente& Salida) const
+{
+	const FEMMHistorial& H = FEMMHistorial::Get();
+	const FEMMPersona* Per = H.Plantilla.FindByPredicate([&](const FEMMPersona& P) { return P.Id == F.CasoId; });
+	const FString CasoId = !F.CasoActual.IsEmpty() ? F.CasoActual : Per ? Per->CasoInicial : F.CasoId;
+	const FEMMPaciente* C = Casos.FindByPredicate([&](const FEMMPaciente& X) { return X.Id == CasoId; });
+	if (!C) return false;
+	Salida = Per ? PacienteDe(*Per, *C, &F) : *C;   // fichas antiguas (antes de la plantilla): el caso tal cual
+	return true;
+}
+
+bool AEMMConsultaModo::ElegirPacienteNuevo(FEMMPaciente& Salida)
+{
+	FEMMHistorial& H = FEMMHistorial::Get();
+	// primero, personas que aún no han venido nunca
+	TArray<const FEMMPersona*> Sin;
+	for (const FEMMPersona& P : H.Plantilla) if (!H.Buscar(P.Id)) Sin.Add(&P);
+	if (Sin.Num())
+	{
+		const FEMMPersona* P = Sin[FMath::RandRange(0, Sin.Num() - 1)];
+		if (const FEMMPaciente* C = Casos.FindByPredicate([&](const FEMMPaciente& X) { return X.Id == P->CasoInicial; })) { Salida = PacienteDe(*P, *C, nullptr); return true; }
+	}
+	// ya los conoce a todos: vuelve alguien sin cita con un problema nuevo (su cara, su nombre y su historial)
+	TArray<TPair<const FEMMPersona*, const FEMMFicha*>> Libres;
+	for (const FEMMPersona& P : H.Plantilla)
+		if (const FEMMFicha* F = H.Buscar(P.Id); F && F->ProximaRevision <= 0 && P.Id != Paciente.Id) Libres.Add({ &P, F });
+	if (!Libres.Num()) return false;
+	const auto& Elegido = Libres[FMath::RandRange(0, Libres.Num() - 1)];
+	const FEMMPersonaje* X = Personajes.FindByPredicate([&](const FEMMPersonaje& Y) { return Y.Nombre == Elegido.Key->Personaje; });
+	const FEMMPaciente* Antes = Casos.FindByPredicate([&](const FEMMPaciente& C) { return C.Id == Elegido.Value->CasoActual; });
+	const float Edad = FMath::Max(1.f, FCString::Atof(*Elegido.Value->TextoEdad));
+	TArray<const FEMMPaciente*> Otros;
+	for (const FEMMPaciente& C : Casos)
+		if (X && C.Sexo == X->Sexo && FMath::Abs(C.Edad - Edad) <= 15.f && C.Id != Elegido.Value->CasoActual && (!Antes || C.EnfId != Antes->EnfId)) Otros.Add(&C);
+	if (!Otros.Num()) return false;
+	Salida = PacienteDe(*Elegido.Key, *Otros[FMath::RandRange(0, Otros.Num() - 1)], Elegido.Value);
+	return true;
+}
+
 const AEMMConsultaModo::FEMMPersonaje* AEMMConsultaModo::PersonajePara(const FEMMPaciente& Caso) const
 {
+	// una persona de la plantilla: siempre su personaje
+	if (const FEMMPersona* Per = FEMMHistorial::Get().Plantilla.FindByPredicate([&](const FEMMPersona& P) { return P.Id == Caso.Id; }))
+		if (const FEMMPersonaje* X = Personajes.FindByPredicate([&](const FEMMPersonaje& Y) { return Y.Nombre == Per->Personaje; })) return X;
 	// los de su sexo y edad; entre varios, siempre el mismo para el mismo caso (vuelve con la misma cara)
 	TArray<const FEMMPersonaje*> Validos;
 	for (const FEMMPersonaje& X : Personajes)
@@ -301,7 +398,12 @@ void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 	FEMMFicha& F = H.FichaDe(Paciente);
 	Visita = FEMMVisita();
 	Visita.Dia = H.Dia;
-	Visita.bRevision = F.Visitas.Num() > 0;
+	// revisión si vuelve por lo mismo; si viene con otro problema es consulta nueva (pero recuerda su historial)
+	const bool bMismoProblema = F.CasoActual.IsEmpty() || F.CasoActual == Paciente.Caso;
+	Visita.bRevision = F.Visitas.Num() > 0 && bMismoProblema;
+	F.CasoActual = Paciente.Caso;
+	F.Enfermedad = Paciente.Enfermedad;
+	if (const FEMMPersonaje* X = PersonajePara(Paciente)) F.Personaje = X->Nombre;
 	Charla.Reset();
 	bTurnoPaciente = bOcupado = bTerminada = false;
 	FraseEvolucion.Reset();
@@ -317,20 +419,27 @@ void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 		F.ProximaRevision = -1;   // la cita ya se está atendiendo
 	}
 	MemoriaPaciente = EMMEvolucion::Memoria(F, Visita.bRevision ? &E : nullptr, H.Dia);
+	if (F.Visitas.Num() && !Visita.bRevision)
+		MemoriaPaciente += TEXT("\nHoy vienes por un problema NUEVO, distinto de lo de las otras veces (lo de antes ya pasó). Si el médico te pregunta, recuerdas lo anterior.");
 	H.Guardar();
 
 	// voz según edad y sexo; si coincide con la del médico, el médico cambia un poco la suya
 	HablaPaciente->Nombre = Paciente.Nombre.IsEmpty() ? TEXT("Paciente") : Paciente.Nombre;
 	const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Paciente.EsMujer(), Paciente.Edad, GetTypeHash(Paciente.Id) | 1u);
 	HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
+	HablaPaciente->VozPiper = VP.Piper;
 	const bool bMedicaMujer = MHMedico.IsValid() && MHMedico->ActorHasTag(TEXT("Mujer"));
 	const FEMMPerfilVoz VM = EMMVoz::PerfilPara(bMedicaMujer, 40.f);
-	Medico->VozPreferida = VM.Preferida; Medico->Tono = VM.Tono;
+	Medico->VozPreferida = VM.Preferida; Medico->Tono = VM.Tono; Medico->VozPiper = VM.Piper;
 	if (bMedicaMujer == VP.bMujer && VM.Preferida == VP.Preferida)
 	{
 		if (bMedicaMujer) Medico->VozPreferida = TEXT("Helena");
 		else Medico->Tono = 1.05f;
 	}
+	// si coinciden en la voz neuronal, el médico usa otra de su sexo
+	if (!VM.Piper.IsEmpty() && VM.Piper == VP.Piper)
+		for (const EMMPiper::FVozPiper& V : EMMPiper::Voces())
+			if (V.Sexo == (bMedicaMujer ? TEXT("m") : TEXT("h")) && V.Id != VP.Piper) { Medico->VozPiper = V.Id; break; }
 	// el carácter se nota en el cuerpo y en la forma de hablar: los nerviosos se mueven más y hablan más deprisa
 	const FString Pers = EMMDatos::Normaliza(Paciente.Personalidad);
 	auto Tiene = [&Pers](std::initializer_list<const TCHAR*> L) { for (const TCHAR* X : L) if (Pers.Contains(X)) return true; return false; };
@@ -593,11 +702,11 @@ void AEMMConsultaModo::AvanzarTiempo()
 	for (FEMMFicha& X : H.Fichas)
 	{
 		if (X.ProximaRevision <= H.Dia || !X.UltimaVisita()) continue;
-		const FEMMPaciente* C = Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == X.CasoId; });
-		if (!C) continue;
+		FEMMPaciente C;
+		if (!PacienteDeFicha(X, C)) continue;
 		for (int32 D = FMath::Max(H.Dia + 1, X.UltimaVisita()->Dia + 2); D < X.ProximaRevision && (DiaAnticipado < 0 || D < DiaAnticipado); ++D)
 		{
-			const FEMMEvolucion E = EMMEvolucion::Calcular(*C, X, D);
+			const FEMMEvolucion E = EMMEvolucion::Calcular(C, X, D);
 			if (E.Estado == TEXT("peor") || E.Estado == TEXT("complicacion")) { DiaAnticipado = D; Anticipada = &X; break; }
 		}
 	}
@@ -607,9 +716,9 @@ void AEMMConsultaModo::AvanzarTiempo()
 	const int32 Pasan = FMath::Max(0, Destino - H.Dia);
 	H.Dia = FMath::Max(H.Dia, Destino);
 	const FEMMFicha* F = bAnticipada ? Anticipada : H.RevisionPendiente();
-	const FEMMPaciente* Caso = F ? Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == F->CasoId; }) : nullptr;
-	if (!Caso) { H.Guardar(); Avisar(TEXT("No se encuentra el caso de la cita."), false); return; }
-	IniciarVisita(*Caso);
+	FEMMPaciente Caso;
+	if (!F || !PacienteDeFicha(*F, Caso)) { H.Guardar(); Avisar(TEXT("No se encuentra el caso de la cita."), false); return; }
+	IniciarVisita(Caso);
 	if (bAnticipada)
 	{
 		Visita.bAnticipada = true;
@@ -625,14 +734,11 @@ void AEMMConsultaModo::PacienteNuevo()
 {
 	FEMMHistorial& H = FEMMHistorial::Get();
 	H.Dia += 1;
-	// alguien que aún no tenga ficha; si ya los ha visto a todos, cualquiera sin cita pendiente
-	TArray<const FEMMPaciente*> Libres;
-	for (const FEMMPaciente& P : Casos) if (!H.Buscar(P.Id)) Libres.Add(&P);
-	if (!Libres.Num()) for (const FEMMPaciente& P : Casos) if (const FEMMFicha* F = H.Buscar(P.Id); F && F->ProximaRevision <= 0 && P.Id != Paciente.Id) Libres.Add(&P);
-	if (const FEMMFicha* F = H.RevisionPendiente())
-		if (const FEMMPaciente* Caso = Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == F->CasoId; })) { Libres = { Caso }; }
-	if (!Libres.Num()) { H.Dia -= 1; Avisar(TEXT("No hay más pacientes disponibles hoy."), false); return; }
-	IniciarVisita(*Libres[FMath::RandRange(0, Libres.Num() - 1)]);
+	// si alguien tiene cita hoy, entra él; si no, una persona nueva (o una conocida con un problema nuevo)
+	FEMMPaciente Siguiente;
+	const FEMMFicha* Cita = H.RevisionPendiente();
+	if (!(Cita && PacienteDeFicha(*Cita, Siguiente)) && !ElegirPacienteNuevo(Siguiente)) { H.Dia -= 1; Avisar(TEXT("No hay más pacientes disponibles hoy."), false); return; }
+	IniciarVisita(Siguiente);
 	Avisar(FString::Printf(TEXT("%s. Entra %s %s."), *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre, *Paciente.Apellidos), true);
 }
 
@@ -648,6 +754,58 @@ void AEMMConsultaModo::PasoDePrueba()
 	static const TCHAR* Preguntas[] = { TEXT("Buenos días. ¿Qué le trae por aquí?"), TEXT("¿Ha tenido fiebre?"), TEXT("¿Desde cuándo le pasa?") };
 	const double T = FPlatformTime::Seconds() - InicioPaso;
 	auto Siguiente = [this]() { ++PasoPrueba; InicioPaso = FPlatformTime::Seconds(); };
+	// -EMMTodos: cada persona de la plantilla entra, el médico le pregunta, contesta con la IA (foto mientras habla)
+	// y se guarda su ficha con revisión; al final se avanza el tiempo y vuelve quien tenga la primera cita
+	if (PasoPrueba >= 200)
+	{
+		FEMMHistorial& H = FEMMHistorial::Get();
+		const int32 K = PasoPrueba - 200, I = K / 4, Fa = K % 4;
+		if (Fa >= 1) Fotogramas.Add(float(FApp::GetDeltaTime()));   // rendimiento con cada paciente en la silla
+		if (H.Plantilla.IsValidIndex(I))
+		{
+			const FEMMPersona& Per = H.Plantilla[I];
+			if (Fa == 0 && T > 0.5)
+			{
+				if (bOcupado) return;
+				const FEMMPaciente* C = Casos.FindByPredicate([&](const FEMMPaciente& X) { return X.Id == Per.CasoInicial; });
+				if (!C) { RegistroPrueba.Add(TEXT("ERROR: sin caso para ") + Per.Personaje); PasoPrueba += 4; return; }
+				IniciarVisita(PacienteDe(Per, *C, nullptr));
+				const FEMMPersonaje* X = PersonajePara(Paciente);
+				RegistroPrueba.Add(FString::Printf(TEXT("=== %s · personaje %s · %s %s, %s, %s · %s · carácter: %s · voz %s tono %.2f"), *Per.Id, X ? *X->Nombre : TEXT("?"), *Paciente.Nombre, *Paciente.Apellidos,
+					*Paciente.TextoEdad, Paciente.EsMujer() ? TEXT("mujer") : TEXT("hombre"), *Paciente.Enfermedad, *Paciente.Personalidad, HablaPaciente->VozPiper.IsEmpty() ? *HablaPaciente->VozPreferida : *(TEXT("Piper ") + HablaPaciente->VozPiper), HablaPaciente->Tono));
+				Siguiente();
+			}
+			else if (Fa == 1 && T > 1.5 && !bOcupado && !bTurnoPaciente) { HablarMedico(TEXT("Buenos días. Cuénteme, ¿qué le pasa?")); Siguiente(); }
+			else if (Fa == 2 && !bOcupado && bTurnoPaciente) { ResponderPaciente(); Siguiente(); }
+			else if (Fa == 3)
+			{
+				if (HablaPaciente->bHablando && !RegistroPrueba.Last().StartsWith(TEXT("[foto]"))) Foto(FString::Printf(TEXT("todos_%02d_%s"), I + 1, *Per.Personaje));
+				if (!bOcupado && !bTurnoPaciente)
+				{
+					RegistroPrueba.Add(FString::Printf(TEXT("PACIENTE [%s]: %s"), *Charla.Last().Origen, *Charla.Last().Texto));
+					TerminarConsulta(Paciente.Enfermedad, FString(), 7 + I);   // revisiones escalonadas
+					Siguiente();
+				}
+				if (T > 120) { RegistroPrueba.Add(TEXT("ERROR: tiempo agotado")); Siguiente(); }
+			}
+			return;
+		}
+		// todos vistos: fichas guardadas y vuelve el primero con cita, recordando su visita
+		const int32 J = K - H.Plantilla.Num() * 4;
+		if (J == 0)
+		{
+			int32 ConFicha = 0; for (const FEMMPersona& P : H.Plantilla) if (H.Buscar(P.Id)) ++ConFicha;
+			TSet<FString> Caras; for (const FEMMPersona& P : H.Plantilla) Caras.Add(P.Personaje);
+			RegistroPrueba.Add(FString::Printf(TEXT("RESUMEN: %d personas en la plantilla, %d caras distintas, %d con ficha guardada"), H.Plantilla.Num(), Caras.Num(), ConFicha));
+			AvanzarTiempo();
+			RegistroPrueba.Add(FString::Printf(TEXT("VUELVE %s %s (%s) el %s; revisión=%s"), *Paciente.Nombre, *Paciente.Apellidos, *Paciente.Id, *FEMMHistorial::Fecha(H.Dia), Visita.bRevision ? TEXT("sí") : TEXT("no")));
+			Siguiente();
+		}
+		else if (J == 1 && T > 1.0 && !bOcupado && !bTurnoPaciente) { HablarMedico(TEXT("Hola otra vez. ¿Recuerda qué le pasaba la última vez y cómo sigue?")); Siguiente(); }
+		else if (J == 2 && !bOcupado && bTurnoPaciente) { ResponderPaciente(); Siguiente(); }
+		else if (J == 3 && !bOcupado && !bTurnoPaciente) { RegistroPrueba.Add(FString::Printf(TEXT("PACIENTE [%s]: %s"), *Charla.Last().Origen, *Charla.Last().Texto)); PasoPrueba = 100; }
+		return;
+	}
 	const int32 Ronda = (PasoPrueba - 2) / 3, Fase = (PasoPrueba - 2) % 3;
 	// rendimiento en juego: durante las conversaciones (no las cargas de personajes ni las vistas de revisión)
 	if ((PasoPrueba >= 2 && PasoPrueba <= 10) || (PasoPrueba >= 16 && PasoPrueba <= 21)) Fotogramas.Add(float(FApp::GetDeltaTime()));
@@ -661,6 +819,47 @@ void AEMMConsultaModo::PasoDePrueba()
 		if (T > 12 && !IA()->bCargando && (!bCompilando || T > 600))
 		{
 			RegistroPrueba.Add(IA()->Descripcion());
+			// voces neuronales Piper: una frase con cada una (fonemas, tiempo, tono medio) y su WAV para escucharla
+			{
+				const FString Frase = TEXT("Buenos días, doctor. Me duele mucho la garganta desde hace tres días y tengo 38,5 de fiebre.");
+				RegistroPrueba.Add(TEXT("Fonemas: ") + EMMFonetica::Fonemas(Frase));
+				for (const EMMPiper::FVozPiper& V : EMMPiper::Voces())
+				{
+					FEMMPerfilVoz Pf; Pf.Piper = V.Id;
+					FEMMAudio A;
+					const double T0 = FPlatformTime::Seconds();
+					const bool bOk = EMMPiper::Sintetizar(Frase, Pf, A);
+					const double Ms = (FPlatformTime::Seconds() - T0) * 1000.0;
+					// tono medio (F0) por autocorrelación en tramos con voz
+					TArray<float> F0;
+					const int16* M = reinterpret_cast<const int16*>(A.PCM.GetData());
+					const int32 N = A.PCM.Num() / 2, Tramo = FMath::Max(1, A.Frecuencia / 25);
+					for (int32 Ini = 0; Ini + Tramo * 2 < N; Ini += Tramo)
+					{
+						double E = 0; for (int32 i = 0; i < Tramo; ++i) E += double(M[Ini + i]) * M[Ini + i];
+						if (E / Tramo < 300.0 * 300.0) continue;
+						double Mejor = 0; int32 Lag = 0;
+						for (int32 L = A.Frecuencia / 400; L < A.Frecuencia / 60; ++L)
+						{
+							double R = 0; for (int32 i = 0; i < Tramo; ++i) R += double(M[Ini + i]) * M[Ini + i + L];
+							if (R / E > Mejor) { Mejor = R / E; Lag = L; }
+						}
+						if (Mejor > 0.5 && Lag) F0.Add(float(A.Frecuencia) / Lag);
+					}
+					F0.Sort();
+					const float Mediana = F0.Num() ? F0[F0.Num() / 2] : 0.f;
+					RegistroPrueba.Add(FString::Printf(TEXT("VOZ PIPER %s (sexo %s): %s · %.0f ms para %.1f s de audio · tono medio %.0f Hz"), *V.Id, *V.Sexo, bOk ? TEXT("bien") : *(TEXT("FALLO ") + A.Error), Ms, A.Duracion, Mediana));
+					if (bOk)
+					{
+						// WAV (PCM 16 bits mono) para escucharla
+						TArray<uint8> W;
+						auto Num = [&W](uint32 X, int32 B) { for (int32 i = 0; i < B; ++i) W.Add(uint8((X >> (8 * i)) & 0xFF)); };
+						W.Append((const uint8*)"RIFF", 4); Num(36 + A.PCM.Num(), 4); W.Append((const uint8*)"WAVEfmt ", 8); Num(16, 4); Num(1, 2); Num(1, 2);
+						Num(A.Frecuencia, 4); Num(A.Frecuencia * 2, 4); Num(2, 2); Num(16, 2); W.Append((const uint8*)"data", 4); Num(A.PCM.Num(), 4); W.Append(A.PCM);
+						FFileHelper::SaveArrayToFile(W, *(FPaths::ProjectSavedDir() / TEXT("Voces") / (V.Id + TEXT(".wav"))));
+					}
+				}
+			}
 			bSubtitulosAntes = UEMMConsultaUI::SubtitulosActivados();
 			RegistroPrueba.Add(FString::Printf(TEXT("Subtítulos guardados al empezar: %s"), bSubtitulosAntes ? TEXT("ON") : TEXT("OFF")));
 			Foto(TEXT("prueba_consulta"));
@@ -703,6 +902,7 @@ void AEMMConsultaModo::PasoDePrueba()
 			Siguiente();
 			// prueba corta (-EMMSoloMontaje): sólo las fotos del montaje
 			if (FParse::Param(FCommandLine::Get(), TEXT("EMMSoloMontaje"))) PasoPrueba = 11 + 17;   // directo al desfile de personajes
+			if (FParse::Param(FCommandLine::Get(), TEXT("EMMTodos"))) PasoPrueba = 200;            // todos los pacientes de la plantilla
 		}
 	}
 	else if (Ronda < 3)
@@ -744,7 +944,7 @@ void AEMMConsultaModo::PasoDePrueba()
 		}
 		if (T > 180) { RegistroPrueba.Add(TEXT("ERROR: tiempo agotado")); PasoPrueba = 100; }
 	}
-	else if (PasoPrueba < 60)
+	else if (PasoPrueba < 100)
 	{
 		// recetas, ficha, calendario y regreso del paciente, con los mismos botones que usa el jugador
 		const int32 K = PasoPrueba - 11;
@@ -869,7 +1069,7 @@ void AEMMConsultaModo::PasoDePrueba()
 				const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Falso.EsMujer(), Falso.Edad, GetTypeHash(X.Nombre) | 1u);
 				HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
 				HablaPaciente->Nombre = X.Nombre;
-				RegistroPrueba.Add(FString::Printf(TEXT("PERSONAJE %s (%s, %.0f años): voz %s, tono %.2f, velocidad %.2f"), *X.Nombre, Falso.EsMujer() ? TEXT("mujer") : TEXT("hombre"), Falso.Edad, *VP.Preferida, VP.Tono, VP.Vel));
+				RegistroPrueba.Add(FString::Printf(TEXT("PERSONAJE %s (%s, %.0f años): voz %s, tono %.2f, velocidad %.2f"), *X.Nombre, Falso.EsMujer() ? TEXT("mujer") : TEXT("hombre"), Falso.Edad, VP.Piper.IsEmpty() ? *VP.Preferida : *(TEXT("Piper ") + VP.Piper), VP.Tono, VP.Vel));
 				TWeakObjectPtr<AEMMConsultaModo> Yo(this);
 				HablaPaciente->Decir(Falso.Edad >= 65 ? TEXT("Buenos días, doctor. Ay, qué mal he dormido esta noche.") : Falso.Edad < 20 ? TEXT("Hola. Es que me duele bastante, la verdad.") : TEXT("Buenos días, doctor. Vengo porque no me encuentro bien."), [](const FString&) {});
 				Siguiente();

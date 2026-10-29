@@ -92,6 +92,11 @@ private:
 	const FEMMPersonaje* PersonajePara(const FEMMPaciente& Caso) const;
 	void PonerPersonaje(const FEMMPaciente& Caso);       // cambia el MetaHuman de la silla si hace falta
 	void PrepararMetaHuman(AActor* Yo, AActor* Otro, bool bPaciente);
+	// personas de la partida: una por personaje, con su caso inicial (se guarda en el historial)
+	void ConstruirPlantilla();
+	FEMMPaciente PacienteDe(const FEMMPersona& Persona, const FEMMPaciente& Caso, const FEMMFicha* Ficha) const;
+	bool PacienteDeFicha(const FEMMFicha& Ficha, FEMMPaciente& Salida) const;
+	bool ElegirPacienteNuevo(FEMMPaciente& Salida);
 	TArray<FEMMPaciente> Casos;
 	FEMMPaciente Paciente;
 	TArray<FEMMLinea> Charla;

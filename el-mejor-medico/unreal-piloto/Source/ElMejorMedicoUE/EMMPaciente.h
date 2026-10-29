@@ -13,6 +13,7 @@ struct FEMMVozPerfil
 struct FEMMPaciente
 {
 	FString Id, Enfermedad, Nombre, Apellidos, Sexo, TextoEdad;
+	FString Caso;                                    // caso de casos.json (Id es la persona en la partida)
 	float Edad = 40.f;
 	FEMMVozPerfil Voz;
 	FString Sistema;                                 // instrucciones para la IA, sin historial
