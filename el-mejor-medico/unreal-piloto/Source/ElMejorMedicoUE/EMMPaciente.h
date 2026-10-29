@@ -22,6 +22,17 @@ struct FEMMPaciente
 	TArray<TArray<FString>> TratMed;                 // grupos necesarios (vale cualquiera del grupo)
 	TArray<FString> TratBuena, TratEvitar, Antecedentes;
 	bool bFumador = false, bBebedor = false;
+	// quién viene y quién habla, carácter y gravedad
+	FString Personalidad, Acompanante, SistemaAcomp;   // SistemaAcomp: instrucciones de la IA para el acompañante
+	bool bHablaAcomp = false, bBebe = false, bCronica = false;
+	int32 Grav = 1;
+	// exploración y pruebas (las del juego web, coherentes con la enfermedad)
+	TMap<FString, float> Constantes;                 // temp, tas, tad, fc, sat, fr
+	TMap<FString, float> Sangre;                     // clave de EMMDatos::ReferenciasSangre()
+	TMap<FString, FString> Orina;                    // tira de orina
+	TMap<FString, FString> Pruebas;                  // rx, ecg, eco, tac → informe
+	float Complexion = 1.f, Altura = 1.f;
+	bool bGafas = false;
 
 	bool EsMujer() const { return Sexo == TEXT("m"); }
 	FString Respuesta(const FString& Intencion) const;
@@ -45,4 +56,7 @@ namespace EMMDatos
 	// Naturaleza de lo recetado (como itemLibre/buscarReceta del juego web): etiquetas como «antibiotico», «alcohol»…
 	// Nombre recibe el producto reconocido del recetario, si lo hay.
 	TArray<FString> EtiquetasDe(const FString& Texto, FString* Nombre = nullptr);
+	// Valores de referencia de la analítica (nombre, unidad, rango normal y decimales)
+	struct FValorRef { FString Clave, Nombre, Unidad; float Min = 0, Max = 0; int32 Decimales = 0; };
+	const TArray<FValorRef>& ReferenciasSangre();
 }

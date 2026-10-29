@@ -7,6 +7,7 @@
 #include "EMMDictado.h"
 #include "EMMRecetaUI.h"
 #include "EMMAgendaUI.h"
+#include "Components/WidgetComponent.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -77,9 +78,10 @@ void AEMMConsultaModo::BeginPlay()
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
 	// personajes y cámara del nivel
-	AActor* Camara = nullptr; AActor* ActorMedico = nullptr; AActor* ActorPaciente = nullptr;
+	AActor* Camara = nullptr; AActor* ActorMedico = nullptr; AActor* ActorPaciente = nullptr; AActor* MarcaPantalla = nullptr;
 	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
+		if (It->ActorHasTag(TEXT("PantallaPortatil"))) MarcaPantalla = *It;
 		if (It->ActorHasTag(TEXT("CamaraConsulta"))) Camara = *It;
 		if (It->ActorHasTag(TEXT("Medico"))) ActorMedico = *It;
 		if (It->ActorHasTag(TEXT("Paciente"))) ActorPaciente = *It;
@@ -169,6 +171,8 @@ void AEMMConsultaModo::BeginPlay()
 	EMMDatos::CargarPacientes(Casos, Error);
 	const bool bPacienteMujer = ActorPaciente && ActorPaciente->ActorHasTag(TEXT("Mujer"));
 	Casos.RemoveAll([&](const FEMMPaciente& P) { return ActorPaciente && P.EsMujer() != bPacienteMujer; });
+	// de momento sólo hay MetaHuman de adulto: los casos de niños, bebés y acompañante esperan a tener su personaje
+	Casos.RemoveAll([](const FEMMPaciente& P) { return P.Edad < 18.f || P.Edad > 64.f || P.bHablaAcomp || P.bBebe; });
 
 	UI = CreateWidget<UEMMConsultaUI>(PC, UEMMConsultaUI::StaticClass());
 	UI->Modo = this;
@@ -179,6 +183,14 @@ void AEMMConsultaModo::BeginPlay()
 	UIAgenda = CreateWidget<UEMMAgendaUI>(PC, UEMMAgendaUI::StaticClass());
 	UIAgenda->Modo = this;
 	UIAgenda->AddToViewport(10);
+	// el portátil: su programa en la pantalla 3D y, ampliado, a pantalla completa
+	UIPortatil = CreateWidget<UEMMPantallaUI>(PC, UEMMPantallaUI::StaticClass());
+	UIPortatil->Modo = this;
+	UIPortatil->bAmpliada = true;
+	UIPortatil->AddToViewport(10);
+	UIPortatil->SetVisibility(ESlateVisibility::Collapsed);
+	if (MarcaPantalla) CrearPantalla(MarcaPantalla);
+	GetWorldTimerManager().SetTimer(TemporizadorMedico, this, &AEMMConsultaModo::ActualizarMedico, 0.1f, true);
 
 	// ficha clínica y calendario: si hoy hay una revisión, vuelve ese paciente; si no, uno nuevo
 	FEMMHistorial& H = FEMMHistorial::Get();
@@ -303,15 +315,97 @@ FEMMPaciente AEMMConsultaModo::PacienteParaIA() const
 
 void AEMMConsultaModo::Avisar(const FString& Texto, bool bBien) { if (UI) UI->Aviso(Texto, bBien); }
 
+FString AEMMConsultaModo::TextoMedico() const { return UI ? UI->TextoEscrito() : FString(); }
+
+void AEMMConsultaModo::CrearPantalla(AActor* Marcador)
+{
+	// el marcador (crear_consulta.py) está en la cara de la pantalla: X hacia el médico, Z hacia arriba;
+	// su escala guarda el tamaño (Y ancho, Z alto, en metros)
+	const FVector Tam = Marcador->GetActorScale3D() * 100.f;
+	const float Ancho = 1280.f, Alto = FMath::RoundToFloat(Ancho * Tam.Z / FMath::Max(1.f, Tam.Y));
+	UIPantalla = CreateWidget<UEMMPantallaUI>(GetWorld(), UEMMPantallaUI::StaticClass());
+	UIPantalla->Modo = this;
+	// el marcador es un TargetPoint, que Unreal oculta en el juego: la pantalla va en un actor propio
+	AActor* Soporte = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), Marcador->GetActorTransform());
+	Pantalla3D = NewObject<UWidgetComponent>(Soporte, TEXT("PantallaPortatil"));
+	Soporte->SetRootComponent(Pantalla3D);
+	Pantalla3D->SetUsingAbsoluteScale(true);
+	Pantalla3D->RegisterComponent();
+	Pantalla3D->SetWorldLocationAndRotation(Marcador->GetActorLocation(), Marcador->GetActorRotation());
+	Pantalla3D->SetWorldScale3D(FVector(1.f, Tam.Y / Ancho, Tam.Y / Ancho));
+	Pantalla3D->SetWidgetSpace(EWidgetSpace::World);
+	Pantalla3D->SetDrawSize(FVector2D(Ancho, Alto));
+	Pantalla3D->SetPivot(FVector2D(0.5f, 0.5f));
+	Pantalla3D->SetBlendMode(EWidgetBlendMode::Opaque);
+	Pantalla3D->SetTwoSided(false);
+	// pantalla retroiluminada (material propio con brillo; el de Unreal se ve negro con la exposición de la consulta)
+	if (UMaterialInterface* M = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materiales/M_PantallaPortatil.M_PantallaPortatil"))) Pantalla3D->SetMaterial(0, M);
+	Pantalla3D->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Pantalla3D->SetWidget(UIPantalla);
+	Pantalla3D->SetTickWhenOffscreen(false);
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Pantalla del portátil: %.1f × %.1f cm, %.0f × %.0f px"), Tam.Y, Tam.Z, Ancho, Alto);
+}
+
+void AEMMConsultaModo::AbrirPortatil()
+{
+	if (!UIPortatil) return;
+	if (UIRecetas) UIRecetas->Cerrar();
+	if (UIAgenda) UIAgenda->Cerrar();
+	const bool bAbrir = UIPortatil->GetVisibility() == ESlateVisibility::Collapsed;
+	UIPortatil->SetVisibility(bAbrir ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	if (bAbrir)
+	{
+		// se abre por lo que muestra el portátil en ese momento
+		if (UIPantalla) UIPortatil->PonerPestana(UIPantalla->PestanaActual());
+		UIPortatil->Refrescar(true);
+	}
+}
+
+void AEMMConsultaModo::PestanaPortatil(EEMMPestana P)
+{
+	if (UIPantalla) { UIPantalla->PonerPestana(P); UIPantalla->Refrescar(); }
+}
+
+void AEMMConsultaModo::ActualizarMedico()
+{
+	const double Ahora = FPlatformTime::Seconds();
+	const FString T = TextoMedico();
+	if (T != UltimoTextoMedico) { UltimoTextoMedico = T; UltimaTecla = Ahora; }
+	const bool bPortatil = UIPortatil && UIPortatil->GetVisibility() == ESlateVisibility::Visible;
+	const bool bRecetando = UIRecetas && UIRecetas->EstaAbierta();
+	const bool bAgenda = UIAgenda && UIAgenda->EstaAbierta();
+	const bool bTeclea = Ahora - UltimaTecla < 1.5 || bRecetando;
+	// lo que enseña el portátil 3D: lo mismo que la vista ampliada o lo que se está haciendo
+	if (UIPantalla && !bPortatil)
+	{
+		const EEMMPestana P = bRecetando ? EEMMPestana::Recetas : bAgenda ? EEMMPestana::Agenda : (bTeclea || Charla.Num()) ? EEMMPestana::Consulta : EEMMPestana::Paciente;
+		UIPantalla->PonerPestana(P);
+	}
+	else if (UIPantalla && bPortatil) UIPantalla->PonerPestana(UIPortatil->PestanaActual());
+	if (MHMedico.IsValid())
+	{
+		TArray<USkeletalMeshComponent*> Mallas;
+		MHMedico->GetComponents(Mallas);
+		for (USkeletalMeshComponent* M : Mallas)
+			if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance()))
+			{
+				A->bMirarPantalla = bTeclea || bPortatil || bAgenda;
+				A->bTeclear = bTeclea;
+			}
+	}
+}
+
 void AEMMConsultaModo::AbrirRecetas()
 {
 	if (UIAgenda) UIAgenda->Cerrar();
+	if (UIPortatil) UIPortatil->SetVisibility(ESlateVisibility::Collapsed);
 	if (UIRecetas) { if (UIRecetas->EstaAbierta()) UIRecetas->Cerrar(); else UIRecetas->Abrir(); }
 }
 
 void AEMMConsultaModo::AbrirAgenda()
 {
 	if (UIRecetas) UIRecetas->Cerrar();
+	if (UIPortatil) UIPortatil->SetVisibility(ESlateVisibility::Collapsed);
 	if (UIAgenda) { if (UIAgenda->EstaAbierta()) UIAgenda->Cerrar(); else UIAgenda->Abrir(); }
 }
 
@@ -475,6 +569,8 @@ void AEMMConsultaModo::PasoDePrueba()
 		for (TActorIterator<AActor> It(GetWorld()); It; ++It) if (It->ActorHasTag(TEXT("Revision"))) Revision.Add(*It);
 		Revision.Sort([](const AActor& A, const AActor& B) { return A.GetName() < B.GetName(); });
 		static AActor* Juego = nullptr;
+		// en las vistas de revisión el médico está escribiendo (para comprobar los brazos en el teclado)
+		UI->PonerTexto(FString::ChrN(1 + int32(T * 5.0) % 30, TEXT('a')));
 		const int32 Cual = int32(T / 2.0);
 		if (PC && !Juego) Juego = PC->GetViewTarget();
 		if (PC && Revision.IsValidIndex(Cual))
@@ -487,11 +583,25 @@ void AEMMConsultaModo::PasoDePrueba()
 				if (FMath::Fmod(T, 2.0) > 1.2 && !RegistroPrueba.Last().EndsWith(Nombre)) Foto(Nombre);
 			}
 		}
-		else { if (PC && Juego) PC->SetViewTargetWithBlend(Juego, 0.f); EMMDictado::Parar(); Siguiente(); }
+		else
+		{
+			if (PC && Juego) PC->SetViewTargetWithBlend(Juego, 0.f);
+			UI->LimpiarTexto();
+			EMMDictado::Parar();
+			Siguiente();
+			// prueba corta (-EMMSoloMontaje): sólo las fotos del montaje
+			if (FParse::Param(FCommandLine::Get(), TEXT("EMMSoloMontaje"))) PasoPrueba = 100;
+		}
 	}
 	else if (Ronda < 3)
 	{
-		if (Fase == 0 && !bOcupado && !bTurnoPaciente && !EMMDictado::Escuchando())
+		// primera pregunta: se escribe en la caja como el jugador (el médico mira el portátil y teclea) y luego se envía
+		if (Ronda == 0 && Fase == 0 && !bOcupado && !bTurnoPaciente && T < 2.2)
+		{
+			if (UI->TextoEscrito().IsEmpty()) UI->PonerTexto(Preguntas[0]);
+			if (T > 1.3 && !RegistroPrueba.Last().Contains(TEXT("tecleando"))) Foto(TEXT("prueba_medico_tecleando"));
+		}
+		else if (Fase == 0 && !bOcupado && !bTurnoPaciente && !EMMDictado::Escuchando())
 		{
 			// segunda pregunta: como si el jugador activara los subtítulos en CONFIGURACIÓN
 			if (Ronda == 1) UEMMConsultaUI::GuardarSubtitulos(true);
@@ -564,7 +674,8 @@ void AEMMConsultaModo::PasoDePrueba()
 		{
 			UIRecetas->Cerrar();
 			UIAgenda->Abrir();
-			UIAgenda->Escribir(Paciente.Enfermedad, TEXT("Ninguna"));
+			UIAgenda->Escribir(Paciente.Enfermedad, TEXT("Analítica de sangre, orina y electrocardiograma"));
+			PonerPruebasVisita(TEXT("Analítica de sangre, orina y electrocardiograma"));
 			UIAgenda->ElegirRevision(-2);   // al acabar el tratamiento
 			UIAgenda->PulsarTerminar();
 			// lo guardado en disco: se vuelve a leer el archivo
@@ -604,7 +715,14 @@ void AEMMConsultaModo::PasoDePrueba()
 			}
 			if (T > 180) { RegistroPrueba.Add(TEXT("ERROR: tiempo agotado en la revisión")); PasoPrueba = 100; }
 		}
-		else if (K > 10) PasoPrueba = 100;
+		// el portátil ampliado: resultados de las pruebas pedidas en la primera visita e historial
+		else if (K == 11) { AbrirPortatil(); UIPortatil->PonerPestana(EEMMPestana::Pruebas); UIPortatil->Refrescar(true); Siguiente(); }
+		else if (K == 12 && T > 1.2) { Foto(TEXT("prueba_portatil_pruebas")); Siguiente(); }
+		else if (K == 13 && T > 0.6) { UIPortatil->PonerPestana(EEMMPestana::Historial); UIPortatil->Refrescar(true); Siguiente(); }
+		else if (K == 14 && T > 1.2) { Foto(TEXT("prueba_portatil_historial")); Siguiente(); }
+		else if (K == 15 && T > 0.6) { AbrirPortatil(); Siguiente(); }
+		else if (K == 16 && T > 1.0) { Foto(TEXT("prueba_pantalla_portatil_juego")); Siguiente(); }
+		else if (K > 16 && T > 1.0) PasoPrueba = 100;
 	}
 	else
 	{

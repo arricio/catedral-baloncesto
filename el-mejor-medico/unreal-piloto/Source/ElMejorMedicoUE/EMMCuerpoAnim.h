@@ -21,6 +21,8 @@ struct FEMMPostura
 {
 	FVector Pelvis = FVector::ZeroVector;     // desplazamiento de la pelvis (espacio del componente)
 	TArray<FEMMGiroHueso> Giros;              // giros locales de los huesos
+	FVector Teclado = FVector(28, -5, 60);    // al teclear: brazo adelante, antebrazo, pronación (grados)
+	float TecladoCierre = 0.f;                // al teclear: brazos hacia el centro (grados, eje vertical del cuerpo)
 	static const FEMMPostura& Sentado();       // leída una vez de postura.json
 };
 
@@ -34,6 +36,7 @@ struct FEMMCuerpoProxy : public FAnimInstanceProxy
 	float Apertura = 0, Redondez = 0, Estiramiento = 0, Cierre = 0, Mordida = 0, Parpadeo = 0, Tiempo = 0, Fase = 0;
 	float MirarYaw = 0, MirarPitch = 0;
 	float Preocupacion = 0, Sonrisa = 0, Habla = 0;   // Habla: 0..1 suavizado mientras habla (gestos)
+	float Pantalla = 0, Teclea = 0, Inquietud = 1;    // 0..1 suavizados
 	FVector2D Ojos = FVector2D::ZeroVector, OjosDestino = FVector2D::ZeroVector;   // microsacadas de la mirada
 	float ProximaSacada = 1.f;
 
@@ -52,6 +55,11 @@ public:
 	// gesto de fondo: el paciente preocupado frunce un poco las cejas; el médico, sonrisa leve y amable
 	float Preocupacion = 0.f;
 	float Sonrisa = 0.f;
+	// el médico con el portátil: mira la pantalla y, si escribe, lleva las manos al teclado
+	bool bMirarPantalla = false;
+	bool bTeclear = false;
+	// carácter del paciente: cuánto se mueve (nervioso > 1, tranquilo < 1)
+	float Inquietud = 1.f;
 
 protected:
 	virtual FAnimInstanceProxy* CreateAnimInstanceProxy() override { return new FEMMCuerpoProxy(this); }

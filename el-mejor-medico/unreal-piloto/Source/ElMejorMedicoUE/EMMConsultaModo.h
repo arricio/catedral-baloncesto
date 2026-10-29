@@ -7,6 +7,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "EMMPaciente.h"
 #include "EMMHistorial.h"
+#include "EMMPantallaUI.h"
 #include "EMMConsultaModo.generated.h"
 
 class UEMMConsultaUI;
@@ -29,6 +30,12 @@ public:
 	void Dictar();
 	void AbrirRecetas();
 	void AbrirAgenda();
+	// el portátil del médico: abre o cierra su programa a pantalla completa; la pestaña se ve también en el 3D
+	void AbrirPortatil();
+	void PestanaPortatil(EEMMPestana P);
+	const FEMMVisita& VisitaActual() const { return Visita; }
+	FString TextoMedico() const;
+	void PonerPruebasVisita(const FString& Pruebas) { Visita.Pruebas = Pruebas; }
 	void Avisar(const FString& Texto, bool bBien);
 
 	// recetas de esta consulta (una por medicamento o tratamiento)
@@ -64,6 +71,14 @@ private:
 	UPROPERTY() TObjectPtr<UEMMConsultaUI> UI;
 	UPROPERTY() TObjectPtr<UEMMRecetaUI> UIRecetas;
 	UPROPERTY() TObjectPtr<UEMMAgendaUI> UIAgenda;
+	UPROPERTY() TObjectPtr<UEMMPantallaUI> UIPortatil;          // a pantalla completa
+	UPROPERTY() TObjectPtr<UEMMPantallaUI> UIPantalla;          // la que se dibuja en el portátil 3D
+	UPROPERTY() TObjectPtr<class UWidgetComponent> Pantalla3D;
+	FTimerHandle TemporizadorMedico;
+	FString UltimoTextoMedico;
+	double UltimaTecla = -10.0;
+	void ActualizarMedico();   // el médico mira la pantalla y teclea cuando escribe o consulta el portátil
+	void CrearPantalla(AActor* Marcador);
 	UPROPERTY() TObjectPtr<UEMMHabla> Medico;
 	UPROPERTY() TObjectPtr<UEMMHabla> HablaPaciente;
 	TWeakObjectPtr<AActor> MHMedico, MHPaciente;

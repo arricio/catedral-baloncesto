@@ -54,6 +54,25 @@ bool EMMDatos::CargarPacientes(TArray<FEMMPaciente>& Salida, FString& Error)
 			P.TratBuena = Lista((*Tr)->GetArrayField(TEXT("buena")));
 			P.TratEvitar = Lista((*Tr)->GetArrayField(TEXT("evitar")));
 		}
+		O->TryGetStringField(TEXT("personalidad"), P.Personalidad);
+		O->TryGetStringField(TEXT("acompanante"), P.Acompanante);
+		O->TryGetStringField(TEXT("sistemaAcomp"), P.SistemaAcomp);
+		O->TryGetBoolField(TEXT("hablaAcomp"), P.bHablaAcomp);
+		O->TryGetBoolField(TEXT("bebe"), P.bBebe);
+		O->TryGetBoolField(TEXT("cronica"), P.bCronica);
+		O->TryGetNumberField(TEXT("grav"), P.Grav);
+		auto Numeros = [](const TSharedPtr<FJsonObject>& J, TMap<FString, float>& M) { for (const auto& X : J->Values) M.Add(FString(X.Key), float(X.Value->AsNumber())); };
+		auto Textos = [](const TSharedPtr<FJsonObject>& J, TMap<FString, FString>& M) { for (const auto& X : J->Values) M.Add(FString(X.Key), X.Value->AsString()); };
+		if (const TSharedPtr<FJsonObject>* J; O->TryGetObjectField(TEXT("constantes"), J)) Numeros(*J, P.Constantes);
+		if (const TSharedPtr<FJsonObject>* J; O->TryGetObjectField(TEXT("sangre"), J)) Numeros(*J, P.Sangre);
+		if (const TSharedPtr<FJsonObject>* J; O->TryGetObjectField(TEXT("orina"), J)) Textos(*J, P.Orina);
+		if (const TSharedPtr<FJsonObject>* J; O->TryGetObjectField(TEXT("pruebas"), J)) Textos(*J, P.Pruebas);
+		if (const TSharedPtr<FJsonObject>* J; O->TryGetObjectField(TEXT("apariencia"), J))
+		{
+			(*J)->TryGetNumberField(TEXT("complexion"), P.Complexion);
+			(*J)->TryGetNumberField(TEXT("altura"), P.Altura);
+			(*J)->TryGetBoolField(TEXT("gafas"), P.bGafas);
+		}
 		Salida.Add(MoveTemp(P));
 	}
 	return Salida.Num() > 0;
@@ -125,6 +144,24 @@ TArray<FString> EMMDatos::EtiquetasDe(const FString& Texto, FString* Nombre)
 		if (M.FindNext()) for (const FString& X : P.Tags) Tags.AddUnique(X);
 	}
 	return Tags;
+}
+
+const TArray<EMMDatos::FValorRef>& EMMDatos::ReferenciasSangre()
+{
+	static TArray<FValorRef> R = []() {
+		TArray<FValorRef> L;
+		FString J; TSharedPtr<FJsonObject> Raiz;
+		if (FFileHelper::LoadFileToString(J, *(FPaths::ProjectContentDir() / TEXT("Datos/casos.json"))) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(J), Raiz) && Raiz.IsValid())
+			if (const TSharedPtr<FJsonObject>* Ref; Raiz->TryGetObjectField(TEXT("referencias"), Ref))
+				for (const auto& V : (*Ref)->GetArrayField(TEXT("sangre")))
+				{
+					const TSharedPtr<FJsonObject> O = V->AsObject();
+					const TArray<TSharedPtr<FJsonValue>>& Rango = O->GetArrayField(TEXT("r"));
+					L.Add({ O->GetStringField(TEXT("k")), O->GetStringField(TEXT("n")), O->GetStringField(TEXT("u")), float(Rango[0]->AsNumber()), float(Rango[1]->AsNumber()), int32(O->GetNumberField(TEXT("d"))) });
+				}
+		return L;
+	}();
+	return R;
 }
 
 TArray<FString> EMMDatos::Intenciones(const FString& Texto)

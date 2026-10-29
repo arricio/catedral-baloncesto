@@ -57,4 +57,5 @@ private:
 	UFUNCTION() void AlAvanzar();
 	UFUNCTION() void AlNuevo();
 	UFUNCTION() void AlCerrar();
+	UFUNCTION() void AlCambiarPruebas(const FText& Texto);
 };

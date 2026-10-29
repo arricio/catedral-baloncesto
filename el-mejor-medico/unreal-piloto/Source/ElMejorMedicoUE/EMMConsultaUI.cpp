@@ -91,7 +91,10 @@ void UEMMConsultaUI::Construir()
 
 	// Arriba a la derecha: RECETAR, AGENDA · FICHA y CONFIGURACIÓN
 	UHorizontalBox* Arriba = WidgetTree->ConstructWidget<UHorizontalBox>();
-	UTextBlock* EAj; UTextBlock* ERec; UTextBlock* EAg;
+	UTextBlock* EAj; UTextBlock* ERec; UTextBlock* EAg; UTextBlock* EPor;
+	UButton* BotonPortatil = CrearBoton(TEXT("PORTÁTIL"), FLinearColor(0.05f, 0.25f, 0.45f), EPor, 16.f);
+	BotonPortatil->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarPortatil);
+	if (UHorizontalBoxSlot* R = Arriba->AddChildToHorizontalBox(BotonPortatil)) R->SetPadding(FMargin(8, 0, 0, 0));
 	UButton* BotonRecetar = CrearBoton(TEXT("RECETAR"), FLinearColor(0.15f, 0.45f, 0.10f), ERec, 16.f);
 	UButton* BotonAgenda = CrearBoton(TEXT("AGENDA · FICHA"), Azul, EAg, 16.f);
 	UButton* BotonAjustes = CrearBoton(TEXT("CONFIGURACIÓN"), Gris, EAj, 15.f);
@@ -215,6 +218,7 @@ void UEMMConsultaUI::PonerIA(const FString& T) { EstadoIA->SetText(FText::FromSt
 void UEMMConsultaUI::PonerFecha(const FString& T) { TextoFecha->SetText(FText::FromString(T)); }
 void UEMMConsultaUI::AlPulsarRecetar() { if (Modo.IsValid()) Modo->AbrirRecetas(); }
 void UEMMConsultaUI::AlPulsarAgenda() { if (Modo.IsValid()) Modo->AbrirAgenda(); }
+void UEMMConsultaUI::AlPulsarPortatil() { if (Modo.IsValid()) Modo->AbrirPortatil(); }
 void UEMMConsultaUI::PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico)
 {
 	// FText::ToUpper usa las reglas del idioma (FString::ToUpper deja «ó» en minúscula)

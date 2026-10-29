@@ -285,18 +285,108 @@ def frente_de_portatil(malla):
     return frente, max(ancho) - min(ancho), max(largo) - min(largo)
 
 
+def material_pantalla():
+    """Pantalla retroiluminada: la interfaz (textura «SlateUI» que pone el componente de Unreal) como luz propia,
+    con brillo suficiente para la exposición de la escena. La usa EMMConsultaModo::CrearPantalla."""
+    ruta = '/Game/Materiales/M_PantallaPortatil'
+    if eal.does_asset_exist(ruta):
+        return eal.load_asset(ruta)
+    m = herr.create_asset('M_PantallaPortatil', '/Game/Materiales', unreal.Material, unreal.MaterialFactoryNew())
+    m.set_editor_property('shading_model', unreal.MaterialShadingModel.MSM_UNLIT)
+    t = mel.create_material_expression(m, unreal.MaterialExpressionTextureSampleParameter2D, -500, 0)
+    t.set_editor_property('parameter_name', 'SlateUI')
+    t.set_editor_property('texture', eal.load_asset('/Engine/EngineResources/WhiteSquareTexture'))
+    b = mel.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -500, 250)
+    b.set_editor_property('parameter_name', 'Brillo')
+    b.set_editor_property('default_value', 9.0)
+    x = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -200, 50)
+    mel.connect_material_expressions(t, 'RGB', x, 'A')
+    mel.connect_material_expressions(b, '', x, 'B')
+    mel.connect_material_property(x, '', unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    mel.recompile_material(m)
+    eal.save_loaded_asset(m)
+    log('material de la pantalla creado')
+    return m
+
+
+def pantalla_de_portatil(malla, frente, actor):
+    """Busca la cara de la pantalla en la geometría de la tapa (la superficie más cercana al usuario, inclinada)
+    y deja un marcador «PantallaPortatil»: su eje X mira al médico, su eje Z sube por la pantalla y su escala
+    guarda el tamaño (Y = ancho, Z = alto, en metros)."""
+    puntos = []
+    for s in range(malla.get_num_sections(0)):
+        puntos += list(unreal.ProceduralMeshLibrary.get_section_from_static_mesh(malla, 0, s)[0])
+    ux, uy = math.cos(frente), math.sin(frente)
+    zmin = min(p.z for p in puntos); zmax = max(p.z for p in puntos); h = zmax - zmin
+    u = lambda p: p.x * ux + p.y * uy        # hacia el usuario
+    v = lambda p: -p.x * uy + p.y * ux       # de lado a lado
+    arriba = [p for p in puntos if p.z > zmax - 0.08 * h]
+    abajo = [p for p in puntos if zmin + 0.22 * h < p.z < zmin + 0.32 * h]
+    u_arr, z_arr = max(u(p) for p in arriba), sum(p.z for p in arriba) / len(arriba)
+    u_abj, z_abj = max(u(p) for p in abajo), sum(p.z for p in abajo) / len(abajo)
+    du, dz = u_arr - u_abj, z_arr - z_abj
+    largo = math.hypot(du, dz)
+    sube = (du / largo, dz / largo)                  # dirección de la tapa hacia arriba (en u, z)
+    normal = (dz / largo, -du / largo)               # perpendicular, hacia el usuario
+    if normal[0] < 0: normal = (-normal[0], -normal[1])
+    # la cara de la tapa: los puntos de la tapa que están en el plano delantero (o por delante de él)
+    tapa = [p for p in puntos if p.z > zmin + 0.12 * h]
+    dist = lambda p: (u(p) - u_abj) * normal[0] + (p.z - z_abj) * normal[1]
+    largo_en = lambda p: (u(p) - u_abj) * sube[0] + (p.z - z_abj) * sube[1]
+    cara = [p for p in tapa if -0.8 < dist(p) < 1.5]   # pegados al plano (no el teclado, que está delante)
+    smin, smax = min(largo_en(p) for p in cara), max(largo_en(p) for p in cara)
+    vmin, vmax = min(v(p) for p in cara), max(v(p) for p in cara)
+    delante = max(dist(p) for p in cara) + 0.15
+    # el cristal está algo por debajo del centro de la tapa (el marco de arriba es más ancho en este modelo)
+    sc, vc = (smin + smax) / 2 - 0.035 * (smax - smin), (vmin + vmax) / 2
+    uc = u_abj + sube[0] * sc + normal[0] * delante
+    zc = z_abj + sube[1] * sc + normal[1] * delante
+    ancho_tapa, alto_tapa = vmax - vmin, smax - smin
+    local = lambda uu, vv, zz: unreal.Vector(uu * ux - vv * uy, uu * uy + vv * ux, zz)
+    tr = actor.get_actor_transform()
+    centro = tr.transform_location(local(uc, vc, zc))
+    eje_x = tr.transform_direction(local(normal[0], 0, normal[1])); eje_x.normalize()
+    eje_z = tr.transform_direction(local(sube[0], 0, sube[1])); eje_z.normalize()
+    esc = actor.get_actor_scale3d().x
+    ancho, alto = ancho_tapa * 0.78 * esc, alto_tapa * 0.68 * esc
+    material_pantalla()
+    m = actores.spawn_actor_from_class(unreal.TargetPoint, centro, unreal.MathLibrary.make_rot_from_xz(eje_x, eje_z))
+    m.set_actor_scale3d(unreal.Vector(1, ancho / 100, alto / 100))
+    m.tags = [unreal.Name('PantallaPortatil')]
+    m.set_actor_label('Pantalla portatil')
+    m.set_folder_path('Consulta/Muebles')
+    log(f'pantalla: centro ({centro.x:.1f}, {centro.y:.1f}, {centro.z:.1f}), {ancho:.1f} × {alto:.1f} cm, inclinada {math.degrees(math.atan2(-sube[0], sube[1])):.0f}°')
+    # la luz que da la pantalla encendida sobre el teclado y la cara del médico (tenue y fría)
+    luz_p = luz(unreal.RectLight, 'Luz pantalla portatil', (centro.x + eje_x.x * 2, centro.y + eje_x.y * 2, centro.z + eje_x.z * 2), (0, 0, 0))
+    luz_p.set_actor_rotation(unreal.MathLibrary.make_rot_from_xz(eje_x, eje_z), False)
+    cl = luz_p.rect_light_component
+    cl.set_editor_property('intensity_units', unreal.LightUnits.CANDELAS)
+    cl.set_intensity(4.0)
+    cl.set_editor_property('source_width', ancho)
+    cl.set_editor_property('source_height', alto)
+    cl.set_editor_property('attenuation_radius', 90.0)
+    cl.set_editor_property('use_temperature', True)
+    cl.set_editor_property('temperature', 7500.0)
+    cl.set_editor_property('cast_shadows', False)
+    cl.set_editor_property('mobility', unreal.ComponentMobility.MOVABLE)
+
+
 # portátil delante del médico, con la pantalla mirándole y a tamaño real (unos 34 cm de ancho)
 portatil = mueble('classic_laptop')
 if portatil:
     frente, ancho, fondo = frente_de_portatil(portatil[0])
     escala = 34.0 / ancho if ancho > 1 else 0.6
     # delante del médico, recto y a 14 cm del borde (las manos del médico no lo tocan)
-    px, py = borde_medico + fondo * escala * 0.5 + 14, -8.0
-    # el frente del portátil (teclado) apunta al médico, que mira hacia +X: giro = 180° − frente de la malla
-    hacia_medico = 180.0
+    px, py = borde_medico + fondo * escala * 0.5 + 14, 2.0
+    # el frente del portátil (teclado) apunta al médico, que mira hacia +X: giro = 180° − frente de la malla.
+    # Girado 25° hacia la ventana (donde está la cámara del juego): el médico lo usa igual y se ve que está encendido
+    hacia_medico = 180.0 - 25.0
     giro = hacia_medico - math.degrees(frente)
-    colocar(portatil, px, py, z_suelo=alto_mesa, giro=giro, escala=escala, etiqueta='Portatil')
+    puesto = colocar(portatil, px, py, z_suelo=alto_mesa, giro=giro, escala=escala, etiqueta='Portatil')
     log(f'portátil en ({px:.0f}, {py:.0f}), giro {giro:.0f}°, escala {escala:.2f}')
+    # la pantalla: un marcador en la cara de la tapa que mira al médico; el juego pone ahí la interfaz médica (EMMPantallaUI)
+    if puesto:
+        pantalla_de_portatil(portatil[0], frente, puesto[0])
 
 
 def material_color(nombre, color, rugosidad=0.8):
@@ -456,7 +546,11 @@ def camara_revision(nombre, pos, mira, focal=24.0):
     c = actores.spawn_actor_from_class(unreal.CineCameraActor, unreal.Vector(*pos), rot)
     c.tags = [unreal.Name('Revision'), unreal.Name(nombre)]
     c.set_actor_label(f'Camara {nombre}')
-    c.get_cine_camera_component().set_editor_property('current_focal_length', focal)
+    cc = c.get_cine_camera_component()
+    cc.set_editor_property('current_focal_length', focal)
+    fs = cc.get_editor_property('focus_settings')      # todo enfocado: las fotos son para revisar
+    fs.set_editor_property('focus_method', unreal.CameraFocusMethod.DISABLE)
+    cc.set_editor_property('focus_settings', fs)
     return c
 
 

@@ -76,6 +76,7 @@ private:
 	UFUNCTION() void AlPulsarAjustes();
 	UFUNCTION() void AlPulsarRecetar();
 	UFUNCTION() void AlPulsarAgenda();
+	UFUNCTION() void AlPulsarPortatil();
 	UFUNCTION() void AlPulsarSubtitulos();
 	UFUNCTION() void AlPulsarCerrarAjustes();
 	void RefrescarAjustes();

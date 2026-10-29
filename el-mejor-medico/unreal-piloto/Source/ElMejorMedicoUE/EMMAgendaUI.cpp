@@ -92,6 +92,7 @@ void UEMMAgendaUI::Construir()
 	Diagnostico->SetHintText(FText::FromString(TEXT("Diagnóstico (lo escribes tú)")));
 	Pruebas = WidgetTree->ConstructWidget<UEditableTextBox>();
 	Pruebas->SetHintText(FText::FromString(TEXT("Pruebas solicitadas (analítica, radiografía…)")));
+	Pruebas->OnTextChanged.AddDynamic(this, &UEMMAgendaUI::AlCambiarPruebas);   // el portátil las muestra al momento
 	for (UEditableTextBox* E : { Diagnostico.Get(), Pruebas.Get() })
 	{
 		EMMEstiloPapel(E->WidgetStyle, 17.f);
@@ -275,3 +276,4 @@ void UEMMAgendaUI::AlNuevo()
 }
 
 void UEMMAgendaUI::AlCerrar() { Cerrar(); }
+void UEMMAgendaUI::AlCambiarPruebas(const FText& T) { if (Modo.IsValid()) Modo->PonerPruebasVisita(T.ToString()); }
