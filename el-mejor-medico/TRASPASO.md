@@ -2,11 +2,54 @@
 
 Informe para continuar el desarrollo en una sesión **local** de Claude Code (portátil Lenovo Legion con Windows, con Blender 5.2.2 LTS y Unreal Engine 5.8 conectados por MCP) sin empezar de cero.
 
-Fecha del traspaso: 25 de octubre de 2026 (actualizado el 27 de octubre de 2026).
+Fecha del traspaso: 25 de octubre de 2026 (actualizado el 29 de octubre de 2026).
 
 ---
 
-## ▶ PUNTO EXACTO PARA CONTINUAR (27/10/2026, guardado antes de agotar el uso semanal)
+## ▶ PUNTO EXACTO PARA CONTINUAR (29/10/2026)
+
+**Estado guardado**
+- GitHub, rama `claude/medical-simulator-game-ruh821` (ver el último commit). Juego **Three.js** intacto: `pruebas/cir.js` y `pruebas/jugar.js` pasan (27/10; el 29/10 sólo se añadió `export` a `PISTAS` en `js/datos.js`).
+- **Piloto Unreal 5.8** en `C:\Users\arric\ElMejorMedicoUE` (fuera de git; **no borrar**: los 9 MetaHumans y el nivel sólo están ahí). Código, datos y herramientas copiados en `unreal-piloto/` con `Herramientas\copiar-a-repositorio.ps1`.
+- Piper (programa y 5 voces es-ES, 316 MB) descargado con permiso en `ElMejorMedicoUE\Fuentes\Piper` (fuera de git). **No se ejecuta**: `piper.exe`, `espeak-ng.dll` y `piper_phonemize.dll` no están firmados (el sistema de permisos lo impidió y Smart App Control lo bloquearía). El usuario eligió **integrar Piper dentro del juego** desde su código.
+
+**Hecho y probado el 29/10 (prueba automática `-EMMPrueba`; ejecutable: ver «Ejecutable» abajo)**
+- **Portátil encendido y funcional** (`EMMPantallaUI`): historia clínica electrónica ficticia con datos reales de la partida en 6 pestañas (paciente con constantes, alergias y antecedentes; consulta actual con lo que escribe el médico en directo y el registro de la conversación; historial; pruebas y resultados; recetas y tratamientos; agenda). Se dibuja en la pantalla 3D (marcador calculado desde la geometría de la tapa en `crear_consulta.py`, material propio retroiluminado `M_PantallaPortatil` y luz de pantalla) y se abre ampliada con el botón PORTÁTIL (ratón, dedo, mando). Portátil girado 25° hacia la cámara: se ve encendido desde el plano general sin tapar caras.
+- **Pruebas médicas**: en AGENDA · FICHA › «Pruebas solicitadas» (texto libre). Tira de orina y ECG dan resultado en el momento; analítica, radiografía, ecografía y TAC, en la siguiente visita. Los valores vienen del juego web (coherentes con la enfermedad).
+- **Médico con el portátil**: mira la pantalla y teclea con las dos manos (palmas abajo) cuando el jugador escribe, receta o consulta el portátil; al hablar vuelve a mirar al paciente. Ángulos en `Content/Datos/postura.json › teclado`.
+- **158 casos** (`casos.json` v3, exportador `herramientas/exportar-casos-unreal.mjs`): las 41 enfermedades del juego web, todas las edades (10 bebés, 18 niños, 8 adolescentes, 76 adultos, 46 mayores), con personalidad, acompañante, constantes, analítica, orina, informes de pruebas y tratamiento.
+- **8 pacientes MetaHuman** (presets elegidos con fotos de galería: `Herramientas/galeria_presets.py`): Mateo (h 14–25), Victor (h 26–40), Bruce (h 41–64), Walter (h 65+), Celeste (m 14–22), Vivian (m 23–40), Lani (m 41–64), Grace (m 65+). `Content/Datos/personajes.json` elige el de su sexo y edad y el juego lo sienta en la silla (`PonerPersonaje`). Construcción: `crear_metahumans.py` con `EMM_SOLO=<nombre>` **de uno en uno** (con varios seguidos el editor se queda sin memoria).
+- **Voz por persona** (`EMMVoz::PerfilPara` con semilla): tono continuo con la edad y variación propia de tono, ritmo y voz (Laura/Helena).
+- **Personalidad**: nerviosos se mueven más y hablan más deprisa; tranquilos y graves, menos. **Revisión anticipada**: si empeora antes de su cita, pide cita (se marca en el historial).
+- **IA**: detecta respuestas casi repetidas y pide otra; corrige «soy el único» y tuteos.
+- **Mando Xbox**: X micrófono, RB enviar, Y responder, LB portátil, RT recetar, Vista agenda, Menú configuración, B/Escape cerrar; Ctrl+Intro envía. Probado simulando las pulsaciones.
+- Rendimiento en juego (RTX 3050 portátil): 30 fps de media, 24 en el 5 % peor.
+
+**Esperando al usuario**
+1. **Ropa gratuita de Epic** (el usuario la añade a su biblioteca de Fab; después se importa con el plugin de Fab del editor): Techwear Outfit `fab.com/listings/9e04c752-1979-4723-b78f-6d24afc532bc`, Hoodie `fae6467c-1d14-412c-b9b0-a579f0eb1b22`, Jeans `07dc895c-7402-411c-a74a-e1c47b33ac68`, T Shirt Variants `1b1009ae-4327-4c9d-9567-9314d88e7a86`, Sweater `d401d47a-204f-4fde-aaec-c230042e7f60`, Slim Jeans Variants `c5ed3971-03fd-4cec-804c-646422881fb3`, Crop Top Variants `39bcebb4-cbc7-4c5e-9cd6-d6dd6b5ed9ff`. No hay bata ni pijama sanitario gratis: el médico sigue con el pijama teñido.
+2. **Niños (de pago, sin comprar nada sin su confirmación)**: propuesta de MetaHumans editables (mismo esqueleto: funcionan con toda la animación): Hometown Family (2 niños pequeños, adolescente y 2 adultos, ~16 € licencia personal), Toddler Twins (~12 €), Metahuman Child de Vano (~4 €), adolescentes Tina y Caleb (~3 € cada uno); bebé realista no MetaHuman (Realistic Baby, ~4,50 €, necesitaría animación propia o ir en un capazo). Los casos de bebés y niños pequeños los explica el acompañante: falta sentar al acompañante en la segunda silla.
+
+**Siguiente trabajo (en orden)**
+1. **Piper dentro del juego**: fonetizador propio de español (reglas; sin espeak-ng, que es GPL) que produzca los fonemas IPA de las voces es-ES + inferencia del modelo ONNX con NNE de Unreal (Windows) y ONNX Runtime de Microsoft (Android, firmado). Créditos de las voces CC BY (sharvard, mls).
+2. Importar la ropa de Fab y vestir a cada paciente según edad y carácter.
+3. Acompañante sentado (bebés, niños pequeños, mayores confusos) y opción «derivar a urgencias / ingreso» (un infarto no debe mandarse a casa).
+4. Android: APK del piloto, dictado con `SpeechRecognizer`, interfaz táctil, prueba en emulador y Xiaomi.
+
+**Errores y pendientes conocidos**
+- Smart App Control bloquea a veces binarios nuevos (error 4551, en el «cook» o en el ejecutable). Solución: cambio real de código, recompilar y empaquetar; `ciclo.ps1` lo detecta.
+- Celeste sale sin melena (su peinado largo no se ve tras construirla en calidad media).
+- El complemento MCP de Blender está desactualizado (`uvx mcp-for-blender install-addon`; pedir permiso).
+- El dictado de Windows coge ruido del ambiente si nadie habla (el texto se revisa antes de enviarlo).
+
+**Cómo comprobar que todo sigue bien** (con el editor cerrado)
+```
+powershell -File C:\Users\arric\ElMejorMedicoUE\Herramientas\ciclo.ps1 -ProbarPaquete
+```
+Prueba corta del montaje y del desfile de personajes: `ciclo.ps1 -Probar -Montaje`.
+
+---
+
+## Histórico: punto de continuación del 27/10/2026 (ya superado)
 
 **Estado guardado y verificado**
 - GitHub, rama `claude/medical-simulator-game-ruh821`: la copia local y la remota coinciden (sin cambios pendientes). Últimos commits: `565eb2c` (ejecutable verificado, rendimiento, Smart App Control) y `bc61d4f` (recetas, ficha, calendario, seguimiento, portátil y mesa).
