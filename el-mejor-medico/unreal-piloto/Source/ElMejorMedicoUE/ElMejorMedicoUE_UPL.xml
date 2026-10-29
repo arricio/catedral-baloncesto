@@ -11,6 +11,7 @@
 dependencies {
 	implementation files('$S(AbsPluginDir)/Android/emm-nativo.aar')
 	implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.1'
+	implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.20.0'
 }
 android {
 	packagingOptions { jniLibs { useLegacyPackaging = false } }
@@ -37,6 +38,7 @@ android {
 		<insert>
 -keep class es.elmejormedico.nativo.** { *; }
 -keep class com.google.ai.edge.litertlm.** { *; }
+-keep class ai.onnxruntime.** { *; }
 		</insert>
 	</proguardAdditions>
 </root>

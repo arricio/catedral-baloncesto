@@ -4,6 +4,9 @@ package es.elmejormedico.nativo
 // Lo llama el C++ del juego por JNI (EMMIA.cpp, EMMVoz.cpp). Mismo modelo y misma descarga que la aplicación
 // Three.js (IALocalPlugin.kt): gemma-4-E2B-it.litertlm, 2 588 147 712 bytes, con comprobación SHA-256.
 
+import ai.onnxruntime.OnnxTensor
+import ai.onnxruntime.OrtEnvironment
+import ai.onnxruntime.OrtSession
 import android.content.Context
 import android.os.Bundle
 import android.os.StatFs
@@ -146,6 +149,55 @@ object EMMNativo {
         } catch (t: Throwable) {
             JSONObject().put("ok", false).put("error", t.message ?: t.toString()).toString()
         }
+    }
+
+    // ───────────────────────── Voces neuronales Piper (ONNX Runtime) ─────────────────────────
+    // El C++ (EMMPiper.cpp) pasa el modelo .onnx y los ids de los fonemas; aquí sólo se ejecuta la red.
+    // 3 hilos como máximo: el resto del procesador queda para el juego.
+    private val sesiones = HashMap<String, OrtSession>()
+
+    @JvmStatic
+    fun piperCargar(clave: String, modelo: ByteArray): Boolean = synchronized(sesiones) {
+        if (sesiones.containsKey(clave)) return true
+        try {
+            val opciones = OrtSession.SessionOptions().apply { setIntraOpNumThreads(3) }
+            sesiones[clave] = OrtEnvironment.getEnvironment().createSession(modelo, opciones)
+            true
+        } catch (t: Throwable) { false }
+    }
+
+    // ids: fonemas (^ _ … $); escalas: ruido, duración y ruido de duración; devuelve las muestras (o null)
+    @JvmStatic
+    fun piper(clave: String, ids: LongArray, escalas: FloatArray, hablante: Long): FloatArray? {
+        val s = synchronized(sesiones) { sesiones[clave] } ?: return null
+        synchronized(s) {
+            val env = OrtEnvironment.getEnvironment()
+            val entradas = HashMap<String, OnnxTensor>()
+            try {
+                entradas["input"] = OnnxTensor.createTensor(env, arrayOf(ids))
+                entradas["input_lengths"] = OnnxTensor.createTensor(env, longArrayOf(ids.size.toLong()))
+                entradas["scales"] = OnnxTensor.createTensor(env, escalas)
+                if (s.inputNames.contains("sid")) entradas["sid"] = OnnxTensor.createTensor(env, longArrayOf(hablante))
+                s.run(entradas).use { r -> return aplanar(r.get(0).value) }
+            } catch (t: Throwable) {
+                return null
+            } finally {
+                entradas.values.forEach { it.close() }
+            }
+        }
+    }
+
+    // la salida de Piper es [1][1][n] (o [1][n]): se aplana a n muestras
+    private fun aplanar(v: Any?): FloatArray? = when (v) {
+        is FloatArray -> v
+        is Array<*> -> {
+            val partes = v.map { aplanar(it) ?: FloatArray(0) }
+            val total = FloatArray(partes.sumOf { it.size })
+            var i = 0
+            for (p in partes) { p.copyInto(total, i); i += p.size }
+            total
+        }
+        else -> null
     }
 
     // ───────────────────────── Voces (TextToSpeech a archivo WAV) ─────────────────────────

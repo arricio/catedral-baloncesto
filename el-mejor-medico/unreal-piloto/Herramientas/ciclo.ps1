@@ -4,8 +4,9 @@
 #   -Probar       abre el juego (1600×900) con la prueba automática: fotos en Saved/Capturas y conversación en Saved/Prueba.txt
 #   -Empaquetar   empaqueta la versión de Windows en Empaquetado/Windows (sombreadores ya compilados)
 #   -ProbarPaquete  la prueba automática con el juego empaquetado (lo que recibirá el usuario)
+#   -Android      empaqueta el APK de Android (arm64 para el móvil y x86_64 para el emulador): Binaries/Android y Saved/StagedBuilds/Android
 #   -Calidad N    fuerza la calidad gráfica en la prueba (0 rápida, 1 equilibrada, 2 alta) sin tocar la guardada
-param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1)
+param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1, [switch]$Android)
 $ErrorActionPreference = 'Stop'
 $UE = 'C:\Program Files\Epic Games\UE_5.8\Engine'
 $P = Split-Path $PSScriptRoot
@@ -35,6 +36,15 @@ if ($Empaquetar) {
   $cook = Get-ChildItem "$env:APPDATA\Unreal Engine\AutomationTool\Logs" -Recurse -Filter 'Cook*.txt' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
   if ($cook -and $cook.LastWriteTime -gt $p.StartTime -and (Select-String -Path $cook.FullName -Pattern 'GetLastError=4551' -Quiet)) { 'BLOQUEADO por Smart App Control (4551): recompila con un cambio de código y vuelve a empaquetar' }
 }
+if ($Android) {
+  # SDK, NDK y JDK gratuitos ya instalados (Android SDK de Google, NDK r27c, Temurin 21)
+  $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"; $env:NDKROOT = "$env:ANDROID_HOME\ndk\27.2.12479018"; $env:NDK_ROOT = $env:NDKROOT
+  $env:JAVA_HOME = (Get-ChildItem "$env:LOCALAPPDATA\Programs\jdk21" -Directory | Select-Object -First 1).FullName
+  $log = Join-Path $P 'Saved\Empaquetar_Android.log'
+  $p = Start-Process -FilePath "$UE\Build\BatchFiles\RunUAT.bat" -ArgumentList 'BuildCookRun', "-project=`"$Proyecto`"", '-platform=Android', '-cookflavor=ASTC', '-clientconfig=Development', '-build', '-cook', '-stage', '-pak', '-package', '-unattended', '-utf8output', '-nop4' -RedirectStandardOutput $log -RedirectStandardError "$log.err" -WindowStyle Hidden -PassThru
+  $p.WaitForExit()
+  Get-Content $log | Select-String 'BUILD SUCCESSFUL|BUILD FAILED| Error:|error:|LogCook: Error|ERROR:' | Select-Object -First 25
+}
 if ($ProbarPaquete) {
   $d = Join-Path $P 'Empaquetado\Windows'; $s = "$d\ElMejorMedicoUE\Saved"; $txt = "$s\Prueba.txt"
   Remove-Item $txt -ErrorAction SilentlyContinue
@@ -56,6 +66,10 @@ if ($Probar) {
   $extra = if ($Montaje) { '-EMMSoloMontaje' } elseif ($Todos) { '-EMMTodos' } else { '-nada' }
   $cal = if ($Calidad -ge 0) { "-EMMCalidad=$Calidad" } else { '-nada' }
   Start-Process "$UE\Binaries\Win64\UnrealEditor.exe" -ArgumentList "`"$Proyecto`"", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extra, $cal, '-nosplash', '-unattended' | Out-Null
-  for ($i = 0; $i -lt 540; $i++) { Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break } }
+  for ($i = 0; $i -lt 540; $i++) {
+    Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break }
+    # Smart App Control (activado; no se desactiva) puede bloquear la DLL recién compilada: se avisa en vez de esperar
+    if ($i -gt 6 -and -not (Get-Process UnrealEditor -ErrorAction SilentlyContinue) -and (Select-String -Path (Join-Path $P 'Saved\Logs\ElMejorMedicoUE.log') -Pattern 'GetLastError=4551' -Quiet)) { 'BLOQUEADO por Smart App Control (4551): recompila con un cambio de código'; break }
+  }
   if (Test-Path $txt) { Get-Content $txt -Encoding utf8 } else { 'La prueba no ha terminado' }
 }

@@ -6,7 +6,15 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 29 de octubre de 2026)
 
 ---
 
-## ▶ ÚLTIMO PUNTO (29/10/2026, noche, 3.ª parte: RENDIMIENTO) — LEER PRIMERO
+## ▶ ANDROID (29/10/2026, noche) — EN CURSO
+
+- **Bloqueo actual (lo resuelve el usuario, gratis)**: a Unreal 5.8 le falta el componente «Android». Error de UAT: «Missing files required to build Android targets. Enable Android as an optional download component in the Epic Games Launcher». Epic Games Launcher › Unreal Engine › Biblioteca › 5.8 › ▾ › Opciones › marcar «Android» › Aplicar. Después: `ciclo.ps1 -Android` (ya configura SDK `%LOCALAPPDATA%\Android\Sdk`, NDK 27.2.12479018 y JDK Temurin 21 de `%LOCALAPPDATA%\Programs\jdk21`; sin `-archive` para ahorrar disco; el APK queda en `Binaries\Android` y `Saved\StagedBuilds\Android`).
+- **Voces Piper en Android (hecho, sin probar en el móvil)**: NNERuntimeORT no existe en Android, así que `EMMPiper.cpp` (bajo `PLATFORM_ANDROID`) pasa el `.onnx` y los ids de fonemas por JNI a `EMMNativo.piper()` (Kotlin, ONNX Runtime de Microsoft 1.20.0, MIT, 3 hilos). Los modelos van tal cual en `ElMejorMedicoUE\VocesOnnx\*.onnx` (294 MB, fuera de Content para que el editor no los importe; fuera de git), añadidos al APK sólo en Android con `RuntimeDependencies` en `ElMejorMedicoUE.Build.cs`. AAR recompilado (`Nativo`, `gradlew :emm-nativo:assembleRelease`) y copiado a `Source/ElMejorMedicoUE/Android/emm-nativo.aar`. Windows comprobado después: 6 voces y 17 personajes bien.
+- Disco: ~18 GB libres; se borró `Saved\StagedBuilds\Windows` (regenerable, duplicado del ejecutable que está en `Empaquetado` y en `Copias`).
+- Pendiente de Android tras instalar el componente: compilar y cocinar (ASTC); revisar renderizador móvil con los MetaHuman (pelo en tarjetas, sin Lumen), interfaz táctil, dictado con `SpeechRecognizer`, rendimiento en el Xiaomi 17 Ultra (conectarlo por USB con depuración USB; nunca desactivar Play Protect).
+- `ciclo.ps1 -Probar` avisa ahora si Smart App Control bloquea la DLL recién compilada del editor (4551) en vez de esperar 45 minutos; solución: cambio real de código y recompilar.
+
+## ▶ ÚLTIMO PUNTO (29/10/2026, noche, 3.ª parte: RENDIMIENTO)
 
 - **Objetivo de 30 fps estables CONSEGUIDO y verificado con el ejecutable empaquetado** (`ciclo.ps1 -ProbarPaquete -Todos`, RTX 3050 portátil, 1600×900, calidad EQUILIBRADA): 17 pacientes, **52 fps de media, mediana 52, 1 % peor 40 fps, 0,0 % de fotogramas por debajo de 30**; al cambiar de paciente el fotograma más lento fue de 26 ms. Prueba general del ejecutable (`-ProbarPaquete`): recetas, ficha, dictado, subtítulos y mando correctos a 47–49 fps. Antes: 27 fps.
 - **Causa encontrada** (medida nueva en `Prueba.txt`: «Reparto del fotograma» juego/render/GPU y memoria de texturas; `Herramientas/medir_gpu.ps1` mide desde Windows la memoria de vídeo y el uso de GPU): el cuello de botella era el **hilo de render del procesador** (28 ms), no la GPU (42 % de uso). Seis luces rectangulares móviles con sombra (cada una dibuja a los dos MetaHumans en 6 direcciones) más la IA y Piper usando todos los núcleos.

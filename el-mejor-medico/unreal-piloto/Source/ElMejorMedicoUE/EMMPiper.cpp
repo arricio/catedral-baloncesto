@@ -1,4 +1,4 @@
-#include "EMMPiper.h"
+﻿#include "EMMPiper.h"
 #include "EMMFonetica.h"
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
@@ -11,6 +11,12 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "UObject/StrongObjectPtr.h"
+#include "HAL/FileManager.h"
+#if PLATFORM_ANDROID
+#include "Android/AndroidApplication.h"
+#include "Android/AndroidJNI.h"
+#include "Android/AndroidJava.h"
+#endif
 
 namespace
 {
@@ -22,6 +28,8 @@ namespace
 		int32 Frecuencia = 22050;
 		bool bVariosHablantes = false;
 		FCriticalSection Cerrojo;   // una síntesis a la vez por modelo
+		FString Archivo;            // Android: el .onnx tal cual (VocesOnnx/), que ejecuta ONNX Runtime desde Kotlin
+		bool bEnKotlin = false;
 	};
 	TMap<FString, TSharedPtr<FModelo>> Modelos;        // por ruta del modelo
 	TMap<TCHAR, int64> Ids;                             // fonema → id
@@ -41,6 +49,26 @@ namespace
 			const FString Clave(Par.Key);
 			if (Clave.Len() == 1) Ids.Add(Clave[0], int64(Par.Value->AsNumber()));
 		}
+#if PLATFORM_ANDROID
+		// en Android no hay NNERuntimeORT: los modelos van como archivos y los ejecuta ONNX Runtime (EMMNativo.kt)
+		for (const TSharedPtr<FJsonValue>& V : O->GetArrayField(TEXT("voces")))
+		{
+			const TSharedPtr<FJsonObject> X = V->AsObject();
+			EMMPiper::FVozPiper Voz{ X->GetStringField(TEXT("id")), X->GetStringField(TEXT("modelo")), X->GetStringField(TEXT("sexo")), int32(X->GetNumberField(TEXT("hablante"))) };
+			TSharedPtr<FModelo>& M = Modelos.FindOrAdd(Voz.Modelo);
+			if (!M.IsValid())
+			{
+				const FString Archivo = FPaths::ProjectDir() / TEXT("VocesOnnx") / (FPaths::GetExtension(Voz.Modelo) + TEXT(".onnx"));
+				if (IFileManager::Get().FileSize(*Archivo) <= 0) { UE_LOG(LogTemp, Warning, TEXT("[EMM] Piper: falta %s"), *Archivo); Modelos.Remove(Voz.Modelo); continue; }
+				M = MakeShared<FModelo>();
+				M->Archivo = Archivo;
+				M->Frecuencia = int32(X->GetNumberField(TEXT("hz")));
+			}
+			ListaVoces.Add(Voz);
+		}
+		UE_LOG(LogTemp, Display, TEXT("[EMM] Piper (Android): %d voces, %d modelos"), ListaVoces.Num(), Modelos.Num());
+		return;
+#endif
 		TWeakInterfacePtr<INNERuntimeCPU> Motor = UE::NNE::GetRuntime<INNERuntimeCPU>(TEXT("NNERuntimeORTCpu"));
 		if (!Motor.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("[EMM] Piper: no hay NNERuntimeORTCpu en esta plataforma")); return; }
 		for (const TSharedPtr<FJsonValue>& V : O->GetArrayField(TEXT("voces")))
@@ -62,7 +90,7 @@ namespace
 			}
 			ListaVoces.Add(Voz);
 		}
-		UE_LOG(LogTemp, Display, TEXT("[EMM] Piper: %d voces, %d modelos"), ListaVoces.Num(), Modelos.Num());
+		UE_LOG(LogTemp, Display, TEXT("[EMM] Piper: %d voces, %d modelos (NNE)"), ListaVoces.Num(), Modelos.Num());
 	}
 
 	// visema (numeración de SAPI, la que entiende UEMMHabla) de cada fonema
@@ -99,7 +127,7 @@ bool EMMPiper::Sintetizar(const FString& Texto, const FEMMPerfilVoz& Perfil, FEM
 	const FVozPiper* Voz = ListaVoces.FindByPredicate([&](const FVozPiper& V) { return V.Id == Perfil.Piper; });
 	if (!Voz) return false;
 	TSharedPtr<FModelo> M = Modelos.FindRef(Voz->Modelo);
-	if (!M.IsValid() || !M->Instancia.IsValid()) return false;
+	if (!M.IsValid() || (!M->Instancia.IsValid() && M->Archivo.IsEmpty())) return false;
 
 	// texto → fonemas → ids (^ inicio, _ entre fonemas, $ final)
 	const FString Fon = EMMFonetica::Fonemas(Texto);
@@ -113,11 +141,47 @@ bool EMMPiper::Sintetizar(const FString& Texto, const FEMMPerfilVoz& Perfil, FEM
 	// tono: se reproduce más rápido o más despacio (agudo o grave) y se compensa la duración con length_scale
 	const float Tono = FMath::Clamp(Perfil.Tono, 0.7f, 1.9f), Vel = FMath::Clamp(Perfil.Vel, 0.6f, 1.6f);
 	float Escalas[3] = { 0.667f, Tono / Vel, 0.8f };
-	int64 Largo = Entrada.Num(), Hablante = Voz->Hablante;
+	[[maybe_unused]] int64 Largo = Entrada.Num();
+	int64 Hablante = Voz->Hablante;
 	TArray<float> Salida;
 	Salida.SetNumUninitialized(int32(Entrada.Num() * 4096 * FMath::Max(1.f, Escalas[1])));
 	const float Marca = 1e30f;
 	for (float& X : Salida) X = Marca;
+#if PLATFORM_ANDROID
+	{
+		FScopeLock L(&M->Cerrojo);
+		JNIEnv* Env = FAndroidApplication::GetJavaEnv();
+		jclass C = FAndroidApplication::FindJavaClassGlobalRef("es/elmejormedico/nativo/EMMNativo");
+		jstring Clave = Env->NewStringUTF(TCHAR_TO_UTF8(*Voz->Modelo));
+		if (!M->bEnKotlin)
+		{
+			// la primera vez se pasa el modelo a ONNX Runtime (luego queda cargado)
+			TArray<uint8> Bytes;
+			if (!FFileHelper::LoadFileToArray(Bytes, *M->Archivo)) { Env->DeleteLocalRef(Clave); A.Error = TEXT("Piper: no se lee el modelo"); return false; }
+			jbyteArray JB = Env->NewByteArray(Bytes.Num());
+			Env->SetByteArrayRegion(JB, 0, Bytes.Num(), reinterpret_cast<const jbyte*>(Bytes.GetData()));
+			jmethodID MC = Env->GetStaticMethodID(C, "piperCargar", "(Ljava/lang/String;[B)Z");
+			M->bEnKotlin = Env->CallStaticBooleanMethod(C, MC, Clave, JB) == JNI_TRUE;
+			Env->DeleteLocalRef(JB);
+			if (!M->bEnKotlin) { Env->DeleteLocalRef(Clave); A.Error = TEXT("Piper: ONNX Runtime no carga el modelo"); return false; }
+		}
+		jlongArray JIds = Env->NewLongArray(Entrada.Num());
+		Env->SetLongArrayRegion(JIds, 0, Entrada.Num(), reinterpret_cast<const jlong*>(Entrada.GetData()));
+		jfloatArray JEsc = Env->NewFloatArray(3);
+		Env->SetFloatArrayRegion(JEsc, 0, 3, Escalas);
+		jmethodID MP = Env->GetStaticMethodID(C, "piper", "(Ljava/lang/String;[J[FJ)[F");
+		jfloatArray JSal = (jfloatArray)Env->CallStaticObjectMethod(C, MP, Clave, JIds, JEsc, jlong(Hablante));
+		Salida.Reset();
+		if (JSal)
+		{
+			Salida.SetNumUninitialized(Env->GetArrayLength(JSal));
+			Env->GetFloatArrayRegion(JSal, 0, Salida.Num(), Salida.GetData());
+			Env->DeleteLocalRef(JSal);
+		}
+		Env->DeleteLocalRef(JIds); Env->DeleteLocalRef(JEsc); Env->DeleteLocalRef(Clave);
+		if (!Salida.Num()) { A.Error = TEXT("Piper: inferencia"); return false; }
+	}
+#else
 	{
 		FScopeLock L(&M->Cerrojo);
 		TArray<UE::NNE::FTensorShape> Formas;
@@ -140,6 +204,7 @@ bool EMMPiper::Sintetizar(const FString& Texto, const FEMMPerfilVoz& Perfil, FEM
 		else { N = Salida.Num(); while (N > 0 && Salida[N - 1] == Marca) --N; }
 		Salida.SetNum(N);
 	}
+#endif
 	if (!Salida.Num()) return false;
 
 	// PCM de 16 bits, normalizado sin saturar; la frecuencia de reproducción da el tono

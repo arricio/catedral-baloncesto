@@ -1,4 +1,4 @@
-// EL MEJOR MÉDICO (Unreal Engine 5.8): módulo del juego.
+﻿// EL MEJOR MÉDICO (Unreal Engine 5.8): módulo del juego.
 using System.IO;
 using UnrealBuildTool;
 
@@ -22,6 +22,8 @@ public class ElMejorMedicoUE : ModuleRules
 			// IA (LiteRT-LM), voces (TextToSpeech) y dictado del propio móvil, por JNI
 			PrivateDependencyModuleNames.AddRange(new string[] { "Launch", "AndroidPermission" });
 			AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(ModuleDirectory, "ElMejorMedicoUE_UPL.xml"));
+			// voces neuronales Piper: los .onnx tal cual (en Android los ejecuta ONNX Runtime de Microsoft desde Kotlin)
+			RuntimeDependencies.Add("$(ProjectDir)/VocesOnnx/*.onnx", StagedFileType.NonUFS);
 		}
 	}
 }
