@@ -1,4 +1,4 @@
-#include "EMMConsultaModo.h"
+﻿#include "EMMConsultaModo.h"
 #include "EMMConsultaUI.h"
 #include "EMMHabla.h"
 #include "EMMIA.h"
@@ -8,6 +8,8 @@
 #include "EMMRecetaUI.h"
 #include "EMMAgendaUI.h"
 #include "Components/WidgetComponent.h"
+#include "Misc/PackageName.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -35,9 +37,13 @@ static void Vestir(AActor* A, const FLinearColor& Arriba, const FLinearColor& Ab
 	if (!A) return;
 	TArray<USkeletalMeshComponent*> Mallas;
 	A->GetComponents(Mallas);
+	int32 Tenidas = 0;
+	TArray<FString> Vistas;
 	for (USkeletalMeshComponent* M : Mallas)
 	{
+		Vistas.Add(FString::Printf(TEXT("%s=%s"), *M->GetName(), M->GetSkeletalMeshAsset() ? *M->GetSkeletalMeshAsset()->GetName() : TEXT("-")));
 		if (!M->GetSkeletalMeshAsset() || !M->GetSkeletalMeshAsset()->GetName().Contains(TEXT("Outfits"))) continue;
+		++Tenidas;
 		const TArray<FName> Ranuras = M->GetMaterialSlotNames();
 		for (int32 i = 0; i < M->GetNumMaterials(); ++i)
 		{
@@ -50,6 +56,7 @@ static void Vestir(AActor* A, const FLinearColor& Arriba, const FLinearColor& Ab
 				D->SetVectorParameterValue(P, bArriba ? Arriba : Abajo);
 		}
 	}
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Vestir %s: %d prendas teñidas (%s)"), *A->GetName(), Tenidas, *FString::Join(Vistas, TEXT(", ")));
 }
 
 // Ropa del paciente según la edad (y una variación fija por caso, para que no vistan todos igual)
@@ -89,27 +96,9 @@ void AEMMConsultaModo::BeginPlay()
 	// MetaHumans: animación propia del cuerpo (sentados, respiración, mirada, boca) y uno frente al otro
 	if (ActorMedico && ActorPaciente)
 	{
-		int32 N = 0;
-		for (AActor* Yo : { ActorMedico, ActorPaciente })
-		{
-			AActor* Otro = Yo == ActorMedico ? ActorPaciente : ActorMedico;
-			// el MetaHuman mira hacia +Y de su malla: se gira 90° menos que la dirección hacia el otro
-			Yo->SetActorRotation(FRotator(0, (Otro->GetActorLocation() - Yo->GetActorLocation()).Rotation().Yaw - 90.f, 0));
-			TArray<USkeletalMeshComponent*> Mallas;
-			Yo->GetComponents(Mallas);
-			for (USkeletalMeshComponent* M : Mallas)
-				if (M->GetName().Contains(TEXT("Body")))
-				{
-					M->SetAnimInstanceClass(UEMMCuerpoAnim::StaticClass());
-					if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance()))
-					{
-						A->Interlocutor = Otro; A->Fase = 1.7f * N;
-						// el paciente llega preocupado; el médico, atento y amable
-						if (Yo == ActorPaciente) A->Preocupacion = 0.6f; else A->Sonrisa = 0.45f;
-					}
-				}
-			++N;
-		}
+		AsientoPaciente = ActorPaciente->GetActorTransform();
+		PrepararMetaHuman(ActorMedico, ActorPaciente, false);
+		PrepararMetaHuman(ActorPaciente, ActorMedico, true);
 	}
 	// encuadre calculado: de lado, a la altura de las cabezas (sentados), viendo de frente a médico y paciente.
 	// Los números están en Content/Datos/escena.json para ajustarlos sin recompilar.
@@ -166,13 +155,13 @@ void AEMMConsultaModo::BeginPlay()
 	// ropa: pijama sanitario azul verdoso para el médico (el paciente se viste en cada visita)
 	Vestir(ActorMedico, FLinearColor(0.06f, 0.26f, 0.32f), FLinearColor(0.05f, 0.22f, 0.28f));
 
-	// casos del juego con el sexo del MetaHuman paciente
+	// casos del juego: sólo los que tienen un personaje de su sexo y edad (personajes.json). Los de bebés y niños
+	// pequeños (que explica el acompañante) esperan a tener sus modelos y el acompañante en la consulta.
 	FString Error;
 	EMMDatos::CargarPacientes(Casos, Error);
-	const bool bPacienteMujer = ActorPaciente && ActorPaciente->ActorHasTag(TEXT("Mujer"));
-	Casos.RemoveAll([&](const FEMMPaciente& P) { return ActorPaciente && P.EsMujer() != bPacienteMujer; });
-	// de momento sólo hay MetaHuman de adulto: los casos de niños, bebés y acompañante esperan a tener su personaje
-	Casos.RemoveAll([](const FEMMPaciente& P) { return P.Edad < 18.f || P.Edad > 64.f || P.bHablaAcomp || P.bBebe; });
+	CargarPersonajes(ActorPaciente);
+	Casos.RemoveAll([this](const FEMMPaciente& P) { return P.bHablaAcomp || P.bBebe || !PersonajePara(P); });
+	UE_LOG(LogTemp, Display, TEXT("[EMM] %d personajes de paciente; %d casos con personaje"), Personajes.Num(), Casos.Num());
 
 	UI = CreateWidget<UEMMConsultaUI>(PC, UEMMConsultaUI::StaticClass());
 	UI->Modo = this;
@@ -226,10 +215,88 @@ void AEMMConsultaModo::BeginPlay()
 	}
 }
 
+// ───────────────────────── Personajes ─────────────────────────
+void AEMMConsultaModo::PrepararMetaHuman(AActor* Yo, AActor* Otro, bool bPaciente)
+{
+	if (!Yo || !Otro) return;
+	// el MetaHuman mira hacia +Y de su malla: se gira 90° menos que la dirección hacia el otro
+	Yo->SetActorRotation(FRotator(0, (Otro->GetActorLocation() - Yo->GetActorLocation()).Rotation().Yaw - 90.f, 0));
+	TArray<USkeletalMeshComponent*> Mallas;
+	Yo->GetComponents(Mallas);
+	for (USkeletalMeshComponent* M : Mallas)
+		if (M->GetName().Contains(TEXT("Body")))
+		{
+			M->SetAnimInstanceClass(UEMMCuerpoAnim::StaticClass());
+			if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance()))
+			{
+				A->Interlocutor = Otro; A->Fase = bPaciente ? 1.7f : 0.f;
+				// el paciente llega preocupado; el médico, atento y amable
+				if (bPaciente) A->Preocupacion = 0.6f; else A->Sonrisa = 0.45f;
+			}
+		}
+}
+
+void AEMMConsultaModo::CargarPersonajes(AActor* PacienteDelNivel)
+{
+	// Content/Datos/personajes.json: { "pacientes": [ { "nombre", "clase", "sexo": "h"|"m", "edad": [min, max] } ] }
+	FString J; TSharedPtr<FJsonObject> O;
+	if (FFileHelper::LoadFileToString(J, *(FPaths::ProjectContentDir() / TEXT("Datos/personajes.json"))) &&
+		FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(J), O) && O.IsValid())
+		for (const TSharedPtr<FJsonValue>& V : O->GetArrayField(TEXT("pacientes")))
+		{
+			const TSharedPtr<FJsonObject> P = V->AsObject();
+			FEMMPersonaje X;
+			X.Nombre = P->GetStringField(TEXT("nombre")); X.Clase = P->GetStringField(TEXT("clase")); X.Sexo = P->GetStringField(TEXT("sexo"));
+			const TArray<TSharedPtr<FJsonValue>>& E = P->GetArrayField(TEXT("edad"));
+			X.EdadMin = E[0]->AsNumber(); X.EdadMax = E[1]->AsNumber();
+			// sólo los que están construidos (el paquete existe); se comprueba sin cargarlos
+			const FString Paquete = FPackageName::ObjectPathToPackageName(X.Clase);
+			if (FPackageName::DoesPackageExist(Paquete)) Personajes.Add(X);
+			else UE_LOG(LogTemp, Display, TEXT("[EMM] Personaje %s sin construir (%s)"), *X.Nombre, *Paquete);
+		}
+	// sin archivo: el paciente que esté en el nivel, como adulto joven de su sexo
+	if (!Personajes.Num() && PacienteDelNivel)
+		Personajes.Add({ TEXT("Paciente del nivel"), PacienteDelNivel->GetClass()->GetPathName(), PacienteDelNivel->ActorHasTag(TEXT("Mujer")) ? TEXT("m") : TEXT("h"), 18.f, 64.f });
+	if (PacienteDelNivel) PersonajeActual = PacienteDelNivel->GetClass()->GetPathName();
+}
+
+const AEMMConsultaModo::FEMMPersonaje* AEMMConsultaModo::PersonajePara(const FEMMPaciente& Caso) const
+{
+	// los de su sexo y edad; entre varios, siempre el mismo para el mismo caso (vuelve con la misma cara)
+	TArray<const FEMMPersonaje*> Validos;
+	for (const FEMMPersonaje& X : Personajes)
+		if (X.Sexo == Caso.Sexo && Caso.Edad >= X.EdadMin && Caso.Edad <= X.EdadMax) Validos.Add(&X);
+	return Validos.Num() ? Validos[GetTypeHash(Caso.Id) % uint32(Validos.Num())] : nullptr;
+}
+
+void AEMMConsultaModo::PonerPersonaje(const FEMMPaciente& Caso)
+{
+	const FEMMPersonaje* X = PersonajePara(Caso);
+	if (!X || X->Clase == PersonajeActual || !MHMedico.IsValid()) return;
+	UClass* Clase = LoadClass<AActor>(nullptr, *X->Clase);
+	if (!Clase) { UE_LOG(LogTemp, Warning, TEXT("[EMM] No se carga el personaje %s (%s)"), *X->Nombre, *X->Clase); return; }
+	AActor* Nuevo = GetWorld()->SpawnActor<AActor>(Clase, AsientoPaciente);
+	if (!Nuevo) return;
+	Nuevo->Tags = { TEXT("Paciente"), Caso.EsMujer() ? TEXT("Mujer") : TEXT("Hombre") };
+	if (MHPaciente.IsValid()) MHPaciente->Destroy();
+	MHPaciente = Nuevo;
+	PersonajeActual = X->Clase;
+	PrepararMetaHuman(Nuevo, MHMedico.Get(), true);
+	// el médico mira al nuevo paciente
+	TArray<USkeletalMeshComponent*> Mallas;
+	MHMedico->GetComponents(Mallas);
+	for (USkeletalMeshComponent* M : Mallas) if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance())) A->Interlocutor = Nuevo;
+	// su voz y su boca
+	HablaPaciente = NewObject<UEMMHabla>(Nuevo, TEXT("Habla"));
+	HablaPaciente->RegisterComponent();
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Paciente: personaje %s"), *X->Nombre);
+}
+
 // ───────────────────────── Visitas, recetas y seguimiento ─────────────────────────
 void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 {
 	FEMMHistorial& H = FEMMHistorial::Get();
+	PonerPersonaje(Caso);
 	Paciente = Caso;
 	FEMMFicha& F = H.FichaDe(Paciente);
 	Visita = FEMMVisita();
@@ -254,7 +321,7 @@ void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 
 	// voz según edad y sexo; si coincide con la del médico, el médico cambia un poco la suya
 	HablaPaciente->Nombre = Paciente.Nombre.IsEmpty() ? TEXT("Paciente") : Paciente.Nombre;
-	const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Paciente.EsMujer(), Paciente.Edad);
+	const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Paciente.EsMujer(), Paciente.Edad, GetTypeHash(Paciente.Id) | 1u);
 	HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
 	const bool bMedicaMujer = MHMedico.IsValid() && MHMedico->ActorHasTag(TEXT("Mujer"));
 	const FEMMPerfilVoz VM = EMMVoz::PerfilPara(bMedicaMujer, 40.f);
@@ -264,6 +331,14 @@ void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 		if (bMedicaMujer) Medico->VozPreferida = TEXT("Helena");
 		else Medico->Tono = 1.05f;
 	}
+	// el carácter se nota en el cuerpo y en la forma de hablar: los nerviosos se mueven más y hablan más deprisa
+	const FString Pers = EMMDatos::Normaliza(Paciente.Personalidad);
+	auto Tiene = [&Pers](std::initializer_list<const TCHAR*> L) { for (const TCHAR* X : L) if (Pers.Contains(X)) return true; return false; };
+	float Inquietud = 1.f;
+	if (Tiene({ TEXT("nervios"), TEXT("inquiet"), TEXT("ansios"), TEXT("impacien"), TEXT("agobi"), TEXT("asustad") })) { Inquietud = 1.7f; HablaPaciente->Velocidad *= 1.1f; }
+	else if (Tiene({ TEXT("hablador"), TEXT("bromista"), TEXT("charlat"), TEXT("extrovert"), TEXT("simpatic") })) { Inquietud = 1.3f; HablaPaciente->Velocidad *= 1.05f; }
+	else if (Tiene({ TEXT("tranquil"), TEXT("seren"), TEXT("calmad"), TEXT("timid"), TEXT("reservad"), TEXT("callad"), TEXT("parco") })) { Inquietud = 0.6f; HablaPaciente->Velocidad *= 0.95f; }
+	if (Paciente.Grav >= 3) Inquietud *= 0.7f;   // los que están muy malos se mueven poco
 	// ropa según la edad y gesto según cómo llega
 	FLinearColor Arriba, Abajo;
 	ColoresPaciente(Paciente, Arriba, Abajo);
@@ -273,7 +348,11 @@ void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 		TArray<USkeletalMeshComponent*> Mallas;
 		MHPaciente->GetComponents(Mallas);
 		for (USkeletalMeshComponent* M : Mallas)
-			if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance())) { A->Preocupacion = Preocupacion; A->Sonrisa = Preocupacion < 0.2f ? 0.35f : 0.f; }
+			if (UEMMCuerpoAnim* A = Cast<UEMMCuerpoAnim>(M->GetAnimInstance()))
+			{
+				A->Preocupacion = Preocupacion; A->Sonrisa = Preocupacion < 0.2f ? 0.35f : 0.f;
+				A->Inquietud = Inquietud;
+			}
 	}
 	if (UI)
 	{
@@ -359,6 +438,14 @@ void AEMMConsultaModo::AbrirPortatil()
 		if (UIPantalla) UIPortatil->PonerPestana(UIPantalla->PestanaActual());
 		UIPortatil->Refrescar(true);
 	}
+}
+
+void AEMMConsultaModo::CerrarVentanas()
+{
+	if (UIRecetas) UIRecetas->Cerrar();
+	if (UIAgenda) UIAgenda->Cerrar();
+	if (UIPortatil) UIPortatil->SetVisibility(ESlateVisibility::Collapsed);
+	if (UI) UI->EnfocarPrincipal();
 }
 
 void AEMMConsultaModo::PestanaPortatil(EEMMPestana P)
@@ -500,14 +587,38 @@ void AEMMConsultaModo::AvanzarTiempo()
 	const int32 Cita = H.ProximaCita();
 	if (!bTerminada) { Avisar(TEXT("Termina antes la consulta en la AGENDA."), false); return; }
 	if (Cita <= 0) { Avisar(TEXT("No hay citas programadas."), false); return; }
-	const int32 Pasan = FMath::Max(0, Cita - H.Dia);
-	H.Dia = FMath::Max(H.Dia, Cita);
-	const FEMMFicha* F = H.RevisionPendiente();
+	// ¿alguien empeora antes de su cita? Entonces pide cita y viene antes (revisión anticipada)
+	int32 DiaAnticipado = -1;
+	FEMMFicha* Anticipada = nullptr;
+	for (FEMMFicha& X : H.Fichas)
+	{
+		if (X.ProximaRevision <= H.Dia || !X.UltimaVisita()) continue;
+		const FEMMPaciente* C = Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == X.CasoId; });
+		if (!C) continue;
+		for (int32 D = FMath::Max(H.Dia + 1, X.UltimaVisita()->Dia + 2); D < X.ProximaRevision && (DiaAnticipado < 0 || D < DiaAnticipado); ++D)
+		{
+			const FEMMEvolucion E = EMMEvolucion::Calcular(*C, X, D);
+			if (E.Estado == TEXT("peor") || E.Estado == TEXT("complicacion")) { DiaAnticipado = D; Anticipada = &X; break; }
+		}
+	}
+	const bool bAnticipada = Anticipada && DiaAnticipado < Cita;
+	const int32 Destino = bAnticipada ? DiaAnticipado : Cita;
+	if (bAnticipada) Anticipada->ProximaRevision = DiaAnticipado;
+	const int32 Pasan = FMath::Max(0, Destino - H.Dia);
+	H.Dia = FMath::Max(H.Dia, Destino);
+	const FEMMFicha* F = bAnticipada ? Anticipada : H.RevisionPendiente();
 	const FEMMPaciente* Caso = F ? Casos.FindByPredicate([&](const FEMMPaciente& P) { return P.Id == F->CasoId; }) : nullptr;
 	if (!Caso) { H.Guardar(); Avisar(TEXT("No se encuentra el caso de la cita."), false); return; }
 	IniciarVisita(*Caso);
+	if (bAnticipada)
+	{
+		Visita.bAnticipada = true;
+		MemoriaPaciente = TEXT("Has pedido cita ANTES de la fecha de revisión porque te encuentras peor; empieza contándolo.\n") + MemoriaPaciente;
+	}
 	if (UIAgenda) UIAgenda->Cerrar();
-	Avisar(FString::Printf(TEXT("Han pasado %d días. Hoy es %s y vuelve %s a revisión."), Pasan, *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre), true);
+	Avisar(bAnticipada
+		? FString::Printf(TEXT("Han pasado %d días. %s ha pedido cita antes de tiempo: se encuentra peor (%s)."), Pasan, *Paciente.Nombre, *FEMMHistorial::Fecha(H.Dia))
+		: FString::Printf(TEXT("Han pasado %d días. Hoy es %s y vuelve %s a revisión."), Pasan, *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre), !bAnticipada);
 }
 
 void AEMMConsultaModo::PacienteNuevo()
@@ -538,7 +649,8 @@ void AEMMConsultaModo::PasoDePrueba()
 	const double T = FPlatformTime::Seconds() - InicioPaso;
 	auto Siguiente = [this]() { ++PasoPrueba; InicioPaso = FPlatformTime::Seconds(); };
 	const int32 Ronda = (PasoPrueba - 2) / 3, Fase = (PasoPrueba - 2) % 3;
-	if (PasoPrueba >= 2) Fotogramas.Add(float(FApp::GetDeltaTime()));   // con la consulta en marcha (sin las vistas de revisión)
+	// rendimiento en juego: durante las conversaciones (no las cargas de personajes ni las vistas de revisión)
+	if ((PasoPrueba >= 2 && PasoPrueba <= 10) || (PasoPrueba >= 16 && PasoPrueba <= 21)) Fotogramas.Add(float(FApp::GetDeltaTime()));
 	// con el editor, los sombreadores se compilan al jugar: hasta que terminan, se ven materiales provisionales
 	bool bCompilando = false;
 #if WITH_EDITOR
@@ -590,7 +702,7 @@ void AEMMConsultaModo::PasoDePrueba()
 			EMMDictado::Parar();
 			Siguiente();
 			// prueba corta (-EMMSoloMontaje): sólo las fotos del montaje
-			if (FParse::Param(FCommandLine::Get(), TEXT("EMMSoloMontaje"))) PasoPrueba = 100;
+			if (FParse::Param(FCommandLine::Get(), TEXT("EMMSoloMontaje"))) PasoPrueba = 11 + 17;   // directo al desfile de personajes
 		}
 	}
 	else if (Ronda < 3)
@@ -632,7 +744,7 @@ void AEMMConsultaModo::PasoDePrueba()
 		}
 		if (T > 180) { RegistroPrueba.Add(TEXT("ERROR: tiempo agotado")); PasoPrueba = 100; }
 	}
-	else if (PasoPrueba < 30)
+	else if (PasoPrueba < 60)
 	{
 		// recetas, ficha, calendario y regreso del paciente, con los mismos botones que usa el jugador
 		const int32 K = PasoPrueba - 11;
@@ -722,7 +834,48 @@ void AEMMConsultaModo::PasoDePrueba()
 		else if (K == 14 && T > 1.2) { Foto(TEXT("prueba_portatil_historial")); Siguiente(); }
 		else if (K == 15 && T > 0.6) { AbrirPortatil(); Siguiente(); }
 		else if (K == 16 && T > 1.0) { Foto(TEXT("prueba_pantalla_portatil_juego")); Siguiente(); }
-		else if (K > 16 && T > 1.0) PasoPrueba = 100;
+		// desfile: cada personaje de paciente en la silla, con su ropa, su foto y una frase con su voz
+		else if (K > 16)
+		{
+			const int32 I = (K - 17) / 2;
+			if (!Personajes.IsValidIndex(I))
+			{
+				// mando Xbox simulado: LB abre el portátil y B lo cierra (con el foco en la interfaz, como al jugar)
+				if (T > 1.0)
+				{
+					auto Pulsar = [](const FKey& K) {
+						FSlateApplication::Get().ProcessKeyDownEvent(FKeyEvent(K, FModifierKeysState(), 0, false, 0, 0));
+						FSlateApplication::Get().ProcessKeyUpEvent(FKeyEvent(K, FModifierKeysState(), 0, false, 0, 0));
+					};
+					UI->EnfocarPrincipal();
+					Pulsar(EKeys::Gamepad_LeftShoulder);
+					const bool bAbre = UIPortatil->GetVisibility() == ESlateVisibility::Visible;
+					Pulsar(EKeys::Gamepad_FaceButton_Right);
+					const bool bCierra = UIPortatil->GetVisibility() == ESlateVisibility::Collapsed;
+					RegistroPrueba.Add(FString::Printf(TEXT("Mando: LB abre el portátil = %s; B lo cierra = %s"), bAbre ? TEXT("sí") : TEXT("NO"), bCierra ? TEXT("sí") : TEXT("NO")));
+					PasoPrueba = 100;
+				}
+			}
+			else if ((K - 17) % 2 == 0 && T > 0.5)
+			{
+				const FEMMPersonaje& X = Personajes[I];
+				FEMMPaciente Falso = Paciente;
+				Falso.Id = FString::Printf(TEXT("desfile_%d"), I);
+				Falso.Sexo = X.Sexo; Falso.Edad = (X.EdadMin + FMath::Min(X.EdadMax, 90.f)) / 2.f;
+				PonerPersonaje(Falso);
+				FLinearColor Arriba, Abajo;
+				ColoresPaciente(Falso, Arriba, Abajo);
+				Vestir(MHPaciente.Get(), Arriba, Abajo);
+				const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Falso.EsMujer(), Falso.Edad, GetTypeHash(X.Nombre) | 1u);
+				HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
+				HablaPaciente->Nombre = X.Nombre;
+				RegistroPrueba.Add(FString::Printf(TEXT("PERSONAJE %s (%s, %.0f años): voz %s, tono %.2f, velocidad %.2f"), *X.Nombre, Falso.EsMujer() ? TEXT("mujer") : TEXT("hombre"), Falso.Edad, *VP.Preferida, VP.Tono, VP.Vel));
+				TWeakObjectPtr<AEMMConsultaModo> Yo(this);
+				HablaPaciente->Decir(Falso.Edad >= 65 ? TEXT("Buenos días, doctor. Ay, qué mal he dormido esta noche.") : Falso.Edad < 20 ? TEXT("Hola. Es que me duele bastante, la verdad.") : TEXT("Buenos días, doctor. Vengo porque no me encuentro bien."), [](const FString&) {});
+				Siguiente();
+			}
+			else if ((K - 17) % 2 == 1 && T > 1.6) { Foto(FString::Printf(TEXT("prueba_personaje_%s"), *Personajes[I].Nombre)); Siguiente(); }
+		}
 	}
 	else
 	{

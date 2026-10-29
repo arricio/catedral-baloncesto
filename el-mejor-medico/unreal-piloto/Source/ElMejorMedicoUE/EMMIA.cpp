@@ -1,4 +1,4 @@
-#include "EMMIA.h"
+﻿#include "EMMIA.h"
 #include "Async/Async.h"
 #include "Dom/JsonObject.h"
 #include "HttpModule.h"
@@ -114,6 +114,29 @@ FString UEMMIASubsystem::CorregirGenero(const FString& T, bool bMujer)
 		S = bMujer ? S.Replace(*El, *La, ESearchCase::IgnoreCase) : S.Replace(*La, *El, ESearchCase::IgnoreCase);
 	}
 	return S;
+}
+
+// ¿Repite casi igual algo que el paciente ya ha dicho? (palabras con sustancia en común, en las dos direcciones)
+bool UEMMIASubsystem::Repetida(const FString& Respuesta, const TArray<FString>& Anteriores)
+{
+	auto Palabras = [](const FString& S) {
+		FString N = EMMDatos::Normaliza(S);
+		for (TCHAR& C : N) if (!FChar::IsAlpha(C)) C = ' ';
+		TArray<FString> W; TSet<FString> R;
+		N.ParseIntoArray(W, TEXT(" "));
+		for (const FString& X : W) if (X.Len() > 3) R.Add(X);
+		return R;
+	};
+	const TSet<FString> R = Palabras(Respuesta);
+	if (R.Num() < 4) return false;   // las respuestas muy cortas («No, doctor») se pueden repetir
+	for (const FString& A : Anteriores)
+	{
+		const TSet<FString> B = Palabras(A);
+		if (!B.Num()) continue;
+		const int32 Comunes = R.Intersect(B).Num();
+		if (float(Comunes) / R.Num() >= 0.7f && float(Comunes) / B.Num() >= 0.5f) return true;
+	}
+	return false;
 }
 
 // ¿La respuesta sólo repite lo que ha dicho el médico? «No he tenido fiebre» comparte palabras pero contesta.
@@ -257,17 +280,25 @@ void UEMMIASubsystem::Responder(const FEMMPaciente& P, const TArray<FEMMLinea>& 
 	TArray<TPair<FString, FString>> M = ConstruirMensajes(P, Historial, Pregunta, Referencia);
 	TWeakObjectPtr<UEMMIASubsystem> Yo(this);
 	const bool bMujer = P.EsMujer();
-	Llamar(M, [Yo, M, Pregunta, Referencia, Hecho, T0, bMujer](bool bOk, const FString& Bruto, const FString& Error) mutable {
+	// lo que ya ha dicho el paciente: si la respuesta es casi igual, se le pide que lo diga de otra forma
+	TArray<FString> Dicho;
+	for (const FEMMLinea& L : Historial) if (!L.bMedico) Dicho.Add(L.Texto);
+	Llamar(M, [Yo, M, Pregunta, Referencia, Hecho, T0, bMujer, Dicho](bool bOk, const FString& Bruto, const FString& Error) mutable {
 		if (!Yo.IsValid()) return;
 		const FString Texto = CorregirGenero(LimpiarRespuesta(Bruto), bMujer);
-		if (bOk && !Texto.IsEmpty() && !EsEco(Texto, Pregunta)) { Hecho({ Texto, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 }); return; }
+		const bool bEco = EsEco(Texto, Pregunta), bRepite = !bEco && Repetida(Texto, Dicho);
+		if (bOk && !Texto.IsEmpty() && !bEco && !bRepite) { Hecho({ Texto, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 }); return; }
 		if (!bOk) { Hecho({ Referencia, TEXT("predefinida"), Error, 0 }); return; }
-		// si repite la pregunta o no dice nada, se le pide otra vez que conteste como paciente
+		// si repite la pregunta, se repite a sí mismo o no dice nada, se le pide otra vez
 		M.Add({ TEXT("assistant"), Texto.IsEmpty() ? TEXT("...") : Texto });
-		M.Add({ TEXT("user"), TEXT("(Eso es repetir lo que ha dicho el médico. Contesta tú, como paciente, a su pregunta.)") });
-		Yo->Llamar(M, [Pregunta, Referencia, Hecho, T0, bMujer](bool bOk2, const FString& Bruto2, const FString& Error2) {
+		M.Add({ TEXT("user"), bRepite ? TEXT("(Eso ya lo has dicho casi igual. Contesta a lo que te acaba de preguntar el médico con otras palabras y, si viene a cuento, añade algo nuevo de tu historia.)")
+			: TEXT("(Eso es repetir lo que ha dicho el médico. Contesta tú, como paciente, a su pregunta.)") });
+		const FString Primera = Texto;
+		Yo->Llamar(M, [Pregunta, Referencia, Hecho, T0, bMujer, Dicho, Primera, bRepite](bool bOk2, const FString& Bruto2, const FString& Error2) {
 			const FString T2 = CorregirGenero(LimpiarRespuesta(Bruto2), bMujer);
-			if (bOk2 && !T2.IsEmpty() && !EsEco(T2, Pregunta)) Hecho({ T2, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 });
+			if (bOk2 && !T2.IsEmpty() && !EsEco(T2, Pregunta) && !Repetida(T2, Dicho)) Hecho({ T2, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 });
+			// si vuelve a repetirse, mejor su primera respuesta (era válida) que la predefinida
+			else if (bRepite && !Primera.IsEmpty()) Hecho({ Primera, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 });
 			else Hecho({ Referencia, TEXT("predefinida"), bOk2 ? TEXT("la IA no ha dado una respuesta válida") : Error2, 0 });
 		});
 	});

@@ -13,11 +13,23 @@ actores = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 niveles = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
 CARPETA = '/Game/MetaHumans/Personajes'
 PRESETS = '/MetaHumanCharacter/Optional/Presets'
-# nombre: (preset, etiquetas en el nivel)
+# nombre: (preset, etiquetas en el nivel). Los dos primeros están en la consulta; el resto son pacientes que el
+# juego pone en la silla según el caso (Content/Datos/personajes.json), cada uno de su sexo y edad.
 PERSONAJES = {
     'MH_Medico': ('Lorenzo', ['Medico']),
     'MH_Paciente': ('Vivian', ['Paciente', 'Mujer']),
+    'MH_P_Mateo': ('Mateo', []),        # chico joven
+    'MH_P_Celeste': ('Celeste', []),    # chica joven
+    'MH_P_Victor': ('Victor', []),      # hombre joven
+    'MH_P_Bruce': ('Bruce', []),        # hombre de mediana edad
+    'MH_P_Lani': ('Lani', []),          # mujer de mediana edad
+    'MH_P_Walter': ('Walter', []),      # anciano
+    'MH_P_Grace': ('Grace', []),        # anciana
 }
+# EMM_SOLO=MH_P_Mateo,MH_P_Grace…: sólo esos (para no rehacer los que ya están construidos)
+SOLO = [x for x in os.environ.get('EMM_SOLO', '').split(',') if x]
+if SOLO:
+    PERSONAJES = {k: v for k, v in PERSONAJES.items() if k in SOLO}
 FASE = os.environ.get('EMM_FASE', 'preparar')
 
 
@@ -84,6 +96,8 @@ def clase_montada(nombre):
 def colocar():
     niveles.load_level('/Game/Mapas/Consulta')
     for nombre, (_, etiquetas) in PERSONAJES.items():
+        if not etiquetas:
+            continue   # pacientes que el juego carga por código: no van en el nivel
         clase = clase_montada(nombre)
         todos = actores.get_all_level_actors()
         previo = [a for a in todos if a.get_actor_label() == nombre]
@@ -115,7 +129,7 @@ for nombre, (preset, _) in PERSONAJES.items():
     except Exception as e:
         log(f'{nombre}: ha fallado: {e}')
 unreal.EditorLoadingAndSavingUtils.save_dirty_packages(True, True)
-if FASE == 'construir':
+if FASE == 'construir' and any(e for _, e in PERSONAJES.values()):
     colocar()
 log(f'MetaHumans: fase «{FASE}» terminada')
 if os.environ.get('EMM_CERRAR') == '1':

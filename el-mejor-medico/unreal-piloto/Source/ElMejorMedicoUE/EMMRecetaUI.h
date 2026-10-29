@@ -1,4 +1,4 @@
-// EL MEJOR MÉDICO (Unreal): recetas de la consulta (botón RECETAR). Una receta por medicamento o tratamiento,
+﻿// EL MEJOR MÉDICO (Unreal): recetas de la consulta (botón RECETAR). Una receta por medicamento o tratamiento,
 // con diseño inspirado en la receta verde tradicional, datos ficticios y la marca «SIMULACIÓN - SIN VALIDEZ MÉDICA».
 // Se escribe o dicta libremente; cada receta se puede guardar, modificar, anular y entregar al paciente.
 #pragma once
@@ -39,6 +39,8 @@ public:
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
+	// B del mando o Escape: cerrar
+	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla) override;
 	virtual void NativeTick(const FGeometry& Geometria, float Dt) override;
 
 private:

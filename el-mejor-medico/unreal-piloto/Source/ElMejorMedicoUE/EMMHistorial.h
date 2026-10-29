@@ -26,6 +26,7 @@ struct FEMMVisita
 {
 	int32 Dia = 1;
 	bool bRevision = false;
+	bool bAnticipada = false;   // el paciente pidió cita antes de tiempo porque empeoraba
 	FString Diagnostico, Pruebas;
 	FString Evolucion;          // en las revisiones: cómo llegó (resumen médico)
 	TArray<FEMMLinea> Charla;

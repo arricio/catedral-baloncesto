@@ -1,4 +1,4 @@
-#include "EMMAgendaUI.h"
+﻿#include "EMMAgendaUI.h"
 #include "EMMConsultaModo.h"
 #include "EMMHistorial.h"
 #include "Blueprint/WidgetTree.h"
@@ -174,7 +174,7 @@ void UEMMAgendaUI::Refrescar()
 	if (F)
 		for (const FEMMVisita& X : F->Visitas)
 		{
-			L.Add(FString::Printf(TEXT("■ %s · %s"), *FEMMHistorial::Fecha(X.Dia), X.bRevision ? TEXT("REVISIÓN") : TEXT("PRIMERA CONSULTA")));
+			L.Add(FString::Printf(TEXT("■ %s · %s"), *FEMMHistorial::Fecha(X.Dia), X.bAnticipada ? TEXT("REVISIÓN ANTICIPADA (empeoraba)") : X.bRevision ? TEXT("REVISIÓN") : TEXT("PRIMERA CONSULTA")));
 			if (!X.Evolucion.IsEmpty()) L.Add(TEXT("   Evolución: ") + X.Evolucion);
 			L.Add(TEXT("   Diagnóstico: ") + (X.Diagnostico.IsEmpty() ? FString(TEXT("(sin anotar)")) : X.Diagnostico));
 			if (!X.Pruebas.IsEmpty()) L.Add(TEXT("   Pruebas: ") + X.Pruebas);
@@ -277,3 +277,9 @@ void UEMMAgendaUI::AlNuevo()
 
 void UEMMAgendaUI::AlCerrar() { Cerrar(); }
 void UEMMAgendaUI::AlCambiarPruebas(const FText& T) { if (Modo.IsValid()) Modo->PonerPruebasVisita(T.ToString()); }
+
+FReply UEMMAgendaUI::NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla)
+{
+	if (Modo.IsValid() && (Tecla.GetKey() == EKeys::Gamepad_FaceButton_Right || Tecla.GetKey() == EKeys::Escape)) { Modo->CerrarVentanas(); return FReply::Handled(); }
+	return Super::NativeOnPreviewKeyDown(Geometria, Tecla);
+}

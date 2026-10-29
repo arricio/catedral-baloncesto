@@ -1,4 +1,4 @@
-#include "EMMRecetaUI.h"
+﻿#include "EMMRecetaUI.h"
 #include "EMMConsultaModo.h"
 #include "EMMDictado.h"
 #include "EMMHistorial.h"
@@ -427,4 +427,10 @@ void UEMMRecetaUI::AlDictar()
 			if (Yo.IsValid() && !Error.IsEmpty() && Yo->Modo.IsValid()) Yo->Modo->Avisar(FString::Printf(TEXT("Micrófono: %s. Puedes escribir la receta."), *Error), false);
 		});
 	if (bOk) EtiquetaDictar->SetText(FText::FromString(TEXT("■ PARAR DICTADO")));
+}
+
+FReply UEMMRecetaUI::NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla)
+{
+	if (Modo.IsValid() && (Tecla.GetKey() == EKeys::Gamepad_FaceButton_Right || Tecla.GetKey() == EKeys::Escape)) { Modo->CerrarVentanas(); return FReply::Handled(); }
+	return Super::NativeOnPreviewKeyDown(Geometria, Tecla);
 }

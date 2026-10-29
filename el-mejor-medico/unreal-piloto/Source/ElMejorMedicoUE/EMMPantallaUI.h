@@ -1,4 +1,4 @@
-// EL MEJOR MÉDICO (Unreal): el programa del portátil del médico, una historia clínica electrónica (ficticia) con los
+﻿// EL MEJOR MÉDICO (Unreal): el programa del portátil del médico, una historia clínica electrónica (ficticia) con los
 // datos reales de la partida: paciente, consulta en curso (lo que el médico escribe y lo hablado), historial, pruebas y
 // resultados, recetas y agenda. La misma pantalla se dibuja en el portátil de la consulta (componente 3D) y, ampliada,
 // a pantalla completa para consultarla y manejarla con ratón, dedo o mando.
@@ -33,6 +33,8 @@ public:
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
+	// B del mando o Escape: cerrar
+	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla) override;
 	virtual void NativeTick(const FGeometry& Geometria, float Dt) override;
 
 private:

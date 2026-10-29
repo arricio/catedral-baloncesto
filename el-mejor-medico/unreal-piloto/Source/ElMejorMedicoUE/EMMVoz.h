@@ -31,7 +31,8 @@ namespace EMMVoz
 	void Sintetizar(const FString& Texto, const FEMMPerfilVoz& Perfil, TFunction<void(TSharedPtr<FEMMAudio>)> Hecho);
 	TArray<FString> VocesDisponibles();
 	// voz según la persona: niño/niña, adolescente, adulto y mayor, hombre o mujer (con las voces es-ES del sistema)
-	FEMMPerfilVoz PerfilPara(bool bMujer, float Edad);
+	// Semilla: la misma persona, la misma voz (variación propia de tono y ritmo); 0 sin variación
+	FEMMPerfilVoz PerfilPara(bool bMujer, float Edad, uint32 Semilla = 0);
 	// Apertura de la boca a partir del propio audio (sirve en todas las plataformas)
 	void CalcularApertura(FEMMAudio& A);
 }

@@ -199,7 +199,7 @@ TArray<UEMMPantallaUI::FTarjeta> UEMMPantallaUI::Contenido() const
 				if (!X.Evolucion.IsEmpty()) S += TEXT("\nEvolución: ") + X.Evolucion;
 				if (!X.Pruebas.IsEmpty()) S += TEXT("\nPruebas: ") + X.Pruebas;
 				for (const FString& Id : X.Recetas) if (const FEMMReceta* R = F->Recetas.FindByPredicate([&](const FEMMReceta& Y) { return Y.Id == Id; })) S += TEXT("\n• ") + R->Medicamento + TEXT(" (") + FEMMReceta::TextoEstado(R->Estado).ToLower() + TEXT(")");
-				T.Add({ FString::Printf(TEXT("%s · %s"), *FEMMHistorial::Fecha(X.Dia).ToUpper(), X.bRevision ? TEXT("REVISIÓN") : TEXT("PRIMERA CONSULTA")), S, Tinta, true });
+				T.Add({ FString::Printf(TEXT("%s · %s"), *FEMMHistorial::Fecha(X.Dia).ToUpper(), X.bAnticipada ? TEXT("REVISIÓN ANTICIPADA (empeoraba)") : X.bRevision ? TEXT("REVISIÓN") : TEXT("PRIMERA CONSULTA")), S, X.bAnticipada ? Ambar : Tinta, true });
 			}
 		break;
 	}
@@ -323,3 +323,9 @@ void UEMMPantallaUI::AlMenu()
 }
 
 void UEMMPantallaUI::AlCerrar() { if (Modo.IsValid()) Modo->AbrirPortatil(); }
+
+FReply UEMMPantallaUI::NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla)
+{
+	if (Modo.IsValid() && (Tecla.GetKey() == EKeys::Gamepad_FaceButton_Right || Tecla.GetKey() == EKeys::Escape)) { Modo->CerrarVentanas(); return FReply::Handled(); }
+	return Super::NativeOnPreviewKeyDown(Geometria, Tecla);
+}

@@ -219,6 +219,23 @@ void UEMMConsultaUI::PonerFecha(const FString& T) { TextoFecha->SetText(FText::F
 void UEMMConsultaUI::AlPulsarRecetar() { if (Modo.IsValid()) Modo->AbrirRecetas(); }
 void UEMMConsultaUI::AlPulsarAgenda() { if (Modo.IsValid()) Modo->AbrirAgenda(); }
 void UEMMConsultaUI::AlPulsarPortatil() { if (Modo.IsValid()) Modo->AbrirPortatil(); }
+
+FReply UEMMConsultaUI::NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla)
+{
+	if (!Modo.IsValid()) return Super::NativeOnPreviewKeyDown(Geometria, Tecla);
+	const FKey K = Tecla.GetKey();
+	if (K == EKeys::Gamepad_FaceButton_Left) { Modo->Dictar(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_RightShoulder) { Modo->HablarMedico(TextoEscrito()); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_FaceButton_Top) { Modo->ResponderPaciente(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_LeftShoulder) { Modo->AbrirPortatil(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_Special_Left) { Modo->AbrirAgenda(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_Special_Right) { AlPulsarAjustes(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_RightTrigger) { Modo->AbrirRecetas(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_FaceButton_Right || K == EKeys::Escape) { Modo->CerrarVentanas(); CajaAjustes->SetVisibility(ESlateVisibility::Collapsed); return FReply::Handled(); }
+	// teclado: Ctrl+Intro envía lo escrito
+	if (K == EKeys::Enter && Tecla.IsControlDown()) { Modo->HablarMedico(TextoEscrito()); return FReply::Handled(); }
+	return Super::NativeOnPreviewKeyDown(Geometria, Tecla);
+}
 void UEMMConsultaUI::PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico)
 {
 	// FText::ToUpper usa las reglas del idioma (FString::ToUpper deja «ó» en minúscula)

@@ -183,16 +183,32 @@ TArray<FString> EMMVoz::VocesDisponibles()
 	return R;
 }
 
-FEMMPerfilVoz EMMVoz::PerfilPara(bool bMujer, float Edad)
+FEMMPerfilVoz EMMVoz::PerfilPara(bool bMujer, float Edad, uint32 Semilla)
 {
-	// Windows trae tres voces es-ES: Pablo (hombre), Laura y Helena (mujer). Los niños usan una voz de mujer
-	// más aguda y algo más rápida; los mayores, más grave y más pausada.
+	// Windows trae tres voces es-ES: Pablo (hombre), Laura y Helena (mujer). El tono baja poco a poco con la edad
+	// (de adolescente a mayor) y la velocidad, a partir de los 65. Cada persona (Semilla) tiene además su propia
+	// variación fija de tono y ritmo, para que dos pacientes de la misma edad no suenen igual.
+	// Los niños usan una voz de mujer más aguda y algo más rápida.
 	FEMMPerfilVoz P;
 	P.bMujer = bMujer;
-	if (Edad < 13.f)      { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Helena"); P.Tono = bMujer ? 1.75f : 1.6f; P.Vel = 1.05f; P.bMujer = true; }
-	else if (Edad < 18.f) { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Pablo");  P.Tono = bMujer ? 1.25f : 1.2f;  P.Vel = 1.05f; }
-	else if (Edad < 65.f) { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Pablo");  P.Tono = bMujer ? 1.f : 0.95f;   P.Vel = 1.f; }
-	else                  { P.Preferida = bMujer ? TEXT("Helena") : TEXT("Pablo"); P.Tono = bMujer ? 0.92f : 0.82f; P.Vel = 0.85f; }
+	const float E = FMath::Clamp(Edad, 0.f, 100.f);
+	if (E < 13.f)
+	{
+		P.Preferida = bMujer ? TEXT("Laura") : TEXT("Helena");
+		P.Tono = (bMujer ? 1.78f : 1.62f) - 0.02f * (E - 6.f);
+		P.Vel = 1.05f;
+		P.bMujer = true;
+	}
+	else if (E < 18.f) { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Pablo"); P.Tono = bMujer ? 1.24f - 0.02f * (E - 13.f) : 1.22f - 0.04f * (E - 13.f); P.Vel = 1.06f; }
+	else if (E < 65.f) { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Pablo"); P.Tono = bMujer ? 1.06f - 0.0028f * (E - 18.f) : 1.03f - 0.0035f * (E - 18.f); P.Vel = 1.02f - 0.001f * (E - 18.f); }
+	else { P.Preferida = bMujer ? TEXT("Helena") : TEXT("Pablo"); P.Tono = bMujer ? 0.93f - 0.003f * (E - 65.f) : 0.85f - 0.004f * (E - 65.f); P.Vel = 0.9f - 0.004f * (E - 65.f); }
+	if (Semilla)
+	{
+		P.Tono += (int32(Semilla % 13u) - 6) * 0.012f;
+		P.Vel += (int32((Semilla / 13u) % 9u) - 4) * 0.012f;
+		// mujeres adultas: unas con Laura y otras con Helena
+		if (bMujer && E >= 18.f && E < 65.f && (Semilla / 117u) % 3u == 0) P.Preferida = TEXT("Helena");
+	}
 	return P;
 }
 

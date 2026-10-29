@@ -43,6 +43,8 @@ public:
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeTick(const FGeometry& Geometria, float Dt) override;
+	// mando Xbox: atajos para todo lo de la consulta (la cruceta y A recorren y pulsan los botones)
+	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla) override;
 
 private:
 	void Construir();

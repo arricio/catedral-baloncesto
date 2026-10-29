@@ -92,6 +92,7 @@ void FEMMHistorial::Cargar(bool bPrueba)
 			const TSharedPtr<FJsonObject> V = VV->AsObject();
 			FEMMVisita X;
 			X.Dia = int32(V->GetNumberField(TEXT("dia"))); X.bRevision = V->GetBoolField(TEXT("revision"));
+			V->TryGetBoolField(TEXT("anticipada"), X.bAnticipada);
 			X.Diagnostico = V->GetStringField(TEXT("diagnostico")); X.Pruebas = V->GetStringField(TEXT("pruebas"));
 			X.Evolucion = V->GetStringField(TEXT("evolucion")); X.Recetas = ListaDe(V, TEXT("recetas"));
 			for (const auto& VL : V->GetArrayField(TEXT("charla")))
@@ -138,6 +139,7 @@ bool FEMMHistorial::Guardar() const
 		{
 			TSharedRef<FJsonObject> V = MakeShared<FJsonObject>();
 			V->SetNumberField(TEXT("dia"), X.Dia); V->SetStringField(TEXT("fecha"), Fecha(X.Dia)); V->SetBoolField(TEXT("revision"), X.bRevision);
+			V->SetBoolField(TEXT("anticipada"), X.bAnticipada);
 			V->SetStringField(TEXT("diagnostico"), X.Diagnostico); V->SetStringField(TEXT("pruebas"), X.Pruebas);
 			V->SetStringField(TEXT("evolucion"), X.Evolucion); V->SetArrayField(TEXT("recetas"), ListaJson(X.Recetas));
 			TArray<TSharedPtr<FJsonValue>> LC;
@@ -305,7 +307,8 @@ FEMMEvolucion EMMEvolucion::Calcular(const FEMMPaciente& P, const FEMMFicha& F, 
 	float Progreso = E.Dias / Curacion * (0.45f + 0.55f * E.Cumplimiento);
 	Progreso *= FMath::Pow(0.85f, float(Malos));
 
-	int32 Nivel = Progreso >= 1.f ? 0 : Progreso >= 0.55f ? 1 : Progreso >= 0.3f ? 2 : 3;
+	// «peor» es empeorar, no seguir enfermo: en los primeros días, poco progreso es «igual»
+	int32 Nivel = Progreso >= 1.f ? 0 : Progreso >= 0.55f ? 1 : Progreso >= 0.3f ? 2 : (E.Dias < Curacion * 0.5f ? 2 : 3);
 	if (E.Dias < 1) Nivel = 2;
 	if (bAlcohol) Nivel = FMath::Min(3, Nivel + (Tags.Contains(TEXT("alcohol_fuerte")) || bAntibiotico ? 2 : 1));
 	if (P.EnfId == TEXT("neumonia") && !bAntibiotico && E.Dias >= 4) Nivel = 4;

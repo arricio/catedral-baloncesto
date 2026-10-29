@@ -1,4 +1,4 @@
-// EL MEJOR MÉDICO (Unreal): AGENDA Y FICHA CLÍNICA. Muestra la ficha persistente del paciente (consultas,
+﻿// EL MEJOR MÉDICO (Unreal): AGENDA Y FICHA CLÍNICA. Muestra la ficha persistente del paciente (consultas,
 // diagnósticos, recetas, pruebas y evolución), el calendario del juego con las citas, y permite terminar la
 // consulta, programar la revisión y avanzar el tiempo sin esperar días reales.
 #pragma once
@@ -34,6 +34,8 @@ public:
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
+	// B del mando o Escape: cerrar
+	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometria, const FKeyEvent& Tecla) override;
 
 private:
 	void Construir();

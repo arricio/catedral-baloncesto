@@ -1,0 +1,13 @@
+{
+ "nota": "Personajes de paciente (EMMConsultaModo). Cada caso usa uno de su sexo (h/m) y edad; si hay varios, siempre el mismo para el mismo caso. Los que no estén construidos se ignoran. Bebés y niños: pendientes de modelos propios (no se usan cuerpos de adulto reducidos).",
+ "pacientes": [
+  { "nombre": "Mateo", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Mateo/BP_MH_P_Mateo.BP_MH_P_Mateo_C", "sexo": "h", "edad": [14, 25] },
+  { "nombre": "Victor", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Victor/BP_MH_P_Victor.BP_MH_P_Victor_C", "sexo": "h", "edad": [26, 40] },
+  { "nombre": "Bruce", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Bruce/BP_MH_P_Bruce.BP_MH_P_Bruce_C", "sexo": "h", "edad": [41, 64] },
+  { "nombre": "Walter", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Walter/BP_MH_P_Walter.BP_MH_P_Walter_C", "sexo": "h", "edad": [65, 99] },
+  { "nombre": "Celeste", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Celeste/BP_MH_P_Celeste.BP_MH_P_Celeste_C", "sexo": "m", "edad": [14, 22] },
+  { "nombre": "Vivian", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_Paciente/BP_MH_Paciente.BP_MH_Paciente_C", "sexo": "m", "edad": [23, 40] },
+  { "nombre": "Lani", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Lani/BP_MH_P_Lani.BP_MH_P_Lani_C", "sexo": "m", "edad": [41, 64] },
+  { "nombre": "Grace", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Grace/BP_MH_P_Grace.BP_MH_P_Grace_C", "sexo": "m", "edad": [65, 99] }
+ ]
+}

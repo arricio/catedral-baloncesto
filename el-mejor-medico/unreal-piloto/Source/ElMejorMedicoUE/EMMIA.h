@@ -39,6 +39,7 @@ public:
 	static FString LimpiarRespuesta(const FString& T);
 	static bool EsEco(const FString& Respuesta, const FString& Pregunta);
 	static FString CorregirGenero(const FString& T, bool bMujer);
+	static bool Repetida(const FString& Respuesta, const TArray<FString>& Anteriores);
 	static TArray<TPair<FString, FString>> ConstruirMensajes(const FEMMPaciente& P, const TArray<FEMMLinea>& Historial, const FString& Pregunta, const FString& Referencia);
 
 #if PLATFORM_ANDROID

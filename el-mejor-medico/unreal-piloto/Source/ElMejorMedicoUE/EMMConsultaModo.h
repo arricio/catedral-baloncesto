@@ -32,6 +32,7 @@ public:
 	void AbrirAgenda();
 	// el portátil del médico: abre o cierra su programa a pantalla completa; la pestaña se ve también en el 3D
 	void AbrirPortatil();
+	void CerrarVentanas();   // recetas, agenda y portátil (botón B del mando o Escape)
 	void PestanaPortatil(EEMMPestana P);
 	const FEMMVisita& VisitaActual() const { return Visita; }
 	FString TextoMedico() const;
@@ -82,6 +83,15 @@ private:
 	UPROPERTY() TObjectPtr<UEMMHabla> Medico;
 	UPROPERTY() TObjectPtr<UEMMHabla> HablaPaciente;
 	TWeakObjectPtr<AActor> MHMedico, MHPaciente;
+	// personajes de paciente disponibles (Content/Datos/personajes.json): cada caso usa uno de su sexo y edad
+	struct FEMMPersonaje { FString Nombre, Clase, Sexo; float EdadMin = 0.f, EdadMax = 200.f; };
+	TArray<FEMMPersonaje> Personajes;
+	FTransform AsientoPaciente;
+	FString PersonajeActual;
+	void CargarPersonajes(AActor* PacienteDelNivel);
+	const FEMMPersonaje* PersonajePara(const FEMMPaciente& Caso) const;
+	void PonerPersonaje(const FEMMPaciente& Caso);       // cambia el MetaHuman de la silla si hace falta
+	void PrepararMetaHuman(AActor* Yo, AActor* Otro, bool bPaciente);
 	TArray<FEMMPaciente> Casos;
 	FEMMPaciente Paciente;
 	TArray<FEMMLinea> Charla;
