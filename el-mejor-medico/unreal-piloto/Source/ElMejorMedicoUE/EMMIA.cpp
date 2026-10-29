@@ -223,13 +223,14 @@ void UEMMIASubsystem::Detectar(TFunction<void(const FString&, bool)> Hecho)
 			for (const TSharedPtr<FJsonValue>& V : O->GetArrayField(TEXT("models"))) Modelos.Add(V->AsObject()->GetStringField(TEXT("name")));
 		if (!Modelos.Num()) { Yo->Modo = EEMMModoIA::Predefinida; Hecho(TEXT("No se encuentra Ollama: los pacientes usarán las respuestas predefinidas."), false); return; }
 		// el mismo orden de preferencia que el juego web. En el portátil la IA va en el procesador (num_gpu 0):
-		// la GPU (RTX 3050, 4 GB) se queda para los gráficos; con Qwen 3B responde en menos de un segundo
+		// la GPU (RTX 3050, 4 GB) se queda para los gráficos; con Qwen 3B responde en menos de un segundo.
+		// 6 hilos: el resto del procesador queda libre para el juego (hilos de juego y de render)
 		Yo->Modelo = Modelos[0];
 		for (const TCHAR* Pref : { TEXT("qwen2.5:3b"), TEXT("gemma") })
 			if (const FString* M = Modelos.FindByPredicate([Pref](const FString& X) { return X.Contains(Pref); })) { Yo->Modelo = *M; break; }
 		Yo->Modo = EEMMModoIA::Ollama;
 		// precalentar: el modelo se queda cargado 30 minutos
-		Yo->PedirOllama(TEXT("/api/chat"), FString::Printf(TEXT("{\"model\":\"%s\",\"messages\":[],\"keep_alive\":\"30m\",\"options\":{\"num_gpu\":0}}"), *Yo->Modelo), 60.f, [](bool, const FString&) {});
+		Yo->PedirOllama(TEXT("/api/chat"), FString::Printf(TEXT("{\"model\":\"%s\",\"messages\":[],\"keep_alive\":\"30m\",\"options\":{\"num_gpu\":0,\"num_thread\":6}}"), *Yo->Modelo), 60.f, [](bool, const FString&) {});
 		Hecho(FString::Printf(TEXT("IA local detectada (%s): los pacientes responderán con inteligencia artificial."), *Yo->Modelo), true);
 	});
 #endif
@@ -262,7 +263,7 @@ void UEMMIASubsystem::Llamar(TArray<TPair<FString, FString>> Mensajes, TFunction
 		AsyncTask(ENamedThreads::GameThread, [Hecho, bOk, Texto, Error]() { Hecho(bOk, Texto, Error); });
 	});
 #else
-	const FString Cuerpo = FString::Printf(TEXT("{\"model\":\"%s\",\"messages\":%s,\"stream\":false,\"keep_alive\":\"30m\",\"options\":{\"temperature\":0.8,\"num_predict\":120,\"num_gpu\":0}}"), *Modelo, *Lista);
+	const FString Cuerpo = FString::Printf(TEXT("{\"model\":\"%s\",\"messages\":%s,\"stream\":false,\"keep_alive\":\"30m\",\"options\":{\"temperature\":0.8,\"num_predict\":120,\"num_gpu\":0,\"num_thread\":6}}"), *Modelo, *Lista);
 	PedirOllama(TEXT("/api/chat"), Cuerpo, 45.f, [Hecho](bool bOk, const FString& Texto) {
 		if (!bOk) { Hecho(false, FString(), Texto); return; }
 		TSharedPtr<FJsonObject> O;

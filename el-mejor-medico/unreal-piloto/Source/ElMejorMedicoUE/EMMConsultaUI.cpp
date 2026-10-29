@@ -78,7 +78,7 @@ void UEMMConsultaUI::AplicarCalidad(int32 Nivel)
 	// TSR reconstruye la imagen a resolución completa, así que bajar la interna apenas se nota en las caras.
 	struct FValor { const TCHAR* Nombre; int32 Rapida, Equilibrada, Alta; };
 	static const FValor Valores[] = {
-		{ TEXT("r.ScreenPercentage"), 60, 77, 100 },
+		{ TEXT("r.ScreenPercentage"), 60, 85, 100 },
 		{ TEXT("sg.GlobalIlluminationQuality"), 1, 2, 3 },
 		{ TEXT("sg.ReflectionQuality"), 1, 2, 3 },
 		{ TEXT("sg.ShadowQuality"), 1, 2, 3 },
@@ -330,6 +330,7 @@ void UEMMConsultaUI::AlPulsarCalidad()
 	const int32 N = (CalidadGrafica() + 1) % 3;   // equilibrada → alta → rápida → equilibrada
 	GuardarCalidad(N);
 	AplicarCalidad(N);
+	if (Modo.IsValid()) Modo->AjustarLuces(N);
 	RefrescarAjustes();
 }
 

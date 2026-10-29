@@ -6,7 +6,20 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 29 de octubre de 2026)
 
 ---
 
-## ▶ ÚLTIMO PUNTO (29/10/2026, noche, 2.ª parte) — LEER PRIMERO
+## ▶ ÚLTIMO PUNTO (29/10/2026, noche, 3.ª parte: RENDIMIENTO) — LEER PRIMERO
+
+- **Objetivo de 30 fps estables CONSEGUIDO y verificado con el ejecutable empaquetado** (`ciclo.ps1 -ProbarPaquete -Todos`, RTX 3050 portátil, 1600×900, calidad EQUILIBRADA): 17 pacientes, **52 fps de media, mediana 52, 1 % peor 40 fps, 0,0 % de fotogramas por debajo de 30**; al cambiar de paciente el fotograma más lento fue de 26 ms. Prueba general del ejecutable (`-ProbarPaquete`): recetas, ficha, dictado, subtítulos y mando correctos a 47–49 fps. Antes: 27 fps.
+- **Causa encontrada** (medida nueva en `Prueba.txt`: «Reparto del fotograma» juego/render/GPU y memoria de texturas; `Herramientas/medir_gpu.ps1` mide desde Windows la memoria de vídeo y el uso de GPU): el cuello de botella era el **hilo de render del procesador** (28 ms), no la GPU (42 % de uso). Seis luces rectangulares móviles con sombra (cada una dibuja a los dos MetaHumans en 6 direcciones) más la IA y Piper usando todos los núcleos.
+- **Cambios** (todos en código o configuración; no se ha tocado ningún MetaHuman ni el nivel):
+  - `AEMMConsultaModo::AjustarLuces`: en EQUILIBRADA tienen sombra la ventana (luz principal) y el panel del techo más cercano; los otros 3 paneles y la pantalla del portátil usan sombras de contacto. RÁPIDA: sólo la ventana. ALTA: todas.
+  - Al cambiar de paciente se libera el MetaHuman anterior (`ForceGarbageCollection`) y entra con un fundido de 0,7 s desde negro.
+  - Ollama con `num_thread 6`; Piper (NNE ONNX Runtime) con 3 hilos (`DefaultEngine.ini › NNERuntimeORTSettings`).
+  - EQUILIBRADA: resolución interna 85 % con TSR (se subió desde 77 % porque sobraba margen).
+- Memoria de vídeo del juego: ~2,4 GB de 4 GB en EQUILIBRADA; ALTA usa ~3 GB y va a 22 fps (render 44 ms): no recomendable en este portátil.
+- **Smart App Control**: sigue activado. Bloqueó tres paquetes seguidos y después permitió el siguiente (su decisión depende de la reputación en la nube de Microsoft; un certificado propio no sirve y los reconocidos son de pago; Windows 11 Home no tiene Windows Sandbox ni Hyper-V). Vía segura: si bloquea, `ciclo.ps1` lo detecta; se verifica con `-Probar -Todos -Calidad 1` en el editor (UnrealEditor.exe firmado por Epic) y se vuelve a empaquetar más tarde con un cambio real de código. Opcional y gratuito: enviar el ejecutable a Microsoft Security Intelligence como desarrollador.
+- **Copias**: versión anterior verificada `Copias\Windows_17pacientes_2026-10-29` (27 fps) y nueva `Copias\Windows_17pacientes_50fps_2026-10-29`; fuentes antes de optimizar en `Copias\Fuentes_antes_optimizacion_2026-10-29`.
+
+## ▶ ÚLTIMO PUNTO (29/10/2026, noche, 2.ª parte)
 
 - **Seguridad de urgencias (hecho y probado en el editor, `-Probar -Todos`)**:
   - `casos.json` lleva lo que necesita cada caso (`destino`: casa / hospitalizar / cirugia, `prioridad`, `cirugia`), sacado de `trat.accion` del juego web. El exportador usa azar con semilla fija (20261029): exportar otra vez da los mismos pacientes. Copia del anterior: `ElMejorMedicoUE\Copias\casos_v3_2026-10-29.json`.
@@ -15,7 +28,7 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 29 de octubre de 2026)
   - Prueba: 120 casos con personaje, 37 necesitan hospital o cirugía, 12 con alerta de triaje, **0 fallos** (mandados a casa empeoran y dan aviso; derivados vuelven de alta; los leves no dan aviso por ir a casa).
 - **Voces**: el fonetizador lee abreviaturas («Dr.», «Sra.», «Ud.»), unidades tras un número (mg, ml, h, mmHg, lpm, °C), siglas deletreadas (ECG, PCR…), horas («8:30»), ordinales («2.º»), fracciones («1/2» = medio), «cada 8 h», «y/o», y enlaces entre palabras («un beso» [m], «con gripe» [ŋ], «con dolor» [d]). Las 6 voces sintetizan en 0,17–0,30 s.
 - **Calidad gráfica** en CONFIGURACIÓN (RÁPIDA / EQUILIBRADA por defecto / ALTA), guardada en GameUserSettings; `ciclo.ps1 -Calidad N` la fuerza en las pruebas. Equilibrada: resolución interna 77 % con TSR y Lumen, sombras, reflejos y posproceso en nivel 2. Medido en el editor con los 17 pacientes: ALTA 24 fps de media (y el motor avisa de **memoria de vídeo agotada**, 66 MB por encima de los 4 GB de la RTX 3050), EQUILIBRADA 26 fps sin ese aviso y con imagen prácticamente igual; el 5 % peor sigue en 22 fps (cambios de personaje). Para llegar a 30 fps: reducir la memoria de vídeo de los MetaHumans (LOD y texturas de 8K a 2K, pelo en tarjetas a distancia) y precargar el siguiente personaje.
-- **Ejecutable nuevo BLOQUEADO por Smart App Control** (3 intentos con cambios de código el 29/10; no se desactiva). `Empaquetado\Windows` contiene ese paquete nuevo sin verificar; **la última versión funcional verificada está en `C:\Users\arric\ElMejorMedicoUE\Copias\Windows_17pacientes_2026-10-29`** (no borrar). Volver a intentar `-Empaquetar` y `-ProbarPaquete -Todos` otro día (la reputación de Smart App Control cambia).
+- Ejecutable: superado (ver 3.ª parte: el paquete optimizado se verificó).
 
 ## ▶ ÚLTIMO PUNTO (29/10/2026, noche)
 

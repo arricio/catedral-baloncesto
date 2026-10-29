@@ -38,6 +38,8 @@ public:
 	FString TextoMedico() const;
 	void PonerPruebasVisita(const FString& Pruebas) { Visita.Pruebas = Pruebas; }
 	void Avisar(const FString& Texto, bool bBien);
+	// sombras de las luces según la calidad gráfica (el coste mayor del hilo de render)
+	void AjustarLuces(int32 Nivel);
 
 	// recetas de esta consulta (una por medicamento o tratamiento)
 	TArray<FString> RecetasVisita() const { return Visita.Recetas; }
@@ -115,6 +117,10 @@ private:
 	TArray<FString> RegistroPrueba;
 	bool bFotoSubtitulos = false, bSubtitulosAntes = false;
 	TArray<float> Fotogramas;   // duración de los fotogramas (rendimiento), muestreada durante la prueba
+	TArray<float> MsJuego, MsRender, MsGPU;   // reparto del fotograma: hilo del juego, hilo de render y GPU
+	TArray<float> FotogramasCarga;            // los 3 s siguientes a cambiar de paciente (carga del MetaHuman)
+	double UltimoCambio = -100.0, UltimaFoto = -100.0;   // las fotos de la prueba congelan un fotograma: no cuentan
+	void MuestraRendimiento();
 	void PasoDePrueba();
 	void Foto(const FString& Nombre);
 

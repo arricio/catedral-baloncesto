@@ -1,4 +1,9 @@
 ﻿#include "EMMConsultaModo.h"
+#include "RenderTimer.h"
+#include "Engine/RectLight.h"
+#include "Components/RectLightComponent.h"
+#include "DynamicRHI.h"
+#include "RHIStats.h"
 #include "EMMConsultaUI.h"
 #include "EMMHabla.h"
 #include "EMMIA.h"
@@ -102,6 +107,8 @@ void AEMMConsultaModo::BeginPlay()
 		AsientoPaciente = ActorPaciente->GetActorTransform();
 		PrepararMetaHuman(ActorMedico, ActorPaciente, false);
 		PrepararMetaHuman(ActorPaciente, ActorMedico, true);
+		MHMedico = ActorMedico;
+		AjustarLuces(UEMMConsultaUI::CalidadGrafica());
 	}
 	// encuadre calculado: de lado, a la altura de las cabezas (sentados), viendo de frente a médico y paciente.
 	// Los números están en Content/Datos/escena.json para ajustarlos sin recompilar.
@@ -219,6 +226,35 @@ void AEMMConsultaModo::BeginPlay()
 }
 
 // ───────────────────────── Personajes ─────────────────────────
+void AEMMConsultaModo::AjustarLuces(int32 Nivel)
+{
+	// Las luces rectangulares proyectan sombra en las 6 direcciones: cada una vuelve a dibujar a los dos MetaHumans
+	// seis veces por fotograma. Se conservan las sombras de la luz principal (la ventana) y del panel del techo más
+	// cercano a médico y paciente; los demás paneles y la pantalla del portátil usan sombras de contacto (casi
+	// gratis, mantienen el contacto de manos, mesa y sillas). En ALTA, todas como en el nivel.
+	const FVector Centro = MHMedico.IsValid() ? (MHMedico->GetActorLocation() + AsientoPaciente.GetLocation()) * 0.5 : AsientoPaciente.GetLocation();
+	URectLightComponent* Cercano = nullptr;
+	TArray<URectLightComponent*> Luces;
+	for (TActorIterator<ARectLight> It(GetWorld()); It; ++It)
+		if (URectLightComponent* L = Cast<URectLightComponent>(It->GetLightComponent()))
+		{
+			Luces.Add(L);
+			const bool bTecho = FMath::IsNearlyEqual(L->Temperature, 4300.f, 50.f);
+			if (bTecho && (!Cercano || FVector::DistSquared2D(L->GetComponentLocation(), Centro) < FVector::DistSquared2D(Cercano->GetComponentLocation(), Centro))) Cercano = L;
+		}
+	int32 ConSombra = 0;
+	for (URectLightComponent* L : Luces)
+	{
+		const bool bVentana = FMath::IsNearlyEqual(L->Temperature, 6200.f, 50.f);
+		const bool bSombra = Nivel >= 2 || bVentana || (Nivel == 1 && L == Cercano);
+		L->SetCastShadows(bSombra);
+		L->ContactShadowLength = bSombra ? 0.f : 0.03f;
+		L->MarkRenderStateDirty();
+		ConSombra += bSombra;
+	}
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Luces: %d de %d con sombra (calidad %d)"), ConSombra, Luces.Num(), Nivel);
+}
+
 void AEMMConsultaModo::PrepararMetaHuman(AActor* Yo, AActor* Otro, bool bPaciente)
 {
 	if (!Yo || !Otro) return;
@@ -378,6 +414,11 @@ void AEMMConsultaModo::PonerPersonaje(const FEMMPaciente& Caso)
 	Nuevo->Tags = { TEXT("Paciente"), Caso.EsMujer() ? TEXT("Mujer") : TEXT("Hombre") };
 	if (MHPaciente.IsValid()) MHPaciente->Destroy();
 	MHPaciente = Nuevo;
+	// el MetaHuman anterior (mallas, texturas, pelo) se libera ya: si no, se acumulan en la memoria de vídeo
+	GEngine->ForceGarbageCollection(true);
+	UltimoCambio = FPlatformTime::Seconds();
+	// el nuevo paciente entra con un fundido desde negro (tapa el instante de carga del MetaHuman)
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController(); PC && PC->PlayerCameraManager) PC->PlayerCameraManager->StartCameraFade(1.f, 0.f, 0.7f, FLinearColor::Black, false, false);
 	PersonajeActual = X->Clase;
 	PrepararMetaHuman(Nuevo, MHMedico.Get(), true);
 	// el médico mira al nuevo paciente
@@ -759,8 +800,19 @@ void AEMMConsultaModo::PacienteNuevo()
 	Avisar(FString::Printf(TEXT("%s. Entra %s %s."), *FEMMHistorial::Fecha(H.Dia), *Paciente.Nombre, *Paciente.Apellidos) + Triaje, Triaje.IsEmpty());
 }
 
+void AEMMConsultaModo::MuestraRendimiento()
+{
+	if (FPlatformTime::Seconds() - UltimoCambio < 3.0) { FotogramasCarga.Add(float(FApp::GetDeltaTime())); return; }
+	if (FPlatformTime::Seconds() - UltimaFoto < 1.0) return;
+	Fotogramas.Add(float(FApp::GetDeltaTime()));
+	MsJuego.Add(FPlatformTime::ToMilliseconds(GGameThreadTime));
+	MsRender.Add(FPlatformTime::ToMilliseconds(GRenderThreadTime));
+	MsGPU.Add(FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles()));
+}
+
 void AEMMConsultaModo::Foto(const FString& Nombre)
 {
+	UltimaFoto = FPlatformTime::Seconds();
 	FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir() / TEXT("Capturas") / (Nombre + TEXT(".png")), true, false);
 	RegistroPrueba.Add(FString::Printf(TEXT("[foto] %s"), *Nombre));
 }
@@ -777,7 +829,7 @@ void AEMMConsultaModo::PasoDePrueba()
 	{
 		FEMMHistorial& H = FEMMHistorial::Get();
 		const int32 K = PasoPrueba - 200, I = K / 4, Fa = K % 4;
-		if (Fa >= 1) Fotogramas.Add(float(FApp::GetDeltaTime()));   // rendimiento con cada paciente en la silla
+		if (Fa >= 1) MuestraRendimiento();   // rendimiento con cada paciente en la silla
 		if (H.Plantilla.IsValidIndex(I))
 		{
 			const FEMMPersona& Per = H.Plantilla[I];
@@ -855,7 +907,7 @@ void AEMMConsultaModo::PasoDePrueba()
 	}
 	const int32 Ronda = (PasoPrueba - 2) / 3, Fase = (PasoPrueba - 2) % 3;
 	// rendimiento en juego: durante las conversaciones (no las cargas de personajes ni las vistas de revisión)
-	if ((PasoPrueba >= 2 && PasoPrueba <= 10) || (PasoPrueba >= 16 && PasoPrueba <= 21)) Fotogramas.Add(float(FApp::GetDeltaTime()));
+	if ((PasoPrueba >= 2 && PasoPrueba <= 10) || (PasoPrueba >= 16 && PasoPrueba <= 21)) MuestraRendimiento();
 	// con el editor, los sombreadores se compilan al jugar: hasta que terminan, se ven materiales provisionales
 	bool bCompilando = false;
 #if WITH_EDITOR
@@ -1134,7 +1186,17 @@ void AEMMConsultaModo::PasoDePrueba()
 			Fotogramas.Sort();
 			float Suma = 0; for (float D : Fotogramas) Suma += D;
 			const float Media = Suma / Fotogramas.Num(), Peor = Fotogramas[FMath::Min(Fotogramas.Num() - 1, int32(Fotogramas.Num() * 0.95f))];
+			const float Peor1 = Fotogramas[FMath::Min(Fotogramas.Num() - 1, int32(Fotogramas.Num() * 0.99f))], Mediana = Fotogramas[Fotogramas.Num() / 2];
+			int32 Bajos = 0; for (float D : Fotogramas) Bajos += D > 1.f / 30.f;
+			float PeorCarga = 0; for (float D : FotogramasCarga) PeorCarga = FMath::Max(PeorCarga, D);
+			RegistroPrueba.Add(FString::Printf(TEXT("Rendimiento estable: mediana %.0f fps, 1 %% peor %.0f fps, %.1f %% de fotogramas por debajo de 30 fps · cambios de paciente: %d muestras, fotograma más lento %.0f ms"),
+				1.f / Mediana, 1.f / Peor1, 100.f * Bajos / Fotogramas.Num(), FotogramasCarga.Num(), PeorCarga * 1000.f));
 			RegistroPrueba.Add(FString::Printf(TEXT("Rendimiento: %.0f fps de media, %.0f fps en el 5 %% peor (%d muestras; %s; calidad %s)"), 1.f / Media, 1.f / Peor, Fotogramas.Num(), *FPlatformMisc::GetPrimaryGPUBrand(), *UEMMConsultaUI::NombreCalidad(UEMMConsultaUI::CalidadGrafica())));
+			auto MediaDe = [](const TArray<float>& A) { float S = 0; for (float X : A) S += X; return A.Num() ? S / A.Num() : 0.f; };
+			FTextureMemoryStats Mem;
+			RHIGetTextureMemoryStats(Mem);
+			RegistroPrueba.Add(FString::Printf(TEXT("Reparto del fotograma (ms de media): juego %.1f · render %.1f · GPU %.1f · texturas en GPU %.0f MB (streaming %.0f MB, fijas %.0f MB, límite del grupo %.0f MB) de %.0f MB de vídeo"),
+				MediaDe(MsJuego), MediaDe(MsRender), MediaDe(MsGPU), (Mem.StreamingMemorySize + Mem.NonStreamingMemorySize) / 1048576.0, Mem.StreamingMemorySize / 1048576.0, Mem.NonStreamingMemorySize / 1048576.0, Mem.TexturePoolSize / 1048576.0, Mem.DedicatedVideoMemory / 1048576.0));
 		}
 		RegistroPrueba.Add(FString::Printf(TEXT("Voces: %s"), *FString::Join(EMMVoz::VocesDisponibles(), TEXT(" | "))));
 		FFileHelper::SaveStringArrayToFile(RegistroPrueba, *(FPaths::ProjectSavedDir() / TEXT("Prueba.txt")), FFileHelper::EEncodingOptions::ForceUTF8);
