@@ -6,7 +6,15 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 30 de octubre de 2026)
 
 ---
 
-## ▶ ANDROID (30/10/2026, mediodía) — DICTADO SIN REPETICIONES; LISTO PARA INSTALAR Y MEDIR FPS
+## ▶ ANDROID (30/10/2026, tarde) — ACTUALIZADO EN EL XIAOMI Y FPS MEDIDOS
+
+- Actualización instalada con `adb install -r` (sin desinstalar) + OBB nuevos. Comprobado después: IA Gemma intacta (2 588 147 712 bytes) e `historial.json` intacto.
+- **Prueba automática real en el Xiaomi 17 Ultra** (`-EMMPrueba -EMMTodos`, 5,5 min, calidad EQUILIBRADA; resultado en `ElMejorMedicoUE\Saved\Prueba_Xiaomi.txt`): 17 personas, 17 caras distintas, 17 fichas guardadas; los 17 pacientes respondieron con la **IA Gemma 4 E2B del móvil** (`[ia]`); 6 voces Piper bien (0,5–1,4 s por frase de 6–11 s); SEGURIDAD 120 casos, 0 fallos; revisión del P01 correcta; dictado arranca sin error.
+- **Rendimiento**: media 55 fps, **mediana 60 fps** (el tope de la pantalla), 5 % peor 46 fps; pero **1 % peor 12 fps y 2,4 % de fotogramas por debajo de 30** → NO son 30 fps totalmente estables. Fotograma más lento al cambiar de paciente: 27 ms. Reparto medio: juego 3,1 ms, render 5,4 ms, GPU 13,3 ms; texturas 417 MB.
+- Sin confirmar: los tirones parecen coincidir con la IA (Gemma va en la GPU del móvil, la misma que dibuja) o con Piper. Siguiente paso: registrar cuándo caen los fotogramas (IA / voz / cambio de paciente) y, si es la IA, probar Gemma en CPU o limitar su prioridad.
+- Capturas del móvil: ya no hay joysticks virtuales; el pelo del médico se ve mucho menos granulado con TAA.
+
+## ▶ ANDROID (30/10/2026, mediodía) — DICTADO SIN REPETICIONES
 
 - **Fallo del usuario**: al dictar, palabras o frases salían 2 o más veces (y el médico las repetía). Causas en `EMMNativo.kt`: tras `onResults` podía llegar también `onError` y volvía a añadir el texto parcial; al relanzar el reconocedor tras un silencio, avisos atrasados de la escucha anterior se sumaban a la nueva; y el reconocedor puede reenviar lo ya dicho. Arreglo: cada escucha lleva número (`dicSesion`) y se cierra una sola vez; `unir()` quita el solapamiento (sin mayúsculas ni signos). Pruebas unitarias `Nativo/emm-nativo/src/test/.../DictadoTest.kt` (`gradlew :emm-nativo:testReleaseUnitTest`): 7/7 bien. Falta probarlo hablando en el móvil.
 - **APK nuevo** en `Binaries\Android` (dictado + sin joysticks + TAA), verificado por dentro. Unreal no rehace el APK si sólo cambia el AAR: borrar los `.apk` antes de `ciclo.ps1 -Android -SinCocinar`.
