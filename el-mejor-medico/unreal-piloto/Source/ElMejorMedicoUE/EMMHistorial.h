@@ -35,6 +35,18 @@ struct FEMMVisita
 	TArray<FString> Recetas;    // Id de las recetas hechas en esta visita
 };
 
+// Lo que el jugador cambia en el CREADOR DE PERSONAJES (vacío o 0: lo original). La cara, el sexo y la edad
+// base los da el personaje elegido; aquí van el nombre, la edad exacta y los tonos.
+struct FEMMAspecto
+{
+	FString Nombre, Apellidos;
+	int32 Edad = -1;                      // años (0: menos de un año); -1: la del caso
+	int32 Piel = 0, Pelo = 0, Ojos = 0;   // 0: los suyos; 1…: tonos del creador (EMMAspecto)
+	// peinado, barba y bigote: vacío el suyo, «-» ninguno, o el groom de otro MetaHuman (ruta del asset)
+	FString Peinado, Barba, Bigote;
+	bool Vacio() const { return Nombre.IsEmpty() && Apellidos.IsEmpty() && Edad < 0 && !Piel && !Pelo && !Ojos && Peinado.IsEmpty() && Barba.IsEmpty() && Bigote.IsEmpty(); }
+};
+
 // Una persona de la partida: un personaje (su cara) con su identidad fija. Puede venir varias veces y con
 // enfermedades distintas; su ficha guarda todo.
 struct FEMMPersona
@@ -42,6 +54,7 @@ struct FEMMPersona
 	FString Id;          // «P01»…
 	FString Personaje;   // nombre en personajes.json
 	FString CasoInicial; // caso con el que se presenta la primera vez
+	FEMMAspecto Aspecto; // cambios del creador de personajes
 };
 
 struct FEMMFicha
@@ -76,6 +89,10 @@ public:
 	int32 SiguienteReceta = 1;
 	TArray<FEMMFicha> Fichas;
 	TArray<FEMMPersona> Plantilla;   // las personas de la partida (una por personaje)
+	// el médico del jugador (creador de personajes): su cara (vacío: Lorenzo, el del nivel) y su aspecto
+	FString PersonajeMedico;
+	bool bMedicaMujer = false;
+	FEMMAspecto Medico;
 
 	static FEMMHistorial& Get();
 	// bPrueba: la prueba automática usa su propio archivo y empieza de cero (no toca la partida del jugador)

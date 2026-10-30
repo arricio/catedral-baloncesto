@@ -1,4 +1,7 @@
 {
- "nota": "Encuadre de la cámara del juego (EMMConsultaModo). atras: cm por detrás del médico; lado: cm hacia la ventana; alto: altura de la cámara; mezcla: punto al que mira entre médico (0) y paciente (1); alto_mira: altura de ese punto; fov: grados.",
- "camara": { "atras": 10, "lado": 180, "alto": 150, "mezcla": 0.44, "alto_mira": 108, "fov": 55 }
+ "nota": "Encuadre de la cámara del juego (EMMConsultaModo). atras: cm por detrás del médico; lado: cm hacia la ventana; alto: altura de la cámara; mezcla: punto al que mira entre médico (0) y paciente (1); alto_mira: altura de ese punto; fov: grados. bebe: [adelante, arriba] cm del asiento del bebé desde la pelvis del adulto que lo tiene en el regazo; nino_atras: cm hacia el fondo de la silla para los niños; acompanante: [cm hacia el lado contrario a la cámara, cm hacia el fondo] desde el paciente, para la silla del acompañante.",
+ "camara": { "atras": 10, "lado": 180, "alto": 150, "mezcla": 0.44, "alto_mira": 108, "fov": 55 },
+ "bebe": [22, 6],
+ "nino_atras": 8,
+ "acompanante": [75, 25]
 }

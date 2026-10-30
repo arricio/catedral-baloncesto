@@ -48,9 +48,21 @@ public:
 	void AnularReceta(const FString& Id);
 	void EntregarReceta(const FString& Id);
 	int32 DiasTratamiento() const;   // lo que dura el tratamiento entregado (para la revisión)
-	FString NombreMedico() const { return TEXT("Dr. Lorenzo Prieto Alonso"); }
+	FString NombreMedico() const;   // «Dr. Lorenzo Prieto Alonso» o el del creador de personajes (Dra. si es médica)
 	FString ColegiadoMedico() const { return TEXT("24/28-417"); }
-	FString FirmaMedico() const { return TEXT("L. Prieto A."); }
+	FString FirmaMedico() const;
+
+	// ── creador de personajes ──
+	struct FEMMCara { FString Nombre, Etiqueta, Sexo; float EdadMin = 0.f, EdadMax = 200.f; bool bNino = false, bMedico = false; };
+	TArray<FEMMCara> Caras() const;                       // los personajes del juego y el médico del nivel («Lorenzo»)
+	void AbrirCreador();
+	// Indice -1: el médico; si no, la persona de la plantilla. Guarda en el historial y lo pone en la consulta
+	FString AplicarCreador(int32 Indice, const FString& Cara, const FEMMAspecto& A);
+	FString CaraDe(int32 Indice) const;
+	int32 EdadDe(int32 Indice) const;
+	void NombreDe(int32 Indice, FString& Nombre, FString& Apellidos) const;
+	FString NombreCompletoDe(int32 Indice) const;
+	FString TextoEdadDe(int32 Indice) const;
 
 	// ficha clínica, calendario y seguimiento
 	FEMMFicha* Ficha() { return FEMMHistorial::Get().Buscar(Paciente.Id); }
@@ -74,6 +86,10 @@ private:
 	UPROPERTY() TObjectPtr<UEMMConsultaUI> UI;
 	UPROPERTY() TObjectPtr<UEMMRecetaUI> UIRecetas;
 	UPROPERTY() TObjectPtr<UEMMAgendaUI> UIAgenda;
+	UPROPERTY() TObjectPtr<class UEMMCreadorUI> UICreador;
+	FString ClaseMedicoNivel;                 // el MetaHuman del médico que trae el nivel (Lorenzo)
+	void PonerMedico();                       // el médico con la cara y el aspecto del creador de personajes
+	const FEMMPersona* PersonaDe(const FString& Id) const;
 	UPROPERTY() TObjectPtr<UEMMPantallaUI> UIPortatil;          // a pantalla completa
 	UPROPERTY() TObjectPtr<UEMMPantallaUI> UIPantalla;          // la que se dibuja en el portátil 3D
 	UPROPERTY() TObjectPtr<class UWidgetComponent> Pantalla3D;
@@ -85,15 +101,23 @@ private:
 	UPROPERTY() TObjectPtr<UEMMHabla> Medico;
 	UPROPERTY() TObjectPtr<UEMMHabla> HablaPaciente;
 	TWeakObjectPtr<AActor> MHMedico, MHPaciente;
-	// personajes de paciente disponibles (Content/Datos/personajes.json): cada caso usa uno de su sexo y edad
-	struct FEMMPersonaje { FString Nombre, Clase, Sexo; float EdadMin = 0.f, EdadMax = 200.f; };
+	// personajes de paciente disponibles (Content/Datos/personajes.json): cada caso usa uno de su sexo y edad.
+	// bNino: niño o bebé (malla de MPFB, Clase es la malla) que viene con un acompañante adulto (MetaHuman)
+	struct FEMMPersonaje { FString Nombre, Clase, Sexo; float EdadMin = 0.f, EdadMax = 200.f; bool bNino = false; };
 	TArray<FEMMPersonaje> Personajes;
-	FTransform AsientoPaciente;
-	FString PersonajeActual;
+	FTransform AsientoPaciente, AsientoAcompanante;
+	FString PersonajeActual, AcompananteActual;
+	TWeakObjectPtr<AActor> MHAcompanante;   // madre, padre, abuelo… de un niño o bebé
+	bool bHablaAcompanante = false;          // en esta visita contesta el acompañante (bebés y niños pequeños)
 	void CargarPersonajes(AActor* PacienteDelNivel);
 	const FEMMPersonaje* PersonajePara(const FEMMPaciente& Caso) const;
+	const FEMMPersonaje* AcompananteDe(const FEMMPaciente& Caso) const;   // un adulto de su sexo y edad
+	static bool AcompananteMujer(const FEMMPaciente& Caso);
+	static float EdadAcompanante(const FEMMPaciente& Caso);
+	AActor* CrearPersonaje(const FEMMPersonaje& X, const FTransform& Donde);
 	void PonerPersonaje(const FEMMPaciente& Caso);       // cambia el MetaHuman de la silla si hace falta
 	void PrepararMetaHuman(AActor* Yo, AActor* Otro, bool bPaciente);
+	void SentarBebe();                                   // el bebé, en el regazo del acompañante
 	// personas de la partida: una por personaje, con su caso inicial (se guarda en el historial)
 	void ConstruirPlantilla();
 	FEMMPaciente PacienteDe(const FEMMPersona& Persona, const FEMMPaciente& Caso, const FEMMFicha* Ficha) const;

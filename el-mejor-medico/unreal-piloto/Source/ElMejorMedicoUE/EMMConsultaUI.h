@@ -80,6 +80,7 @@ private:
 	UFUNCTION() void AlPulsarMedico();
 	UFUNCTION() void AlPulsarPaciente();
 	UFUNCTION() void AlPulsarMicrofono();
+	UFUNCTION() void AlPulsarCreador();
 	UFUNCTION() void AlPulsarDescargar();
 	UFUNCTION() void AlPulsarAjustes();
 	UFUNCTION() void AlPulsarRecetar();

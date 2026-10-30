@@ -56,12 +56,38 @@ namespace
 		if (O->TryGetArrayField(Campo, A)) for (const auto& V : *A) R.Add(V->AsString());
 		return R;
 	}
+	// aspecto del creador de personajes (sólo lo que se ha cambiado)
+	TSharedRef<FJsonObject> AspectoJson(const FEMMAspecto& A)
+	{
+		TSharedRef<FJsonObject> O = MakeShared<FJsonObject>();
+		if (!A.Nombre.IsEmpty()) O->SetStringField(TEXT("nombre"), A.Nombre);
+		if (!A.Apellidos.IsEmpty()) O->SetStringField(TEXT("apellidos"), A.Apellidos);
+		if (A.Edad >= 0) O->SetNumberField(TEXT("edad"), A.Edad);
+		if (A.Piel) O->SetNumberField(TEXT("piel"), A.Piel);
+		if (A.Pelo) O->SetNumberField(TEXT("pelo"), A.Pelo);
+		if (A.Ojos) O->SetNumberField(TEXT("ojos"), A.Ojos);
+		if (!A.Peinado.IsEmpty()) O->SetStringField(TEXT("peinado"), A.Peinado);
+		if (!A.Barba.IsEmpty()) O->SetStringField(TEXT("barba"), A.Barba);
+		if (!A.Bigote.IsEmpty()) O->SetStringField(TEXT("bigote"), A.Bigote);
+		return O;
+	}
+	FEMMAspecto AspectoDe(const TSharedPtr<FJsonObject>& O)
+	{
+		FEMMAspecto A;
+		if (!O.IsValid()) return A;
+		O->TryGetStringField(TEXT("nombre"), A.Nombre); O->TryGetStringField(TEXT("apellidos"), A.Apellidos);
+		O->TryGetNumberField(TEXT("edad"), A.Edad); O->TryGetNumberField(TEXT("piel"), A.Piel);
+		O->TryGetNumberField(TEXT("pelo"), A.Pelo); O->TryGetNumberField(TEXT("ojos"), A.Ojos);
+		O->TryGetStringField(TEXT("peinado"), A.Peinado); O->TryGetStringField(TEXT("barba"), A.Barba); O->TryGetStringField(TEXT("bigote"), A.Bigote);
+		return A;
+	}
 }
 
 void FEMMHistorial::Cargar(bool bPrueba)
 {
 	RutaArchivo = FPaths::ProjectSavedDir() / TEXT("Historial") / (bPrueba ? TEXT("historial_prueba.json") : TEXT("historial.json"));
 	Dia = 1; SiguienteReceta = 1; Fichas.Reset(); Plantilla.Reset();
+	PersonajeMedico.Reset(); bMedicaMujer = false; Medico = FEMMAspecto();
 	if (bPrueba) return;   // la prueba empieza siempre de cero
 	FString J; TSharedPtr<FJsonObject> Raiz;
 	if (!FFileHelper::LoadFileToString(J, *RutaArchivo) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(J), Raiz) || !Raiz.IsValid()) return;
@@ -71,8 +97,16 @@ void FEMMHistorial::Cargar(bool bPrueba)
 		for (const auto& V : *LP)
 		{
 			const TSharedPtr<FJsonObject> O = V->AsObject();
-			Plantilla.Add({ O->GetStringField(TEXT("id")), O->GetStringField(TEXT("personaje")), O->GetStringField(TEXT("casoInicial")) });
+			const TSharedPtr<FJsonObject>* As = nullptr;
+			Plantilla.Add({ O->GetStringField(TEXT("id")), O->GetStringField(TEXT("personaje")), O->GetStringField(TEXT("casoInicial")),
+				O->TryGetObjectField(TEXT("aspecto"), As) ? AspectoDe(*As) : FEMMAspecto() });
 		}
+	if (const TSharedPtr<FJsonObject>* M; Raiz->TryGetObjectField(TEXT("medico"), M))
+	{
+		(*M)->TryGetStringField(TEXT("personaje"), PersonajeMedico);
+		(*M)->TryGetBoolField(TEXT("mujer"), bMedicaMujer);
+		Medico = AspectoDe(*M);
+	}
 	for (const auto& VF : Raiz->GetArrayField(TEXT("fichas")))
 	{
 		const TSharedPtr<FJsonObject> O = VF->AsObject();
@@ -176,9 +210,16 @@ bool FEMMHistorial::Guardar() const
 	{
 		TSharedRef<FJsonObject> O = MakeShared<FJsonObject>();
 		O->SetStringField(TEXT("id"), P.Id); O->SetStringField(TEXT("personaje"), P.Personaje); O->SetStringField(TEXT("casoInicial"), P.CasoInicial);
+		if (!P.Aspecto.Vacio()) O->SetObjectField(TEXT("aspecto"), AspectoJson(P.Aspecto));
 		LP.Add(MakeShared<FJsonValueObject>(O));
 	}
 	Raiz->SetArrayField(TEXT("plantilla"), LP);
+	{
+		TSharedRef<FJsonObject> M = AspectoJson(Medico);
+		M->SetStringField(TEXT("personaje"), PersonajeMedico);
+		M->SetBoolField(TEXT("mujer"), bMedicaMujer);
+		Raiz->SetObjectField(TEXT("medico"), M);
+	}
 	FString J;
 	TSharedRef<TJsonWriter<>> W = TJsonWriterFactory<>::Create(&J);
 	FJsonSerializer::Serialize(Raiz, W);

@@ -205,6 +205,11 @@ void UEMMConsultaUI::Construir()
 	EtiquetaCalidad = ECal;
 	BotonCal->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarCalidad);
 	if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(BotonCal)) S->SetPadding(FMargin(0, 8, 0, 0));
+	// el médico y los pacientes: nombre, sexo, edad, cara, piel, pelo, peinado, barba, bigote y ojos
+	UTextBlock* ECre = nullptr;
+	UButton* BotonCreador = CrearBoton(TEXT("CREADOR DE PERSONAJES"), FLinearColor(0.32f, 0.16f, 0.45f), ECre, 18.f);
+	BotonCreador->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarCreador);
+	if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(BotonCreador)) S->SetPadding(FMargin(0, 8, 0, 0));
 	// créditos obligatorios de las voces (licencias CC BY) y aviso de simulación
 	UTextBlock* Creditos = Texto(WidgetTree, TEXT("Créditos de voces: corpus Sharvard (Aubanel, García Lecumberri y Cooke), CC BY 3.0; Multilingual LibriSpeech (OpenSLR 94), CC BY 4.0; davefx (CC0); carlfm (dominio público). Modelos Piper (MIT).\nSimulación: pacientes, médicos, centro y recetas ficticios, sin validez médica."), 11.f, FLinearColor(0.7f, 0.75f, 0.85f));
 	Creditos->SetWrapTextAt(430.f);
@@ -341,3 +346,4 @@ void UEMMConsultaUI::AlPulsarAjustes()
 }
 void UEMMConsultaUI::AlPulsarSubtitulos() { GuardarSubtitulos(!SubtitulosActivados()); RefrescarAjustes(); }
 void UEMMConsultaUI::AlPulsarCerrarAjustes() { CajaAjustes->SetVisibility(ESlateVisibility::Collapsed); }
+void UEMMConsultaUI::AlPulsarCreador() { CajaAjustes->SetVisibility(ESlateVisibility::Collapsed); if (Modo.IsValid()) Modo->AbrirCreador(); }

@@ -1,5 +1,5 @@
 {
- "nota": "Personajes de paciente (EMMConsultaModo). Cada caso usa uno de su sexo (h/m) y edad; si hay varios, siempre el mismo para el mismo caso. Los que no estén construidos se ignoran. Bebés y niños: pendientes de modelos propios (no se usan cuerpos de adulto reducidos).",
+ "nota": "Personajes de paciente (EMMConsultaModo). Cada caso usa uno de su sexo (h/m) y edad; si hay varios, siempre el mismo para el mismo caso. Los que no estén construidos se ignoran. Bebés y niños («nino»: true): mallas de MPFB (CC0, Fuentes/Ninos) en vez de MetaHumans; vienen con un acompañante adulto (un MetaHuman de su sexo y edad) que se sienta en la silla de al lado o, con un bebé, en la del paciente con el bebé en el regazo.",
  "pacientes": [
   { "nombre": "Mateo", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Mateo/BP_MH_P_Mateo.BP_MH_P_Mateo_C", "sexo": "h", "edad": [14, 25] },
   { "nombre": "Victor", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Victor/BP_MH_P_Victor.BP_MH_P_Victor_C", "sexo": "h", "edad": [26, 40] },
@@ -17,6 +17,12 @@
   { "nombre": "Sunita", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Sunita/BP_MH_P_Sunita.BP_MH_P_Sunita_C", "sexo": "m", "edad": [18, 35] },
   { "nombre": "Jelena", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Jelena/BP_MH_P_Jelena.BP_MH_P_Jelena_C", "sexo": "m", "edad": [20, 40] },
   { "nombre": "Etta", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Etta/BP_MH_P_Etta.BP_MH_P_Etta_C", "sexo": "m", "edad": [25, 50] },
-  { "nombre": "Sookja", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Sookja/BP_MH_P_Sookja.BP_MH_P_Sookja_C", "sexo": "m", "edad": [65, 99] }
+  { "nombre": "Sookja", "clase": "/Game/MetaHumans/Personajes/Unpacked/MH_P_Sookja/BP_MH_P_Sookja.BP_MH_P_Sookja_C", "sexo": "m", "edad": [65, 99] },
+  { "nombre": "Bebe_Nino", "clase": "/Game/Ninos/Nino_Bebe/Nino_Bebe.Nino_Bebe", "sexo": "h", "edad": [0, 2.5], "nino": true },
+  { "nombre": "Bebe_Nina", "clase": "/Game/Ninos/Nino_Bebe_M/Nino_Bebe_M.Nino_Bebe_M", "sexo": "m", "edad": [0, 2.5], "nino": true },
+  { "nombre": "Nino_Pequeno", "clase": "/Game/Ninos/Nino_Pequeno_H/Nino_Pequeno_H.Nino_Pequeno_H", "sexo": "h", "edad": [2.5, 6.5], "nino": true },
+  { "nombre": "Nina_Pequena", "clase": "/Game/Ninos/Nino_Pequena_M/Nino_Pequena_M.Nino_Pequena_M", "sexo": "m", "edad": [2.5, 6.5], "nino": true },
+  { "nombre": "Nino_Escolar", "clase": "/Game/Ninos/Nino_Escolar_H/Nino_Escolar_H.Nino_Escolar_H", "sexo": "h", "edad": [6.5, 13.99], "nino": true },
+  { "nombre": "Nina_Escolar", "clase": "/Game/Ninos/Nino_Escolar_M/Nino_Escolar_M.Nino_Escolar_M", "sexo": "m", "edad": [6.5, 13.99], "nino": true }
  ]
 }

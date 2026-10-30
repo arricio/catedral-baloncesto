@@ -6,8 +6,9 @@
 #   -ProbarPaquete  la prueba automática con el juego empaquetado (lo que recibirá el usuario)
 #   -Android      empaqueta el APK de Android (arm64 para el móvil y x86_64 para el emulador): Binaries/Android y Saved/StagedBuilds/Android
 #   -Calidad N    fuerza la calidad gráfica en la prueba (0 rápida, 1 equilibrada, 2 alta) sin tocar la guardada
+#   -SoloNinos    con -Probar: la prueba de todos los pacientes, pero sólo niños y bebés (con sus acompañantes)
 #   -SinCocinar   con -Android: sólo recompila el código y reempaqueta (el contenido ya cocinado no ha cambiado)
-param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1, [switch]$Android, [switch]$SinCocinar)
+param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1, [switch]$Android, [switch]$SinCocinar, [switch]$SoloNinos, [switch]$Creador)
 $ErrorActionPreference = 'Stop'
 $UE = 'C:\Program Files\Epic Games\UE_5.8\Engine'
 $P = Split-Path $PSScriptRoot
@@ -17,7 +18,7 @@ function Esperar-Editor { for ($i = 0; $i -lt 180; $i++) { Start-Sleep 5; if (-n
 
 if ($Compilar) {
   $log = Join-Path $P 'Saved\Compilar.log'
-  & "$UE\Build\BatchFiles\Build.bat" ElMejorMedicoUEEditor Win64 Development "-Project=$Proyecto" -WaitMutex *> $log
+  & "$UE\Build\BatchFiles\Build.bat" ElMejorMedicoUEEditor Win64 Development "-Project=$Proyecto" -WaitMutex -NoHotReloadFromIDE *> $log   # -NoHotReloadFromIDE: compila aunque otro proyecto tenga Live Coding abierto
   Get-Content $log | Select-String 'error |error:|Result:' | Select-Object -First 20
   if ($LASTEXITCODE -ne 0) { throw 'La compilación ha fallado' }
 }
@@ -62,9 +63,11 @@ if ($ProbarPaquete) {
   if (Test-Path $txt) { Get-Content $txt -Encoding utf8 } else { 'La prueba no ha terminado' }
 }
 if ($Probar) {
+  # una tarea de editor pendiente en esta consola no debe ejecutarse dentro del juego
+  Remove-Item Env:EMM_TAREA, Env:EMM_CERRAR -ErrorAction SilentlyContinue
   $txt = Join-Path $P 'Saved\Prueba.txt'
   Remove-Item $txt -ErrorAction SilentlyContinue
-  $extra = if ($Montaje) { '-EMMSoloMontaje' } elseif ($Todos) { '-EMMTodos' } else { '-nada' }
+  $extra = if ($Montaje) { '-EMMSoloMontaje' } elseif ($Creador) { '-EMMCreador' } elseif ($SoloNinos) { '-EMMTodos -EMMSoloNinos' } elseif ($Todos) { '-EMMTodos' } else { '-nada' }
   $cal = if ($Calidad -ge 0) { "-EMMCalidad=$Calidad" } else { '-nada' }
   Start-Process "$UE\Binaries\Win64\UnrealEditor.exe" -ArgumentList "`"$Proyecto`"", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extra, $cal, '-nosplash', '-unattended' | Out-Null
   for ($i = 0; $i -lt 540; $i++) {

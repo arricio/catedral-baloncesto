@@ -150,4 +150,7 @@ void UEMMHabla::TickComponent(float Dt, ELevelTick TickType, FActorComponentTick
 		Parpadeo = FMath::Sin(FMath::Clamp(TiempoParpadeo / 0.18f, 0.f, 1.f) * PI);
 		if (TiempoParpadeo > 0.18f) { TiempoParpadeo = -1.f; Parpadeo = 0.f; }
 	}
+	// niños y bebés (mallas de MPFB, sin rig facial): la boca es su forma «Boca»
+	if (AActor* Yo = GetOwner(); Yo && Yo->ActorHasTag(TEXT("Nino")))
+		if (USkeletalMeshComponent* M = Yo->FindComponentByClass<USkeletalMeshComponent>()) M->SetMorphTarget(TEXT("Boca"), FMath::Clamp(Apertura * 0.6f, 0.f, 0.6f));   // más abierta deja ver el hueco de la boca
 }
