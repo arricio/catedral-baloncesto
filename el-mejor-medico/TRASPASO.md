@@ -6,7 +6,14 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 30 de octubre de 2026)
 
 ---
 
-## ▶ ANDROID (30/10/2026) — PRIMER APK COMPILADO, FALTA PROBARLO EN EL XIAOMI
+## ▶ ANDROID (30/10/2026) — FUNCIONA EN EL XIAOMI 17 ULTRA (falta medir fps)
+
+- **Probado en el Xiaomi 17 Ultra real** (Android 17, SM8850 / Adreno 840, 16 GB, adb `1ecc5f83`): instala, arranca con el perfil `Android_Adreno8xx_Vulkan`, renderizado diferido móvil correcto, 17 personajes, 120 casos, 6 voces Piper cargadas, médico y paciente (Etta) MetaHuman con ropa, portátil e interfaz táctil a buen tamaño. Memoria del juego ≈ 2,4 GB.
+- Xiaomi: para instalar por USB hay que activar «Instalar vía USB» en Opciones de desarrollador y pulsar «Instalar» en el móvil en cada instalación. No deja inyectar toques ni teclas por adb (INJECT_EVENTS).
+- Visto en la captura y corregido (reempaquetado, falta instalar y comprobar): sobraban los joysticks virtuales de Unreal (`DefaultInput.ini › DefaultTouchInterface=None`) y el pelo del médico se veía granulado (`r.Mobile.AntiAliasing=2`, TAA, en vez de MSAA).
+- Prueba automática en el móvil: `UECommandLine.txt` con ` -EMMPrueba -EMMTodos` en `/sdcard/Android/data/es.elmejormedico.ue/files/UnrealGame/ElMejorMedicoUE/`; resultado en `.../ElMejorMedicoUE/Saved/Prueba.txt`. El primer intento se pausó porque el usuario pasó a otra app: el juego tiene que estar delante y la pantalla encendida. Borrar `UECommandLine.txt` al terminar.
+
+## ▶ ANDROID (30/10/2026, mañana) — PRIMER APK
 
 - **APK compilado y cocinado** (componente Android de Unreal 5.8.3 ya instalado por el usuario). Requisitos comprobados y exactos a lo que pide UE 5.8 (`Android_SDK.json`): plataforma android-36, build-tools 36.0.0, CMake 3.22.1, NDK r27c (27.2.12479018), JDK Temurin 21.
 - Resultado en `ElMejorMedicoUE\Binaries\Android`: `ElMejorMedicoUE-arm64.apk` (324 MB, **el del Xiaomi**), `ElMejorMedicoUE-x64.apk` (emulador), `main.1.es.elmejormedico.ue.obb` (2 013 MB: MetaHumans) y `patch.1.es.elmejormedico.ue.obb` (73 MB). Copia: `Copias\Android_primer_APK_2026-10-30`.
