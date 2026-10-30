@@ -10,7 +10,7 @@ public class ElMejorMedicoUE : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AudioMixer" });
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "HTTP", "Json", "JsonUtilities", "Projects", "RenderCore", "RHI", "NNE", "HairStrandsCore", "AssetRegistry" });
-		if (Target.bBuildEditor) PrivateDependencyModuleNames.Add("Engine");
+		if (Target.bBuildEditor) PrivateDependencyModuleNames.AddRange(new string[] { "MeshDescription", "StaticMeshDescription", "SkeletalMeshDescription", "AnimationCore" });   // herramientas del editor (uniformes)
 
 		if (Target.Platform == UnrealTargetPlatform.Win64)
 		{

@@ -24,11 +24,13 @@ def edad_mh(anios):
 
 # nombre: edad, sexo (1 chico, 0 chica), piel, pelo, ropa, zapatos, ojos, altura (macro de MakeHuman: los niños
 # de MakeHuman salen bajos con 0,5; así quedan en la talla media: ~1,03 m a los 4 años y ~1,33 m a los 9)
+# Ropa distinta en cada uno (prendas CC0 de MakeHuman); en el juego, además, cada paciente la lleva de su color.
+# Nada de prendas que dejen la tripa al aire (female_sportsuit01 es un top corto: no vale para niñas).
 NINOS = {
-    'Nino_Bebe':      (1.0, 0.5, 'young_caucasian_male', None, 'male_casualsuit02', None, 'brown', 0.5),
+    'Nino_Bebe':      (1.0, 0.5, 'young_caucasian_male', None, 'male_casualsuit06', None, 'brown', 0.5),
     'Nino_Bebe_M':    (1.0, 0.5, 'young_asian_female', 'short01', 'female_casualsuit02', None, 'brownlight', 0.5),
-    'Nino_Pequeno_H': (4.0, 1.0, 'young_caucasian_male', 'short02', 'male_casualsuit04', 'shoes01', 'brown', 0.76),
-    'Nino_Pequena_M': (4.0, 0.0, 'young_caucasian_female', 'bob01', 'female_casualsuit02', 'shoes02', 'blue', 0.76),
+    'Nino_Pequeno_H': (4.0, 1.0, 'young_caucasian_male', 'short02', 'male_casualsuit03', 'shoes01', 'brown', 0.76),
+    'Nino_Pequena_M': (4.0, 0.0, 'young_caucasian_female', 'bob01', 'female_elegantsuit01', 'shoes02', 'blue', 0.76),
     'Nino_Escolar_H': (9.0, 1.0, 'young_african_male', 'short02', 'male_casualsuit01', 'shoes01', 'brownlight', 0.6),
     'Nino_Escolar_M': (9.0, 0.0, 'young_caucasian_female2', 'ponytail01', 'female_casualsuit01', 'shoes02', 'brownlight', 0.65),
 }

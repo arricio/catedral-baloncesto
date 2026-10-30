@@ -44,7 +44,8 @@ struct FEMMAspecto
 	int32 Piel = 0, Pelo = 0, Ojos = 0;   // 0: los suyos; 1…: tonos del creador (EMMAspecto)
 	// peinado, barba y bigote: vacío el suyo, «-» ninguno, o el groom de otro MetaHuman (ruta del asset)
 	FString Peinado, Barba, Bigote;
-	bool Vacio() const { return Nombre.IsEmpty() && Apellidos.IsEmpty() && Edad < 0 && !Piel && !Pelo && !Ojos && Peinado.IsEmpty() && Barba.IsEmpty() && Bigote.IsEmpty(); }
+	int32 Uniforme = 0;                   // médicos: color del uniforme sanitario (0: el azul de siempre)
+	bool Vacio() const { return Nombre.IsEmpty() && Apellidos.IsEmpty() && Edad < 0 && !Piel && !Pelo && !Ojos && Peinado.IsEmpty() && Barba.IsEmpty() && Bigote.IsEmpty() && !Uniforme; }
 };
 
 // Una persona de la partida: un personaje (su cara) con su identidad fija. Puede venir varias veces y con

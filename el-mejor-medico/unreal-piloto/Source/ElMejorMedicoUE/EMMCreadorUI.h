@@ -1,4 +1,4 @@
-// EL MEJOR MÉDICO (Unreal): CREADOR DE PERSONAJES (CONFIGURACIÓN › CREADOR DE PERSONAJES). Para el médico y para
+﻿// EL MEJOR MÉDICO (Unreal): CREADOR DE PERSONAJES (CONFIGURACIÓN › CREADOR DE PERSONAJES). Para el médico y para
 // cada persona de la partida: nombre y apellidos, sexo, edad, cara (los MetaHumans y los niños del juego), tono de
 // piel, color y peinado del pelo, barba, bigote y ojos. Se guarda en el historial y se ve al momento en la consulta.
 #pragma once
@@ -64,6 +64,7 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> TBarba;
 	UPROPERTY() TObjectPtr<UTextBlock> TBigote;
 	UPROPERTY() TObjectPtr<UTextBlock> TOjos;
+	UPROPERTY() TObjectPtr<UTextBlock> TUniforme;
 	UPROPERTY() TObjectPtr<UTextBlock> Estado;
 	UPROPERTY() TArray<TObjectPtr<UButton>> BotonesLista;
 
@@ -77,6 +78,7 @@ private:
 	UFUNCTION() void AlBarbaMenos();  UFUNCTION() void AlBarbaMas();
 	UFUNCTION() void AlBigoteMenos(); UFUNCTION() void AlBigoteMas();
 	UFUNCTION() void AlOjosMenos();   UFUNCTION() void AlOjosMas();
+	UFUNCTION() void AlUniformeMenos();   UFUNCTION() void AlUniformeMas();
 	UFUNCTION() void AlGuardar();
 	UFUNCTION() void AlDeshacer();
 	UFUNCTION() void AlCerrar();

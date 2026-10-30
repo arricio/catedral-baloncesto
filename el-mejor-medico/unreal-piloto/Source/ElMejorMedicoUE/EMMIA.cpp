@@ -305,6 +305,121 @@ void UEMMIASubsystem::Responder(const FEMMPaciente& P, const TArray<FEMMLinea>& 
 	});
 }
 
+// ───────────────────────── El médico con IA (MÉDICO: IA) ─────────────────────────
+FString UEMMIASubsystem::PreguntaGuiada(const FEMMPaciente& P, const FString& NombreMedico, const TArray<FEMMLinea>& Historial)
+{
+	// la entrevista clínica de siempre, en orden: cada vez la siguiente que no se haya hecho
+	int32 N = 0;
+	for (const FEMMLinea& L : Historial) N += L.bMedico;
+	const bool bNino = P.Edad < 14.f;
+	// «Dr. Lorenzo Prieto» → «el doctor Lorenzo Prieto» (dicho en voz alta)
+	const FString Soy = NombreMedico.Replace(TEXT("Dra. "), TEXT("la doctora ")).Replace(TEXT("Dr. "), TEXT("el doctor "));
+	if (N == 0)
+		return P.bHablaAcomp ? FString::Printf(TEXT("Hola, buenos días. Soy %s. Siéntense, por favor. Cuéntenme, ¿qué le ocurre a %s?"), *Soy, *P.Nombre)
+			: bNino ? FString::Printf(TEXT("Hola, %s, buenos días. Soy %s. Siéntate, por favor. Cuéntame, ¿qué te pasa?"), *P.Nombre, *Soy)
+			: FString::Printf(TEXT("Buenos días, soy %s. Siéntese, por favor. Cuénteme, ¿qué le ocurre?"), *Soy);
+	static const TCHAR* Adultos[] = {
+		TEXT("¿Desde cuándo le pasa?"),
+		TEXT("¿Cómo es exactamente la molestia y dónde la nota?"),
+		TEXT("¿Ha tenido fiebre o algún otro síntoma?"),
+		TEXT("¿Hay algo que lo mejore o que lo empeore?"),
+		TEXT("¿Toma alguna medicación de forma habitual?"),
+		TEXT("¿Es alérgico a algún medicamento?"),
+		TEXT("¿Ha tenido alguna enfermedad importante o alguna operación?"),
+		TEXT("¿Fuma o bebe alcohol?"),
+		TEXT("¿Hay algo más que quiera contarme?"),
+		TEXT("De acuerdo. Ahora voy a explorarle, si le parece bien."),
+	};
+	static const TCHAR* Ninos[] = {
+		TEXT("¿Desde cuándo le pasa?"),
+		TEXT("¿Dónde le duele o qué le molesta exactamente?"),
+		TEXT("¿Ha tenido fiebre? ¿Cuánto le ha llegado a subir?"),
+		TEXT("¿Come y duerme bien estos días?"),
+		TEXT("¿Toma alguna medicación?"),
+		TEXT("¿Tiene alergia a algún medicamento?"),
+		TEXT("¿Lleva las vacunas al día?"),
+		TEXT("¿Hay algo más que les preocupe?"),
+		TEXT("Muy bien. Ahora voy a explorarle con cuidado."),
+	};
+	if (bNino && !P.bHablaAcomp)
+	{
+		// el niño contesta él mismo: de tú
+		static const TCHAR* Tu[] = {
+			TEXT("¿Desde cuándo te pasa?"), TEXT("¿Dónde te duele o qué te molesta exactamente?"), TEXT("¿Has tenido fiebre?"),
+			TEXT("¿Comes y duermes bien estos días?"), TEXT("¿Tomas alguna medicina?"), TEXT("¿Eres alérgico a alguna medicina?"),
+			TEXT("¿Hay algo más que quieras contarme?"), TEXT("Muy bien. Ahora voy a explorarte con cuidado, ¿vale?") };
+		return Tu[FMath::Min(N - 1, int32(UE_ARRAY_COUNT(Tu)) - 1)];
+	}
+	if (bNino) return Ninos[FMath::Min(N - 1, int32(UE_ARRAY_COUNT(Ninos)) - 1)];
+	return Adultos[FMath::Min(N - 1, int32(UE_ARRAY_COUNT(Adultos)) - 1)];
+}
+
+TArray<TPair<FString, FString>> UEMMIASubsystem::MensajesMedico(const FEMMPaciente& P, const FString& NombreMedico, bool bMedicaMujer, const TArray<FEMMLinea>& Historial)
+{
+	const bool bNino = P.Edad < 14.f;
+	const FString Acomp = P.Acompanante.IsEmpty() ? FString(TEXT("un familiar")) : P.Acompanante;
+	TArray<FString> S;
+	S.Add(FString::Printf(TEXT("Eres %s, %s de familia en un centro de salud de España. Ya has saludado y te has presentado."), *NombreMedico, bMedicaMujer ? TEXT("médica") : TEXT("médico")));
+	if (P.bHablaAcomp)
+		S.Add(FString::Printf(TEXT("El paciente es %s, %s de %s. Ha venido con %s, que es quien te contesta: háblale a esa persona, de usted, y pregunta por %s en tercera persona (le pasa, le duele, ha tenido…). No le hables directamente a %s."),
+			*P.Nombre, P.EsMujer() ? TEXT("una niña") : TEXT("un niño"), *P.TextoEdad, *Acomp, *P.Nombre, *P.Nombre));
+	else if (bNino)
+		S.Add(FString::Printf(TEXT("El paciente es %s, %s de %s, que viene con %s pero te contesta él mismo: háblale de tú, con palabras sencillas."), *P.Nombre, P.EsMujer() ? TEXT("una niña") : TEXT("un niño"), *P.TextoEdad, *Acomp));
+	else
+		S.Add(FString::Printf(TEXT("La paciente o el paciente es %s %s, %s de %s: háblale de usted."), *P.Nombre, *P.Apellidos, P.EsMujer() ? TEXT("una mujer") : TEXT("un hombre"), *P.TextoEdad));
+	S.Add(TEXT("Tu tarea ahora es la entrevista clínica: averiguar qué le pasa preguntando, como en una consulta real."));
+	S.Add(TEXT("Habla en español de España, con un tono amable, cercano y profesional. No vuelvas a saludar ni a decir tu nombre."));
+	S.Add(TEXT("En cada turno di UNA sola intervención breve (una o dos frases cortas) y haz como mucho UNA pregunta."));
+	S.Add(TEXT("Después ve preguntando, según lo que te cuente: desde cuándo, cómo es y dónde, intensidad, qué lo mejora o lo empeora, fiebre y otros síntomas, medicación habitual, alergias, enfermedades previas y hábitos."));
+	S.Add(TEXT("Aprovecha lo que ya te han contado: no repitas preguntas hechas y no preguntes lo que ya sabes."));
+	S.Add(TEXT("No digas todavía un diagnóstico ni recetes nada. No escribas acotaciones, ni tu nombre delante, ni comillas."));
+	TArray<FString> Hecho, Contado;
+	for (const FEMMLinea& L : Historial) (L.bMedico ? Hecho : Contado).Add(FString::Printf(TEXT("- «%s»"), *L.Texto));
+	if (Hecho.Num() > 8) Hecho.RemoveAt(0, Hecho.Num() - 8);
+	if (Contado.Num() > 8) Contado.RemoveAt(0, Contado.Num() - 8);
+	if (Hecho.Num()) { S.Add(TEXT("Lo que YA has dicho tú (no lo repitas):")); S.Append(Hecho); }
+	if (Contado.Num()) { S.Add(TEXT("Lo que te ha contado el paciente (tenlo en cuenta para la siguiente pregunta):")); S.Append(Contado); }
+	TArray<TPair<FString, FString>> M;
+	M.Add({ TEXT("system"), FString::Join(S, TEXT("\n")) });
+	// los papeles al revés que con el paciente: el médico es el asistente
+	const int32 Desde = FMath::Max(0, Historial.Num() - 14);
+	for (int32 i = Desde; i < Historial.Num(); ++i)
+		M.Add({ Historial[i].bMedico ? TEXT("assistant") : TEXT("user"), Historial[i].Texto });
+	if (!Historial.Num()) M.Add({ TEXT("user"), TEXT("(El paciente entra en la consulta y se sienta. Empieza tú.)") });
+	else if (Historial.Last().bMedico) M.Add({ TEXT("user"), TEXT("(El paciente espera a que sigas. Continúa con la siguiente pregunta.)") });
+	return M;
+}
+
+void UEMMIASubsystem::ResponderMedico(const FEMMPaciente& P, const FString& NombreMedico, bool bMedicaMujer, const TArray<FEMMLinea>& Historial, TFunction<void(const FEMMRespuesta&)> Hecho)
+{
+	const double T0 = FPlatformTime::Seconds();
+	const FString Guiada = PreguntaGuiada(P, NombreMedico, Historial);
+	if (Modo == EEMMModoIA::Predefinida) { Hecho({ Guiada, TEXT("predefinida"), FString(), 0 }); return; }
+	// el saludo y la presentación, siempre bien (nombre, género y a quién se habla): los modelos pequeños se
+	// confunden ahí; a partir de ahí, las preguntas las decide la IA según lo que le cuenten
+	if (!Historial.ContainsByPredicate([](const FEMMLinea& L) { return L.bMedico; })) { Hecho({ Guiada, TEXT("saludo"), FString(), 0 }); return; }
+	TArray<TPair<FString, FString>> M = MensajesMedico(P, NombreMedico, bMedicaMujer, Historial);
+	TArray<FString> Dicho;
+	FString Ultima;
+	for (const FEMMLinea& L : Historial) { if (L.bMedico) Dicho.Add(L.Texto); else Ultima = L.Texto; }
+	TWeakObjectPtr<UEMMIASubsystem> Yo(this);
+	Llamar(M, [Yo, M, Guiada, Dicho, Ultima, Hecho, T0, bMedicaMujer](bool bOk, const FString& Bruto, const FString& Error) mutable {
+		if (!Yo.IsValid()) return;
+		const FString Texto = CorregirGenero(LimpiarRespuesta(Bruto), bMedicaMujer);
+		const bool bMal = Texto.IsEmpty() || (!Ultima.IsEmpty() && EsEco(Texto, Ultima)) || Repetida(Texto, Dicho);
+		if (bOk && !bMal) { Hecho({ Texto, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 }); return; }
+		if (!bOk) { Hecho({ Guiada, TEXT("predefinida"), Error, 0 }); return; }
+		// se ha repetido o ha contestado como si fuera el paciente: otra vez, y si no, la pregunta guiada
+		M.Add({ TEXT("assistant"), Texto.IsEmpty() ? TEXT("...") : Texto });
+		M.Add({ TEXT("user"), TEXT("(Eso no vale: eres el médico y eso ya está dicho. Haz una pregunta NUEVA y breve al paciente.)") });
+		Yo->Llamar(M, [Guiada, Dicho, Ultima, Hecho, T0, bMedicaMujer](bool bOk2, const FString& Bruto2, const FString& Error2) {
+			const FString T2 = CorregirGenero(LimpiarRespuesta(Bruto2), bMedicaMujer);
+			if (bOk2 && !T2.IsEmpty() && !(!Ultima.IsEmpty() && EsEco(T2, Ultima)) && !Repetida(T2, Dicho)) Hecho({ T2, TEXT("ia"), FString(), FPlatformTime::Seconds() - T0 });
+			else Hecho({ Guiada, TEXT("predefinida"), bOk2 ? TEXT("la IA no ha dado una pregunta válida") : Error2, 0 });
+		});
+	});
+}
+
 #if PLATFORM_ANDROID
 static FString LlamarNativoTexto(const char* Metodo)
 {

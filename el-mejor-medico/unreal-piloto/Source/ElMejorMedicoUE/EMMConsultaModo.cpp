@@ -57,6 +57,23 @@ static void Vestir(AActor* A, const FLinearColor& Arriba, const FLinearColor& Ab
 	for (USkeletalMeshComponent* M : Mallas)
 	{
 		Vistas.Add(FString::Printf(TEXT("%s=%s"), *M->GetName(), M->GetSkeletalMeshAsset() ? *M->GetSkeletalMeshAsset()->GetName() : TEXT("-")));
+		if (A->ActorHasTag(TEXT("Nino")))
+		{
+			// niños (MPFB): su conjunto (camiseta, sudadera, vestido…) recoloreado con el color de este paciente,
+			// conservando las costuras y los pliegues de la textura (M_NinoBase: «Tinte» y «TinteFuerza»)
+			for (int32 i = 0; i < M->GetNumMaterials(); ++i)
+			{
+				const UMaterialInterface* Mat = M->GetMaterial(i);
+				if (!Mat || !Mat->GetName().Contains(TEXT("suit"))) continue;
+				if (UMaterialInstanceDynamic* D = M->CreateDynamicMaterialInstance(i))
+				{
+					D->SetVectorParameterValue(TEXT("Tinte"), Arriba);
+					D->SetScalarParameterValue(TEXT("TinteFuerza"), 0.6f);
+					++Tenidas;
+				}
+			}
+			continue;
+		}
 		if (!M->GetSkeletalMeshAsset() || !M->GetSkeletalMeshAsset()->GetName().Contains(TEXT("Outfits"))) continue;
 		++Tenidas;
 		const TArray<FName> Ranuras = M->GetMaterialSlotNames();
@@ -74,15 +91,77 @@ static void Vestir(AActor* A, const FLinearColor& Arriba, const FLinearColor& Ab
 	UE_LOG(LogTemp, Display, TEXT("[EMM] Vestir %s: %d prendas teñidas (%s)"), *A->GetName(), Tenidas, *FString::Join(Vistas, TEXT(", ")));
 }
 
+// Colores de los uniformes sanitarios (pijama y zapatos)
+static const struct { const TCHAR* Nombre; FLinearColor Tela, Calzado; } Uniformes[] = {
+	{ TEXT("Azul quirófano"), FLinearColor(0.06f, 0.26f, 0.32f), FLinearColor(0.85f, 0.85f, 0.85f) },
+	{ TEXT("Verde quirófano"), FLinearColor(0.07f, 0.28f, 0.2f), FLinearColor(0.85f, 0.85f, 0.85f) },
+	{ TEXT("Azul marino"), FLinearColor(0.025f, 0.04f, 0.12f), FLinearColor(0.04f, 0.04f, 0.045f) },
+	{ TEXT("Celeste"), FLinearColor(0.25f, 0.45f, 0.65f), FLinearColor(0.85f, 0.85f, 0.85f) },
+	{ TEXT("Granate"), FLinearColor(0.28f, 0.035f, 0.06f), FLinearColor(0.04f, 0.04f, 0.045f) },
+	{ TEXT("Gris marengo"), FLinearColor(0.1f, 0.11f, 0.12f), FLinearColor(0.04f, 0.04f, 0.045f) },
+};
+
+TArray<FString> AEMMConsultaModo::NombresUniformes()
+{
+	TArray<FString> R;
+	for (const auto& U : Uniformes) R.Add(U.Nombre);
+	return R;
+}
+
+// Pantalón largo y zapatos de un MetaHuman (/Game/Uniformes/SKM_<MetaHuman>_Uniforme, de
+// Herramientas/crear_uniformes.py): una copia de su piel con sus mismos huesos y pesos, así que sigue al cuerpo en
+// cualquier postura o animación (sentado, de pie, andando, girando) como la ropa. Los niños (MPFB) no lo llevan.
+static void PonerPantalon(AActor* A, const FLinearColor& Pantalon, const FLinearColor& Calzado)
+{
+	if (!A) return;
+	TArray<USkeletalMeshComponent*> Mallas;
+	A->GetComponents(Mallas);
+	USkeletalMeshComponent* Cuerpo = nullptr;
+	for (USkeletalMeshComponent* M : Mallas)
+	{
+		if (M->GetName() == TEXT("Uniforme")) M->DestroyComponent();
+		else if (M->GetName() == TEXT("Body")) Cuerpo = M;
+	}
+	if (!Cuerpo || !Cuerpo->GetSkeletalMeshAsset()) return;
+	// SKM_<MetaHuman>_BodyMesh → SKM_<MetaHuman>_Uniforme
+	const FString N = Cuerpo->GetSkeletalMeshAsset()->GetName().Replace(TEXT("_BodyMesh"), TEXT("_Uniforme"));
+	USkeletalMesh* Malla = LoadObject<USkeletalMesh>(nullptr, *FString::Printf(TEXT("/Game/Uniformes/%s.%s"), *N, *N));
+	if (!Malla) { UE_LOG(LogTemp, Warning, TEXT("[EMM] Uniforme: falta %s"), *N); return; }
+	USkeletalMeshComponent* C = NewObject<USkeletalMeshComponent>(A, TEXT("Uniforme"));
+	C->SetSkeletalMeshAsset(Malla);
+	C->SetupAttachment(Cuerpo);
+	C->RegisterComponent();
+	C->SetLeaderPoseComponent(Cuerpo);
+	if (UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Malla->GetMaterials().Num() ? Malla->GetMaterials()[0].MaterialInterface : nullptr, C))
+	{
+		D->SetVectorParameterValue(TEXT("Tinte"), Pantalon);
+		D->SetVectorParameterValue(TEXT("Calzado"), Calzado);
+		for (int32 i = 0; i < C->GetNumMaterials(); ++i) C->SetMaterial(i, D);
+	}
+}
+
+// Uniforme sanitario del médico: camiseta y pantalón (corto y largo) del color del pijama, y zapatos
+static void Uniformar(AActor* A, int32 Color)
+{
+	const auto& U = Uniformes[FMath::Abs(Color) % UE_ARRAY_COUNT(Uniformes)];
+	Vestir(A, U.Tela, U.Tela);
+	PonerPantalon(A, U.Tela, U.Calzado);
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Uniforme de %s: %s"), A ? *A->GetName() : TEXT("-"), U.Nombre);
+}
+
 // Ropa del paciente según la edad (y una variación fija por caso, para que no vistan todos igual)
-static void ColoresPaciente(const FEMMPaciente& P, FLinearColor& Arriba, FLinearColor& Abajo)
+static void ColoresPaciente(const FEMMPaciente& P, FLinearColor& Arriba, FLinearColor& Abajo, FLinearColor& Calzado)
 {
 	const uint32 H = GetTypeHash(P.Id);
 	auto Elige = [H](std::initializer_list<FLinearColor> L, uint32 Sal) { return *(L.begin() + (H / Sal) % L.size()); };
-	if (P.Edad < 13.f)      { Arriba = Elige({ FLinearColor(0.75f, 0.12f, 0.1f), FLinearColor(0.95f, 0.7f, 0.1f), FLinearColor(0.15f, 0.45f, 0.8f), FLinearColor(0.2f, 0.6f, 0.3f) }, 1); Abajo = FLinearColor(0.08f, 0.12f, 0.25f); }
-	else if (P.Edad < 30.f) { Arriba = Elige({ FLinearColor(0.05f, 0.05f, 0.06f), FLinearColor(0.35f, 0.38f, 0.22f), FLinearColor(0.55f, 0.1f, 0.15f), FLinearColor(0.6f, 0.6f, 0.62f) }, 1); Abajo = FLinearColor(0.06f, 0.09f, 0.18f); }
-	else if (P.Edad < 65.f) { Arriba = Elige({ FLinearColor(0.08f, 0.12f, 0.25f), FLinearColor(0.45f, 0.42f, 0.38f), FLinearColor(0.3f, 0.06f, 0.1f), FLinearColor(0.15f, 0.25f, 0.2f) }, 1); Abajo = Elige({ FLinearColor(0.05f, 0.05f, 0.06f), FLinearColor(0.25f, 0.22f, 0.18f) }, 7); }
-	else                    { Arriba = Elige({ FLinearColor(0.35f, 0.25f, 0.18f), FLinearColor(0.55f, 0.5f, 0.42f), FLinearColor(0.35f, 0.08f, 0.12f), FLinearColor(0.25f, 0.3f, 0.35f) }, 1); Abajo = FLinearColor(0.18f, 0.16f, 0.14f); }
+	// pantalones de calle: vaquero, negro, beis, gris, marrón
+	const FLinearColor Vaquero(0.05f, 0.09f, 0.2f), Negro(0.035f, 0.035f, 0.04f), Beis(0.42f, 0.36f, 0.26f), Gris(0.17f, 0.17f, 0.19f), Marron(0.2f, 0.13f, 0.08f);
+	if (P.Edad < 13.f)      { Arriba = Elige({ FLinearColor(0.75f, 0.12f, 0.1f), FLinearColor(0.95f, 0.7f, 0.1f), FLinearColor(0.15f, 0.45f, 0.8f), FLinearColor(0.2f, 0.6f, 0.3f), FLinearColor(0.85f, 0.35f, 0.55f), FLinearColor(0.45f, 0.25f, 0.7f), FLinearColor(0.95f, 0.45f, 0.1f) }, 1); Abajo = Elige({ Vaquero, FLinearColor(0.08f, 0.12f, 0.25f), Gris }, 7); }
+	else if (P.Edad < 30.f) { Arriba = Elige({ FLinearColor(0.05f, 0.05f, 0.06f), FLinearColor(0.35f, 0.38f, 0.22f), FLinearColor(0.55f, 0.1f, 0.15f), FLinearColor(0.6f, 0.6f, 0.62f) }, 1); Abajo = Elige({ Vaquero, Negro, Beis, Gris }, 7); }
+	else if (P.Edad < 65.f) { Arriba = Elige({ FLinearColor(0.08f, 0.12f, 0.25f), FLinearColor(0.45f, 0.42f, 0.38f), FLinearColor(0.3f, 0.06f, 0.1f), FLinearColor(0.15f, 0.25f, 0.2f) }, 1); Abajo = Elige({ Vaquero, Negro, Beis, Gris, Marron }, 7); }
+	else                    { Arriba = Elige({ FLinearColor(0.35f, 0.25f, 0.18f), FLinearColor(0.55f, 0.5f, 0.42f), FLinearColor(0.35f, 0.08f, 0.12f), FLinearColor(0.25f, 0.3f, 0.35f) }, 1); Abajo = Elige({ Gris, Marron, Beis, Negro }, 7); }
+	// zapatos o zapatillas: negros, marrones, blancos
+	Calzado = Elige({ Negro, FLinearColor(0.12f, 0.07f, 0.04f), FLinearColor(0.8f, 0.8f, 0.8f) }, 11);
 }
 
 AEMMConsultaModo::AEMMConsultaModo()
@@ -206,8 +285,14 @@ void AEMMConsultaModo::BeginPlay()
 
 	MHMedico = ActorMedico;
 	MHPaciente = ActorPaciente;
-	// ropa: pijama sanitario azul verdoso para el médico (el paciente se viste en cada visita)
-	Vestir(ActorMedico, FLinearColor(0.06f, 0.26f, 0.32f), FLinearColor(0.05f, 0.22f, 0.28f));
+	// ropa: uniforme sanitario para el médico (el paciente se viste en cada visita)
+	Uniformar(ActorMedico, FEMMHistorial::Get().Medico.Uniforme);
+	// quién controla a cada uno (lo último elegido; las pruebas empiezan siempre con médico YO y paciente IA)
+	if (!FParse::Param(FCommandLine::Get(), TEXT("EMMPrueba")))
+	{
+		bMedicoIA = UEMMConsultaUI::LeerOpcion(TEXT("MedicoIA"), false);
+		bPacienteIA = UEMMConsultaUI::LeerOpcion(TEXT("PacienteIA"), true);
+	}
 
 	// casos del juego: sólo los que tienen un personaje de su sexo y edad (personajes.json); los de bebés y niños
 	// pequeños, que explica el acompañante, necesitan además un adulto para el acompañante
@@ -647,7 +732,7 @@ void AEMMConsultaModo::PonerMedico()
 	MHMedico->Destroy();
 	MHMedico = Nuevo;
 	if (MHPaciente.IsValid()) PrepararMetaHuman(Nuevo, MHPaciente.Get(), false);
-	Vestir(Nuevo, FLinearColor(0.06f, 0.26f, 0.32f), FLinearColor(0.05f, 0.22f, 0.28f));
+	Uniformar(Nuevo, H.Medico.Uniforme);
 	EMMAspecto::Aplicar(Nuevo, H.Medico);
 	// el paciente y su acompañante le miran
 	for (const TWeakObjectPtr<AActor>& Q : { MHPaciente, MHAcompanante })
@@ -783,6 +868,23 @@ void AEMMConsultaModo::SentarBebe()
 	MHPaciente->SetActorLocation(Cuerpo->GetBoneLocation(TEXT("pelvis")) + F * Adelante + FVector(0, 0, Arriba));
 }
 
+// Ropa de cuerpo entero del paciente y de su acompañante, según su edad y con una variación fija por persona
+void AEMMConsultaModo::VestirPersonajes(const FEMMPaciente& Caso)
+{
+	FLinearColor Arriba, Abajo, Calzado;
+	ColoresPaciente(Caso, Arriba, Abajo, Calzado);
+	Vestir(MHPaciente.Get(), Arriba, Abajo);
+	PonerPantalon(MHPaciente.Get(), Abajo, Calzado);
+	if (MHAcompanante.IsValid())
+	{
+		FEMMPaciente Adulto = Caso;
+		Adulto.Id += TEXT("·acomp"); Adulto.Edad = EdadAcompanante(Caso);
+		ColoresPaciente(Adulto, Arriba, Abajo, Calzado);
+		Vestir(MHAcompanante.Get(), Arriba, Abajo);
+		PonerPantalon(MHAcompanante.Get(), Abajo, Calzado);
+	}
+}
+
 void AEMMConsultaModo::PonerPersonaje(const FEMMPaciente& Caso)
 {
 	const FEMMPersonaje* X = PersonajePara(Caso);
@@ -813,7 +915,7 @@ void AEMMConsultaModo::PonerPersonaje(const FEMMPaciente& Caso)
 		Nuevo->Tags.Append({ TEXT("Paciente"), Caso.EsMujer() ? TEXT("Mujer") : TEXT("Hombre") });
 		MHPaciente = Nuevo;
 		PrepararMetaHuman(Nuevo, MHMedico.Get(), true);
-		if (Per) EMMAspecto::Aplicar(Nuevo, Per->Aspecto);
+		EMMAspecto::Aplicar(Nuevo, Per ? Per->Aspecto : FEMMAspecto());
 		if (X->bNino && !bBebe)
 		{
 			// el niño, bien sentado al fondo del asiento (escena.json › nino_atras, cm)
@@ -883,7 +985,8 @@ void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 	F.Enfermedad = Paciente.Enfermedad;
 	if (const FEMMPersonaje* X = PersonajePara(Paciente)) F.Personaje = X->Nombre;
 	Charla.Reset();
-	bTurnoPaciente = bOcupado = bTerminada = false;
+	bTurnoPaciente = bOcupado = bTerminada = bPensando = false;
+	++Epoca;
 	FraseEvolucion.Reset();
 	float Preocupacion = 0.6f;
 	FEMMEvolucion E;
@@ -937,16 +1040,10 @@ void AEMMConsultaModo::IniciarVisita(const FEMMPaciente& Caso)
 	else if (Tiene({ TEXT("tranquil"), TEXT("seren"), TEXT("calmad"), TEXT("timid"), TEXT("reservad"), TEXT("callad"), TEXT("parco") })) { Inquietud = 0.6f; HablaPaciente->Velocidad *= 0.95f; }
 	if (Paciente.Grav >= 3) Inquietud *= 0.7f;   // los que están muy malos se mueven poco
 	// ropa según la edad y gesto según cómo llega
-	FLinearColor Arriba, Abajo;
-	ColoresPaciente(Paciente, Arriba, Abajo);
-	Vestir(MHPaciente.Get(), Arriba, Abajo);
+	VestirPersonajes(Paciente);
 	if (MHAcompanante.IsValid())
 	{
-		// el acompañante, vestido según su edad y algo preocupado
-		FEMMPaciente Adulto = Paciente;
-		Adulto.Id += TEXT("·acomp"); Adulto.Edad = EdadAcompanante(Paciente);
-		ColoresPaciente(Adulto, Arriba, Abajo);
-		Vestir(MHAcompanante.Get(), Arriba, Abajo);
+		// el acompañante, algo preocupado
 		TArray<USkeletalMeshComponent*> Mallas;
 		MHAcompanante->GetComponents(Mallas);
 		for (USkeletalMeshComponent* M : Mallas)
@@ -1284,6 +1381,152 @@ void AEMMConsultaModo::PasoDePrueba()
 	static const TCHAR* Preguntas[] = { TEXT("Buenos días. ¿Qué le trae por aquí?"), TEXT("¿Ha tenido fiebre?"), TEXT("¿Desde cuándo le pasa?") };
 	const double T = FPlatformTime::Seconds() - InicioPaso;
 	auto Siguiente = [this]() { ++PasoPrueba; InicioPaso = FPlatformTime::Seconds(); };
+	// -EMMVoces: la voz de cada persona distinta de los casos (y de médico y médica) con tres frases: se guarda en
+	// Saved/Voces/<nombre>_<n>.wav ya igualada, como suena en el juego, con su nivel (RMS y pico) y su ritmo
+	if (PasoPrueba >= 600)
+	{
+		struct FVozPrueba { FString Nombre; bool bMujer; float Edad; uint32 Semilla; };
+		static TArray<FVozPrueba> Lista;
+		static TSharedPtr<FEMMAudio> Hecho;
+		static bool bEsperando = false;
+		static const TCHAR* FrasesNino[] = { TEXT("Me duele mucho la garganta y no puedo tragar."), TEXT("Empezó el lunes, cuando volví del colegio."), TEXT("Sí, tengo un poco de fiebre y me pica la cabeza.") };
+		static const TCHAR* FrasesAdulto[] = { TEXT("Buenos días, doctor. Vengo porque me duele la garganta."), TEXT("Empezó hace tres días, más o menos."), TEXT("Sí, anoche tuve treinta y ocho de fiebre.") };
+		if (PasoPrueba == 600)
+		{
+			Lista.Reset();
+			Lista.Add({ TEXT("Medico"), false, 40.f, 0 });
+			Lista.Add({ TEXT("Medica"), true, 40.f, 0 });
+			TSet<FString> Vistos;
+			for (const FEMMPaciente& C : Casos)
+				if (!Vistos.Contains(C.Nombre + C.Apellidos)) { Vistos.Add(C.Nombre + C.Apellidos); Lista.Add({ (C.Nombre + TEXT("_") + C.Apellidos).Replace(TEXT(" "), TEXT("_")), C.EsMujer(), C.Edad, GetTypeHash(C.Id) | 1u }); }
+			RegistroPrueba.Add(FString::Printf(TEXT("VOCES: %d personas × 3 frases → Saved/Voces"), Lista.Num()));
+			bEsperando = false;
+			Siguiente();
+			return;
+		}
+		const int32 K = PasoPrueba - 601, I = K / 3, F = K % 3;
+		if (I >= Lista.Num()) { PasoPrueba = 100; return; }
+		const FVozPrueba& V = Lista[I];
+		const FEMMPerfilVoz Perfil = EMMVoz::PerfilPara(V.bMujer, V.Edad, V.Semilla);
+		const FString Frase = V.Edad < 13.f ? FrasesNino[F] : FrasesAdulto[F];
+		if (!bEsperando)
+		{
+			bEsperando = true; Hecho.Reset();
+			EMMVoz::Sintetizar(Frase, Perfil, [](TSharedPtr<FEMMAudio> A) { Hecho = A.IsValid() ? A : MakeShared<FEMMAudio>(); });
+			return;
+		}
+		if (!Hecho.IsValid()) return;
+		bEsperando = false;
+		FEMMAudio& A = *Hecho;
+		auto Nivel = [](const TArray<uint8>& P, double& Rms, double& Pico) {
+			const int16* S = reinterpret_cast<const int16*>(P.GetData()); const int32 N = P.Num() / 2;
+			double Suma = 0; int32 C = 0; Pico = 0;
+			for (int32 i = 0; i < N; ++i) { const double X = FMath::Abs(S[i] / 32768.0); Pico = FMath::Max(Pico, X); if (X > 0.01) { Suma += X * X; ++C; } }
+			Rms = C ? FMath::Sqrt(Suma / C) : 0;
+		};
+		double Rms0 = 0, Pico0 = 0, Rms1 = 0, Pico1 = 0;
+		Nivel(A.PCM, Rms0, Pico0);
+		UEMMHabla::Igualar(A.PCM);
+		Nivel(A.PCM, Rms1, Pico1);
+		// WAV (mono, 16 bits) a la frecuencia a la que suena en el juego
+		TArray<uint8> W;
+		auto Pon32 = [&W](uint32 X) { W.Append(reinterpret_cast<uint8*>(&X), 4); };
+		auto Pon16 = [&W](uint16 X) { W.Append(reinterpret_cast<uint8*>(&X), 2); };
+		W.Append((const uint8*)"RIFF", 4); Pon32(36 + A.PCM.Num()); W.Append((const uint8*)"WAVEfmt ", 8);
+		Pon32(16); Pon16(1); Pon16(1); Pon32(A.Frecuencia); Pon32(A.Frecuencia * 2); Pon16(2); Pon16(16);
+		W.Append((const uint8*)"data", 4); Pon32(A.PCM.Num()); W.Append(A.PCM);
+		FFileHelper::SaveArrayToFile(W, *(FPaths::ProjectSavedDir() / TEXT("Voces") / FString::Printf(TEXT("%s_%d.wav"), *V.Nombre, F + 1)));
+		int32 Palabras = 0; { TArray<FString> P; Frase.ParseIntoArrayWS(P); Palabras = P.Num(); }
+		RegistroPrueba.Add(FString::Printf(TEXT("  %s (%s, %.0f años) · voz %s · tono %.2f · vel %.2f · %.1f s (%.1f palabras/s) · RMS %.3f→%.3f · pico %.2f→%.2f%s"),
+			*V.Nombre, V.bMujer ? TEXT("mujer") : TEXT("hombre"), V.Edad, Perfil.Piper.IsEmpty() ? *Perfil.Preferida : *Perfil.Piper, Perfil.Tono, Perfil.Vel,
+			A.Duracion, A.Duracion > 0 ? Palabras / A.Duracion : 0.f, Rms0, Rms1, Pico0, Pico1, A.Error.IsEmpty() ? TEXT("") : *(TEXT(" · ERROR ") + A.Error)));
+		Siguiente();
+		return;
+	}
+	// -EMMModos: las cuatro combinaciones MÉDICO YO/IA × PACIENTE YO/IA, por turnos y con los mismos botones que el
+	// jugador (lo de YO se escribe en la caja); después de cada una se comprueba que nadie habla solo, y en la cuarta
+	// que DETENER corta la espera de la IA sin pasar el turno
+	if (PasoPrueba >= 500)
+	{
+		struct FModoPrueba { bool bMedIA, bPacIA; const TCHAR* Nombre; int32 Rondas; };
+		static const FModoPrueba Modos[] = {
+			{ false, true, TEXT("MODO 1 · MÉDICO YO / PACIENTE IA"), 2 }, { true, false, TEXT("MODO 2 · MÉDICO IA / PACIENTE YO"), 2 },
+			{ false, false, TEXT("MODO 3 · MÉDICO YO / PACIENTE YO"), 2 }, { true, true, TEXT("MODO 4 · MÉDICO IA / PACIENTE IA"), 3 } };
+		static const TCHAR* DiceMedico[] = { TEXT("Buenos días, soy el doctor Prieto. ¿Qué le trae por aquí?"), TEXT("¿Desde cuándo le pasa?"), TEXT("¿Ha tenido fiebre?") };
+		static const TCHAR* DicePaciente[] = { TEXT("Buenos días, doctor. Llevo unos días con dolor de garganta."), TEXT("Empezó hace tres días, más o menos."), TEXT("Sí, anoche tuve treinta y ocho.") };
+		static int32 NumAntes = 0;
+		const int32 K = PasoPrueba - 500, M = K / 20, S = K % 20;
+		if (M >= int32(UE_ARRAY_COUNT(Modos))) { PasoPrueba = 100; return; }
+		const FModoPrueba& Md = Modos[M];
+		auto Ultima = [this](const TCHAR* Quien) {
+			const FEMMLinea& L = Charla.Last();
+			RegistroPrueba.Add(FString::Printf(TEXT("  %s [%s, %.1f s]: %s"), Quien, L.Origen.IsEmpty() ? TEXT("jugador") : *L.Origen, FPlatformTime::Seconds() - InicioPaso, *L.Texto));
+		};
+		const int32 R = (S - 1) / 4, Fase = (S - 1) % 4;
+		if (S == 0)
+		{
+			if (bOcupado || T < 1.0) return;
+			bMedicoIA = Md.bMedIA; bPacienteIA = Md.bPacIA; bTurnoPaciente = false;
+			Charla.Reset();
+			Actualizar();
+			RegistroPrueba.Add(FString::Printf(TEXT("%s (IA: %s)"), Md.Nombre, *IA()->Descripcion()));
+			Foto(FString::Printf(TEXT("modos_%d_controles"), M + 1));
+			Siguiente();
+		}
+		else if (R < Md.Rondas)
+		{
+			if (T > 150.0) { RegistroPrueba.Add(FString::Printf(TEXT("  FALLO: el turno no termina (paso %d)"), S)); PasoPrueba = 500 + (M + 1) * 20; return; }
+			if (Fase == 0 && T > 0.5)
+			{
+				if (!bMedicoIA) UI->PonerTexto(DiceMedico[R]);
+				PulsarMedico();
+				Siguiente();
+			}
+			else if (Fase == 1)
+			{
+				if (R == 0 && T > 1.2 && T < 1.4) Foto(FString::Printf(TEXT("modos_%d_habla_medico"), M + 1));
+				if (!bOcupado && bTurnoPaciente) { Ultima(TEXT("MÉDICO")); Siguiente(); }
+			}
+			else if (Fase == 2 && T > 0.5)
+			{
+				if (!bPacienteIA) UI->PonerTexto(DicePaciente[R]);
+				PulsarPaciente();
+				Siguiente();
+			}
+			else if (Fase == 3)
+			{
+				if (R == 0 && T > 1.2 && T < 1.4) Foto(FString::Printf(TEXT("modos_%d_habla_paciente"), M + 1));
+				if (!bOcupado && !bTurnoPaciente) { Ultima(bHablaAcompanante ? TEXT("ACOMPAÑANTE") : TEXT("PACIENTE")); NumAntes = Charla.Num(); Siguiente(); }
+			}
+		}
+		else if (S == 1 + 4 * Md.Rondas)
+		{
+			// nadie habla solo: 6 s sin pulsar nada
+			if (T < 6.0) return;
+			RegistroPrueba.Add(FString::Printf(TEXT("  Sin pulsar nada en 6 s: %s"), Charla.Num() == NumAntes && !bOcupado ? TEXT("nadie habla solo (bien)") : TEXT("FALLO: alguien ha hablado solo")));
+			if (!Md.bMedIA || !Md.bPacIA) { PasoPrueba = 500 + (M + 1) * 20; InicioPaso = FPlatformTime::Seconds(); return; }
+			// DETENER mientras la IA del médico piensa
+			PulsarMedico();
+			Siguiente();
+		}
+		else if (S == 2 + 4 * Md.Rondas)
+		{
+			if (T < 0.4) return;
+			const bool bPensabaAntes = bPensando;
+			Detener();
+			RegistroPrueba.Add(FString::Printf(TEXT("  DETENER con la IA pensando (%s): %s"), bPensabaAntes ? TEXT("sí pensaba") : TEXT("ya no pensaba"),
+				!bOcupado && !bTurnoPaciente && Charla.Num() == NumAntes ? TEXT("se corta y el turno sigue en el médico (bien)") : TEXT("FALLO")));
+			Siguiente();
+		}
+		else if (T > 8.0)
+		{
+			// lo que la IA iba a decir no llega tarde
+			RegistroPrueba.Add(FString::Printf(TEXT("  8 s después de DETENER: %s"), Charla.Num() == NumAntes && !bOcupado ? TEXT("no ha hablado nadie (bien)") : TEXT("FALLO: ha llegado la respuesta cortada")));
+			Foto(FString::Printf(TEXT("modos_%d_fin"), M + 1));
+			PasoPrueba = 500 + (M + 1) * 20; InicioPaso = FPlatformTime::Seconds();
+		}
+		return;
+	}
 	// -EMMCreador: el creador de personajes con el médico (otra cara, nombre, pelo y peinado) y con la paciente de
 	// la consulta (nombre, edad, piel, ojos y peinado); fotos de la ventana y de la consulta, y vuelta a lo original
 	if (PasoPrueba >= 400)
@@ -1530,6 +1773,8 @@ void AEMMConsultaModo::PasoDePrueba()
 			if (FParse::Param(FCommandLine::Get(), TEXT("EMMSoloMontaje"))) PasoPrueba = 11 + 17;   // directo al desfile de personajes
 			if (FParse::Param(FCommandLine::Get(), TEXT("EMMTodos"))) PasoPrueba = 200;            // todos los pacientes de la plantilla
 			if (FParse::Param(FCommandLine::Get(), TEXT("EMMCreador"))) PasoPrueba = 400;          // el creador de personajes
+			if (FParse::Param(FCommandLine::Get(), TEXT("EMMModos"))) PasoPrueba = 500;            // MÉDICO y PACIENTE: YO / IA
+			if (FParse::Param(FCommandLine::Get(), TEXT("EMMVoces"))) PasoPrueba = 600;            // voces y volumen de todos
 		}
 	}
 	else if (Ronda < 3)
@@ -1690,9 +1935,7 @@ void AEMMConsultaModo::PasoDePrueba()
 				Falso.Id = FString::Printf(TEXT("desfile_%d"), I);
 				Falso.Sexo = X.Sexo; Falso.Edad = (X.EdadMin + FMath::Min(X.EdadMax, 90.f)) / 2.f;
 				PonerPersonaje(Falso);
-				FLinearColor Arriba, Abajo;
-				ColoresPaciente(Falso, Arriba, Abajo);
-				Vestir(MHPaciente.Get(), Arriba, Abajo);
+				VestirPersonajes(Falso);
 				const FEMMPerfilVoz VP = EMMVoz::PerfilPara(Falso.EsMujer(), Falso.Edad, GetTypeHash(X.Nombre) | 1u);
 				HablaPaciente->bMujer = VP.bMujer; HablaPaciente->Tono = VP.Tono; HablaPaciente->Velocidad = VP.Vel; HablaPaciente->VozPreferida = VP.Preferida;
 				HablaPaciente->Nombre = X.Nombre;
@@ -1735,7 +1978,8 @@ void AEMMConsultaModo::PasoDePrueba()
 void AEMMConsultaModo::Dictar()
 {
 	if (EMMDictado::Escuchando()) { EMMDictado::Parar(); return; }
-	if (bOcupado || bTurnoPaciente || bTerminada) return;
+	// se dicta para quien tiene el turno, si lo controla el jugador (YO)
+	if (bOcupado || bTerminada || (bTurnoPaciente ? bPacienteIA : bMedicoIA)) return;
 	// lo dictado se añade a lo que ya hubiera escrito
 	const FString Previo = UI->TextoEscrito();
 	auto Unir = [Previo](const FString& T) { return Previo.IsEmpty() ? T : Previo + TEXT(" ") + T; };
@@ -1751,21 +1995,28 @@ void AEMMConsultaModo::Dictar()
 	if (bEmpieza)
 	{
 		UI->PonerDictado(true);
-		UI->Aviso(TEXT("Escuchando… Habla y pulsa PARAR al acabar. Revisa el texto y pulsa ENVIAR · HABLAR MÉDICO."), true);
+		UI->Aviso(bTurnoPaciente ? TEXT("Escuchando… Habla y pulsa PARAR al acabar. Revisa el texto y pulsa HABLAR PACIENTE.")
+			: TEXT("Escuchando… Habla y pulsa PARAR al acabar. Revisa el texto y pulsa HABLAR MÉDICO."), true);
 	}
 }
 
 void AEMMConsultaModo::Actualizar()
 {
 	if (!UI) return;
+	// quién tiene el turno, quién habla y qué hay que pulsar (el acompañante contesta por bebés y niños pequeños)
+	const FString Quien = bHablaAcompanante ? TEXT("ACOMPAÑANTE") : TEXT("PACIENTE");
 	FString Estado;
 	if (bTerminada) Estado = TEXT("Consulta terminada y guardada. En AGENDA · FICHA puedes avanzar el tiempo o recibir a otro paciente.");
-	else if (bOcupado) Estado = bTurnoPaciente ? TEXT("El paciente está hablando…") : TEXT("Está hablando el médico…");
-	else if (bTurnoPaciente) Estado = TEXT("Turno del paciente: pulsa RESPONDER PACIENTE.");
-	else Estado = TEXT("Turno del médico: escribe lo que quieres decir y pulsa ENVIAR · HABLAR MÉDICO.");
+	else if (bPensando) Estado = bTurnoPaciente ? FString::Printf(TEXT("Turno del %s (IA): está pensando qué responder… (DETENER para cortar)"), *Quien)
+		: TEXT("Turno del MÉDICO (IA): está pensando qué decir… (DETENER para cortar)");
+	else if (bOcupado) Estado = bTurnoPaciente ? FString::Printf(TEXT("Habla el %s…"), *Quien) : TEXT("Habla el MÉDICO…");
+	else if (bTurnoPaciente) Estado = bPacienteIA ? FString::Printf(TEXT("Turno del %s (IA): pulsa RESPONDER PACIENTE para que conteste."), *Quien)
+		: FString::Printf(TEXT("Turno del %s (tú): escribe o dicta lo que responde y pulsa HABLAR PACIENTE."), *Quien);
+	else Estado = bMedicoIA ? TEXT("Turno del MÉDICO (IA): pulsa HABLAR MÉDICO para que pregunte.")
+		: TEXT("Turno del MÉDICO (tú): escribe o dicta lo que dice y pulsa HABLAR MÉDICO.");
 	UI->PonerEstado(Estado, bTurnoPaciente);
 	UI->PonerIA(IA()->Descripcion());
-	UI->PonerBotones(!bTerminada && !bOcupado && !bTurnoPaciente, !bTerminada && !bOcupado && bTurnoPaciente);
+	UI->PonerControles(bMedicoIA, bPacienteIA, bTurnoPaciente, bOcupado, bTerminada, bHablaAcompanante);
 }
 
 void AEMMConsultaModo::Decir(UEMMHabla* Quien, const FString& Nombre, const FString& Texto, bool bEsMedico, TFunction<void()> Despues)
@@ -1825,17 +2076,114 @@ FString AEMMConsultaModo::Referencia(const FString& Pregunta) const
 	return R;
 }
 
+void AEMMConsultaModo::PulsarMedico()
+{
+	if (bMedicoIA) HablarMedicoIA();
+	else HablarMedico(UI->TextoEscrito());
+}
+
+void AEMMConsultaModo::PulsarPaciente() { ResponderPaciente(); }
+
+void AEMMConsultaModo::CambiarControl(bool bDelMedico)
+{
+	if (EMMDictado::Escuchando()) EMMDictado::Parar();
+	bool& B = bDelMedico ? bMedicoIA : bPacienteIA;
+	B = !B;
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Control: %s pasa a %s"), bDelMedico ? TEXT("MÉDICO") : TEXT("PACIENTE"), B ? TEXT("IA") : TEXT("YO"));
+	if (FParse::Param(FCommandLine::Get(), TEXT("EMMPrueba"))) RegistroPrueba.Add(FString::Printf(TEXT("  (selector %s cambiado a %s durante la prueba)"), bDelMedico ? TEXT("MÉDICO") : TEXT("PACIENTE"), B ? TEXT("IA") : TEXT("YO")));
+	// las pruebas automáticas no tocan la elección del jugador
+	if (!FParse::Param(FCommandLine::Get(), TEXT("EMMPrueba"))) UEMMConsultaUI::GuardarOpcion(bDelMedico ? TEXT("MedicoIA") : TEXT("PacienteIA"), B);
+	UI->Aviso(FString::Printf(TEXT("%s: %s."), bDelMedico ? TEXT("MÉDICO") : TEXT("PACIENTE"), B ? TEXT("lo controla la IA (habla al pulsar su botón)") : TEXT("lo controlas tú (escribe o dicta)")), true);
+	Actualizar();
+}
+
+void AEMMConsultaModo::CambiarTurno()
+{
+	if (bOcupado || bTerminada) return;
+	if (EMMDictado::Escuchando()) EMMDictado::Parar();
+	bTurnoPaciente = !bTurnoPaciente;
+	Actualizar();
+	UI->EnfocarPrincipal();
+}
+
+void AEMMConsultaModo::Detener()
+{
+	if (EMMDictado::Escuchando()) EMMDictado::Parar();
+	if (!bOcupado) return;
+	++Epoca;   // la respuesta de la IA que esté en camino ya no se usa
+	if (bPensando)
+	{
+		// esperando a la IA: el turno se queda donde estaba (se puede volver a pulsar o cambiar a YO)
+		bPensando = false;
+		bOcupado = false;
+		Actualizar();
+		UI->Aviso(TEXT("Detenido. El turno sigue donde estaba."), true);
+		return;
+	}
+	// hablando: se corta la frase y el turno pasa al otro, como si la hubiera terminado
+	if (IsValid(Medico)) Medico->Detener();
+	if (IsValid(HablaPaciente)) HablaPaciente->Detener();
+}
+
+void AEMMConsultaModo::HablarMedicoIA()
+{
+	if (bOcupado || bTurnoPaciente || bTerminada) return;
+	if (EMMDictado::Escuchando()) EMMDictado::Parar();
+	bOcupado = bPensando = true;
+	Actualizar();
+	FEMMPaciente P = PacienteParaIA();
+	P.bHablaAcomp = bHablaAcompanante;
+	const bool bMedicaMujer = MHMedico.IsValid() && MHMedico->ActorHasTag(TEXT("Mujer"));
+	const int32 E = Epoca;
+	TWeakObjectPtr<AEMMConsultaModo> Yo(this);
+	IA()->ResponderMedico(P, NombreMedico(), bMedicaMujer, Charla, [Yo, E](const FEMMRespuesta& R) {
+		if (!Yo.IsValid() || Yo->Epoca != E) return;
+		Yo->bPensando = false;
+		Yo->Charla.Add({ true, R.Texto, R.Origen });
+		if (R.Origen != TEXT("ia") && Yo->IA()->Modo != EEMMModoIA::Predefinida)
+			Yo->UI->Aviso(FString::Printf(TEXT("IA no disponible (%s). El médico hace la pregunta guiada."), *R.Error), false);
+		Yo->Actualizar();
+		Yo->Decir(Yo->Medico, Yo->Medico->Nombre, R.Texto, true, [Yo]() {
+			if (!Yo.IsValid()) return;
+			Yo->bOcupado = false; Yo->bTurnoPaciente = true;
+			Yo->Actualizar();
+			Yo->UI->EnfocarPrincipal();
+		});
+	});
+}
+
 void AEMMConsultaModo::ResponderPaciente()
 {
-	if (bOcupado || !bTurnoPaciente || !Charla.Num()) return;
-	bOcupado = true;
-	UI->PonerEstado(IA()->Modo == EEMMModoIA::Predefinida ? TEXT("El paciente va a responder…") : TEXT("El paciente está pensando qué responder (IA)…"), true);
-	UI->PonerBotones(false, false);
-	const FString Pregunta = Charla.Last().Texto;
-	TArray<FEMMLinea> Antes = Charla; Antes.Pop();
+	if (bOcupado || !bTurnoPaciente || bTerminada) return;
+	if (EMMDictado::Escuchando()) EMMDictado::Parar();
 	TWeakObjectPtr<AEMMConsultaModo> Yo(this);
-	IA()->Responder(PacienteParaIA(), Antes, Pregunta, Referencia(Pregunta), [Yo](const FEMMRespuesta& R) {
-		if (!Yo.IsValid()) return;
+	if (!bPacienteIA)
+	{
+		// PACIENTE: YO: el paciente (o su acompañante) dice exactamente lo escrito o dictado, con su voz
+		const FString Texto = UI->TextoEscrito();
+		if (Texto.IsEmpty()) { UI->Aviso(TEXT("Escribe o dicta primero lo que responde el paciente."), false); return; }
+		Charla.Add({ false, Texto, TEXT("jugador") });
+		UI->LimpiarTexto();
+		bOcupado = true;
+		Actualizar();
+		Decir(HablaPaciente, HablaPaciente->Nombre, Texto, false, [Yo]() {
+			if (!Yo.IsValid()) return;
+			Yo->bOcupado = false; Yo->bTurnoPaciente = false;
+			Yo->Actualizar();
+			Yo->UI->EnfocarPrincipal();
+		});
+		return;
+	}
+	bOcupado = bPensando = true;
+	Actualizar();
+	// lo último del médico (si se ha cambiado el turno sin que hable, el paciente sigue con lo suyo)
+	const bool bHayPregunta = Charla.Num() && Charla.Last().bMedico;
+	const FString Pregunta = bHayPregunta ? Charla.Last().Texto : FString(TEXT("¿Algo más que quiera contarme?"));
+	TArray<FEMMLinea> Antes = Charla; if (bHayPregunta) Antes.Pop();
+	const int32 E = Epoca;
+	IA()->Responder(PacienteParaIA(), Antes, Pregunta, Referencia(Pregunta), [Yo, E](const FEMMRespuesta& R) {
+		if (!Yo.IsValid() || Yo->Epoca != E) return;
+		Yo->bPensando = false;
 		Yo->Charla.Add({ false, R.Texto, R.Origen });
 		if (R.Origen != TEXT("ia") && Yo->IA()->Modo != EEMMModoIA::Predefinida)
 			Yo->UI->Aviso(FString::Printf(TEXT("IA no disponible (%s). Se usa la respuesta predefinida."), *R.Error), false);

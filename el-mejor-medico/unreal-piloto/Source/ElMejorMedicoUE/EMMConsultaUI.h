@@ -12,6 +12,7 @@ class UButton;
 class UTextBlock;
 class UMultiLineEditableTextBox;
 class UBorder;
+class USlider;
 class AEMMConsultaModo;
 class UEMMHabla;
 
@@ -29,7 +30,8 @@ public:
 	void PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico);
 	void QuitarSubtitulo();
 	void Aviso(const FString& Texto, bool bBien);
-	void PonerBotones(bool bMedico, bool bPaciente);
+	// botones, caja y micrófono según quién tiene el turno y quién lo controla (YO / IA)
+	void PonerControles(bool bMedicoIA, bool bPacienteIA, bool bTurnoPaciente, bool bOcupado, bool bTerminada, bool bAcompanante);
 	void PonerDescarga(const FString& Texto, bool bVisible);
 	void PonerDictado(bool bEscuchando);
 	FString TextoEscrito() const;
@@ -37,6 +39,11 @@ public:
 	void LimpiarTexto();
 	void EnfocarPrincipal();
 
+	// opciones guardadas (GameUserSettings.ini): quién controla al médico y al paciente, volúmenes…
+	static bool LeerOpcion(const TCHAR* Clave, bool bPorDefecto);
+	static void GuardarOpcion(const TCHAR* Clave, bool b);
+	static float LeerNumero(const TCHAR* Clave, float PorDefecto);
+	static void GuardarNumero(const TCHAR* Clave, float N);
 	static bool SubtitulosActivados();
 	static void GuardarSubtitulos(bool bActivos);
 	// calidad gráfica: 0 rápida, 1 equilibrada (por defecto), 2 alta; «-EMMCalidad=N» la fuerza sin guardarla
@@ -66,6 +73,15 @@ private:
 	UPROPERTY() TObjectPtr<UButton> BotonPaciente;
 	UPROPERTY() TObjectPtr<UButton> BotonMicrofono;
 	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaMicrofono;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaMedico;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaPaciente;
+	UPROPERTY() TObjectPtr<UButton> BotonControlMedico;
+	UPROPERTY() TObjectPtr<UButton> BotonControlPaciente;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaControlMedico;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaControlPaciente;
+	UPROPERTY() TObjectPtr<UButton> BotonTurno;
+	UPROPERTY() TObjectPtr<UButton> BotonDetener;
+	bool bTurnoPacienteUI = false;
 	UPROPERTY() TObjectPtr<UTextBlock> TextoAviso;
 	UPROPERTY() TObjectPtr<UBorder> CajaAviso;
 	UPROPERTY() TObjectPtr<UBorder> CajaDescarga;
@@ -74,12 +90,22 @@ private:
 	UPROPERTY() TObjectPtr<UBorder> CajaAjustes;
 	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaSubtitulos;
 	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaCalidad;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaVolMedico;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaVolPacientes;
+	UPROPERTY() TObjectPtr<UTextBlock> EtiquetaVolEfectos;
+	UPROPERTY() TObjectPtr<USlider> BarraVolMedico;
+	UPROPERTY() TObjectPtr<USlider> BarraVolPacientes;
+	UPROPERTY() TObjectPtr<USlider> BarraVolEfectos;
 	UPROPERTY() TObjectPtr<UEMMHabla> HablaSubtitulo;
 	FTimerHandle TemporizadorAviso;
 
 	UFUNCTION() void AlPulsarMedico();
 	UFUNCTION() void AlPulsarPaciente();
 	UFUNCTION() void AlPulsarMicrofono();
+	UFUNCTION() void AlPulsarControlMedico();
+	UFUNCTION() void AlPulsarControlPaciente();
+	UFUNCTION() void AlPulsarTurno();
+	UFUNCTION() void AlPulsarDetener();
 	UFUNCTION() void AlPulsarCreador();
 	UFUNCTION() void AlPulsarDescargar();
 	UFUNCTION() void AlPulsarAjustes();
@@ -89,5 +115,8 @@ private:
 	UFUNCTION() void AlPulsarSubtitulos();
 	UFUNCTION() void AlPulsarCalidad();
 	UFUNCTION() void AlPulsarCerrarAjustes();
+	UFUNCTION() void AlVolumenMedico(float V);
+	UFUNCTION() void AlVolumenPacientes(float V);
+	UFUNCTION() void AlVolumenEfectos(float V);
 	void RefrescarAjustes();
 };

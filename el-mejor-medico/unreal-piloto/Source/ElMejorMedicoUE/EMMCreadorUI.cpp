@@ -134,6 +134,7 @@ void UEMMCreadorUI::Construir()
 	TBarba = Selector(Der, TEXT("Barba"), M, P); M->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlBarbaMenos); P->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlBarbaMas);
 	TBigote = Selector(Der, TEXT("Bigote"), M, P); M->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlBigoteMenos); P->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlBigoteMas);
 	TOjos = Selector(Der, TEXT("Ojos"), M, P); M->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlOjosMenos); P->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlOjosMas);
+	TUniforme = Selector(Der, TEXT("Uniforme"), M, P); M->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlUniformeMenos); P->OnClicked.AddDynamic(this, &UEMMCreadorUI::AlUniformeMas);
 	UTextBlock* Nota = Texto(WidgetTree, TEXT("La cara (forma de la cabeza, nariz, ojos, boca y mandíbula) se elige entre los modelos del juego: MetaHuman Creator, que esculpe caras nuevas, sólo funciona en el editor de Unreal. Con un cambio de sexo o de edad, la persona vendrá en su próxima visita con un problema de salud propio de su edad."), 12.f, FLinearColor(0.65f, 0.7f, 0.8f));
 	if (UVerticalBoxSlot* R = Der->AddChildToVerticalBox(Nota)) R->SetPadding(FMargin(0, 8, 0, 0));
 	Estado = Texto(WidgetTree, TEXT(""), 14.f, FLinearColor(0.6f, 1.f, 0.6f), true);
@@ -247,6 +248,8 @@ void UEMMCreadorUI::Refrescar()
 	TPeinado->SetText(FText::FromString(bNino ? SoloAdultos : EMMAspecto::NombreDe(Aspecto.Peinado, EMMAspecto::Peinados(), TEXT("El suyo"), TEXT("Rapado (sin pelo)"))));
 	TBarba->SetText(FText::FromString(bNino ? SoloAdultos : EMMAspecto::NombreDe(Aspecto.Barba, EMMAspecto::Barbas(), TEXT("La suya"), TEXT("Afeitado (sin barba)"))));
 	TBigote->SetText(FText::FromString(bNino ? SoloAdultos : EMMAspecto::NombreDe(Aspecto.Bigote, EMMAspecto::Bigotes(), TEXT("El suyo"), TEXT("Sin bigote"))));
+	const TArray<FString> Uniformes = AEMMConsultaModo::NombresUniformes();
+	TUniforme->SetText(FText::FromString(Indice >= 0 ? FString(TEXT("— (sólo el médico)")) : TEXT("Pijama sanitario ") + Uniformes[FMath::Clamp(Aspecto.Uniforme, 0, Uniformes.Num() - 1)].ToLower()));
 }
 
 void UEMMCreadorUI::Cambiar(const FString& Que, int32 Paso)
@@ -269,6 +272,7 @@ void UEMMCreadorUI::Cambiar(const FString& Que, int32 Paso)
 	else if (Que == TEXT("peinado")) Aspecto.Peinado = CicloGroom(Aspecto.Peinado, Paso, EMMAspecto::Peinados());
 	else if (Que == TEXT("barba")) Aspecto.Barba = CicloGroom(Aspecto.Barba, Paso, EMMAspecto::Barbas());
 	else if (Que == TEXT("bigote")) Aspecto.Bigote = CicloGroom(Aspecto.Bigote, Paso, EMMAspecto::Bigotes());
+	else if (Que == TEXT("uniforme") && Indice < 0) Aspecto.Uniforme = Ciclo(Aspecto.Uniforme, Paso, AEMMConsultaModo::NombresUniformes().Num());
 	Estado->SetText(FText::GetEmpty());
 	Refrescar();
 }
@@ -316,6 +320,8 @@ void UEMMCreadorUI::AlBigoteMenos() { Cambiar(TEXT("bigote"), -1); }
 void UEMMCreadorUI::AlBigoteMas() { Cambiar(TEXT("bigote"), 1); }
 void UEMMCreadorUI::AlOjosMenos() { Cambiar(TEXT("ojos"), -1); }
 void UEMMCreadorUI::AlOjosMas() { Cambiar(TEXT("ojos"), 1); }
+void UEMMCreadorUI::AlUniformeMenos() { Cambiar(TEXT("uniforme"), -1); }
+void UEMMCreadorUI::AlUniformeMas() { Cambiar(TEXT("uniforme"), 1); }
 void UEMMCreadorUI::AlGuardar() { Guardar(); }
 void UEMMCreadorUI::AlDeshacer() { Cargar(Indice); Estado->SetText(FText::FromString(TEXT("Cambios deshechos: vuelve lo guardado."))); }
 void UEMMCreadorUI::AlCerrar() { Cerrar(); }

@@ -33,6 +33,12 @@ public:
 	void Detectar(TFunction<void(const FString& Aviso, bool bBien)> Hecho);
 	// Respuesta del paciente a lo último que ha dicho el médico
 	void Responder(const FEMMPaciente& P, const TArray<FEMMLinea>& Historial, const FString& Pregunta, const FString& Referencia, TFunction<void(const FEMMRespuesta&)> Hecho);
+	// Lo siguiente que dice el médico controlado por la IA (MÉDICO: IA): saluda, se presenta y hace la entrevista
+	// clínica pregunta a pregunta, según lo que ya le han contado. Sólo sabe lo que ve un médico al recibir al
+	// paciente (nombre, edad, sexo, quién le acompaña), no su enfermedad. Sin IA, la pregunta guiada que toca.
+	void ResponderMedico(const FEMMPaciente& P, const FString& NombreMedico, bool bMedicaMujer, const TArray<FEMMLinea>& Historial, TFunction<void(const FEMMRespuesta&)> Hecho);
+	static FString PreguntaGuiada(const FEMMPaciente& P, const FString& NombreMedico, const TArray<FEMMLinea>& Historial);
+	static TArray<TPair<FString, FString>> MensajesMedico(const FEMMPaciente& P, const FString& NombreMedico, bool bMedicaMujer, const TArray<FEMMLinea>& Historial);
 	FString Descripcion() const;
 
 	// Igual que js/ia.js (públicas para las pruebas)

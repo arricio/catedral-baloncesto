@@ -37,7 +37,13 @@ public:
 	// Sintetiza y dice la frase; Fin se llama al terminar (o si falla la voz, tras un tiempo de lectura)
 	void Decir(const FString& Frase, TFunction<void(const FString& Error)> Fin);
 	void Callar();
+	// corta la frase (botón DETENER): termina como si la hubiera acabado de decir
+	void Detener();
 	FEMMPerfilVoz Perfil() const;
+	// volumen elegido en CONFIGURACIÓN (0..2; 1 normal) para el médico o para pacientes y acompañantes
+	static float VolumenDe(bool bDelMedico);
+	// sonoridad igualada (PCM de 16 bits): la misma media para todas las voces, con limitador suave
+	static void Igualar(TArray<uint8>& PCM);
 	// Lo que la voz ya ha dicho de la frase actual (para los subtítulos); vacío si está callado
 	FString TextoDicho() const;
 
@@ -47,6 +53,7 @@ private:
 	TSharedPtr<FEMMAudio> Audio;
 	FString Texto;
 	bool bSinVoz = false;   // la voz falló: el subtítulo sale entero mientras dura la lectura
+	int32 Ficha = 0;        // cada frase lleva la suya: lo que llega de una frase ya cortada se descarta
 	UPROPERTY() TObjectPtr<UAudioComponent> Sonido;
 	double Inicio = 0;
 	TFunction<void(const FString&)> AlTerminar;

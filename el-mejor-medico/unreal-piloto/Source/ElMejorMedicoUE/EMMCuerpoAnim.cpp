@@ -112,7 +112,10 @@ bool FEMMCuerpoProxy::Evaluate(FPoseContext& Output)
 {
 	Output.ResetToRefPose();
 	const FEMMPostura& P = FEMMPostura::Sentado();
+	// pruebas de la ropa de pie (-EMMDePie): sin bajar la pelvis ni doblar las piernas
+	static const bool bDePie = FParse::Param(FCommandLine::Get(), TEXT("EMMDePie"));
 	// pelvis
+	if (!bDePie)
 	{
 		const FBoneContainer& BC = Output.Pose.GetBoneContainer();
 		const int32 Indice = BC.GetPoseBoneIndexForBoneName(TEXT("pelvis"));
@@ -124,6 +127,7 @@ bool FEMMCuerpoProxy::Evaluate(FPoseContext& Output)
 	}
 	for (const FEMMGiroHueso& G : P.Giros)
 	{
+		if (bDePie && (G.Hueso.ToString().StartsWith(TEXT("thigh")) || G.Hueso.ToString().StartsWith(TEXT("calf")))) continue;
 		const FQuat Q(G.Eje, FMath::DegreesToRadians(G.Grados));
 		if (G.bCuerpo) GirarCuerpo(Output, G.Hueso, Q); else Girar(Output, G.Hueso, Q);
 	}

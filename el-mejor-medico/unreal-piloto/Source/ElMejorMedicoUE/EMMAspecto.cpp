@@ -1,5 +1,6 @@
-#include "EMMAspecto.h"
+﻿#include "EMMAspecto.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Engine/SkeletalMesh.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GroomAsset.h"
 #include "GroomBindingAsset.h"

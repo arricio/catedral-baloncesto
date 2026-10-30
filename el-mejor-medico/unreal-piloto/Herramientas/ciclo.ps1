@@ -8,7 +8,7 @@
 #   -Calidad N    fuerza la calidad gráfica en la prueba (0 rápida, 1 equilibrada, 2 alta) sin tocar la guardada
 #   -SoloNinos    con -Probar: la prueba de todos los pacientes, pero sólo niños y bebés (con sus acompañantes)
 #   -SinCocinar   con -Android: sólo recompila el código y reempaqueta (el contenido ya cocinado no ha cambiado)
-param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1, [switch]$Android, [switch]$SinCocinar, [switch]$SoloNinos, [switch]$Creador)
+param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1, [switch]$Android, [switch]$SinCocinar, [switch]$SoloNinos, [switch]$Creador, [string]$Extra = '-nada')
 $ErrorActionPreference = 'Stop'
 $UE = 'C:\Program Files\Epic Games\UE_5.8\Engine'
 $P = Split-Path $PSScriptRoot
@@ -67,9 +67,9 @@ if ($Probar) {
   Remove-Item Env:EMM_TAREA, Env:EMM_CERRAR -ErrorAction SilentlyContinue
   $txt = Join-Path $P 'Saved\Prueba.txt'
   Remove-Item $txt -ErrorAction SilentlyContinue
-  $extra = if ($Montaje) { '-EMMSoloMontaje' } elseif ($Creador) { '-EMMCreador' } elseif ($SoloNinos) { '-EMMTodos -EMMSoloNinos' } elseif ($Todos) { '-EMMTodos' } else { '-nada' }
+  $modo = if ($Montaje) { '-EMMSoloMontaje' } elseif ($Creador) { '-EMMCreador' } elseif ($SoloNinos) { '-EMMTodos -EMMSoloNinos' } elseif ($Todos) { '-EMMTodos' } else { '-nada' }
   $cal = if ($Calidad -ge 0) { "-EMMCalidad=$Calidad" } else { '-nada' }
-  Start-Process "$UE\Binaries\Win64\UnrealEditor.exe" -ArgumentList "`"$Proyecto`"", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $extra, $cal, '-nosplash', '-unattended' | Out-Null
+  Start-Process "$UE\Binaries\Win64\UnrealEditor.exe" -ArgumentList "`"$Proyecto`"", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-EMMPrueba', $modo, $cal, $Extra, '-nosplash', '-unattended' | Out-Null
   for ($i = 0; $i -lt 540; $i++) {
     Start-Sleep 5; if (Test-Path $txt) { Start-Sleep 4; break }
     # Smart App Control (activado; no se desactiva) puede bloquear la DLL recién compilada: se avisa en vez de esperar

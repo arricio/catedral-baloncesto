@@ -2,6 +2,7 @@
 #include "EMMPiper.h"
 #include "Async/Async.h"
 #include "HAL/PlatformFileManager.h"
+#include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
@@ -189,15 +190,20 @@ FEMMPerfilVoz EMMVoz::PerfilPara(bool bMujer, float Edad, uint32 Semilla)
 	// Windows trae tres voces es-ES: Pablo (hombre), Laura y Helena (mujer). El tono baja poco a poco con la edad
 	// (de adolescente a mayor) y la velocidad, a partir de los 65. Cada persona (Semilla) tiene además su propia
 	// variación fija de tono y ritmo, para que dos pacientes de la misma edad no suenen igual.
-	// Los niños usan una voz de mujer más aguda y algo más rápida.
+	// Los niños usan una voz de mujer algo más aguda y un poco más pausada. El tono se sube cambiando la velocidad
+	// de reproducción, que también mueve los formantes: por encima de ~1,25 la voz suena a dibujo animado y deja
+	// de entenderse (le pasaba a Alba, con 1,70), así que se queda entre 1,13 y 1,20.
 	FEMMPerfilVoz P;
 	P.bMujer = bMujer;
 	const float E = FMath::Clamp(Edad, 0.f, 100.f);
-	if (E < 13.f)
+	const bool bNino = E < 13.f;
+	if (bNino)
 	{
 		P.Preferida = bMujer ? TEXT("Laura") : TEXT("Helena");
-		P.Tono = (bMujer ? 1.78f : 1.62f) - 0.02f * (E - 6.f);
-		P.Vel = 1.05f;
+		P.Tono = FMath::Clamp(1.20f - 0.009f * (FMath::Max(E, 4.f) - 4.f), 1.13f, 1.20f) - (bMujer ? 0.f : 0.03f);
+		P.Vel = 0.95f;
+		// «-EMMVozAntigua» (sólo pruebas): la voz de antes, para comparar cuánto se entiende
+		if (FParse::Param(FCommandLine::Get(), TEXT("EMMVozAntigua"))) { P.Tono = (bMujer ? 1.78f : 1.62f) - 0.02f * (E - 6.f); P.Vel = 1.05f; }
 		P.bMujer = true;
 	}
 	else if (E < 18.f) { P.Preferida = bMujer ? TEXT("Laura") : TEXT("Pablo"); P.Tono = bMujer ? 1.24f - 0.02f * (E - 13.f) : 1.22f - 0.04f * (E - 13.f); P.Vel = 1.06f; }
@@ -205,8 +211,9 @@ FEMMPerfilVoz EMMVoz::PerfilPara(bool bMujer, float Edad, uint32 Semilla)
 	else { P.Preferida = bMujer ? TEXT("Helena") : TEXT("Pablo"); P.Tono = bMujer ? 0.93f - 0.003f * (E - 65.f) : 0.85f - 0.004f * (E - 65.f); P.Vel = 0.9f - 0.004f * (E - 65.f); }
 	if (Semilla)
 	{
-		P.Tono += (int32(Semilla % 13u) - 6) * 0.012f;
-		P.Vel += (int32((Semilla / 13u) % 9u) - 4) * 0.012f;
+		// los niños, poca variación: su tono ya va en el límite de lo que se entiende bien
+		P.Tono += (int32(Semilla % 13u) - 6) * (bNino ? 0.0035f : 0.012f);
+		P.Vel += (int32((Semilla / 13u) % 9u) - 4) * (bNino ? 0.005f : 0.012f);
 		// mujeres adultas: unas con Laura y otras con Helena
 		if (bMujer && E >= 18.f && E < 65.f && (Semilla / 117u) % 3u == 0) P.Preferida = TEXT("Helena");
 	}
@@ -215,7 +222,9 @@ FEMMPerfilVoz EMMVoz::PerfilPara(bool bMujer, float Edad, uint32 Semilla)
 	{
 		TArray<FString> Candidatas;
 		for (const EMMPiper::FVozPiper& V : EMMPiper::Voces()) if (V.Sexo == (P.bMujer ? TEXT("m") : TEXT("h"))) Candidatas.Add(V.Id);
-		if (Candidatas.Num()) P.Piper = Candidatas[(Semilla / 7u) % uint32(Candidatas.Num())];
+		// los niños, siempre la voz femenina más clara (sharvard, calidad media a 22 kHz)
+		if (bNino && Candidatas.Contains(TEXT("sharvard_m")) && !FParse::Param(FCommandLine::Get(), TEXT("EMMVozAntigua"))) P.Piper = TEXT("sharvard_m");
+		else if (Candidatas.Num()) P.Piper = Candidatas[(Semilla / 7u) % uint32(Candidatas.Num())];
 	}
 	return P;
 }

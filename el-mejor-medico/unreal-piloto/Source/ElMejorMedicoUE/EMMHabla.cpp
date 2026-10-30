@@ -1,4 +1,5 @@
 #include "EMMHabla.h"
+#include "EMMConsultaUI.h"
 #include "Misc/CommandLine.h"
 #include "Components/AudioComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -42,14 +43,45 @@ FString UEMMHabla::TextoDicho() const
 	return Texto.Left(Hasta).TrimEnd();
 }
 
+// Volumen igualado: cada voz sale con la misma sonoridad media (RMS), venga de Piper, de Windows o del móvil, para
+// que nadie se oiga más bajo; un limitador suave impide que los picos saturen. La voz de cada persona (tono,
+// velocidad, timbre) no cambia: sólo el nivel.
+void UEMMHabla::Igualar(TArray<uint8>& PCM)
+{
+	int16* S = reinterpret_cast<int16*>(PCM.GetData());
+	const int32 N = PCM.Num() / 2;
+	if (N < 64) return;
+	// RMS de lo que suena (sin los silencios, que bajarían la media)
+	double Suma = 0; int32 Cuenta = 0;
+	for (int32 i = 0; i < N; ++i) { const double X = S[i] / 32768.0; if (FMath::Abs(X) > 0.01) { Suma += X * X; ++Cuenta; } }
+	if (!Cuenta) return;
+	const double Rms = FMath::Sqrt(Suma / Cuenta);
+	const double Objetivo = 0.17;   // unos −15 dBFS: claro en los altavoces de un móvil y de un portátil
+	const float Ganancia = float(FMath::Clamp(Objetivo / FMath::Max(Rms, 1e-4), 0.5, 5.0));
+	for (int32 i = 0; i < N; ++i)
+	{
+		float X = S[i] / 32768.f * Ganancia;
+		// limitador suave: por encima de 0,8 se comprime hacia 0,98 (sin recortes que distorsionen)
+		const float A = FMath::Abs(X);
+		if (A > 0.8f) X = FMath::Sign(X) * (0.8f + 0.18f * FMath::Tanh((A - 0.8f) / 0.18f));
+		S[i] = int16(FMath::Clamp(X, -1.f, 1.f) * 32767.f);
+	}
+}
+
+float UEMMHabla::VolumenDe(bool bDelMedico)
+{
+	return FMath::Clamp(UEMMConsultaUI::LeerNumero(bDelMedico ? TEXT("VolumenMedico") : TEXT("VolumenPacientes"), 1.f), 0.f, 2.f);
+}
+
 void UEMMHabla::Decir(const FString& Frase, TFunction<void(const FString&)> Fin)
 {
 	Callar();
 	Texto = Frase;
 	AlTerminar = MoveTemp(Fin);
 	TWeakObjectPtr<UEMMHabla> Yo(this);
-	EMMVoz::Sintetizar(Frase, Perfil(), [Yo, Frase](TSharedPtr<FEMMAudio> A) {
-		if (!Yo.IsValid()) return;
+	const int32 F = ++Ficha;
+	EMMVoz::Sintetizar(Frase, Perfil(), [Yo, Frase, F](TSharedPtr<FEMMAudio> A) {
+		if (!Yo.IsValid() || Yo->Ficha != F) return;
 		if (!A.IsValid() || !A->Error.IsEmpty() || !A->PCM.Num())
 		{
 			// sin voz: los subtítulos se quedan el tiempo de leerlos, y se avisa
@@ -57,9 +89,10 @@ void UEMMHabla::Decir(const FString& Frase, TFunction<void(const FString&)> Fin)
 			const float Lectura = FMath::Clamp(Frase.Len() / 15.f, 2.f, 10.f);
 			const FString Error = A.IsValid() ? A->Error : TEXT("sin voz");
 			FTimerHandle T;
-			Yo->GetWorld()->GetTimerManager().SetTimer(T, FTimerDelegate::CreateWeakLambda(Yo.Get(), [Yo, Error]() { Yo->Terminar(Error); }), Lectura, false);
+			Yo->GetWorld()->GetTimerManager().SetTimer(T, FTimerDelegate::CreateWeakLambda(Yo.Get(), [Yo, Error, F]() { if (Yo->Ficha == F) Yo->Terminar(Error); }), Lectura, false);
 			return;
 		}
+		Igualar(A->PCM);
 		USoundWaveProcedural* Onda = NewObject<USoundWaveProcedural>(Yo.Get());
 		Onda->SetSampleRate(A->Frecuencia);
 		Onda->NumChannels = 1;
@@ -73,7 +106,8 @@ void UEMMHabla::Decir(const FString& Frase, TFunction<void(const FString&)> Fin)
 		TArray<USkeletalMeshComponent*> Mallas;
 		Yo->GetOwner()->GetComponents(Mallas);
 		for (USkeletalMeshComponent* M : Mallas) if (M->DoesSocketExist(TEXT("head"))) { Donde = M; Hueso = TEXT("head"); break; }
-		Yo->Sonido = UGameplayStatics::SpawnSoundAttached(Onda, Donde, Hueso, FVector::ZeroVector, EAttachLocation::SnapToTarget, true);
+		// volumen de CONFIGURACIÓN: el del médico o el de pacientes y acompañantes
+		Yo->Sonido = UGameplayStatics::SpawnSoundAttached(Onda, Donde, Hueso, FVector::ZeroVector, EAttachLocation::SnapToTarget, true, VolumenDe(Yo->GetOwner()->ActorHasTag(TEXT("Medico"))));
 		Yo->Audio = A;
 		Yo->Inicio = FPlatformTime::Seconds();
 		Yo->bHablando = true;
@@ -86,6 +120,12 @@ void UEMMHabla::Callar()
 	Audio.Reset();
 	bHablando = false;
 	bSinVoz = false;
+}
+
+void UEMMHabla::Detener()
+{
+	++Ficha;
+	Terminar(FString());
 }
 
 void UEMMHabla::Terminar(const FString& Error)

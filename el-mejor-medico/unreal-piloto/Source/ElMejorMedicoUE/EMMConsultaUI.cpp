@@ -1,4 +1,5 @@
 ﻿#include "EMMConsultaUI.h"
+#include "Components/Slider.h"
 #include "EMMConsultaModo.h"
 #include "EMMHabla.h"
 #include "Blueprint/WidgetTree.h"
@@ -57,6 +58,29 @@ bool UEMMConsultaUI::SubtitulosActivados()
 void UEMMConsultaUI::GuardarSubtitulos(bool bActivos)
 {
 	GConfig->SetBool(Seccion, TEXT("Subtitulos"), bActivos, GGameUserSettingsIni);
+	GConfig->Flush(false, GGameUserSettingsIni);
+}
+
+bool UEMMConsultaUI::LeerOpcion(const TCHAR* Clave, bool bPorDefecto)
+{
+	bool b = bPorDefecto;
+	GConfig->GetBool(Seccion, Clave, b, GGameUserSettingsIni);
+	return b;
+}
+void UEMMConsultaUI::GuardarOpcion(const TCHAR* Clave, bool b)
+{
+	GConfig->SetBool(Seccion, Clave, b, GGameUserSettingsIni);
+	GConfig->Flush(false, GGameUserSettingsIni);
+}
+float UEMMConsultaUI::LeerNumero(const TCHAR* Clave, float PorDefecto)
+{
+	float N = PorDefecto;
+	GConfig->GetFloat(Seccion, Clave, N, GGameUserSettingsIni);
+	return N;
+}
+void UEMMConsultaUI::GuardarNumero(const TCHAR* Clave, float N)
+{
+	GConfig->SetFloat(Seccion, Clave, N, GGameUserSettingsIni);
 	GConfig->Flush(false, GGameUserSettingsIni);
 }
 
@@ -156,15 +180,34 @@ void UEMMConsultaUI::Construir()
 	VSub->AddChildToVerticalBox(SubTexto);
 	CajaSubtitulo->SetContent(VSub);
 	CajaSubtitulo->SetVisibility(ESlateVisibility::Collapsed);
-	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(CajaSubtitulo)) { S->SetAnchors(FAnchors(0.15f, 1.f, 0.85f, 1.f)); S->SetAlignment(FVector2D(0, 1)); S->SetOffsets(FMargin(0, -232, 0, 0)); S->SetAutoSize(true); }
+	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(CajaSubtitulo)) { S->SetAnchors(FAnchors(0.15f, 1.f, 0.85f, 1.f)); S->SetAlignment(FVector2D(0, 1)); S->SetOffsets(FMargin(0, -272, 0, 0)); S->SetAutoSize(true); }
 
 	// Panel de la conversación, abajo y compacto: escribir o dictar, y los dos botones de turno
 	UBorder* Abajo = Recuadro(WidgetTree, Panel, 12.f);
 	UVerticalBox* Columna = WidgetTree->ConstructWidget<UVerticalBox>();
 	Abajo->SetContent(Columna);
-	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(Abajo)) { S->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f)); S->SetAlignment(FVector2D(0, 1)); S->SetOffsets(FMargin(16, -12, 16, 210)); }
-	Estado = Texto(WidgetTree, TEXT("Turno del médico: escribe o dicta lo que quieres decir."), 16.f, FLinearColor(0.85f, 0.9f, 1.f), true);
-	Columna->AddChildToVerticalBox(Estado);
+	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(Abajo)) { S->SetAnchors(FAnchors(0.f, 1.f, 1.f, 1.f)); S->SetAlignment(FVector2D(0, 1)); S->SetOffsets(FMargin(16, -12, 16, 250)); }
+	// arriba: de quién es el turno y quién habla, y los selectores MÉDICO: YO / IA y PACIENTE: YO / IA
+	UHorizontalBox* FilaEstado = WidgetTree->ConstructWidget<UHorizontalBox>();
+	Columna->AddChildToVerticalBox(FilaEstado);
+	Estado = Texto(WidgetTree, TEXT("Turno del MÉDICO (tú): escribe o dicta lo que dice y pulsa HABLAR MÉDICO."), 16.f, FLinearColor(0.85f, 0.9f, 1.f), true);
+	Estado->SetAutoWrapText(true);
+	if (UHorizontalBoxSlot* S = FilaEstado->AddChildToHorizontalBox(Estado)) { S->SetSize(FSlateChildSize(ESlateSizeRule::Fill)); S->SetVerticalAlignment(VAlign_Center); }
+	UTextBlock* ECM = nullptr; UTextBlock* ECP = nullptr; UTextBlock* ETu = nullptr; UTextBlock* EDe = nullptr;
+	BotonControlMedico = CrearBoton(TEXT("MÉDICO: YO"), Azul, ECM, 13.f);
+	BotonControlPaciente = CrearBoton(TEXT("PACIENTE: IA"), Ambar, ECP, 13.f);
+	BotonTurno = CrearBoton(TEXT("CAMBIAR TURNO"), Gris, ETu, 13.f);
+	BotonDetener = CrearBoton(TEXT("■ DETENER"), Rojo, EDe, 13.f);
+	for (UTextBlock* E : { ECM, ECP, ETu, EDe }) if (E) E->SetAutoWrapText(false);
+	EtiquetaControlMedico = ECM; EtiquetaControlPaciente = ECP;
+	BotonControlMedico->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarControlMedico);
+	BotonControlPaciente->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarControlPaciente);
+	BotonTurno->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarTurno);
+	BotonDetener->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarDetener);
+	BotonControlMedico->SetToolTipText(FText::FromString(TEXT("Quién controla al médico: tú (escribes o dictas) o la IA")));
+	BotonControlPaciente->SetToolTipText(FText::FromString(TEXT("Quién controla al paciente: tú (escribes o dictas) o la IA")));
+	for (UButton* B : { BotonControlMedico.Get(), BotonControlPaciente.Get(), BotonTurno.Get(), BotonDetener.Get() })
+		if (UHorizontalBoxSlot* S = FilaEstado->AddChildToHorizontalBox(B)) S->SetPadding(FMargin(8, 0, 0, 0));
 	UHorizontalBox* Fila = WidgetTree->ConstructWidget<UHorizontalBox>();
 	if (UVerticalBoxSlot* S = Columna->AddChildToVerticalBox(Fila)) { S->SetSize(FSlateChildSize(ESlateSizeRule::Fill)); S->SetPadding(FMargin(0, 8, 0, 0)); }
 	Caja = WidgetTree->ConstructWidget<UMultiLineEditableTextBox>();
@@ -180,8 +223,9 @@ void UEMMConsultaUI::Construir()
 	UTextBlock* EMic = nullptr;
 	BotonMicrofono = CrearBoton(TEXT("MICRÓFONO"), Gris, EMic, 17.f);
 	EtiquetaMicrofono = EMic;
-	BotonMedico = CrearBoton(TEXT("ENVIAR · HABLAR MÉDICO"), Azul, E1);
+	BotonMedico = CrearBoton(TEXT("HABLAR MÉDICO"), Azul, E1);
 	BotonPaciente = CrearBoton(TEXT("RESPONDER PACIENTE"), Ambar, E2);
+	EtiquetaMedico = E1; EtiquetaPaciente = E2;
 	BotonMicrofono->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarMicrofono);
 	BotonMedico->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarMedico);
 	BotonPaciente->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarPaciente);
@@ -205,6 +249,25 @@ void UEMMConsultaUI::Construir()
 	EtiquetaCalidad = ECal;
 	BotonCal->OnClicked.AddDynamic(this, &UEMMConsultaUI::AlPulsarCalidad);
 	if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(BotonCal)) S->SetPadding(FMargin(0, 8, 0, 0));
+	// volúmenes (0 % a 200 %; se guardan): el médico, pacientes y acompañantes, y efectos y ambiente
+	auto Volumen = [&](const TCHAR* Titulo, const TCHAR* Clave, TObjectPtr<UTextBlock>& Etiqueta, TObjectPtr<USlider>& Barra) {
+		UHorizontalBox* F = WidgetTree->ConstructWidget<UHorizontalBox>();
+		Etiqueta = Texto(WidgetTree, TEXT(""), 15.f, FLinearColor::White);
+		Etiqueta->SetToolTipText(FText::FromString(Titulo));
+		Barra = WidgetTree->ConstructWidget<USlider>();
+		Barra->SetMinValue(0.f); Barra->SetMaxValue(2.f); Barra->SetStepSize(0.05f);
+		Barra->SetValue(LeerNumero(Clave, 1.f));
+		Barra->SetSliderBarColor(FLinearColor(0.3f, 0.35f, 0.45f)); Barra->SetSliderHandleColor(Azul);
+		if (UHorizontalBoxSlot* S = F->AddChildToHorizontalBox(Etiqueta)) { FSlateChildSize T(ESlateSizeRule::Fill); T.Value = 1.1f; S->SetSize(T); S->SetVerticalAlignment(VAlign_Center); }
+		if (UHorizontalBoxSlot* S = F->AddChildToHorizontalBox(Barra)) { S->SetSize(FSlateChildSize(ESlateSizeRule::Fill)); S->SetVerticalAlignment(VAlign_Center); }
+		if (UVerticalBoxSlot* S = VAj->AddChildToVerticalBox(F)) S->SetPadding(FMargin(0, 10, 0, 0));
+	};
+	Volumen(TEXT("Volumen del médico"), TEXT("VolumenMedico"), EtiquetaVolMedico, BarraVolMedico);
+	Volumen(TEXT("Volumen de pacientes y acompañantes"), TEXT("VolumenPacientes"), EtiquetaVolPacientes, BarraVolPacientes);
+	Volumen(TEXT("Volumen de efectos y ambiente"), TEXT("VolumenEfectos"), EtiquetaVolEfectos, BarraVolEfectos);
+	BarraVolMedico->OnValueChanged.AddDynamic(this, &UEMMConsultaUI::AlVolumenMedico);
+	BarraVolPacientes->OnValueChanged.AddDynamic(this, &UEMMConsultaUI::AlVolumenPacientes);
+	BarraVolEfectos->OnValueChanged.AddDynamic(this, &UEMMConsultaUI::AlVolumenEfectos);
 	// el médico y los pacientes: nombre, sexo, edad, cara, piel, pelo, peinado, barba, bigote y ojos
 	UTextBlock* ECre = nullptr;
 	UButton* BotonCreador = CrearBoton(TEXT("CREADOR DE PERSONAJES"), FLinearColor(0.32f, 0.16f, 0.45f), ECre, 18.f);
@@ -238,8 +301,17 @@ void UEMMConsultaUI::Construir()
 	if (UCanvasPanelSlot* S = Lienzo->AddChildToCanvas(CajaDescarga)) { S->SetAnchors(FAnchors(0.2f, 0.15f, 0.8f, 0.15f)); S->SetAutoSize(true); }
 }
 
+void UEMMConsultaUI::AlVolumenMedico(float V) { GuardarNumero(TEXT("VolumenMedico"), V); RefrescarAjustes(); }
+void UEMMConsultaUI::AlVolumenPacientes(float V) { GuardarNumero(TEXT("VolumenPacientes"), V); RefrescarAjustes(); }
+void UEMMConsultaUI::AlVolumenEfectos(float V) { GuardarNumero(TEXT("VolumenEfectos"), V); RefrescarAjustes(); }
+
 void UEMMConsultaUI::RefrescarAjustes()
 {
+	auto Pc = [](float V) { return FMath::RoundToInt(V * 100.f); };
+	EtiquetaVolMedico->SetText(FText::FromString(FString::Printf(TEXT("VOZ DEL MÉDICO: %d %%"), Pc(BarraVolMedico->GetValue()))));
+	EtiquetaVolPacientes->SetText(FText::FromString(FString::Printf(TEXT("PACIENTES Y ACOMPAÑANTES: %d %%"), Pc(BarraVolPacientes->GetValue()))));
+	// el juego todavía no tiene sonidos de ambiente ni efectos: el valor se guarda para cuando los tenga
+	EtiquetaVolEfectos->SetText(FText::FromString(FString::Printf(TEXT("EFECTOS Y AMBIENTE: %d %% (aún sin sonidos)"), Pc(BarraVolEfectos->GetValue()))));
 	EtiquetaSubtitulos->SetText(FText::FromString(SubtitulosActivados() ? TEXT("SUBTÍTULOS: ON") : TEXT("SUBTÍTULOS: OFF")));
 	EtiquetaCalidad->SetText(FText::FromString(TEXT("CALIDAD GRÁFICA: ") + NombreCalidad(CalidadGrafica())));
 }
@@ -273,15 +345,16 @@ FReply UEMMConsultaUI::NativeOnPreviewKeyDown(const FGeometry& Geometria, const 
 	if (!Modo.IsValid()) return Super::NativeOnPreviewKeyDown(Geometria, Tecla);
 	const FKey K = Tecla.GetKey();
 	if (K == EKeys::Gamepad_FaceButton_Left) { Modo->Dictar(); return FReply::Handled(); }
-	if (K == EKeys::Gamepad_RightShoulder) { Modo->HablarMedico(TextoEscrito()); return FReply::Handled(); }
-	if (K == EKeys::Gamepad_FaceButton_Top) { Modo->ResponderPaciente(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_RightShoulder) { Modo->PulsarMedico(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_FaceButton_Top) { Modo->PulsarPaciente(); return FReply::Handled(); }
+	if (K == EKeys::Gamepad_LeftTrigger) { Modo->Detener(); return FReply::Handled(); }
 	if (K == EKeys::Gamepad_LeftShoulder) { Modo->AbrirPortatil(); return FReply::Handled(); }
 	if (K == EKeys::Gamepad_Special_Left) { Modo->AbrirAgenda(); return FReply::Handled(); }
 	if (K == EKeys::Gamepad_Special_Right) { AlPulsarAjustes(); return FReply::Handled(); }
 	if (K == EKeys::Gamepad_RightTrigger) { Modo->AbrirRecetas(); return FReply::Handled(); }
 	if (K == EKeys::Gamepad_FaceButton_Right || K == EKeys::Escape) { Modo->CerrarVentanas(); CajaAjustes->SetVisibility(ESlateVisibility::Collapsed); return FReply::Handled(); }
-	// teclado: Ctrl+Intro envía lo escrito
-	if (K == EKeys::Enter && Tecla.IsControlDown()) { Modo->HablarMedico(TextoEscrito()); return FReply::Handled(); }
+	// teclado: Ctrl+Intro hace hablar a quien tiene el turno
+	if (K == EKeys::Enter && Tecla.IsControlDown()) { if (bTurnoPacienteUI) Modo->PulsarPaciente(); else Modo->PulsarMedico(); return FReply::Handled(); }
 	return Super::NativeOnPreviewKeyDown(Geometria, Tecla);
 }
 void UEMMConsultaUI::PonerSubtitulo(const FString& Quien, UEMMHabla* Habla, bool bMedico)
@@ -300,12 +373,32 @@ void UEMMConsultaUI::Aviso(const FString& T, bool bBien)
 	if (UWorld* W = GetWorld())
 		W->GetTimerManager().SetTimer(TemporizadorAviso, FTimerDelegate::CreateWeakLambda(this, [this]() { CajaAviso->SetVisibility(ESlateVisibility::Collapsed); }), 7.f, false);
 }
-void UEMMConsultaUI::PonerBotones(bool bMedico, bool bPaciente)
+void UEMMConsultaUI::PonerControles(bool bMedicoIA, bool bPacienteIA, bool bTurnoPaciente, bool bOcupado, bool bTerminada, bool bAcompanante)
 {
-	BotonMedico->SetIsEnabled(bMedico);
-	BotonPaciente->SetIsEnabled(bPaciente);
-	BotonMicrofono->SetIsEnabled(bMedico);
-	Caja->SetIsEnabled(bMedico);
+	bTurnoPacienteUI = bTurnoPaciente;
+	const bool bLibre = !bTerminada && !bOcupado;
+	// cada uno habla sólo en su turno, al pulsar su botón
+	BotonMedico->SetIsEnabled(bLibre && !bTurnoPaciente);
+	BotonPaciente->SetIsEnabled(bLibre && bTurnoPaciente);
+	EtiquetaMedico->SetText(FText::FromString(bMedicoIA ? TEXT("HABLAR MÉDICO (IA)") : TEXT("HABLAR MÉDICO")));
+	EtiquetaPaciente->SetText(FText::FromString(bPacienteIA ? (bAcompanante ? TEXT("RESPONDER ACOMPAÑANTE (IA)") : TEXT("RESPONDER PACIENTE (IA)"))
+		: (bAcompanante ? TEXT("HABLAR ACOMPAÑANTE") : TEXT("HABLAR PACIENTE"))));
+	// la caja y el micrófono, para quien tenga el turno si lo controla el jugador
+	const bool bEscribe = bLibre && (bTurnoPaciente ? !bPacienteIA : !bMedicoIA);
+	BotonMicrofono->SetIsEnabled(bEscribe);
+	Caja->SetIsEnabled(bEscribe);
+	Caja->SetHintText(FText::FromString(
+		bTerminada ? TEXT("Consulta terminada.")
+		: !bTurnoPaciente ? (bMedicoIA ? TEXT("El médico lo controla la IA: pulsa HABLAR MÉDICO (IA).") : TEXT("Escribe o dicta lo que dice el médico…"))
+		: bPacienteIA ? TEXT("El paciente lo controla la IA: pulsa RESPONDER PACIENTE (IA).")
+		: bAcompanante ? TEXT("Escribe o dicta lo que responde el acompañante…") : TEXT("Escribe o dicta lo que responde el paciente…")));
+	// selectores (se pueden cambiar en cualquier momento; valen desde la siguiente intervención)
+	EtiquetaControlMedico->SetText(FText::FromString(bMedicoIA ? TEXT("MÉDICO: IA") : TEXT("MÉDICO: YO")));
+	EtiquetaControlPaciente->SetText(FText::FromString(bPacienteIA ? TEXT("PACIENTE: IA") : TEXT("PACIENTE: YO")));
+	BotonControlMedico->SetBackgroundColor(bMedicoIA ? FLinearColor(0.32f, 0.16f, 0.45f) : Azul);
+	BotonControlPaciente->SetBackgroundColor(bPacienteIA ? FLinearColor(0.32f, 0.16f, 0.45f) : Ambar);
+	BotonTurno->SetIsEnabled(bLibre);
+	BotonDetener->SetIsEnabled(!bTerminada && bOcupado);
 }
 void UEMMConsultaUI::PonerDescarga(const FString& T, bool bVisible)
 {
@@ -326,8 +419,20 @@ void UEMMConsultaUI::EnfocarPrincipal()
 	else BotonMicrofono->SetKeyboardFocus();
 }
 
-void UEMMConsultaUI::AlPulsarMedico() { if (Modo.IsValid()) Modo->HablarMedico(TextoEscrito()); }
-void UEMMConsultaUI::AlPulsarPaciente() { if (Modo.IsValid()) Modo->ResponderPaciente(); }
+void UEMMConsultaUI::AlPulsarMedico() { if (Modo.IsValid()) Modo->PulsarMedico(); }
+void UEMMConsultaUI::AlPulsarPaciente() { if (Modo.IsValid()) Modo->PulsarPaciente(); }
+void UEMMConsultaUI::AlPulsarControlMedico()
+{
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Selector MÉDICO pulsado (%s)"), FSlateApplication::Get().IsFakingTouchEvents() || FSlateApplication::Get().GetCursorUser().IsValid() ? TEXT("táctil o ratón") : TEXT("teclado o mando"));
+	if (Modo.IsValid()) Modo->CambiarControl(true);
+}
+void UEMMConsultaUI::AlPulsarControlPaciente()
+{
+	UE_LOG(LogTemp, Display, TEXT("[EMM] Selector PACIENTE pulsado (%s)"), FSlateApplication::Get().IsFakingTouchEvents() || FSlateApplication::Get().GetCursorUser().IsValid() ? TEXT("táctil o ratón") : TEXT("teclado o mando"));
+	if (Modo.IsValid()) Modo->CambiarControl(false);
+}
+void UEMMConsultaUI::AlPulsarTurno() { if (Modo.IsValid()) Modo->CambiarTurno(); }
+void UEMMConsultaUI::AlPulsarDetener() { if (Modo.IsValid()) Modo->Detener(); }
 void UEMMConsultaUI::AlPulsarMicrofono() { if (Modo.IsValid()) Modo->Dictar(); }
 void UEMMConsultaUI::AlPulsarDescargar() { if (Modo.IsValid()) Modo->DescargarModelo(); }
 void UEMMConsultaUI::AlPulsarCalidad()

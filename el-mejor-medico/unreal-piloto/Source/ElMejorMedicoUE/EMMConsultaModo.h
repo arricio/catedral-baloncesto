@@ -23,8 +23,18 @@ class ELMEJORMEDICOUE_API AEMMConsultaModo : public AGameModeBase
 public:
 	AEMMConsultaModo();
 
+	// Turnos de la consulta. Cada intervención empieza sólo al pulsar su botón (nunca hablan solos):
+	//  - el médico: con MÉDICO: YO dice exactamente lo escrito o dictado; con MÉDICO: IA, lo que decide la IA
+	//  - el paciente (o su acompañante): con PACIENTE: YO dice exactamente lo escrito o dictado; con IA, responde la IA
 	void HablarMedico(const FString& Texto);
 	void ResponderPaciente();
+	void PulsarMedico();     // botón del médico: según el selector
+	void PulsarPaciente();   // botón del paciente: según el selector
+	void CambiarControl(bool bDelMedico);   // selector YO / IA (se puede cambiar en mitad de la consulta)
+	void CambiarTurno();     // pasa el turno al otro sin que hable nadie
+	void Detener();          // corta al que habla (o la espera de la IA): el turno no avanza solo
+	bool MedicoIA() const { return bMedicoIA; }
+	bool PacienteIA() const { return bPacienteIA; }
 	void DescargarModelo();
 	// micrófono: empieza o para el dictado; el texto va a la caja para revisarlo (el médico no habla solo)
 	void Dictar();
@@ -55,6 +65,7 @@ public:
 	// ── creador de personajes ──
 	struct FEMMCara { FString Nombre, Etiqueta, Sexo; float EdadMin = 0.f, EdadMax = 200.f; bool bNino = false, bMedico = false; };
 	TArray<FEMMCara> Caras() const;                       // los personajes del juego y el médico del nivel («Lorenzo»)
+	static TArray<FString> NombresUniformes();            // colores del uniforme sanitario de los médicos
 	void AbrirCreador();
 	// Indice -1: el médico; si no, la persona de la plantilla. Guarda en el historial y lo pone en la consulta
 	FString AplicarCreador(int32 Indice, const FString& Cara, const FEMMAspecto& A);
@@ -132,6 +143,12 @@ private:
 	bool bTurnoPaciente = false;
 	bool bOcupado = false;
 	bool bTerminada = false;
+	bool bMedicoIA = false;        // MÉDICO: YO (false) / IA (true)
+	bool bPacienteIA = true;       // PACIENTE: YO (false) / IA (true)
+	int32 Epoca = 0;               // DETENER: lo que llegue después de la IA se descarta
+	bool bPensando = false;        // esperando a la IA (del médico o del paciente)
+	void HablarMedicoIA();
+	void VestirPersonajes(const FEMMPaciente& Caso);
 	FTimerHandle TemporizadorDescarga;
 
 	// Prueba automática (-EMMPrueba): fotos, conversación real con la IA y registro en Saved/Prueba.txt

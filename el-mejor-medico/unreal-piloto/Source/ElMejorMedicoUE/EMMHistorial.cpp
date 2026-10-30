@@ -69,6 +69,7 @@ namespace
 		if (!A.Peinado.IsEmpty()) O->SetStringField(TEXT("peinado"), A.Peinado);
 		if (!A.Barba.IsEmpty()) O->SetStringField(TEXT("barba"), A.Barba);
 		if (!A.Bigote.IsEmpty()) O->SetStringField(TEXT("bigote"), A.Bigote);
+		if (A.Uniforme) O->SetNumberField(TEXT("uniforme"), A.Uniforme);
 		return O;
 	}
 	FEMMAspecto AspectoDe(const TSharedPtr<FJsonObject>& O)
@@ -79,6 +80,7 @@ namespace
 		O->TryGetNumberField(TEXT("edad"), A.Edad); O->TryGetNumberField(TEXT("piel"), A.Piel);
 		O->TryGetNumberField(TEXT("pelo"), A.Pelo); O->TryGetNumberField(TEXT("ojos"), A.Ojos);
 		O->TryGetStringField(TEXT("peinado"), A.Peinado); O->TryGetStringField(TEXT("barba"), A.Barba); O->TryGetStringField(TEXT("bigote"), A.Bigote);
+		O->TryGetNumberField(TEXT("uniforme"), A.Uniforme);
 		return A;
 	}
 }
