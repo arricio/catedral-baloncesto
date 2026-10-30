@@ -67,8 +67,7 @@ namespace
 			ListaVoces.Add(Voz);
 		}
 		UE_LOG(LogTemp, Display, TEXT("[EMM] Piper (Android): %d voces, %d modelos"), ListaVoces.Num(), Modelos.Num());
-		return;
-#endif
+#else
 		TWeakInterfacePtr<INNERuntimeCPU> Motor = UE::NNE::GetRuntime<INNERuntimeCPU>(TEXT("NNERuntimeORTCpu"));
 		if (!Motor.IsValid()) { UE_LOG(LogTemp, Warning, TEXT("[EMM] Piper: no hay NNERuntimeORTCpu en esta plataforma")); return; }
 		for (const TSharedPtr<FJsonValue>& V : O->GetArrayField(TEXT("voces")))
@@ -91,6 +90,7 @@ namespace
 			ListaVoces.Add(Voz);
 		}
 		UE_LOG(LogTemp, Display, TEXT("[EMM] Piper: %d voces, %d modelos (NNE)"), ListaVoces.Num(), Modelos.Num());
+#endif
 	}
 
 	// visema (numeración de SAPI, la que entiende UEMMHabla) de cada fonema

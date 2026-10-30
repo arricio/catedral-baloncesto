@@ -1,15 +1,24 @@
 package es.elmejormedico.nativo
 
-// EL MEJOR MÉDICO (Unreal, Android): IA generativa dentro del móvil (LiteRT-LM + Gemma 4 E2B) y voces del sistema.
+// EL MEJOR MÉDICO (Unreal, Android): IA generativa dentro del móvil (LiteRT-LM + Gemma 4 E2B), voces y dictado.
 // Lo llama el C++ del juego por JNI (EMMIA.cpp, EMMVoz.cpp). Mismo modelo y misma descarga que la aplicación
 // Three.js (IALocalPlugin.kt): gemma-4-E2B-it.litertlm, 2 588 147 712 bytes, con comprobación SHA-256.
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.StatFs
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import com.google.ai.edge.litertlm.Backend
@@ -198,6 +207,96 @@ object EMMNativo {
             total
         }
         else -> null
+    }
+
+    // ───────────────────────── Dictado (SpeechRecognizer del móvil, es-ES) ─────────────────────────
+    // El C++ (EMMDictado.cpp) llama a dictadoEmpezar, consulta dictadoEstado cada 200 ms y termina con dictadoParar.
+    // El reconocedor se para solo tras un silencio: se vuelve a lanzar hasta que el jugador pulsa PARAR.
+    private var reco: SpeechRecognizer? = null
+    @Volatile private var dicEscuchando = false
+    @Volatile private var dicParar = false
+    @Volatile private var dicError = ""
+    @Volatile private var dicFijo = ""      // frases ya reconocidas
+    @Volatile private var dicParcial = ""   // la frase que se está diciendo
+    private val principal by lazy { Handler(Looper.getMainLooper()) }
+
+    private fun unir(a: String, b: String) = if (a.isEmpty()) b else if (b.isEmpty()) a else "$a $b"
+
+    @JvmStatic
+    fun dictadoEstado(): String = JSONObject().put("escuchando", dicEscuchando)
+        .put("texto", unir(dicFijo, dicParcial)).put("error", dicError).toString()
+
+    @JvmStatic
+    fun dictadoEmpezar(act: Activity): String {
+        if (dicEscuchando) return "ok"
+        if (!SpeechRecognizer.isRecognitionAvailable(act)) return "error: el móvil no tiene reconocimiento de voz"
+        dicEscuchando = true; dicParar = false; dicError = ""; dicFijo = ""; dicParcial = ""
+        Thread {
+            // la primera vez Android pregunta si se permite el micrófono; se espera la respuesta (hasta 30 s)
+            if (act.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                principal.post { act.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 4711) }
+                val fin = System.currentTimeMillis() + 30000
+                while (act.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    if (dicParar || System.currentTimeMillis() > fin) { dicError = "no hay permiso para usar el micrófono"; dicEscuchando = false; return@Thread }
+                    Thread.sleep(250)
+                }
+            }
+            principal.post { escuchar(act) }
+        }.start()
+        return "ok"
+    }
+
+    @JvmStatic
+    fun dictadoParar() {
+        dicParar = true
+        principal.post { reco?.stopListening() }
+    }
+
+    private fun escuchar(act: Activity) {
+        if (dicParar) { terminarDictado(); return }
+        val r = reco ?: SpeechRecognizer.createSpeechRecognizer(act).also { reco = it }
+        r.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(p: Bundle?) {}
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(v: Float) {}
+            override fun onBufferReceived(b: ByteArray?) {}
+            override fun onEndOfSpeech() {}
+            override fun onEvent(t: Int, p: Bundle?) {}
+            override fun onPartialResults(p: Bundle?) {
+                p?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { dicParcial = it }
+            }
+            override fun onResults(p: Bundle?) {
+                dicFijo = unir(dicFijo, p?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull() ?: dicParcial)
+                dicParcial = ""
+                seguir(act)
+            }
+            override fun onError(codigo: Int) {
+                dicFijo = unir(dicFijo, dicParcial); dicParcial = ""
+                // silencio o nada entendido: se sigue escuchando; lo demás se avisa
+                when (codigo) {
+                    SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> seguir(act)
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> { dicError = "no hay permiso para usar el micrófono"; terminarDictado() }
+                    SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> { dicError = "el reconocimiento de voz necesita Internet o el paquete de español sin conexión"; terminarDictado() }
+                    SpeechRecognizer.ERROR_AUDIO -> { dicError = "no se puede grabar con el micrófono"; terminarDictado() }
+                    else -> if (dicParar) terminarDictado() else { dicError = "el reconocimiento de voz ha fallado ($codigo)"; terminarDictado() }
+                }
+            }
+        })
+        val pedir = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-ES")
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L)
+        }
+        try { r.startListening(pedir) } catch (t: Throwable) { dicError = t.message ?: "no se ha podido iniciar el dictado"; terminarDictado() }
+    }
+
+    private fun seguir(act: Activity) { if (dicParar) terminarDictado() else escuchar(act) }
+
+    private fun terminarDictado() {
+        reco?.destroy(); reco = null
+        dicEscuchando = false
     }
 
     // ───────────────────────── Voces (TextToSpeech a archivo WAV) ─────────────────────────

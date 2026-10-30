@@ -12,6 +12,15 @@
 #include "Windows/HideWindowsPlatformTypes.h"
 #endif
 
+#if PLATFORM_ANDROID
+#include "Android/AndroidApplication.h"
+#include "Android/AndroidJNI.h"
+#include "Android/AndroidJava.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+#endif
+
 namespace
 {
 	std::atomic<bool> GParar{ false };
@@ -90,6 +99,36 @@ bool EMMDictado::Empezar(TFunction<void(const FString&)> AlTexto, TFunction<void
 		if (Audio) Audio->Release();
 		if (Reco) Reco->Release();
 		if (SUCCEEDED(HrInit)) CoUninitialize();
+#elif PLATFORM_ANDROID
+		// reconocedor de voz del móvil (SpeechRecognizer, es-ES) en EMMNativo.kt: se consulta cada 200 ms
+		JNIEnv* Env = FAndroidApplication::GetJavaEnv();
+		jclass C = FAndroidApplication::FindJavaClassGlobalRef("es/elmejormedico/nativo/EMMNativo");
+		jmethodID MEmp = C ? Env->GetStaticMethodID(C, "dictadoEmpezar", "(Landroid/app/Activity;)Ljava/lang/String;") : nullptr;
+		jmethodID MEst = C ? Env->GetStaticMethodID(C, "dictadoEstado", "()Ljava/lang/String;") : nullptr;
+		jmethodID MPar = C ? Env->GetStaticMethodID(C, "dictadoParar", "()V") : nullptr;
+		if (!MEmp || !MEst || !MPar) { if (Env->ExceptionCheck()) Env->ExceptionClear(); Error = TEXT("dictado no disponible"); }
+		else
+		{
+			const FString Inicio = FJavaHelper::FStringFromLocalRef(Env, (jstring)Env->CallStaticObjectMethod(C, MEmp, FJavaWrapper::GameActivityThis));
+			if (Inicio.StartsWith(TEXT("error"))) Error = Inicio.Mid(7);
+			else
+			{
+				const double Fin = FPlatformTime::Seconds() + 60.0;
+				bool bParado = false;
+				FString Visto;
+				while (true)
+				{
+					FPlatformProcess::Sleep(0.2f);
+					if (!bParado && (GParar || FPlatformTime::Seconds() > Fin)) { Env->CallStaticVoidMethod(C, MPar); bParado = true; }
+					TSharedPtr<FJsonObject> O;
+					const FString Json = FJavaHelper::FStringFromLocalRef(Env, (jstring)Env->CallStaticObjectMethod(C, MEst));
+					if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), O) || !O.IsValid()) continue;
+					const FString Texto = O->GetStringField(TEXT("texto"));
+					if (Texto != Visto) { Visto = Texto; AsyncTask(ENamedThreads::GameThread, [AlTexto, Texto]() { AlTexto(Texto); }); }
+					if (!O->GetBoolField(TEXT("escuchando"))) { Dicho = Texto; Error = O->GetStringField(TEXT("error")); break; }
+				}
+			}
+		}
 #else
 		Error = TEXT("dictado no disponible en esta plataforma");
 #endif

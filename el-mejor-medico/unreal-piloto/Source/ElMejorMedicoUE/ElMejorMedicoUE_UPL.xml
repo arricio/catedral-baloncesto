@@ -7,9 +7,13 @@
 	</init>
 
 	<buildGradleAdditions>
+		<!-- la ruta de la biblioteca propia sólo se expande con insertValue (dentro de insert va literal) -->
 		<insert>
 dependencies {
-	implementation files('$S(AbsPluginDir)/Android/emm-nativo.aar')
+		</insert>
+		<insertValue value="	implementation files('$S(AbsPluginDir)/Android/emm-nativo.aar')"/>
+		<insertNewline/>
+		<insert>
 	implementation 'com.google.ai.edge.litertlm:litertlm-android:0.18.1'
 	implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.20.0'
 }
@@ -29,9 +33,12 @@ android {
 		<addElements tag="manifest">
 			<queries>
 				<intent><action android:name="android.intent.action.TTS_SERVICE"/></intent>
+				<intent><action android:name="android.speech.RecognitionService"/></intent>
 			</queries>
 		</addElements>
 		<addPermission android:name="android.permission.INTERNET"/>
+		<!-- dictado con el micrófono (se pide al pulsar MICRÓFONO por primera vez) -->
+		<addPermission android:name="android.permission.RECORD_AUDIO"/>
 	</androidManifestUpdates>
 
 	<proguardAdditions>

@@ -6,7 +6,8 @@
 #   -ProbarPaquete  la prueba automática con el juego empaquetado (lo que recibirá el usuario)
 #   -Android      empaqueta el APK de Android (arm64 para el móvil y x86_64 para el emulador): Binaries/Android y Saved/StagedBuilds/Android
 #   -Calidad N    fuerza la calidad gráfica en la prueba (0 rápida, 1 equilibrada, 2 alta) sin tocar la guardada
-param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1, [switch]$Android)
+#   -SinCocinar   con -Android: sólo recompila el código y reempaqueta (el contenido ya cocinado no ha cambiado)
+param([switch]$Compilar, [string]$Tarea, [switch]$Probar, [switch]$Empaquetar, [switch]$ProbarPaquete, [switch]$Montaje, [switch]$Todos, [int]$Calidad = -1, [switch]$Android, [switch]$SinCocinar)
 $ErrorActionPreference = 'Stop'
 $UE = 'C:\Program Files\Epic Games\UE_5.8\Engine'
 $P = Split-Path $PSScriptRoot
@@ -41,7 +42,7 @@ if ($Android) {
   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"; $env:NDKROOT = "$env:ANDROID_HOME\ndk\27.2.12479018"; $env:NDK_ROOT = $env:NDKROOT
   $env:JAVA_HOME = (Get-ChildItem "$env:LOCALAPPDATA\Programs\jdk21" -Directory | Select-Object -First 1).FullName
   $log = Join-Path $P 'Saved\Empaquetar_Android.log'
-  $p = Start-Process -FilePath "$UE\Build\BatchFiles\RunUAT.bat" -ArgumentList 'BuildCookRun', "-project=`"$Proyecto`"", '-platform=Android', '-cookflavor=ASTC', '-clientconfig=Development', '-build', '-cook', '-stage', '-pak', '-package', '-unattended', '-utf8output', '-nop4' -RedirectStandardOutput $log -RedirectStandardError "$log.err" -WindowStyle Hidden -PassThru
+  $p = Start-Process -FilePath "$UE\Build\BatchFiles\RunUAT.bat" -ArgumentList 'BuildCookRun', "-project=`"$Proyecto`"", '-platform=Android', '-cookflavor=ASTC', '-clientconfig=Development', '-build', '-nocompileeditor', '-ubtargs="-NoUBA -MaxParallelActions=2"', $(if ($SinCocinar) { '-skipcook' } else { '-cook' }), '-stage', '-pak', '-package', '-unattended', '-utf8output', '-nop4' -RedirectStandardOutput $log -RedirectStandardError "$log.err" -WindowStyle Hidden -PassThru
   $p.WaitForExit()
   Get-Content $log | Select-String 'BUILD SUCCESSFUL|BUILD FAILED| Error:|error:|LogCook: Error|ERROR:' | Select-Object -First 25
 }

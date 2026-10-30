@@ -2,16 +2,25 @@
 
 Informe para continuar el desarrollo en una sesión **local** de Claude Code (portátil Lenovo Legion con Windows, con Blender 5.2.2 LTS y Unreal Engine 5.8 conectados por MCP) sin empezar de cero.
 
-Fecha del traspaso: 25 de octubre de 2026 (actualizado el 29 de octubre de 2026).
+Fecha del traspaso: 25 de octubre de 2026 (actualizado el 30 de octubre de 2026).
 
 ---
 
-## ▶ ANDROID (29/10/2026, noche) — EN CURSO
+## ▶ ANDROID (30/10/2026) — PRIMER APK COMPILADO, FALTA PROBARLO EN EL XIAOMI
 
-- **Bloqueo actual (lo resuelve el usuario, gratis)**: a Unreal 5.8 le falta el componente «Android». Error de UAT: «Missing files required to build Android targets. Enable Android as an optional download component in the Epic Games Launcher». Epic Games Launcher › Unreal Engine › Biblioteca › 5.8 › ▾ › Opciones › marcar «Android» › Aplicar. Después: `ciclo.ps1 -Android` (ya configura SDK `%LOCALAPPDATA%\Android\Sdk`, NDK 27.2.12479018 y JDK Temurin 21 de `%LOCALAPPDATA%\Programs\jdk21`; sin `-archive` para ahorrar disco; el APK queda en `Binaries\Android` y `Saved\StagedBuilds\Android`).
+- **APK compilado y cocinado** (componente Android de Unreal 5.8.3 ya instalado por el usuario). Requisitos comprobados y exactos a lo que pide UE 5.8 (`Android_SDK.json`): plataforma android-36, build-tools 36.0.0, CMake 3.22.1, NDK r27c (27.2.12479018), JDK Temurin 21.
+- Resultado en `ElMejorMedicoUE\Binaries\Android`: `ElMejorMedicoUE-arm64.apk` (324 MB, **el del Xiaomi**), `ElMejorMedicoUE-x64.apk` (emulador), `main.1.es.elmejormedico.ue.obb` (2 013 MB: MetaHumans) y `patch.1.es.elmejormedico.ue.obb` (73 MB). Copia: `Copias\Android_primer_APK_2026-10-30`.
+- **Instalar en el móvil** (sin Play Store, por USB con depuración USB; Play Protect sin tocar). El `.bat` de Unreal no arranca desde la sesión de Claude; a mano: `adb install -r ElMejorMedicoUE-arm64.apk`, `adb shell mkdir -p /sdcard/Android/obb/es.elmejormedico.ue` y `adb push` de los dos `.obb` a esa carpeta. Paquete `es.elmejormedico.ue` (convive con la app Three.js).
+- Arreglos para compilar: el plugin «MetaHuman» (Animator, sólo editor/PC) se limita a Win64/Linux/Mac en el `.uproject`; `EMMPiper.cpp` con `#if/#else` (clang daba «código inalcanzable»); en el UPL la ruta del AAR va con `insertValue`; OBB de más de 2 GB → `bAllowPatchOBBFile` + `bAllowOverflowOBBFiles`, datos fuera del APK.
+- `ciclo.ps1 -Android [-SinCocinar]`: usa `-nocompileeditor` (otro editor abierto con Live Coding bloquea compilar el editor) y `-NoUBA -MaxParallelActions=2` (UBA se quedaba sin memoria). `-SinCocinar` sólo recompila y reempaqueta (3 min).
+- **Nuevo para el móvil** (compilado, sin probar en un móvil real):
+  - **Dictado** con `SpeechRecognizer` del propio móvil en es-ES (`EMMNativo.dictadoEmpezar/Estado/Parar`, consultado cada 200 ms desde `EMMDictado.cpp`); se relanza tras cada silencio hasta pulsar PARAR; la primera vez pide el permiso de micrófono (`RECORD_AUDIO` en el UPL). Vale para la conversación y para las recetas.
+  - **Interfaz táctil**: todo son botones UMG (funcionan con el dedo) y el cuadro de texto abre el teclado del móvil; en Android la interfaz se amplía ×1,35 (`ApplicationScale`) para leerla en 6,9".
+  - **Rendimiento**: `Config/DefaultDeviceProfiles.ini` sube la resolución a ~1920 px de ancho (`r.MobileContentScaleFactor=1.5`) en Adreno 8xx (Snapdragon 8 Elite Gen 5 del Xiaomi 17 Ultra); el botón CALIDAD GRÁFICA sigue bajando la resolución interna. Renderizador móvil diferido (por defecto en 5.8; mejor calidad).
+- **Prueba en el emulador (`emm36`)**: instala, arranca, carga el nivel, la consulta y a la paciente Lani con su ropa, y se cierra al crear un sombreador del renderizado diferido («Failed to create graphics pipeline», 4 destinos: color + GBuffer). Es una limitación del traductor gráfico del emulador (OpenGL de la RTX → Vulkan); con SwiftShader no hay Vulkan («No Vulkan driver found»). No se ha bajado la calidad para el emulador. **Siguiente paso: probarlo en el Xiaomi** y leer `adb logcat -s UE` (si fallara igual, probar `r.Mobile.ShadingPath=0` = forward).
+- La memoria del portátil iba justa: quedaron abiertas 2 copias ocultas del juego de Windows de las pruebas del 29/10 (≈3 GB; Claude no tiene permiso para cerrarlas: cerrarlas desde el Administrador de tareas).
 - **Voces Piper en Android (hecho, sin probar en el móvil)**: NNERuntimeORT no existe en Android, así que `EMMPiper.cpp` (bajo `PLATFORM_ANDROID`) pasa el `.onnx` y los ids de fonemas por JNI a `EMMNativo.piper()` (Kotlin, ONNX Runtime de Microsoft 1.20.0, MIT, 3 hilos). Los modelos van tal cual en `ElMejorMedicoUE\VocesOnnx\*.onnx` (294 MB, fuera de Content para que el editor no los importe; fuera de git), añadidos al APK sólo en Android con `RuntimeDependencies` en `ElMejorMedicoUE.Build.cs`. AAR recompilado (`Nativo`, `gradlew :emm-nativo:assembleRelease`) y copiado a `Source/ElMejorMedicoUE/Android/emm-nativo.aar`. Windows comprobado después: 6 voces y 17 personajes bien.
 - Disco: ~18 GB libres; se borró `Saved\StagedBuilds\Windows` (regenerable, duplicado del ejecutable que está en `Empaquetado` y en `Copias`).
-- Pendiente de Android tras instalar el componente: compilar y cocinar (ASTC); revisar renderizador móvil con los MetaHuman (pelo en tarjetas, sin Lumen), interfaz táctil, dictado con `SpeechRecognizer`, rendimiento en el Xiaomi 17 Ultra (conectarlo por USB con depuración USB; nunca desactivar Play Protect).
 - `ciclo.ps1 -Probar` avisa ahora si Smart App Control bloquea la DLL recién compilada del editor (4551) en vez de esperar 45 minutos; solución: cambio real de código y recompilar.
 
 ## ▶ ÚLTIMO PUNTO (29/10/2026, noche, 3.ª parte: RENDIMIENTO)

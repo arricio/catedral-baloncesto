@@ -1,6 +1,7 @@
 ﻿#include "EMMConsultaModo.h"
 #include "RenderTimer.h"
 #include "Engine/RectLight.h"
+#include "Engine/UserInterfaceSettings.h"
 #include "Components/RectLightComponent.h"
 #include "DynamicRHI.h"
 #include "RHIStats.h"
@@ -89,6 +90,10 @@ void AEMMConsultaModo::BeginPlay()
 {
 	Super::BeginPlay();
 	UEMMConsultaUI::AplicarCalidad(UEMMConsultaUI::CalidadGrafica());
+#if PLATFORM_ANDROID
+	// la interfaz está pensada para 1600×900 en un portátil: en el móvil, más grande para leerla y pulsarla con el dedo
+	GetMutableDefault<UUserInterfaceSettings>()->ApplicationScale = 1.35f;
+#endif
 	UE_LOG(LogTemp, Display, TEXT("[EMM] Consulta: empieza la partida (subtítulos %s, día %d del calendario, %d casos)"), UEMMConsultaUI::SubtitulosActivados() ? TEXT("ON") : TEXT("OFF"), FEMMHistorial::Get().Dia, Casos.Num());
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 
