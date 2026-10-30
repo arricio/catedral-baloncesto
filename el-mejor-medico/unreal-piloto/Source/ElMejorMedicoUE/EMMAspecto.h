@@ -1,7 +1,7 @@
 // EL MEJOR MÉDICO (Unreal): aspecto de los personajes que se cambia en el juego (CREADOR DE PERSONAJES).
 // MetaHumans: tono de piel y de ojos (multiplicadores de sus materiales), color del pelo (melanina y rojizo de
-// sus grooms) y peinado, barba y bigote (grooms de otros MetaHumans: todas las caras tienen la misma malla, así
-// que el anclaje de uno vale en otro). Niños y bebés (MPFB): tonos de piel y de pelo con sus materiales propios.
+// sus grooms) y peinado, barba y bigote (en el PC, grooms de otros MetaHumans: todas las caras tienen la misma malla,
+// así que el anclaje de uno vale en otro; en el móvil no se adaptan a otra cara, así que allí sólo el suyo o ninguno). Niños y bebés (MPFB): tonos de piel y de pelo con sus materiales propios.
 // La forma de la cara no se puede esculpir en el juego: MetaHuman Creator sólo existe en el editor de Unreal.
 #pragma once
 

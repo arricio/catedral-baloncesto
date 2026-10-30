@@ -67,6 +67,10 @@ namespace
 	TArray<EMMAspecto::FGroom> Buscar(std::initializer_list<const TCHAR*> Prefijos)
 	{
 		TArray<EMMAspecto::FGroom> R;
+#if PLATFORM_ANDROID || PLATFORM_IOS
+		// en móvil el anclaje no adapta el groom de otro personaje a esta cara (comprobado en el Xiaomi: el pelo
+		// flota donde estaba la cabeza original): sólo el suyo o ninguno. Lo elegido en el PC se ignora aquí.
+#else
 		IAssetRegistry& AR = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
 		TArray<FAssetData> Grooms;
 		AR.GetAssetsByClass(UGroomAsset::StaticClass()->GetClassPathName(), Grooms);
@@ -83,6 +87,7 @@ namespace
 			Vistos.Add(G.AssetName);
 			R.Add({ Legible(N), G.GetSoftObjectPath().ToString(), Anclaje + TEXT(".") + N + TEXT("_Binding") });
 		}
+#endif
 		return R;
 	}
 

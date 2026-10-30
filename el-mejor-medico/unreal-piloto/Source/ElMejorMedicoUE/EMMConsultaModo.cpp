@@ -329,7 +329,14 @@ void AEMMConsultaModo::PrepararMetaHuman(AActor* Yo, AActor* Otro, bool bPacient
 #if PLATFORM_ANDROID || PLATFORM_IOS
 	// en móvil el cuerpo y la cara no tienen LOD0 (MinLOD de Mobile = 1), pero la ropa se elegía para el cuerpo de LOD0
 	// y el cuerpo la atravesaba por hombros y pecho: todo el MetaHuman (cuerpo, ropa, cara y pelo) desde el LOD1
-	if (ULODSyncComponent* Sync = Yo->FindComponentByClass<ULODSyncComponent>()) { Sync->MinLOD = 1; Sync->UpdateLOD(); }
+	// (el pelo, las cejas, la barba y el bigote siguen con sus tiras del LOD0 de la consulta, no con el «casco»)
+	if (ULODSyncComponent* Sync = Yo->FindComponentByClass<ULODSyncComponent>())
+	{
+		Sync->MinLOD = 1;
+		for (TPair<FName, FLODMappingData>& Par : Sync->CustomLODMapping)
+			if (!Par.Key.ToString().StartsWith(TEXT("SkeletalMesh")) && Par.Value.Mapping.Num() > 1) Par.Value.Mapping[1] = Par.Value.Mapping[0];
+		Sync->RefreshSyncComponents();
+	}
 #endif
 	TArray<USkeletalMeshComponent*> Mallas;
 	Yo->GetComponents(Mallas);

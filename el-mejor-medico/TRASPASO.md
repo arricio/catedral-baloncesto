@@ -6,7 +6,15 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 30 de octubre de 2026)
 
 ---
 
-## ▶ ROPA, NIÑOS Y CREADOR DE PERSONAJES (30/10/2026, tarde) — PROBADO EN WINDOWS; EN EL XIAOMI INSTALADO, FALTA VERLO
+## ▶ ROPA, NIÑOS Y CREADOR — COMPROBADO EN EL XIAOMI 17 ULTRA (30/10/2026, 16:10)
+
+- `Herramientas/probar_movil.ps1 -Modo '<parámetros>' -Nombre <x>`: prueba automática en el móvil por adb (necesita pantalla desbloqueada y el juego delante; el Xiaomi se bloquea solo si se deja mucho rato); resultado en `Saved/Prueba_Xiaomi_<x>.txt` y fotos en `Saved/Capturas_Xiaomi_<x>`.
+- **Ropa**: sin agujeros en médico, pacientes y acompañantes. Al poner `MinLOD = 1` el pelo pasaba a su «casco» (LOD5, muy tosco): ahora el mapa del `LODSyncComponent` deja pelo, cejas, barba y bigote en sus tiras del LOD0 de la consulta (mapa[1] = mapa[0], `RefreshSyncComponents`). Comprobado en fotos.
+- **Niños**: los 6 en el móvil con su acompañante (bebé en el regazo, niños en la silla); 56 fps de media, mediana 60.
+- **Creador en el móvil**: nombre, sexo, edad, cara, piel, pelo, ojos y «rapado/afeitado/sin bigote» bien. **El peinado, la barba o el bigote de OTRO MetaHuman NO funcionan en el móvil** (el groom se dibuja donde estaba la cabeza original y flota; ni las tiras ni un desplazamiento lo corrigen): en Android `EMMAspecto` sólo ofrece «el suyo» o «sin». En Windows el intercambio sí encaja.
+- APK instalado con `install -r`; IA Gemma (2 588 147 712 bytes) e historial intactos.
+
+## ▶ ROPA, NIÑOS Y CREADOR DE PERSONAJES (30/10/2026, tarde) — PROBADO EN WINDOWS
 
 - **Ropa rota en Android (todos los personajes)**: no era el asset. En móvil el cuerpo y la cara de los MetaHumans no tienen LOD0 (`min_lod` de Mobile = 1, comprobado con `Herramientas/sondear_lod.py`), pero el `LODSyncComponent` elegía la ropa para el cuerpo de LOD0 (mapa de la ropa 1,2,3) y el cuerpo la atravesaba por hombros y pecho. Arreglo en `PrepararMetaHuman` (sólo `PLATFORM_ANDROID || PLATFORM_IOS`): `LODSync->MinLOD = 1`. Windows no cambia (allí nunca pasó).
 - **Niños y bebés**: los 28 casos infantiles (6 de <1 año, 6 de 1–2, 16 de 3–12) existían pero se descartaban (`bHablaAcomp || bBebe` y sin personaje de su edad). Ahora:
