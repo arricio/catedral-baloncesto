@@ -212,15 +212,34 @@ object EMMNativo {
     // ───────────────────────── Dictado (SpeechRecognizer del móvil, es-ES) ─────────────────────────
     // El C++ (EMMDictado.cpp) llama a dictadoEmpezar, consulta dictadoEstado cada 200 ms y termina con dictadoParar.
     // El reconocedor se para solo tras un silencio: se vuelve a lanzar hasta que el jugador pulsa PARAR.
+    // Para que nada se escriba dos veces: cada escucha tiene su número (se ignoran los avisos atrasados de otra),
+    // se cierra una sola vez (resultado o error, el primero que llegue) y al unir frases se quita lo repetido.
     private var reco: SpeechRecognizer? = null
     @Volatile private var dicEscuchando = false
     @Volatile private var dicParar = false
     @Volatile private var dicError = ""
     @Volatile private var dicFijo = ""      // frases ya reconocidas
     @Volatile private var dicParcial = ""   // la frase que se está diciendo
+    private var dicSesion = 0               // número de la escucha en curso (sólo en el hilo principal)
     private val principal by lazy { Handler(Looper.getMainLooper()) }
 
-    private fun unir(a: String, b: String) = if (a.isEmpty()) b else if (b.isEmpty()) a else "$a $b"
+    private fun palabras(s: String) = s.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+    private fun clave(p: String) = p.lowercase(Locale.ROOT).trim { !it.isLetterOrDigit() }
+
+    // Une lo ya escrito con lo nuevo sin repetir: si lo nuevo ya está al final de lo anterior, no se añade;
+    // si empieza por el final de lo anterior (o por todo, en reconocedores que lo reenvían acumulado),
+    // ese trozo no se repite. Se compara sin mayúsculas ni signos.
+    internal fun unir(a: String, b: String): String {
+        val pa = palabras(a); val pb = palabras(b)
+        if (pa.isEmpty()) return pb.joinToString(" ")
+        if (pb.isEmpty()) return pa.joinToString(" ")
+        val ka = pa.map(::clave); val kb = pb.map(::clave)
+        if (ka.size >= kb.size && ka.subList(ka.size - kb.size, ka.size) == kb) return pa.joinToString(" ")
+        for (n in minOf(ka.size, kb.size) downTo 1) {
+            if (ka.subList(ka.size - n, ka.size) == kb.subList(0, n)) return (pa + pb.drop(n)).joinToString(" ")
+        }
+        return (pa + pb).joinToString(" ")
+    }
 
     @JvmStatic
     fun dictadoEstado(): String = JSONObject().put("escuchando", dicEscuchando)
@@ -255,6 +274,10 @@ object EMMNativo {
     private fun escuchar(act: Activity) {
         if (dicParar) { terminarDictado(); return }
         val r = reco ?: SpeechRecognizer.createSpeechRecognizer(act).also { reco = it }
+        val sesion = ++dicSesion
+        var cerrada = false
+        // un aviso cuenta sólo si es de esta escucha y ésta no ha terminado todavía
+        fun valido() = sesion == dicSesion && !cerrada
         r.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(p: Bundle?) {}
             override fun onBeginningOfSpeech() {}
@@ -263,14 +286,21 @@ object EMMNativo {
             override fun onEndOfSpeech() {}
             override fun onEvent(t: Int, p: Bundle?) {}
             override fun onPartialResults(p: Bundle?) {
+                if (!valido()) return
                 p?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { dicParcial = it }
             }
             override fun onResults(p: Bundle?) {
-                dicFijo = unir(dicFijo, p?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull() ?: dicParcial)
+                if (!valido()) return
+                cerrada = true
+                val final = p?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
+                dicFijo = unir(dicFijo, if (final.isNullOrBlank()) dicParcial else final)
                 dicParcial = ""
                 seguir(act)
             }
             override fun onError(codigo: Int) {
+                if (!valido()) return
+                cerrada = true
+                // lo que se estaba diciendo, si no llegó el resultado definitivo
                 dicFijo = unir(dicFijo, dicParcial); dicParcial = ""
                 // silencio o nada entendido: se sigue escuchando; lo demás se avisa
                 when (codigo) {
@@ -295,6 +325,7 @@ object EMMNativo {
     private fun seguir(act: Activity) { if (dicParar) terminarDictado() else escuchar(act) }
 
     private fun terminarDictado() {
+        dicSesion++   // cualquier aviso que llegue después ya no cuenta
         reco?.destroy(); reco = null
         dicEscuchando = false
     }

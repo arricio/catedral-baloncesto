@@ -17,4 +17,6 @@ dependencies {
     compileOnly 'com.google.ai.edge.litertlm:litertlm-android:0.18.1'
     // voces neuronales Piper (ONNX Runtime de Microsoft, licencia MIT); Unreal la añade también en su Gradle
     compileOnly 'com.microsoft.onnxruntime:onnxruntime-android:1.20.0'
+    // pruebas del dictado en el ordenador (gradlew :emm-nativo:testReleaseUnitTest)
+    testImplementation 'junit:junit:4.13.2'
 }

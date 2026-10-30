@@ -6,7 +6,14 @@ Fecha del traspaso: 25 de octubre de 2026 (actualizado el 30 de octubre de 2026)
 
 ---
 
-## ▶ ANDROID (30/10/2026) — FUNCIONA EN EL XIAOMI 17 ULTRA (falta medir fps)
+## ▶ ANDROID (30/10/2026, mediodía) — DICTADO SIN REPETICIONES; LISTO PARA INSTALAR Y MEDIR FPS
+
+- **Fallo del usuario**: al dictar, palabras o frases salían 2 o más veces (y el médico las repetía). Causas en `EMMNativo.kt`: tras `onResults` podía llegar también `onError` y volvía a añadir el texto parcial; al relanzar el reconocedor tras un silencio, avisos atrasados de la escucha anterior se sumaban a la nueva; y el reconocedor puede reenviar lo ya dicho. Arreglo: cada escucha lleva número (`dicSesion`) y se cierra una sola vez; `unir()` quita el solapamiento (sin mayúsculas ni signos). Pruebas unitarias `Nativo/emm-nativo/src/test/.../DictadoTest.kt` (`gradlew :emm-nativo:testReleaseUnitTest`): 7/7 bien. Falta probarlo hablando en el móvil.
+- **APK nuevo** en `Binaries\Android` (dictado + sin joysticks + TAA), verificado por dentro. Unreal no rehace el APK si sólo cambia el AAR: borrar los `.apk` antes de `ciclo.ps1 -Android -SinCocinar`.
+- **Datos del móvil a salvo**: la IA está en la memoria interna de la app (`files/modelos/gemma-4-E2B-it.litertlm`, 2 588 147 712 bytes) y la partida en `/sdcard/Android/data/es.elmejormedico.ue/files/.../Saved` (historial.json). Ambas se conservan con `adb install -r` (actualizar, NUNCA desinstalar ni el `.bat` de Unreal, que desinstala). Firma del APK nuevo = instalado (SHA-256 del certificado 9be652a1…27d3). Copia en el portátil: `Copias\Xiaomi_datos_2026-10-30` (IA con SHA-256 comprobado y `Saved`). Para restaurar la IA: `adb push` a `/data/local/tmp` y `run-as es.elmejormedico.ue cp` a `files/modelos/`.
+- Actualizar los OBB (cambió la configuración) sólo reemplaza esos dos archivos; no toca la partida ni la IA.
+
+## ▶ ANDROID (30/10/2026) — FUNCIONA EN EL XIAOMI 17 ULTRA
 
 - **Probado en el Xiaomi 17 Ultra real** (Android 17, SM8850 / Adreno 840, 16 GB, adb `1ecc5f83`): instala, arranca con el perfil `Android_Adreno8xx_Vulkan`, renderizado diferido móvil correcto, 17 personajes, 120 casos, 6 voces Piper cargadas, médico y paciente (Etta) MetaHuman con ropa, portátil e interfaz táctil a buen tamaño. Memoria del juego ≈ 2,4 GB.
 - Xiaomi: para instalar por USB hay que activar «Instalar vía USB» en Opciones de desarrollador y pulsar «Instalar» en el móvil en cada instalación. No deja inyectar toques ni teclas por adb (INJECT_EVENTS).
