@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>¡Manos a la obra! · Reformas Chapucilla</title>
+<meta name="description" content="Juego 3D de humor: dos chapuzas de barrio, una clienta con poca paciencia y una jornada llena de grifos, enchufes y desatascadores.">
+<meta name="theme-color" content="#f2a33a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f2a33a'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle'%3E%F0%9F%94%A8%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --naranja:#f2a33a; --naranja-osc:#c4701b; --azul:#1f4e8c; --crema:#fff6e4;
+    --tinta:#2a1e12; --verde:#3fae5a; --rojo:#d8382c; --amarillo:#ffd23f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#1b1410;color:var(--tinta);
+    font-family:'Nunito',system-ui,sans-serif;-webkit-user-select:none;user-select:none;touch-action:none}
+  canvas{display:block}
+  .oculto{display:none!important}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .panel{background:rgba(255,246,228,.94);border:3px solid var(--tinta);border-radius:14px;
+    box-shadow:4px 4px 0 var(--tinta);padding:8px 12px}
+  #hud-izq{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;display:flex;flex-direction:column;gap:8px;width:210px}
+  #reloj{font-family:'Bangers',cursive;font-size:30px;letter-spacing:1px;line-height:1}
+  #reloj small{font-family:'Nunito';font-size:12px;font-weight:800;display:block;letter-spacing:0;opacity:.7}
+  #dinero{font-family:'Bangers';font-size:26px;color:#1d7a35}
+  #dinero.negativo{color:var(--rojo)}
+  .barra{height:14px;border:2px solid var(--tinta);border-radius:8px;background:#e8dcc4;overflow:hidden}
+  .barra > i{display:block;height:100%;background:var(--verde);transition:width .3s,background .3s}
+  #paciencia-txt{font-size:12px;font-weight:900;margin-bottom:3px;display:flex;justify-content:space-between}
+  #herramienta{font-size:13px;font-weight:800}
+  #hud-der{position:absolute;top:max(10px,env(safe-area-inset-top));right:10px;width:250px;display:flex;flex-direction:column;gap:6px}
+  #hud-der h3{margin:0 0 2px;font-family:'Bangers';font-size:22px;letter-spacing:1px;color:#fff;text-shadow:2px 2px 0 var(--tinta)}
+  .encargo{display:flex;gap:8px;align-items:center;padding:6px 9px;font-size:13px;font-weight:800;line-height:1.15}
+  .encargo .ico{font-size:24px}
+  .encargo .info{flex:1;min-width:0}
+  .encargo .sub{font-weight:600;font-size:11px;opacity:.75}
+  .encargo .t{font-family:'Bangers';font-size:20px}
+  .encargo.urgente{animation:temblor .25s infinite;background:#ffd9cf}
+  .encargo.ramon{background:#e4ecff}
+  @keyframes temblor{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+
+  #pista{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);
+    font-weight:900;font-size:16px;padding:8px 16px;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+  #pista kbd{display:inline-block;background:var(--tinta);color:#fff;border-radius:5px;padding:0 6px;margin:0 2px;font-family:inherit}
+
+  #rotulo{position:absolute;left:50%;top:32%;transform:translate(-50%,-50%) rotate(-6deg);font-family:'Bangers';
+    font-size:clamp(46px,11vw,110px);color:var(--amarillo);-webkit-text-stroke:3px var(--tinta);
+    text-shadow:6px 6px 0 var(--tinta);white-space:nowrap;opacity:0;pointer-events:none}
+  #rotulo.ver{animation:sello 1.6s ease-out forwards}
+  #rotulo.malo{color:var(--rojo)}
+  #rotulo.bueno{color:#7fe08f}
+  @keyframes sello{0%{opacity:0;transform:translate(-50%,-50%) rotate(-6deg) scale(2.6)}
+    12%{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(1)}
+    80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) rotate(-6deg) scale(1)}}
+
+  #toasts{position:absolute;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;width:min(440px,52vw)}
+  .toast{font-weight:900;font-size:14px;padding:6px 12px;animation:toast 3.2s forwards;text-align:center}
+  .toast.mas{background:#dff5e3}.toast.menos{background:#ffdcd6}
+  @keyframes toast{0%{opacity:0;transform:translateY(-10px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+
+  /* Bocadillos de diálogo */
+  #bocadillos{position:fixed;inset:0;pointer-events:none;z-index:4}
+  .globo{position:absolute;transform:translate(-50%,-100%);background:#fff;border:3px solid var(--tinta);border-radius:16px;
+    padding:6px 11px;font-weight:800;font-size:14px;max-width:230px;text-align:center;line-height:1.2;
+    box-shadow:3px 3px 0 rgba(0,0,0,.35)}
+  .globo::after{content:'';position:absolute;left:50%;bottom:-12px;margin-left:-8px;border:8px solid transparent;border-top-color:var(--tinta)}
+  .globo b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;opacity:.65}
+  .globo.paco b{color:var(--azul)} .globo.ramon b{color:var(--naranja-osc)} .globo.remedios b{color:#a0307a} .globo.michi b{color:#666}
+
+  /* Minijuego */
+  #mini{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);width:min(520px,92vw);z-index:6;text-align:center}
+  #mini h4{margin:0 0 6px;font-family:'Bangers';font-size:26px;letter-spacing:1px}
+  #mini-barra{position:relative;height:38px;border:3px solid var(--tinta);border-radius:12px;background:repeating-linear-gradient(45deg,#f6d7d2,#f6d7d2 10px,#efc9c3 10px,#efc9c3 20px);overflow:hidden}
+  #mini-verde{position:absolute;top:0;bottom:0;background:#8fdc9c}
+  #mini-oro{position:absolute;top:0;bottom:0;background:#ffd23f}
+  #mini-aguja{position:absolute;top:-4px;bottom:-4px;width:6px;margin-left:-3px;background:var(--tinta);border-radius:3px}
+  #mini p{margin:6px 0 0;font-weight:800;font-size:13px}
+
+  /* Pantallas */
+  .pantalla{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:16px;
+    background:radial-gradient(circle at 50% 30%,rgba(242,163,58,.92),rgba(110,48,12,.96));overflow:auto}
+  .tarjeta{background:var(--crema);border:4px solid var(--tinta);border-radius:20px;box-shadow:8px 8px 0 var(--tinta);
+    padding:22px 24px;max-width:620px;width:100%;max-height:100%;overflow:auto}
+  .titulo{font-family:'Bangers',cursive;font-size:clamp(46px,10vw,84px);line-height:.9;margin:0;color:var(--naranja);
+    -webkit-text-stroke:2.5px var(--tinta);text-shadow:5px 5px 0 var(--tinta);transform:rotate(-3deg);text-align:center}
+  .subtitulo{text-align:center;font-weight:900;font-size:16px;margin:14px 0 4px}
+  .lema{text-align:center;font-style:italic;margin:0 0 14px;opacity:.8}
+  .reparto{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:12px 0}
+  .reparto div{background:#fff;border:2px solid var(--tinta);border-radius:12px;padding:8px 10px;font-size:13px;line-height:1.25}
+  .reparto strong{display:block;font-size:15px}
+  .controles{font-size:13px;line-height:1.5;background:#fff;border:2px dashed var(--tinta);border-radius:12px;padding:8px 12px}
+  .controles kbd{background:var(--tinta);color:#fff;border-radius:4px;padding:0 5px}
+  .boton{pointer-events:auto;display:block;margin:16px auto 0;font-family:'Bangers';font-size:30px;letter-spacing:1px;
+    background:var(--verde);color:#fff;border:4px solid var(--tinta);border-radius:16px;padding:8px 30px;cursor:pointer;
+    box-shadow:5px 5px 0 var(--tinta);text-shadow:2px 2px 0 var(--tinta)}
+  .boton:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--tinta)}
+  .nota{font-size:11px;opacity:.65;text-align:center;margin-top:12px}
+
+  /* Factura */
+  .factura{font-family:'Courier New',monospace;background:#fffdf6;border:2px solid var(--tinta);padding:14px 16px;font-size:14px;
+    background-image:repeating-linear-gradient(#fffdf6,#fffdf6 23px,#e6eefc 24px)}
+  .factura h2{font-family:'Bangers';font-size:30px;margin:0;text-align:center;letter-spacing:1px}
+  .factura .cab{text-align:center;font-size:12px;margin-bottom:8px}
+  .factura table{width:100%;border-collapse:collapse}
+  .factura td{padding:2px 0;vertical-align:top}
+  .factura td:last-child{text-align:right;white-space:nowrap;padding-left:10px}
+  .factura tr.total td{border-top:2px dashed var(--tinta);font-weight:900;font-size:18px;padding-top:6px}
+  .factura .neg{color:var(--rojo)}
+  .factura .pie{font-size:12px;margin-top:8px;font-style:italic}
+  .valoracion{margin-top:12px;text-align:center;font-weight:900}
+  .valoracion .estrellas{font-size:32px;letter-spacing:4px}
+  .valoracion q{display:block;font-style:italic;font-weight:700;margin-top:4px}
+  .sello-fuera{font-family:'Bangers';font-size:clamp(40px,9vw,72px);color:var(--rojo);-webkit-text-stroke:2px var(--tinta);
+    text-align:center;transform:rotate(-4deg);margin:0 0 6px}
+
+  /* Pausa / botones superiores */
+  #botones{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:10px;z-index:7;display:flex;gap:6px}
+  #botones button{pointer-events:auto;width:42px;height:42px;font-size:20px;border:3px solid var(--tinta);border-radius:12px;
+    background:var(--crema);box-shadow:3px 3px 0 var(--tinta);cursor:pointer}
+
+  /* Controles táctiles */
+  #tactil{position:fixed;inset:0;z-index:6;pointer-events:none}
+  #joy{position:absolute;left:24px;bottom:80px;width:130px;height:130px;border-radius:50%;background:rgba(255,246,228,.25);
+    border:3px solid rgba(42,30,18,.5);pointer-events:auto;touch-action:none}
+  #joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,246,228,.85);border:3px solid var(--tinta)}
+  #btn-accion{position:absolute;right:26px;bottom:90px;width:96px;height:96px;border-radius:50%;pointer-events:auto;touch-action:none;
+    font-family:'Bangers';font-size:24px;background:var(--naranja);border:4px solid var(--tinta);box-shadow:4px 4px 0 var(--tinta);color:var(--tinta)}
+  #btn-accion:active{transform:translate(2px,2px)}
+
+  @media (max-width:760px){
+    #hud-izq{width:150px;gap:5px} #hud-izq .panel{padding:5px 8px;border-radius:10px;box-shadow:3px 3px 0 var(--tinta)}
+    #reloj{font-size:22px} #reloj small{display:none} #dinero{font-size:18px}
+    #paciencia-txt{font-size:10px} #herramienta{font-size:11px}
+    #hud-der{width:180px} .encargo{font-size:11px;padding:4px 6px} .encargo .ico{font-size:18px} .encargo .t{font-size:16px}
+    .encargo .sub{display:none} #hud-der h3{font-size:18px}
+    #pista{font-size:13px;bottom:200px} #mini{bottom:210px}
+    .globo{font-size:12px;max-width:170px}
+    #toasts{width:60vw;top:auto;bottom:250px}
+  }
+</style>
+<script type="importmap">{"imports":{"three":"./lib/three.module.min.js"}}</script>
+</head>
+<body>
+
+<div id="bocadillos"></div>
+
+<div id="hud" class="oculto">
+  <div id="hud-izq">
+    <div class="panel">
+      <div id="reloj">09:00<small>Jornada en casa de Doña Remedios</small></div>
+      <div id="dinero">0 €</div>
+    </div>
+    <div class="panel">
+      <div id="paciencia-txt"><span>Paciencia de la clienta</span><span id="cara">😊</span></div>
+      <div class="barra"><i id="paciencia" style="width:100%"></i></div>
+    </div>
+    <div class="panel" id="herramienta">🧰 Manos vacías</div>
+  </div>
+  <div id="hud-der"><h3>📋 Encargos</h3><div id="lista-encargos"></div></div>
+  <div id="toasts"></div>
+  <div id="pista" class="panel oculto"></div>
+  <div id="rotulo"></div>
+</div>
+
+<div id="mini" class="panel oculto">
+  <h4 id="mini-titulo">¡Dale!</h4>
+  <div id="mini-barra"><div id="mini-verde"></div><div id="mini-oro"></div><div id="mini-aguja"></div></div>
+  <p>Pulsa <b>E</b> / <b>Espacio</b> (o el botón) cuando la aguja esté en lo verde. ¡En lo amarillo es trabajo fino!</p>
+</div>
+
+<div id="botones" class="oculto">
+  <button id="btn-pausa" title="Pausa (P)">⏸️</button>
+  <button id="btn-sonido" title="Sonido (M)">🔊</button>
+</div>
+
+<div id="tactil" class="oculto">
+  <div id="joy"><i></i></div>
+  <button id="btn-accion">¡DALE!</button>
+</div>
+
+<!-- Portada -->
+<div id="portada" class="pantalla">
+  <div class="tarjeta">
+    <h1 class="titulo">¡Manos a<br>la obra!</h1>
+    <p class="subtitulo">REFORMAS CHAPUCILLA S.L. · «Lo arreglamos todo… más o menos»</p>
+    <p class="lema">Un homenaje en 3D a las telecomedias de chapuzas de los 90</p>
+    <div class="reparto">
+      <div><strong>🔧 Paco Chapucilla</strong>Tú. El jefe. Mono azul, gorra y una fe ciega en la cinta americana.</div>
+      <div><strong>🥖 Ramón Tarugo</strong>Tu socio. Experto en almuerzos, siestas y en echarle la culpa «al de antes».</div>
+      <div><strong>👵 Doña Remedios</strong>La clienta. Bata de flores, rulos y una paciencia que se acaba.</div>
+      <div><strong>🐈 Michi</strong>El gato de la casa. Siempre en medio. Siempre.</div>
+    </div>
+    <div class="controles">
+      <b>Cómo se juega:</b> llegan encargos al piso. Coge la herramienta correcta de la mesa junto a la furgoneta,
+      ve hasta el sitio y para la aguja en lo verde. Si fallas… <b>¡CHAPUZA!</b><br>
+      <kbd>WASD</kbd>/<kbd>flechas</kbd> moverse · <kbd>Shift</kbd> correr · <kbd>E</kbd>/<kbd>Espacio</kbd> acción ·
+      <kbd>P</kbd> pausa · <kbd>M</kbd> sonido. En el móvil: joystick y botón «¡DALE!».<br>
+      Truco: acércate a Ramón y pulsa acción para ponerle a trabajar (bajo tu propia responsabilidad).
+    </div>
+    <button class="boton" id="btn-empezar">¡A currar!</button>
+    <p class="nota">Personajes y situaciones originales. Juego de fans sin relación oficial con ninguna serie.</p>
+  </div>
+</div>
+
+<!-- Pausa -->
+<div id="pausa" class="pantalla oculto">
+  <div class="tarjeta" style="text-align:center">
+    <h1 class="titulo" style="font-size:60px">Pausa para<br>el bocata</h1>
+    <p class="lema" style="margin-top:16px">«Diez minutillos, que esto no se va a ir a ningún sitio» — Ramón</p>
+    <button class="boton" id="btn-seguir">Seguir currando</button>
+  </div>
+</div>
+
+<!-- Final -->
+<div id="final" class="pantalla oculto">
+  <div class="tarjeta" id="final-contenido"></div>
+</div>
+
+<script type="module" src="./juego.js"></script>
+</body>
+</html>
