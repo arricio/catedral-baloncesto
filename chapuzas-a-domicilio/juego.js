@@ -1,4 +1,4 @@
-// ¡Manos a la obra! · Reformas Chapucilla S.L.
+// CHAPUZAS A DOMICILIO · Reformas Chapucilla S.L.
 // Juego 3D de humor (three.js). Personajes y situaciones originales.
 import * as THREE from 'three';
 
@@ -1131,7 +1131,7 @@ function empezar() {
   Sonido.timbre();
   luego(0.6, () => decir(remedios, '¡Por fin! Les llamé el martes... ¡del mes pasado!', 3.5));
   luego(4.2, () => decir(ramon, 'Es que había un atasco en la circunvalación, señora.', 3.2));
-  luego(7.6, () => decir(paco, '¡Venga, Ramón! ¡MANOS A LA OBRA!', 2.8));
+  luego(7.6, () => decir(paco, '¡Venga, Ramón! ¡CHAPUZAS A DOMICILIO, AL ATAQUE!', 2.8));
 }
 
 /* =========================================================================
@@ -1382,7 +1382,7 @@ function textoPista(o) {
     case 'encargo': {
       const d = ENCARGOS[o.t];
       if (!paco.herr) return `Necesitas ${H[d.herr].icono} ${H[d.herr].corto} · está en la mesa de la furgoneta`;
-      if (paco.herr === d.herr) return `<kbd>E</kbd> ¡Manos a la obra! ${d.icono} ${d.nombre}`;
+      if (paco.herr === d.herr) return `<kbd>E</kbd> ¡A arreglarlo! ${d.icono} ${d.nombre}`;
       return `<kbd>E</kbd> Intentarlo con ${H[paco.herr].icono} ${H[paco.herr].corto.toLowerCase()}… (mala idea)`;
     }
     case 'ramon': return `<kbd>E</kbd> «¡Ramón, a trabajar!»`;
