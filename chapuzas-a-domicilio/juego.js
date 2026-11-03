@@ -390,10 +390,7 @@ caja(0.04, 0.5, 0.04, 0x888888, 1.1, 1.3, -0.53);
 addCol(0.2, 1.2, -1.35, -0.53);
 // Imanes de nevera
 caja(0.15, 0.15, 0.02, 0xd8382c, 0.5, 1.5, -0.54); caja(0.12, 0.18, 0.02, 0x2f5fa8, 0.8, 1.2, -0.54);
-caja(1.6, 0.08, 1.0, 0xc79a5b, 5, 0.8, 3.3);
-for (const [dx, dz] of [[-0.7, -0.4], [0.7, -0.4], [-0.7, 0.4], [0.7, 0.4]]) caja(0.08, 0.8, 0.08, 0x8a5a3a, 5 + dx, 0.4, 3.3 + dz);
-addCol(4.2, 5.8, 2.8, 3.8);
-const frutero = esfera(0.14, 0xff9f1a, 5.1, 0.95, 3.3); esfera(0.12, 0xd8382c, 4.85, 0.93, 3.2);
+addCol(4.2, 5.8, 2.8, 3.8); // la mesa de la cocina se construye más abajo (es un encargo)
 // Baño: bañera, lavabo, espejo
 caja(2.6, 0.6, 0.8, 0xfafafa, 2.3, 0.3, -7.5);
 caja(2.3, 0.05, 0.55, 0x8fc3d9, 2.3, 0.58, -7.5, scene, false);
@@ -439,14 +436,14 @@ furgoneta(-7.5, 7.8);
 // Cubo donde se sienta Ramón a almorzar
 cilindro(0.25, 0.2, 0.45, 0x8f8f8f, -4.0, 0.22, 9.6);
 // Mesa de herramientas
-caja(4.8, 0.08, 0.9, 0x9b6a3c, 2.9, 0.85, 8.0);
-for (const [dx, dz] of [[-2.3, -0.38], [2.3, -0.38], [-2.3, 0.38], [2.3, 0.38]]) caja(0.08, 0.85, 0.08, 0x6b4321, 2.9 + dx, 0.42, 8.0 + dz);
-addCol(0.5, 5.3, 7.55, 8.45);
+caja(9.2, 0.08, 0.9, 0x9b6a3c, 5.1, 0.85, 8.0);
+for (const dx of [-4.5, 0, 4.5]) for (const dz of [-0.38, 0.38]) caja(0.08, 0.85, 0.08, 0x6b4321, 5.1 + dx, 0.42, 8.0 + dz);
+addCol(0.5, 9.7, 7.55, 8.45);
 const cartelHerr = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.55), new THREE.MeshLambertMaterial({
   map: texCartel([['🧰 HERRAMIENTAS 🧰', 60, 64]], '#ffd23f', '#2a1e12', 512, 110, '#2a1e12'),
 }));
-cartelHerr.position.set(2.9, 2.25, 8.45); scene.add(cartelHerr);
-caja(0.06, 1.5, 0.06, 0x6b4321, 1.7, 1.6, 8.43); caja(0.06, 1.5, 0.06, 0x6b4321, 4.1, 1.6, 8.43);
+cartelHerr.position.set(5.1, 2.25, 8.45); scene.add(cartelHerr);
+caja(0.06, 1.5, 0.06, 0x6b4321, 3.9, 1.6, 8.43); caja(0.06, 1.5, 0.06, 0x6b4321, 6.3, 1.6, 8.43);
 
 // Decorado: farolas, árboles, edificios al fondo
 function farola(x, z) { cilindro(0.07, 0.09, 3.6, 0x333333, x, 1.8, z); esfera(0.22, 0xfff3b0, x, 3.7, z); }
@@ -501,9 +498,11 @@ function crearPersonaje(o) {
   esfera(0.07, o.nariz || 0xe8a682, 0, -0.03, 0.28, cabeza, 8);
   caja(0.12, 0.025, 0.02, 0x7a2b22, 0, -0.13, 0.25, cabeza, false);
   if (o.bigote) caja(0.26, 0.06, 0.06, 0x2a1a10, 0, -0.08, 0.27, cabeza, false);
+  let gorra = null;
   if (o.gorra) {
-    const gc = cilindro(0.28, 0.28, 0.16, o.gorra, 0, 0.18, 0, cabeza, 14);
-    caja(0.32, 0.03, 0.22, o.gorra, 0, 0.12, 0.3, cabeza);
+    gorra = new THREE.Group(); cabeza.add(gorra);
+    cilindro(0.28, 0.28, 0.16, o.gorra, 0, 0.18, 0, gorra, 14);
+    caja(0.32, 0.03, 0.22, o.gorra, 0, 0.12, 0.3, gorra);
   }
   if (o.calvo) {
     caja(0.06, 0.16, 0.2, 0x3a2a1c, -0.27, 0.07, -0.05, cabeza); caja(0.06, 0.16, 0.2, 0x3a2a1c, 0.27, 0.07, -0.05, cabeza);
@@ -536,7 +535,41 @@ function crearPersonaje(o) {
   if (o.escala) g.scale.setScalar(o.escala);
   scene.add(g);
   g.traverse(m => { if (m.isMesh) m.castShadow = true; });
-  return { g, cuerpo, piernas, brazos, mano, cabeza, matCuerpo, colorCuerpo, pelosPunta, fase: 0 };
+  return { g, cuerpo, piernas, brazos, mano, cabeza, matCuerpo, colorCuerpo, pelosPunta, gorra, sombreros: {}, fase: 0 };
+}
+
+// Cada oficio tiene su sombrero: el chapuzas se lo pone al coger la herramienta
+function crearSombrero(oficio) {
+  const g = new THREE.Group();
+  const cupula = (color) => { const c = new THREE.Mesh(new THREE.SphereGeometry(0.31, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(color)); c.position.y = 0.05; g.add(c); return c; };
+  switch (oficio) {
+    case 'fontaneria': // gorra azul de fontanero
+      cilindro(0.28, 0.28, 0.16, 0x2f7fd8, 0, 0.18, 0, g, 14); caja(0.32, 0.03, 0.22, 0x2f7fd8, 0, 0.12, 0.3, g); break;
+    case 'electricidad': // casco blanco con linterna
+      cupula(0xf4f4f4); cilindro(0.33, 0.33, 0.03, 0xf4f4f4, 0, 0.06, 0, g, 16);
+      cilindro(0.06, 0.06, 0.08, 0xffd23f, 0, 0.2, 0.28, g, 8).rotation.x = Math.PI / 2; break;
+    case 'pintura': { // gorro de papel de periódico
+      const c = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.4, 4), mat(0xeeeeea)); c.position.y = 0.33; c.rotation.y = Math.PI / 4; c.scale.set(1.2, 1, 0.5); g.add(c);
+      caja(0.3, 0.06, 0.02, 0x555555, 0, 0.3, 0.11, g, false); break; }
+    case 'carpinteria': { // boina
+      const b = esfera(0.31, 0x2a2a2a, 0, 0.17, -0.02, g, 14); b.scale.set(1.05, 0.35, 1.05);
+      esfera(0.035, 0x2a2a2a, 0, 0.29, 0, g, 6); break; }
+    case 'albanileria': // casco amarillo de obra
+      cupula(0xffc21a); cilindro(0.37, 0.37, 0.03, 0xffc21a, 0, 0.06, 0, g, 16); caja(0.04, 0.05, 0.3, 0xe0a800, 0, 0.34, 0, g); break;
+    case 'jardineria': // sombrero de paja
+      cilindro(0.52, 0.52, 0.03, 0xe2c46a, 0, 0.12, 0, g, 18); cilindro(0.24, 0.28, 0.22, 0xe2c46a, 0, 0.23, 0, g, 14);
+      cilindro(0.285, 0.285, 0.05, 0xc0392b, 0, 0.15, 0, g, 14); break;
+  }
+  g.traverse(m => { if (m.isMesh) m.castShadow = true; });
+  return g;
+}
+function ponerSombrero(c, oficio) {
+  for (const k in c.sombreros) c.sombreros[k].visible = false;
+  if (oficio) {
+    if (!c.sombreros[oficio]) { c.sombreros[oficio] = crearSombrero(oficio); c.cabeza.add(c.sombreros[oficio]); }
+    c.sombreros[oficio].visible = true;
+  }
+  if (c.gorra) c.gorra.visible = !oficio;
 }
 
 function animarAndar(c, dt, vel, trabajando = false) {
@@ -581,15 +614,35 @@ function crearGato() {
 /* =========================================================================
    Herramientas
    ========================================================================= */
-const HERRAMIENTAS = {
-  llave: { nombre: 'la llave inglesa', corto: 'Llave inglesa', icono: '🔧' },
-  destornillador: { nombre: 'el destornillador', corto: 'Destornillador', icono: '🪛' },
-  brocha: { nombre: 'la brocha', corto: 'Brocha y pintura', icono: '🖌️' },
-  martillo: { nombre: 'el martillo', corto: 'Martillo', icono: '🔨' },
-  bombilla: { nombre: 'la bombilla nueva', corto: 'Bombilla nueva', icono: '💡' },
-  desatascador: { nombre: 'el desatascador', corto: 'Desatascador', icono: '🪠' },
+const OFICIOS = {
+  fontaneria: { nombre: 'Fontanería', persona: 'fontanero', icono: '🚿', color: '#2f7fd8' },
+  electricidad: { nombre: 'Electricidad', persona: 'electricista', icono: '⚡', color: '#e0a800' },
+  pintura: { nombre: 'Pintura', persona: 'pintor', icono: '🎨', color: '#d8509a' },
+  carpinteria: { nombre: 'Carpintería', persona: 'carpintero', icono: '🪚', color: '#9b6a3c' },
+  albanileria: { nombre: 'Albañilería', persona: 'albañil', icono: '🧱', color: '#c4541b' },
+  jardineria: { nombre: 'Jardinería', persona: 'jardinero', icono: '🌿', color: '#3f9a3f' },
 };
-const ORDEN_HERR = ['llave', 'destornillador', 'brocha', 'martillo', 'bombilla', 'desatascador'];
+const FRASE_OFICIO = {
+  fontaneria: ['Fontanero titulado. Por correspondencia.', 'Hoy soy fontanero. Que tiemblen las tuberías.'],
+  electricidad: ['Electricista. Si no da calambre, no cuenta.', 'Casco puesto. Lo de los cables ya lo veremos.'],
+  pintura: ['Pintor de brocha gorda. Muy gorda.', '¡Gorro de periódico! Ya soy un artista.'],
+  carpinteria: ['Carpintero: mido una vez y corto tres.', 'Boina puesta. Ya soy carpintero de toda la vida.'],
+  albanileria: ['Albañil. ¡Masa, que se seca!', 'Casco de obra. Ahora sí que impongo.'],
+  jardineria: ['Jardinero. Las plantas me tienen miedo.', 'Sombrero de paja. Ya sólo me falta el botijo.'],
+};
+const HERRAMIENTAS = {
+  llave: { nombre: 'la llave inglesa', corto: 'Llave inglesa', icono: '🔧', oficio: 'fontaneria' },
+  desatascador: { nombre: 'el desatascador', corto: 'Desatascador', icono: '🪠', oficio: 'fontaneria' },
+  destornillador: { nombre: 'el destornillador', corto: 'Destornillador', icono: '🪛', oficio: 'electricidad' },
+  bombilla: { nombre: 'la bombilla nueva', corto: 'Bombilla nueva', icono: '💡', oficio: 'electricidad' },
+  brocha: { nombre: 'la brocha', corto: 'Brocha y pintura', icono: '🖌️', oficio: 'pintura' },
+  rodillo: { nombre: 'el rodillo', corto: 'Rodillo', icono: '🧻', oficio: 'pintura' },
+  martillo: { nombre: 'el martillo', corto: 'Martillo', icono: '🔨', oficio: 'carpinteria' },
+  serrucho: { nombre: 'el serrucho', corto: 'Serrucho', icono: '🪚', oficio: 'carpinteria' },
+  paleta: { nombre: 'la paleta y el cemento', corto: 'Paleta y cemento', icono: '🧱', oficio: 'albanileria' },
+  tijeras: { nombre: 'las tijeras de podar', corto: 'Tijeras de podar', icono: '✂️', oficio: 'jardineria' },
+};
+const ORDEN_HERR = ['llave', 'desatascador', 'destornillador', 'bombilla', 'brocha', 'rodillo', 'martillo', 'serrucho', 'paleta', 'tijeras'];
 
 function crearHerramienta(id) {
   const g = new THREE.Group();
@@ -620,13 +673,32 @@ function crearHerramienta(id) {
       cilindro(0.022, 0.022, 0.42, madera, 0, 0.27, 0, g, 6);
       { const v = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(0xc0262b)); v.rotation.x = Math.PI; v.position.y = 0.08; g.add(v); }
       break;
+    case 'rodillo':
+      cilindro(0.02, 0.02, 0.3, madera, 0, 0.15, 0, g, 6);
+      caja(0.025, 0.025, 0.14, gris, 0, 0.31, 0.06, g);
+      { const r = cilindro(0.055, 0.055, 0.22, 0x7ec8e3, 0, 0.31, 0.14, g, 10); r.rotation.z = Math.PI / 2; }
+      break;
+    case 'serrucho':
+      caja(0.05, 0.12, 0.07, 0xc0392b, 0, 0.06, 0, g);
+      caja(0.012, 0.42, 0.13, gris, 0, 0.33, 0.02, g);
+      break;
+    case 'paleta':
+      cilindro(0.025, 0.03, 0.14, madera, 0, 0.07, 0, g, 6);
+      caja(0.015, 0.06, 0.015, gris, 0, 0.17, 0, g);
+      { const h = caja(0.012, 0.16, 0.16, gris, 0, 0.27, 0, g); h.rotation.x = Math.PI / 4; }
+      esfera(0.05, 0x9a9a9a, 0.02, 0.3, 0, g, 6);
+      break;
+    case 'tijeras':
+      { const a = caja(0.02, 0.3, 0.04, gris, -0.02, 0.32, 0, g); a.rotation.z = 0.15; const b = caja(0.02, 0.3, 0.04, gris, 0.02, 0.32, 0, g); b.rotation.z = -0.15; }
+      { const a = caja(0.03, 0.2, 0.04, 0xc0392b, -0.05, 0.09, 0, g); a.rotation.z = -0.2; const b = caja(0.03, 0.2, 0.04, 0xc0392b, 0.05, 0.09, 0, g); b.rotation.z = 0.2; }
+      break;
   }
   g.traverse(m => { if (m.isMesh) m.castShadow = true; });
   return g;
 }
 // Herramientas en la mesa
 const ranuras = ORDEN_HERR.map((id, i) => {
-  const x = 0.9 + i * 0.8, z = 8.0;
+  const x = 0.95 + i * 0.92, z = 8.0;
   const m = crearHerramienta(id);
   m.rotation.z = Math.PI / 2; m.rotation.y = 0.3;
   m.scale.setScalar(1.7);
@@ -634,6 +706,15 @@ const ranuras = ORDEN_HERR.map((id, i) => {
   scene.add(m);
   return { id, x, z: 7.15, malla: m, base: m.position.clone() };
 });
+// Letreros de cada oficio en el canto de la mesa
+for (const [k, o] of Object.entries(OFICIOS)) {
+  const rs = ranuras.filter(r => HERRAMIENTAS[r.id].oficio === k);
+  const x0 = rs[0].x, x1 = rs[rs.length - 1].x, ancho = x1 - x0 + 0.84;
+  const l = new THREE.Mesh(new THREE.PlaneGeometry(ancho, 0.26), new THREE.MeshLambertMaterial({
+    map: texCartel([[`${o.icono} ${o.nombre.toUpperCase()}`, 46, 34]], o.color, '#ffffff', Math.round(ancho * 300), 70),
+  }));
+  l.position.set((x0 + x1) / 2 + 0.15, 0.68, 8.47); scene.add(l);
+}
 
 /* =========================================================================
    Partículas
@@ -705,13 +786,19 @@ function limpiarPeligros() { peligros.forEach(p => p.m.removeFromParent()); peli
    Encargos (los «trabajos») y sus objetos en el piso
    ========================================================================= */
 const ENCARGOS = {
-  grifo: { nombre: 'Grifo que gotea', herr: 'llave', sitio: 'Cocina', icono: '🚰', pie: [8.5, 0.05] },
-  enchufe: { nombre: 'Enchufe que echa chispas', herr: 'destornillador', sitio: 'Cocina', icono: '🔌', pie: [10.1, 3.0] },
-  pared: { nombre: 'Pintar la pared del salón', herr: 'brocha', sitio: 'Salón', icono: '🎨', pie: [-10.05, 1.5] },
-  cuadro: { nombre: 'Colgar el cuadro de la abuela', herr: 'martillo', sitio: 'Dormitorio', icono: '🖼️', pie: [-7, -7.05] },
-  bombilla: { nombre: 'Cambiar la bombilla', herr: 'bombilla', sitio: 'Salón', icono: '💡', pie: [-6.3, 3.45] },
-  vater: { nombre: 'Váter atascado', herr: 'desatascador', sitio: 'Baño', icono: '🚽', pie: [9.6, -6.35] },
+  grifo: { nombre: 'Grifo que gotea', herr: 'llave', sitio: 'Cocina', icono: '🚰', pie: [8.5, 0.05], mira: [8.5, -1.2] },
+  vater: { nombre: 'Váter atascado', herr: 'desatascador', sitio: 'Baño', icono: '🚽', pie: [9.6, -6.35], mira: [9.6, -7.45] },
+  enchufe: { nombre: 'Enchufe que echa chispas', herr: 'destornillador', sitio: 'Cocina', icono: '🔌', pie: [10.1, 3.0], mira: [10.9, 3] },
+  bombilla: { nombre: 'Cambiar la bombilla', herr: 'bombilla', sitio: 'Salón', icono: '💡', pie: [-6.3, 3.45], mira: [-6.3, 4.3] },
+  pared: { nombre: 'Pintar la pared del salón', herr: 'brocha', sitio: 'Salón', icono: '🎨', pie: [-10.05, 1.5], mira: [-10.9, 1.5] },
+  fachada: { nombre: 'Pintar la fachada', herr: 'rodillo', sitio: 'Calle', icono: '🏠', pie: [6.0, 5.85], mira: [6.0, 5.0] },
+  cuadro: { nombre: 'Colgar el cuadro de la abuela', herr: 'martillo', sitio: 'Dormitorio', icono: '🖼️', pie: [-7, -7.05], mira: [-7, -7.9] },
+  mesa: { nombre: 'Arreglar la mesa coja', herr: 'serrucho', sitio: 'Cocina', icono: '🪑', pie: [5, 2.3], mira: [5, 3.3] },
+  agujero: { nombre: 'Tapar el agujero de la pared', herr: 'paleta', sitio: 'Salón', icono: '🕳️', pie: [-0.95, -0.3], mira: [0, -0.3] },
+  azulejos: { nombre: 'Poner los azulejos del baño', herr: 'paleta', sitio: 'Baño', icono: '🚿', pie: [10.1, -4.35], mira: [11, -4.35] },
+  seto: { nombre: 'Podar el seto', herr: 'tijeras', sitio: 'Calle', icono: '🌳', pie: [8.6, 9.2], mira: [8.6, 10.1] },
 };
+for (const d of Object.values(ENCARGOS)) d.oficio = HERRAMIENTAS[d.herr].oficio;
 const TIPOS = Object.keys(ENCARGOS);
 const DESPERFECTOS = {
   grifo: 'Géiser decorativo en la cocina',
@@ -720,6 +807,25 @@ const DESPERFECTOS = {
   cuadro: 'Cuadro de la abuela en el suelo (otra vez)',
   bombilla: 'Bombilla reventada y salón a oscuras',
   vater: 'Inundación aromática del baño',
+  fachada: 'Fachada estilo «discoteca de verano»',
+  mesa: 'Mesa de cocina convertida en mesa para enanitos',
+  agujero: 'Agujero el doble de grande + pegote de cemento',
+  azulejos: 'Azulejos colocados «a lo loco»',
+  seto: 'Seto podado hasta dejarlo calvo',
+};
+// Lo que dice Doña Remedios cuando ve cada chapuza
+const QUEJAS = {
+  grifo: '¡Que me han hecho una fuente en la cocina! ¡Como la de Cibeles!',
+  vater: '¡Ay, qué peste! ¡Abran las ventanas, por Dios!',
+  enchufe: '¡Se ha ido la luz en todo el edificio! ¡La del cuarto me va a matar!',
+  bombilla: '¡Ahora no veo ni mis zapatillas!',
+  pared: '¡Yo pedí melocotón, no «chillón de verbena»!',
+  fachada: '¡Mi fachada! ¡Parece una discoteca de Benidorm!',
+  cuadro: '¡La abuela otra vez al suelo! ¡Que la pobre ya tiene una edad!',
+  mesa: '¡Mi mesa! ¡Ahora es una mesa para enanitos!',
+  agujero: '¡El agujero es más grande! ¡Ahora veo la cocina desde el sofá!',
+  azulejos: '¡Los azulejos están torcidos! ¡Parece el baño de un barco!',
+  seto: '¡Mi seto! ¡Lo han dejado como la cabeza de Arricio!',
 };
 
 // --- Grifo ---
@@ -795,6 +901,45 @@ const tapa = caja(0.52, 0.04, 0.5, 0xf2f2f2, 0, 0.55, 0.12, vater);
 const rollo = cilindro(0.08, 0.08, 0.1, 0xffffff, 0.55, 0.65, 0.2, vater, 10); rollo.rotation.z = Math.PI / 2;
 addCol(9.25, 9.95, -7.9, -7.05);
 
+// --- Fachada (por fuera de la pared de la entrada) ---
+const muroFachada = new THREE.Mesh(new THREE.PlaneGeometry(5, 1.2), new THREE.MeshLambertMaterial({ color: COL_PARED }));
+muroFachada.position.set(6, 0.8, 5.106); muroFachada.receiveShadow = true; scene.add(muroFachada);
+const texFachadaSucia = texLienzo(400, 96, (g, w, h) => {
+  g.fillStyle = '#d6c9aa'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 30; i++) { g.fillStyle = `rgba(90,80,60,${rand(0.15, 0.4)})`; g.beginPath(); g.ellipse(rand(0, w), rand(0, h), rand(6, 30), rand(4, 14), 0, 0, 7); g.fill(); }
+  g.save(); g.translate(w / 2, h / 2 + 8); g.rotate(-0.06);
+  g.font = '900 30px Nunito, Arial'; g.textAlign = 'center'; g.fillStyle = '#3b5bdb'; g.fillText('AQUÍ ESTUVO EL NIETO', 0, 0); g.restore();
+});
+// --- Mesa coja de la cocina ---
+const mesaCocina = new THREE.Group(); mesaCocina.position.set(5, 0, 3.3); scene.add(mesaCocina);
+const tablero = new THREE.Group(); mesaCocina.add(tablero);
+caja(1.6, 0.08, 1.0, 0xc79a5b, 0, 0, 0, tablero);
+esfera(0.14, 0xff9f1a, 0.1, 0.15, 0, tablero); esfera(0.12, 0xd8382c, -0.15, 0.13, -0.1, tablero);
+const patasMesa = [[-0.7, -0.4], [0.7, -0.4], [-0.7, 0.4], [0.7, 0.4]].map(([dx, dz]) => caja(0.08, 1, 0.08, 0x8a5a3a, dx, 0.5, dz, mesaCocina));
+function alturaPatas(h, coja = false) {
+  patasMesa.forEach((p, i) => { const hh = coja && i === 3 ? h * 0.72 : h; p.scale.y = hh; p.position.y = hh / 2; });
+  tablero.position.y = h + 0.04; tablero.rotation.set(0, 0, 0);
+}
+// --- Agujero en la pared del salón ---
+const agujero = new THREE.Mesh(new THREE.CircleGeometry(0.28, 16), new THREE.MeshBasicMaterial({ color: 0x1a1410 }));
+agujero.rotation.y = -Math.PI / 2; agujero.position.set(-0.106, 0.8, -0.3); scene.add(agujero);
+const pegote = new THREE.Group(); pegote.position.set(-0.15, 0, -0.3); scene.add(pegote);
+{ const a = esfera(0.35, 0x9a9a9a, 0, 0.75, 0, pegote, 8); a.scale.set(0.5, 1, 1.2); esfera(0.2, 0x8a8a8a, -0.1, 0.25, 0.2, pegote, 8); caja(0.3, 0.25, 0.3, 0x9a9a9a, -0.15, 0.12, -0.25, pegote); }
+// --- Azulejos del baño ---
+const azulejos = [];
+for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) {
+  const color = (i + j) % 2 ? 0xffffff : 0x8fc3d9;
+  const m = caja(0.03, 0.32, 0.32, color, 10.87, 0.5 + j * 0.34, -4.86 + i * 0.34, scene, false);
+  azulejos.push({ m, color, casa: m.position.clone() });
+}
+// --- Seto de la calle ---
+const seto = new THREE.Group(); seto.position.set(8.6, 0, 10.1); scene.add(seto);
+const setoBase = caja(2.8, 0.9, 0.7, 0x3f8f3f, 0, 0.45, 0, seto);
+const setoPelos = new THREE.Group(); seto.add(setoPelos);
+for (let i = 0; i < 16; i++) esfera(rand(0.15, 0.3), pick([0x4fa04f, 0x3a8a3a, 0x5fb05f]), rand(-1.4, 1.4), rand(0.75, 1.3), rand(-0.35, 0.4), setoPelos, 8);
+const setoPino = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.3, 7), mat(0x3f8f3f)); setoPino.position.set(0.9, 0.85, 0); setoPino.castShadow = true; seto.add(setoPino);
+addCol(7.2, 10.0, 9.75, 10.45);
+
 // Estado visual de cada sitio: 'ok' | 'roto' | 'chapuza'
 const Visual = {
   estado: {}, t: {},
@@ -821,6 +966,33 @@ const Visual = {
       case 'vater':
         aguaVater.material = mat(est === 'ok' ? 0x8fc3d9 : est === 'chapuza' ? 0x6b7a2a : 0x8a7a4a);
         tapa.rotation.x = 0; tapa.position.set(0, 0.55, 0.12);
+        break;
+      case 'fachada':
+        if (est === 'roto') { muroFachada.material.map = texFachadaSucia; muroFachada.material.color.set(0xffffff); }
+        else if (est === 'chapuza') { muroFachada.material.map = texChillona(); muroFachada.material.color.set(0xffffff); }
+        else { muroFachada.material.map = null; muroFachada.material.color.set(this._fachadaPintada ? pick(COLORES_BONITOS) : COL_PARED); }
+        muroFachada.material.needsUpdate = true;
+        break;
+      case 'mesa':
+        alturaPatas(est === 'chapuza' ? 0.22 : 0.8, est === 'roto');
+        break;
+      case 'agujero':
+        agujero.visible = est !== 'ok'; agujero.scale.setScalar(est === 'chapuza' ? 2.2 : 1);
+        pegote.visible = est === 'chapuza';
+        break;
+      case 'azulejos':
+        azulejos.forEach((a, i) => {
+          a.m.position.copy(a.casa); a.m.rotation.set(0, 0, 0); a.m.material = mat(a.color);
+          if (est === 'roto' && i % 2 === 1) { // la mitad, al suelo
+            a.m.position.set(10.35 + rand(-0.3, 0.2), 0.03, a.casa.z + rand(-0.4, 0.4));
+            a.m.rotation.set(0, rand(0, 3), Math.PI / 2);
+          }
+          if (est === 'chapuza') { a.m.rotation.x = rand(-0.7, 0.7); a.m.position.y += rand(-0.08, 0.08); a.m.material = mat(pick([0xff8fb1, 0xfff08f, 0x9be38f, 0xffffff, 0xd8382c])); }
+        });
+        break;
+      case 'seto':
+        setoPelos.visible = est === 'roto'; setoPino.visible = est === 'chapuza';
+        setoBase.scale.y = est === 'chapuza' ? 0.22 : 1; setoBase.position.y = est === 'chapuza' ? 0.1 : 0.45;
         break;
     }
   },
@@ -850,6 +1022,11 @@ const Visual = {
       }
       if (tipo === 'vater' && est === 'chapuza' && t < 4 && Math.random() < dt * 6)
         emitir(9.6, 0.8, -7.3, 2, { color: [0x9acd32, 0x7bb026, 0xb8e05a], vel: 0.6, sube: 1.4, gravedad: -0.4, tam: 0.16, vida: 2, crece: 2.5 });
+      if (tipo === 'mesa' && est === 'roto') { tablero.rotation.z = -0.07 + Math.sin(t * 7) * 0.03; tablero.rotation.x = Math.sin(t * 5) * 0.02; }
+      if (tipo === 'seto' && est === 'roto' && Math.random() < dt * 1.5)
+        emitir(8.6 + rand(-1.3, 1.3), 1.2, 10.0, 1, { color: 0x4fa04f, vel: 0.3, sube: 0.2, gravedad: 1.5, tam: 0.05, vida: 1.4, cubo: true, gira: 4 });
+      if (tipo === 'agujero' && est === 'roto' && Math.random() < dt * 1.2)
+        emitir(-0.15, 0.75, -0.3, 1, { color: 0xcfc6b5, vel: 0.2, sube: 0.2, gravedad: 2, tam: 0.03, vida: 0.8, vx: -0.4 });
       if (tipo === 'cuadro' && est === 'chapuza' && this.caida > 0) {
         this.caida += dt;
         if (this.caida > 1.6) {
@@ -926,41 +1103,47 @@ const PUNTOS_PASEO = [[-5, 2.5], [-3, 0.5], [-8, 2], [3, 1], [6, 0.8], [8, 3.5],
    ========================================================================= */
 const FRASES = {
   remediosNuevo: {
-    grifo: ['¡Paco! ¡El grifo de la cocina gotea! ¡Plic, plic, plic, toda la noche!', '¡Que el grifo hace plic-plic! ¡Me va a volver loca!', '¡El grifo! ¡Que me sale más agua por fuera que por dentro!'],
-    enchufe: ['¡El enchufe de la cocina echa chispas! ¡Y he enchufado la tostadora!', 'Paco, el enchufe hace «bzzzz». ¿Eso es normal?', '¡El enchufe huele a chamusquina! ¡Como la paella de mi cuñada!'],
+    grifo: ['¡{J}! ¡El grifo de la cocina gotea! ¡Plic, plic, plic, toda la noche!', '¡Que el grifo hace plic-plic! ¡Me va a volver loca!', '¡El grifo! ¡Que me sale más agua por fuera que por dentro!'],
+    vater: ['¡El váter! ¡EL VÁTER! ¡No pregunten y vengan!', '{J}, el váter hace «glu-glu». Y no debería hacer «glu-glu».', '¡El váter se ha atascado! ¡Y tengo visita a las cinco!'],
+    enchufe: ['¡El enchufe de la cocina echa chispas! ¡Y he enchufado la tostadora!', '{J}, el enchufe hace «bzzzz». ¿Eso es normal?', '¡El enchufe huele a chamusquina! ¡Como la paella de mi cuñada!'],
+    bombilla: ['¡Se ha fundido la bombilla del salón! ¡No veo ni la tele!', '¡La lámpara! ¡Que hace como en las películas de miedo!', '¡{J}, la bombilla! ¡Que me como el mueble a oscuras!'],
     pared: ['¡Quiero la pared del salón en color «melocotón del Mediterráneo»!', '¡Esa pared está más desconchada que el portal de mi hermana!', '¡Píntenme la pared, que viene la del tercero a cotillear!'],
+    fachada: ['¡La fachada está hecha un asco! ¡Los vecinos me miran raro!', '¡Mi nieto ha pintado la fachada con rotulador! ¡Píntenla, por Dios!', '¡{J}, la fachada! ¡Que parece la de una casa abandonada!'],
     cuadro: ['¡Se ha caído el cuadro de la abuela! ¡Cuélguenlo, que me mira mal desde el suelo!', '¡El cuadro de mi madre! ¡En el suelo! ¡Qué disgusto!', '¡Cuelguen el cuadro, que viene mi hermana el domingo!'],
-    bombilla: ['¡Se ha fundido la bombilla del salón! ¡No veo ni la tele!', '¡La lámpara! ¡Que hace como en las películas de miedo!', '¡Paco, la bombilla! ¡Que me como el mueble a oscuras!'],
-    vater: ['¡El váter! ¡EL VÁTER! ¡No pregunten y vengan!', 'Paco, el váter hace «glu-glu». Y no debería hacer «glu-glu».', '¡El váter se ha atascado! ¡Y tengo visita a las cinco!'],
+    mesa: ['¡La mesa de la cocina cojea! ¡Se me derrama el café con leche!', '¡La mesa baila más que yo en las fiestas del pueblo!', '¡{J}, la mesa cojea! ¡Le he puesto un sobre de azúcar y nada!'],
+    agujero: ['¡Hay un agujero en la pared del salón! ¡Y creo que sale un ratón!', '¡Un agujero! ¡Se me escapa la calefacción por ahí!', '¡{J}, un agujero en la pared! ¡Y yo no he sido!'],
+    azulejos: ['¡Se han caído los azulejos del baño! ¡Casi me abro la cabeza!', '¡Los azulejos están en el suelo y no en la pared!', '¡Mi baño! ¡Parece un puzle sin terminar!'],
+    seto: ['¡El seto de la entrada parece una selva! ¡Pódenlo!', '¡Ese seto está más greñudo que mi sobrino!', '¡{J}, el seto! ¡Que ya no veo la calle!'],
   },
-  remediosFino: ['¡Anda! Si hasta ha quedado bien.', '¡Qué manos tiene usted, Paco! Ni mi difunto, que en paz descanse.', 'Bueno... no está mal. Pero no se lo digan a nadie.', '¡Esto lo cuento en la peluquería!'],
+  remediosFino: ['¡Anda! Si hasta ha quedado bien.', '¡Qué manos tiene usted, {J}! Ni mi difunto, que en paz descanse.', 'Bueno... no está mal. Pero no se lo digan a nadie.', '¡Esto lo cuento en la peluquería!'],
   remediosBien: ['Pse. Pasable.', 'Ha quedado... apañao.', 'Bueno, mientras funcione...', 'Yo lo habría hecho mejor, pero vale.'],
-  remediosChapuza: ['¡¿PERO QUÉ HA HECHO?!', '¡Esto lo pago yo de mi pensión!', '¡Ay, mi casa! ¡Ay, mi casita!', '¡Llamo a los de consumo! ¡Ahora mismo llamo!', '¡Mi hermana tenía razón con ustedes!', '¡Esto no lo arregla ni el Papa!'],
+  remediosChapuza: ['¡¿PERO QUÉ HAN HECHO?!', '¡Esto lo pago yo de mi pensión!', '¡Ay, mi casa! ¡Ay, mi casita!', '¡Llamo a los de consumo! ¡Ahora mismo llamo!', '¡Mi hermana tenía razón con ustedes!', '¡Esto no lo arregla ni el Papa!'],
   remediosExpira: ['¡Pues ya lo arreglará mi sobrino, que hace un curso por internet!', '¡Me harto! ¡Eso se queda así y punto!', '¡Llevo media hora esperando! ¡Ni que fueran del Ayuntamiento!', '¡Esto lo arreglo yo con una horquilla!'],
-  remediosCharla: ['¿Quieren un cafelito? Bueno, no, que luego se entretienen.', 'Mi sobrino dice que esto lo arregla él con un vídeo de internet.', 'No pisen la alfombra, que es persa. De los chinos, pero persa.', '¿Y ustedes tienen seguro? Lo digo por nada.', 'Paco, ¿usted no salía con la del quinto?', '¿Ese señor gordito trabaja con usted o se ha colado?', 'En mis tiempos los fontaneros venían con corbata.'],
+  remediosCharla: ['¿Quieren un cafelito? Bueno, no, que luego se entretienen.', 'Mi sobrino dice que esto lo arregla él con un vídeo de internet.', 'No pisen la alfombra, que es persa. De los chinos, pero persa.', '¿Y ustedes tienen seguro? Lo digo por nada.', '{J}, ¿usted no salía con la del quinto?', '¿Y {S} trabaja con usted o se ha colado?', 'En mis tiempos los fontaneros venían con corbata.', '¿Ustedes qué son, fontaneros, pintores o albañiles? ¿O todo a la vez?', 'Mi vecina dice que ustedes son los de la chapuza del ascensor.'],
   remediosIdle: ['¡Michi! ¡Deja a los señores!', 'Ay, qué cruz, Señor, qué cruz...', 'Esto en mis tiempos se hacía en un periquete.', 'Ya verás cuando se entere mi hermana...', '¿Y eso del suelo quién lo va a limpiar?'],
   remediosResbalon: ['¡Ay, que se mata! ¡Y en mi casa!', '¡Si se rompe algo no me denuncie, eh!', '¡Cuidado con mi suelo, que está recién fregao!'],
-  ramonAlmuerzo: ['Primero el almuerzo, que sin gasolina el motor no arranca.', 'Un bocata de chorizo y estoy contigo, Paco.', '¿Tú sabes lo que es trabajar con el estómago vacío? Yo tampoco, ni pienso averiguarlo.', 'Es mi descanso sindical, Paco.'],
+  ramonAlmuerzo: ['Primero el almuerzo, que sin gasolina el motor no arranca.', 'Un bocata de chorizo y estoy contigo, {J}.', '¿Tú sabes lo que es trabajar con el estómago vacío? Yo tampoco, ni pienso averiguarlo.', 'Es mi descanso sindical, {J}.'],
   ramonSiesta: ['Me echo cinco minutillos... para pensar la estrategia.', 'No estoy durmiendo. Estoy midiendo el techo con los ojos cerrados.', 'Zzz... ¡Ya voy, ya voy!... Zzz...'],
-  ramonPasea: ['Voy a hacer un estudio de la situación.', 'Aquí lo que hace falta es una reforma integral, Paco.', '¿Esta pared es de carga? Yo creo que es de carga.', 'Esto con pladur quedaba precioso.', 'Hmmm. Hmmmm. Sí. Hmmm.'],
-  ramonPlatano: ['Uy, la cáscara. Bueno, ya la recojo luego.', 'Vitaminas, Paco. Potasio. Lo dicen los médicos.', 'La dejo aquí, que así sé dónde está.'],
-  ramonAyuda: ['¡Quita, quita, que esto lo hago yo en un pispás!', 'Déjamelo a mí, que tengo un primo que es fontanero.', 'Esto lo vi en un tutorial. Bueno, el principio.'],
-  ramonBien: ['¿Has visto, Paco? ¡Ni yo me lo creo!', '¡Toma! ¡Aprende, aprende!', '¡Manos de seda, Paco! ¡De seda!'],
+  ramonPasea: ['Voy a hacer un estudio de la situación.', 'Aquí lo que hace falta es una reforma integral, {J}.', '¿Esta pared es de carga? Yo creo que es de carga.', 'Esto con pladur quedaba precioso.', 'Hmmm. Hmmmm. Sí. Hmmm.'],
+  ramonPlatano: ['Uy, la cáscara. Bueno, ya la recojo luego.', 'Vitaminas, {J}. Potasio. Lo dicen los médicos.', 'La dejo aquí, que así sé dónde está.'],
+  ramonAyuda: ['¡Quita, quita, que esto lo hago yo en un pispás!', 'Déjamelo a mí, que tengo un primo que es de esto.', 'Esto lo vi en un tutorial. Bueno, el principio.'],
+  ramonBien: ['¿Has visto, {J}? ¡Ni yo me lo creo!', '¡Toma! ¡Aprende, aprende!', '¡Manos de seda, {J}! ¡De seda!'],
   ramonChapuza: ['Esto ya venía así de fábrica.', 'Ha sido culpa del de antes, que lo dejó fatal.', 'Ups. Bueno, así tiene más personalidad.', '¡Yo no he tocado nada! Bueno, un poquito.'],
-  ramonOrden: ['¡Voy, voy! Qué estrés, Paco, qué estrés.', 'Que síííí, que ya voy. Siempre igual.', '¿Yo? Bueno, vale, pero luego me invitas a un café.', '¡A sus órdenes, mi general!'],
-  ramonOrdenSin: ['No hay nada que hacer, jefe. Me vuelvo a mi bocata.', 'Todo arreglado. Bueno, todo «arreglado».', 'Si no hay faena, no hay Ramón.'],
+  ramonOrden: ['¡Voy, voy! Qué estrés, {J}, qué estrés.', 'Que síííí, que ya voy. Siempre igual.', '¿Yo? Bueno, vale, pero luego me invitas a un café.', '¡A sus órdenes, mi general!'],
+  ramonOrdenSin: ['No hay nada que hacer, jefe. Me vuelvo a mi bocata.', 'Todo arreglado. Bueno, todo «arreglado».', 'Si no hay faena, no hay {S}.'],
   ramonTarde: ['Anda, ya está hecho. Pues nada, me vuelvo.', 'Llego tarde por los pelos. Qué pena, oye.'],
-  ramonApagon: ['¿Quién ha apagado la luz? ¡Yo no he sido, eh!', '¡Paco! ¡No veo! Bueno, nunca veo, pero ahora menos.'],
-  ramonBocata: ['Ñam. ¿Era tuyo, Paco?', 'Estaba aquí solo, abandonado... Lo he adoptado.', '¡Calamares! ¡Esto es una señal divina!'],
-  pacoChapuza: ['Esto ya estaba así cuando llegamos.', 'Es un estilo nuevo. Se lleva mucho en Milán.', 'Tranquila, señora, que esto con cinta americana queda como nuevo.', '¡Ha sido el gato!', 'Técnicamente... funciona. A su manera.'],
-  pacoFino: ['¡Lo que yo te diga, Ramón: manos de cirujano!', '¡Trabajo fino, señora!', '¡Y sin cinta americana!'],
-  pacoResbalon: ['¡Uuuuuy!', '¡Mi madre!', '¡Ramóóóóón!', '¡Mis lumbares!', '¡¿Quién ha dejado esto aquí?!'],
+  ramonApagon: ['¿Quién ha apagado la luz? ¡Yo no he sido, eh!', '¡{J}! ¡No veo! Bueno, nunca veo, pero ahora menos.'],
+  ramonBocata: ['Ñam. ¿Era tuyo, {J}?', 'Estaba aquí solo, abandonado... Lo he adoptado.', '¡Calamares! ¡Esto es una señal divina!'],
+  pacoChapuza: ['Esto ya estaba así cuando llegamos.', 'Es un estilo nuevo. Se lleva mucho en Milán.', 'Tranquila, señora, que esto con cinta americana queda como nuevo.', '¡Ha sido el gato!', 'Técnicamente... funciona. A su manera.', '¡Ha sido {S}! Bueno, he sido yo, pero pensando en {S}.'],
+  pacoFino: ['¡Lo que yo te diga, {S}: manos de cirujano!', '¡Trabajo fino, señora!', '¡Y sin cinta americana!'],
+  pacoResbalon: ['¡Uuuuuy!', '¡Mi madre!', '¡{S}, socorroooo!', '¡Mis lumbares!', '¡¿Quién ha dejado esto aquí?!'],
   pacoMalaHerr: ['¿Con {h}? Bueno... por probar...', 'Con {h} también se puede. Creo.', 'Un buen profesional lo arregla con lo que sea. Incluso con {h}.'],
   pacoSinHerr: ['Necesito {h}. Está en la mesa, junto a la furgoneta.', 'Sin {h} no hay manera. ¡A la furgoneta!'],
   pacoGato: ['¡Michi, quita de en medio!', '¡Este gato me quiere matar!', '¡Gato del demonio!'],
   michi: ['¡MIAAAAU!', 'Miau. (Te juzga en silencio)', 'Prrrrr...', '¡FFFFSSSS!'],
 };
-const frase = (lista, h) => pick(lista).replace('{h}', h || '');
+const nombres = t => t.replaceAll('{J}', paco.nombre).replaceAll('{S}', ramon.nombre);
+const frase = (lista, h) => nombres(pick(lista).replaceAll('{h}', h || ''));
 
 /* Globos de texto encima de los personajes */
 const capaGlobos = $('bocadillos');
@@ -995,16 +1178,25 @@ function actualizarGlobos(dt) {
 /* =========================================================================
    Entidades
    ========================================================================= */
-const paco = {
-  nombre: 'Paco', clase: 'paco', voz: 330, alturaGlobo: 2.35,
-  c: crearPersonaje({ cuerpo: 0x2f5fa8, piernas: 'mono', gorra: 0xd8382c, bolsillo: 0xf2a33a, zapatos: 0x3b2a1c }),
-  estado: 'normal', t: 0, vel: 0, vx: 0, vz: 0, herr: null, mallaHerr: null, tinte: 0, boost: 0,
+// Los dos chapuzas de la empresa. Uno lo manejas tú («paco» en el código) y el otro va por libre («ramon»).
+const CHAPUZAS = {
+  arricio: { nombre: 'Arricio', clase: 'ramon', voz: 190, alturaGlobo: 2.45,
+    c: crearPersonaje({ cuerpo: 0xe0782a, piernas: 'mono', ancho: 1.3, barriga: true, bigote: true, calvo: true, zapatos: 0x2a1a10 }) },
+  jeremias: { nombre: 'Jeremías', clase: 'paco', voz: 330, alturaGlobo: 2.35,
+    c: crearPersonaje({ cuerpo: 0x2f5fa8, piernas: 'mono', gorra: 0xd8382c, bolsillo: 0xf2a33a, zapatos: 0x3b2a1c }) },
 };
-const ramon = {
-  nombre: 'Ramón', clase: 'ramon', voz: 190, alturaGlobo: 2.45,
-  c: crearPersonaje({ cuerpo: 0xe0782a, piernas: 'mono', ancho: 1.3, barriga: true, bigote: true, calvo: true, zapatos: 0x2a1a10 }),
-  estado: 'idle', t: 0, vel: 0, ruta: null, encargo: null,
-};
+const paco = { estado: 'normal', t: 0, vel: 0, vx: 0, vz: 0, herr: null, mallaHerr: null, tinte: 0, boost: 0 };
+const ramon = { estado: 'idle', t: 0, vel: 0, ruta: null, encargo: null };
+function asignarPapeles(quien) {
+  const otro = quien === 'arricio' ? 'jeremias' : 'arricio';
+  for (const [e, k] of [[paco, quien], [ramon, otro]]) {
+    const m = CHAPUZAS[k];
+    Object.assign(e, { id: k, nombre: m.nombre, clase: m.clase, voz: m.voz, alturaGlobo: m.alturaGlobo, c: m.c });
+    if (e.globo) { e.globo.remove(); e.globo = null; }
+  }
+  if (asignarPapeles.listo) ramon.c.mano.add(bocataRamon);
+}
+asignarPapeles('arricio');
 const remedios = {
   nombre: 'Doña Remedios', clase: 'remedios', voz: 520, alturaGlobo: 2.2,
   c: crearPersonaje({ cuerpo: 0xd9709d, piernas: 0xf1c7a0, rulos: true, escala: 0.92, zapatos: 0xff9ec4, mangas: mat(0xd9709d) }),
@@ -1024,7 +1216,7 @@ const entidades = [paco, ramon, remedios, michi];
 // Bocadillo de ramón en la mano (sólo visible al almorzar)
 const bocataRamon = new THREE.Group();
 { const pan = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.25, 4, 8), mat(0xd9a45a)); pan.rotation.z = Math.PI / 2; bocataRamon.add(pan); }
-bocataRamon.position.set(0, 0, 0.1); bocataRamon.visible = false; ramon.c.mano.add(bocataRamon);
+bocataRamon.position.set(0, 0, 0.1); bocataRamon.visible = false; ramon.c.mano.add(bocataRamon); asignarPapeles.listo = true;
 
 // Bocata de calamares (power-up)
 const bocata = new THREE.Group();
@@ -1045,7 +1237,7 @@ const G = {
   stats: null, accion: false,
 };
 function nuevasStats() {
-  return { fino: 0, bien: 0, chapuza: 0, expirado: 0, ramonBien: 0, ramonChapuza: 0, bocatasRamon: 0, resbalones: 0, desperfectos: [], bocatasPaco: 0 };
+  return { fino: 0, bien: 0, chapuza: 0, expirado: 0, ramonBien: 0, ramonChapuza: 0, bocatasRamon: 0, resbalones: 0, desperfectos: [], bocatasPaco: 0, oficios: new Set() };
 }
 const luego = (seg, fn) => G.cola.push({ t: G.t + seg, fn });
 const progreso = () => clamp(G.t / DURACION, 0, 1);
@@ -1054,10 +1246,12 @@ function reiniciar() {
   G.t = 0; G.dinero = 0; G.paciencia = 100; G.spawnT = 3.5; G.mini = null; G.apagon = 0; G.temblor = 0; G.cola = []; G.fin = false; G.pausa = false;
   G.bocataT = 25; bocata.visible = false;
   G.stats = nuevasStats();
-  TIPOS.forEach(t => { G.encargos[t] = { activo: false, t: 0, max: 0, ramon: false, cd: 0 }; Visual._yaPintada = false; Visual.poner(t, 'ok'); });
+  Visual._yaPintada = Visual._fachadaPintada = false;
+  TIPOS.forEach(t => { G.encargos[t] = { activo: false, t: 0, max: 0, ramon: false, cd: 0 }; Visual.poner(t, 'ok'); });
   limpiarPeligros();
   particulas.forEach(p => p.m.removeFromParent()); particulas.length = 0;
-  paco.c.brazos[0].rotation.z = 0;
+  for (const m of Object.values(CHAPUZAS)) { m.c.brazos[0].rotation.z = 0; m.c.cuerpo.rotation.set(0, 0, 0); m.c.cuerpo.position.set(0, 0, 0); ponerSombrero(m.c, null); }
+  ramon.conSombrero = false;
   paco.c.g.position.set(-1, 0, 7.6); paco.c.g.rotation.y = Math.PI; paco.estado = 'normal'; paco.vx = paco.vz = 0; paco.tinte = 0; paco.boost = 0;
   soltarHerramienta();
   restaurarTinte(paco);
@@ -1126,7 +1320,14 @@ function pantallaCompleta() {
   } catch (e) { /* algunos móviles (iPhone) no lo permiten */ }
 }
 
+let eleccion = 'arricio';
+document.querySelectorAll('.opcion').forEach(b => b.addEventListener('click', () => {
+  eleccion = b.dataset.pj;
+  document.querySelectorAll('.opcion').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+  Sonido.init(); Sonido.coger();
+}));
 function empezar() {
+  asignarPapeles(eleccion);
   Sonido.init();
   if (esTactil && !document.fullscreenElement) pantallaCompleta();
   reiniciar();
@@ -1140,7 +1341,8 @@ function empezar() {
   Sonido.timbre();
   luego(0.6, () => decir(remedios, '¡Por fin! Les llamé el martes... ¡del mes pasado!', 3.5));
   luego(4.2, () => decir(ramon, 'Es que había un atasco en la circunvalación, señora.', 3.2));
-  luego(7.6, () => decir(paco, '¡Venga, Ramón! ¡CHAPUZAS A DOMICILIO, AL ATAQUE!', 2.8));
+  luego(7.6, () => decir(paco, nombres('¡Venga, {S}, que hoy toca de todo: fontanería, pintura, electricidad, albañilería...!'), 3.4));
+  luego(11.3, () => decir(ramon, '¿De todo? Pero si yo sólo sé hacer bocadillos...', 3));
 }
 
 /* =========================================================================
@@ -1174,7 +1376,7 @@ function actualizarHUD() {
   barra.style.background = p > 60 ? 'var(--verde)' : p > 30 ? '#e9a527' : 'var(--rojo)';
   $('cara').textContent = p > 75 ? '😊' : p > 55 ? '🙂' : p > 35 ? '😒' : p > 15 ? '😠' : '🤬';
   const h = paco.herr ? HERRAMIENTAS[paco.herr] : null;
-  $('herramienta').textContent = h ? `${h.icono} En la mano: ${h.corto}` : '🧰 Manos vacías';
+  $('herramienta').textContent = h ? `${h.icono} ${h.corto} · hoy eres ${OFICIOS[h.oficio].persona}` : '🧰 Manos vacías';
   // Lista de encargos
   const activos = TIPOS.filter(t => G.encargos[t].activo).sort((a, b) => G.encargos[a].t - G.encargos[b].t);
   const firma = activos.map(t => t + (G.encargos[t].ramon ? 'R' : '')).join('|');
@@ -1187,7 +1389,7 @@ function actualizarHUD() {
       const div = document.createElement('div');
       div.className = 'panel encargo' + (e.ramon ? ' ramon' : '');
       div.dataset.tipo = t;
-      div.innerHTML = `<span class="ico">${d.icono}</span><span class="info">${d.nombre}<br><span class="sub">${d.sitio} · ${e.ramon ? 'Ramón va «a ayudar»' : HERRAMIENTAS[d.herr].icono + ' ' + HERRAMIENTAS[d.herr].corto}</span></span><span class="t"></span>`;
+      div.innerHTML = `<span class="ico">${d.icono}</span><span class="info">${d.nombre}<br><span class="sub">${OFICIOS[d.oficio].icono} ${OFICIOS[d.oficio].nombre} · ${d.sitio} · ${e.ramon ? ramon.nombre + ' va «a ayudar»' : HERRAMIENTAS[d.herr].icono + ' ' + HERRAMIENTAS[d.herr].corto}</span></span><span class="t"></span>`;
       lista.appendChild(div);
     }
   }
@@ -1211,6 +1413,7 @@ function generarEncargo() {
   e.activo = true; e.ramon = false;
   e.max = e.t = lerp(58, 36, progreso()) + rand(-3, 3);
   if (tipo === 'pared') Visual._yaPintada = true;
+  if (tipo === 'fachada') Visual._fachadaPintada = true;
   Visual.poner(tipo, 'roto');
   if (tipo === 'bombilla' || tipo === 'vater' || tipo === 'cuadro') Sonido.crash(); else Sonido.timbre();
   decir(remedios, frase(FRASES.remediosNuevo[tipo]), 3.6);
@@ -1225,6 +1428,7 @@ function cerrarEncargo(tipo) {
 function resolver(tipo, resultado, quien = 'paco', malaHerr = false) {
   const d = ENCARGOS[tipo];
   cerrarEncargo(tipo);
+  if (quien === 'paco') G.stats.oficios.add(d.oficio);
   const [px, pz] = d.pie;
   const autor = quien === 'paco' ? paco : ramon;
   if (resultado === 'chapuza') {
@@ -1238,13 +1442,13 @@ function resolver(tipo, resultado, quien = 'paco', malaHerr = false) {
     G.temblor = 0.35;
     efectoChapuza(tipo, autor);
     luego(0.3, () => decir(autor, quien === 'paco' ? frase(FRASES.pacoChapuza) : frase(FRASES.ramonChapuza), 3));
-    luego(2.2, () => decir(remedios, frase(FRASES.remediosChapuza), 3));
+    luego(2.2, () => decir(remedios, Math.random() < 0.65 ? QUEJAS[tipo] : frase(FRASES.remediosChapuza), 3.2));
   } else {
     Visual.poner(tipo, 'ok');
     const fino = resultado === 'fino';
     let pago = fino ? 60 : 40;
     if (quien === 'ramon') { pago = 20; G.stats.ramonBien++; } else if (fino) G.stats.fino++; else G.stats.bien++;
-    sumar(pago, quien === 'ramon' ? `Ramón: ${d.nombre} (de milagro)` : `${d.nombre}${fino ? ' (¡fino!)' : ''}`);
+    sumar(pago, quien === 'ramon' ? `${ramon.nombre}: ${d.nombre} (de milagro)` : `${d.nombre}${fino ? ' (¡fino!)' : ''}`);
     paciencia(fino ? 8 : 4);
     rotulo(quien === 'ramon' ? '¡DE MILAGRO!' : fino ? '¡TRABAJO FINO!' : '¡APAÑAO!', 'bueno');
     if (fino) Sonido.fanfarria(); else Sonido.clonc();
@@ -1283,6 +1487,30 @@ function efectoChapuza(tipo, autor) {
       Sonido.zas();
       emitir(-6.3, 1.65, 4.3, 30, { color: [0xffffff, 0xd8f2ff], brilla: true, vel: 3, sube: 3, tam: 0.04, vida: 0.8, cubo: true });
       empezarApagon(11);
+      break;
+    case 'fachada': {
+      Sonido.chof();
+      const col = new THREE.Color(colorChillon()).getHex();
+      emitir(6, 0.9, 5.3, 40, { color: col, vel: 2.5, sube: 3, tam: 0.08, vida: 1.2, vz: 1.5 });
+      teñir(autor, col, 14);
+      break;
+    }
+    case 'mesa':
+      Sonido.crash();
+      emitir(5, 0.5, 3.3, 30, { color: [0x8a5a3a, 0xc79a5b, 0xe8c99a], cubo: true, vel: 2.5, sube: 3, tam: 0.05, vida: 1.2 });
+      luego(1.2, () => decir(autor, '¿Y si la vendemos como mesa japonesa?', 2.6));
+      break;
+    case 'agujero':
+      Sonido.crash(); G.temblor = 0.5;
+      emitir(-0.3, 0.8, -0.3, 30, { color: [0xbdbdbd, 0x9a9a9a, 0xe0d8c8], vel: 1.5, sube: 1.5, gravedad: 0.5, tam: 0.12, vida: 1.6, crece: 2, vx: -1 });
+      break;
+    case 'azulejos':
+      Sonido.clonc(); setTimeout(() => Sonido.clonc(), 180); setTimeout(() => Sonido.clonc(), 360);
+      emitir(10.6, 0.9, -4.35, 20, { color: [0xffffff, 0x8fc3d9, 0xff8fb1], cubo: true, vel: 2, sube: 2.5, tam: 0.06, vida: 1, vx: -1.5 });
+      break;
+    case 'seto':
+      Sonido.ruidoF(0.8, 0.35, 2500, 'bandpass', 600);
+      emitir(8.6, 0.9, 10.1, 60, { color: [0x4fa04f, 0x3a8a3a, 0x5fb05f], cubo: true, vel: 3, sube: 3, tam: 0.07, vida: 1.5, gira: 6 });
       break;
     case 'vater':
       Sonido.chof();
@@ -1329,7 +1557,7 @@ function resbalar(motivo) {
    ========================================================================= */
 function empezarMini(tipo) {
   const p = progreso();
-  const ancho = lerp(0.3, 0.17, p);
+  const ancho = lerp(0.3, 0.17, p) * (paco.id === 'arricio' ? 0.8 : 1); // Arricio es el más chapuzas: más difícil
   const centro = rand(0.15 + ancho / 2, 0.85 - ancho / 2);
   G.mini = { tipo, p: Math.random() < 0.5 ? 0 : 1, dir: 1, vel: lerp(0.85, 1.6, p) * rand(0.9, 1.15), centro, ancho, fino: ancho * 0.3 };
   if (G.mini.p === 1) G.mini.dir = -1;
@@ -1344,7 +1572,7 @@ function empezarMini(tipo) {
   $('mini').classList.remove('oculto');
   // Cara a la faena
   const [px, pz] = ENCARGOS[tipo].pie;
-  const obj = { grifo: [8.5, -1.2], enchufe: [10.9, 3], pared: [-10.9, 1.5], cuadro: [-7, -7.9], bombilla: [-6.3, 4.3], vater: [9.6, -7.45] }[tipo];
+  const obj = ENCARGOS[tipo].mira;
   paco.c.g.rotation.y = Math.atan2(obj[0] - px, obj[1] - pz);
 }
 function cancelarMini() { G.mini = null; $('mini').classList.add('oculto'); if (paco.estado === 'mini') paco.estado = 'normal'; }
@@ -1394,7 +1622,7 @@ function textoPista(o) {
       if (paco.herr === d.herr) return `<kbd>E</kbd> ¡A arreglarlo! ${d.icono} ${d.nombre}`;
       return `<kbd>E</kbd> Intentarlo con ${H[paco.herr].icono} ${H[paco.herr].corto.toLowerCase()}… (mala idea)`;
     }
-    case 'ramon': return `<kbd>E</kbd> «¡Ramón, a trabajar!»`;
+    case 'ramon': return `<kbd>E</kbd> «¡${ramon.nombre}, a trabajar!»`;
     case 'remedios': return `<kbd>E</kbd> Charlar con Doña Remedios`;
     case 'michi': return `<kbd>E</kbd> Acariciar a Michi`;
   }
@@ -1410,12 +1638,17 @@ function coger(id) {
   paco.c.mano.add(m);
   paco.mallaHerr = m;
   Sonido.coger();
-  if (Math.random() < 0.35) decir(paco, pick([`¡${HERRAMIENTAS[id].corto}! Justo lo que necesitaba.`, `Esto es una herramienta de profesional.`, `Con esto y un bizcocho...`]), 2);
+  const oficio = HERRAMIENTAS[id].oficio;
+  const cambia = paco.oficio !== oficio;
+  paco.oficio = oficio;
+  ponerSombrero(paco.c, oficio);
+  if (cambia) { decir(paco, pick(FRASE_OFICIO[oficio]), 2.4); estrellitas(paco.c.g.position.x, 2.1, paco.c.g.position.z); }
 }
 function soltarHerramienta() {
   if (paco.mallaHerr) { paco.mallaHerr.removeFromParent(); paco.mallaHerr = null; }
   if (paco.herr) { const r = ranuras.find(x => x.id === paco.herr); r.malla.visible = true; }
-  paco.herr = null;
+  paco.herr = null; paco.oficio = null;
+  if (paco.c) ponerSombrero(paco.c, null);
 }
 function accion() {
   if (G.mini) { pararMini(); return; }
@@ -1455,6 +1688,7 @@ function asignarRamon(tipo, vel = 2.3) {
   if (ramon.encargo) G.encargos[ramon.encargo].ramon = false;
   ramon.estado = 'ayudar'; ramon.encargo = tipo; ramon.velAyuda = vel; ramon.trabajaT = 0;
   G.encargos[tipo].ramon = true;
+  ponerSombrero(ramon.c, ENCARGOS[tipo].oficio); ramon.conSombrero = true;
   const [x, z] = ENCARGOS[tipo].pie;
   irA(ramon, x, z);
 }
@@ -1466,6 +1700,7 @@ function actualizarRamon(dt) {
   switch (r.estado) {
     case 'idle':
       r.vel = 0;
+      if (r.conSombrero) { ponerSombrero(r.c, null); r.conSombrero = false; }
       if (r.t <= 0) {
         const libres = TIPOS.filter(t => G.encargos[t].activo && !G.encargos[t].ramon);
         const tirada = Math.random();
@@ -1477,7 +1712,7 @@ function actualizarRamon(dt) {
       break;
     case 'pasea':
       if (caminar(r, dt, 1.9)) {
-        if (Math.random() < 0.45 && zona(pos.x, pos.z) !== 'calle') { crearPlatano(pos.x + rand(-0.3, 0.3), pos.z + rand(-0.3, 0.3)); decir(r, frase(FRASES.ramonPlatano), 2.6); }
+        if (Math.random() < (r.id === 'arricio' ? 0.45 : 0.25) && zona(pos.x, pos.z) !== 'calle') { crearPlatano(pos.x + rand(-0.3, 0.3), pos.z + rand(-0.3, 0.3)); decir(r, frase(FRASES.ramonPlatano), 2.6); }
         r.estado = 'idle'; r.t = rand(1.5, 4);
       }
       break;
@@ -1485,7 +1720,7 @@ function actualizarRamon(dt) {
       if (r.sentado) {
         bocataRamon.visible = true;
         r.c.brazos[1].rotation.x = -1.6 + Math.sin(performance.now() / 180) * 0.25;
-        if (r.t <= 0) { r.sentado = false; bocataRamon.visible = false; r.c.cuerpo.position.y = 0; r.estado = 'idle'; r.t = rand(1, 3); G.stats.bocatasRamon++; sumar(-3, 'Bocadillo de Ramón (a cuenta de la empresa)'); }
+        if (r.t <= 0) { r.sentado = false; bocataRamon.visible = false; r.c.cuerpo.position.y = 0; r.estado = 'idle'; r.t = rand(1, 3); G.stats.bocatasRamon++; sumar(-3, `Bocadillo de ${ramon.nombre} (a cuenta de la empresa)`); }
       } else if (caminar(r, dt, 2.0)) {
         r.sentado = true; r.t = rand(9, 14); r.c.g.rotation.y = Math.PI; r.c.cuerpo.position.y = -0.32;
       }
@@ -1508,11 +1743,11 @@ function actualizarRamon(dt) {
         if (Math.random() < dt * 6) emitir(pos.x, 1.2, pos.z, 2, { color: [0xbdbdbd, 0xffd23f], vel: 1.5, sube: 2, tam: 0.04, vida: 0.4, cubo: true });
         if (r.trabajaT <= 0) {
           const tipo = r.encargo; r.encargo = null; r.estado = 'idle'; r.t = rand(2, 4);
-          resolver(tipo, Math.random() < 0.55 ? 'chapuza' : 'bien', 'ramon');
+          resolver(tipo, Math.random() < (r.id === 'arricio' ? 0.6 : 0.4) ? 'chapuza' : 'bien', 'ramon');
         }
       } else if (caminar(r, dt, r.velAyuda || 2.3)) {
         r.trabajaT = 3;
-        const obj = { grifo: [8.5, -1.2], enchufe: [10.9, 3], pared: [-10.9, 1.5], cuadro: [-7, -7.9], bombilla: [-6.3, 4.3], vater: [9.6, -7.45] }[r.encargo];
+        const obj = ENCARGOS[r.encargo].mira;
         r.c.g.rotation.y = Math.atan2(obj[0] - pos.x, obj[1] - pos.z);
       }
       break;
@@ -1668,7 +1903,7 @@ function actualizarPaco(dt) {
     bocata.visible = false; G.bocataT = rand(30, 42);
     paco.boost = 10; G.stats.bocatasPaco++;
     Sonido.nam();
-    decir(paco, pick(['¡Bocata de calamares! ¡Esto da alas!', '¡Ñam! ¡Turbo de calamares activado!', 'Esto no se lo digas a Ramón...']), 2.5);
+    decir(paco, pick(['¡Bocata de calamares! ¡Esto da alas!', '¡Ñam! ¡Turbo de calamares activado!', nombres('Esto no se lo digas a {S}...')]), 2.5);
     estrellitas(p.x, 1.2, p.z);
   }
 }
@@ -1753,11 +1988,11 @@ function terminar(motivo) {
   const lineas = [];
   if (S.fino) lineas.push([`Trabajos finos (${S.fino} × 60 €)`, S.fino * 60]);
   if (S.bien) lineas.push([`Trabajos apañaos (${S.bien} × 40 €)`, S.bien * 40]);
-  if (S.ramonBien) lineas.push([`Trabajos de Ramón que salieron bien, sorprendentemente (${S.ramonBien} × 20 €)`, S.ramonBien * 20]);
+  if (S.ramonBien) lineas.push([`Trabajos de ${ramon.nombre} que salieron bien, sorprendentemente (${S.ramonBien} × 20 €)`, S.ramonBien * 20]);
   const cuenta = {};
   S.desperfectos.forEach(t => cuenta[t] = (cuenta[t] || 0) + 1);
   for (const [t, n] of Object.entries(cuenta)) lineas.push([`Desperfecto: ${DESPERFECTOS[t]}${n > 1 ? ` (×${n})` : ''}`, -25 * n]);
-  if (S.bocatasRamon) lineas.push([`Bocadillos de Ramón (${S.bocatasRamon} × 3 €)`, -3 * S.bocatasRamon]);
+  if (S.bocatasRamon) lineas.push([`Bocadillos de ${ramon.nombre} (${S.bocatasRamon} × 3 €)`, -3 * S.bocatasRamon]);
   if (S.resbalones) lineas.push([`Plus de peligrosidad por resbalones (${S.resbalones} × 2 €)`, 2 * S.resbalones]);
   if (!lineas.length) lineas.push(['Visita técnica (no se hizo nada, pero se vino)', 0]);
   const base = lineas.reduce((a, l) => a + l[1], 0);
@@ -1771,14 +2006,14 @@ function terminar(motivo) {
     'Lo han dejado... distinto. Mi hermana dice que «con personalidad».',
     'Ni tan mal. Para lo que cobran, ni tan mal.',
     'Muy apañaos. Les voy a recomendar a la del quinto. Y a la del sexto, que es muy pesada.',
-    '¡Unos artistas! Paco, si quiere se queda a comer. Ramón no, que ya ha comido.',
+    `¡Unos artistas! ${paco.nombre}, si quiere se queda a comer. ${ramon.nombre} no, que ya ha comido.`,
   ];
   const fecha = new Date().toLocaleDateString('es-ES');
   const filas = lineas.map(([t, v]) => `<tr><td>${t}</td><td class="${v < 0 ? 'neg' : ''}">${euros(v)}</td></tr>`).join('');
   $('final-contenido').innerHTML = `
     ${motivo === 'fuera'
-      ? `<div class="sello-fuera">¡FUERA DE MI CASA!</div><p class="lema">Doña Remedios os ha echado a escobazos a las ${$('reloj').firstChild.nodeValue}. Ramón ha salvado el bocadillo.</p>`
-      : `<h1 class="titulo" style="font-size:54px">¡Fin de la jornada!</h1><p class="lema" style="margin-top:12px">Son las 18:00. Ramón ya está en la furgoneta desde las 17:45.</p>`}
+      ? `<div class="sello-fuera">¡FUERA DE MI CASA!</div><p class="lema">Doña Remedios os ha echado a escobazos a las ${$('reloj').firstChild.nodeValue}. ${ramon.nombre} ha salvado el bocadillo.</p>`
+      : `<h1 class="titulo" style="font-size:54px">¡Fin de la jornada!</h1><p class="lema" style="margin-top:12px">Son las 18:00. ${ramon.nombre} ya está en la furgoneta desde las 17:45.</p>`}
     <div class="factura">
       <h2>FACTURA ${String(Math.floor(rand(1, 999))).padStart(3, '0')}/B</h2>
       <div class="cab">REFORMAS CHAPUCILLA S.L. · Cliente: Dña. Remedios · ${fecha}</div>
@@ -1787,13 +2022,15 @@ function terminar(motivo) {
         <tr><td>IVA (21 %)</td><td>${euros(iva)}</td></tr>
         <tr class="total"><td>TOTAL</td><td class="${total < 0 ? 'neg' : ''}">${euros(total)}</td></tr>
       </table>
-      <div class="pie">${total < 0 ? '* Sí: con esta jornada, la empresa le debe dinero a la clienta.' : '* Ramón pregunta si se puede pagar «en especie» (croquetas).'}<br>
-      * Encargos sin atender: ${S.expirado}. Resbalones: ${S.resbalones}. Bocatas de calamares: Paco ${S.bocatasPaco}, Ramón «ninguno, lo juro».</div>
+      <div class="pie">${total < 0 ? '* Sí: con esta jornada, la empresa le debe dinero a la clienta.' : `* ${ramon.nombre} pregunta si se puede pagar «en especie» (croquetas).`}<br>
+      * Encargos sin atender: ${S.expirado}. Resbalones: ${S.resbalones}. Bocatas de calamares: ${paco.nombre} ${S.bocatasPaco}, ${ramon.nombre} «ninguno, lo juro».<br>
+      * Oficios de hoy: ${[...S.oficios].map(o => OFICIOS[o].persona).join(', ') || 'ninguno (se pasaron el día mirando)'}.</div>
     </div>
     <div class="valoracion">Valoración de Doña Remedios<div class="estrellas">${'★'.repeat(estrellas)}${'☆'.repeat(5 - estrellas)}</div>
       <q>${motivo === 'fuera' ? '¡Y no vuelvan! ¡Y llévense al gato! ...No, al gato no.' : opiniones[estrellas]}</q></div>
-    <button class="boton" id="btn-otra">Otra jornada</button>`;
+    <div class="botonera"><button class="boton" id="btn-otra">Otra jornada</button><button class="boton secundario" id="btn-portada">Cambiar de chapuzas</button></div>`;
   $('btn-otra').addEventListener('click', empezar);
+  $('btn-portada').addEventListener('click', () => { $('final').classList.add('oculto'); $('portada').classList.remove('oculto'); posePortada(); });
   $('final').classList.remove('oculto');
   if (motivo === 'fuera') Sonido.trombon(); else Sonido.fanfarria();
 }
@@ -1854,10 +2091,15 @@ function actualizarJuego(dt) {
   else if (G.t >= DURACION) terminar('tiempo');
 }
 
-// Escena de portada: los personajes posan
-reiniciar();
-paco.c.g.position.set(-0.5, 0, 7.4); ramon.c.g.position.set(-2.4, 0, 7.6); ramon.c.g.rotation.y = 0.5; paco.c.g.rotation.y = -0.3;
-actualizarCamara(0, true);
+// Escena de portada: los dos chapuzas posan
+function posePortada() {
+  reiniciar();
+  const a = CHAPUZAS.arricio.c.g, j = CHAPUZAS.jeremias.c.g;
+  a.position.set(-0.5, 0, 7.4); a.rotation.y = -0.3;
+  j.position.set(-2.4, 0, 7.6); j.rotation.y = 0.5;
+  actualizarCamara(0, true);
+}
+posePortada();
 
 let ultimo = performance.now();
 function bucle(ahora) {
@@ -1866,8 +2108,10 @@ function bucle(ahora) {
   ultimo = ahora;
   if (G.jugando && !G.pausa) actualizarJuego(dt);
   else if (!G.jugando && !G.fin) { // animación de portada
-    animarAndar(paco.c, dt, 0); animarAndar(ramon.c, dt, 0);
-    paco.c.brazos[0].rotation.z = Math.sin(ahora / 300) * 0.3 + 2.6; // saluda
+    animarAndar(CHAPUZAS.arricio.c, dt, 0); animarAndar(CHAPUZAS.jeremias.c, dt, 0);
+    const elegido = CHAPUZAS[eleccion].c, otro = CHAPUZAS[eleccion === 'arricio' ? 'jeremias' : 'arricio'].c;
+    elegido.brazos[0].rotation.z = Math.sin(ahora / 300) * 0.3 + 2.6; // saluda el elegido
+    otro.brazos[0].rotation.z = lerp(otro.brazos[0].rotation.z, 0, 0.1);
   }
   if (!G.pausa) { actualizarParticulas(dt); actualizarLuces(dt); actualizarGlobos(dt); }
   Musica.tic();
@@ -1877,4 +2121,4 @@ function bucle(ahora) {
 requestAnimationFrame(bucle);
 
 // Ganchos de depuración (sólo con ?debug en la URL)
-if (location.search.includes('debug')) window.__j = { G, paco, ramon, remedios, michi, resolver, generarEncargo, empezarMini, coger, terminar, ordenarRamon, crearPlatano, resbalar };
+if (location.search.includes('debug')) window.__j = { G, CHAPUZAS, asignarPapeles, paco, ramon, remedios, michi, resolver, generarEncargo, empezarMini, coger, terminar, ordenarRamon, crearPlatano, resbalar };

@@ -93,6 +93,18 @@
   .reparto{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:12px 0}
   .reparto div{background:#fff;border:2px solid var(--tinta);border-radius:12px;padding:8px 10px;font-size:13px;line-height:1.25}
   .reparto strong{display:block;font-size:15px}
+  .pregunta{font-weight:900;text-align:center;margin:14px 0 6px;font-size:16px}
+  .opciones{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .opcion{pointer-events:auto;display:flex;flex-direction:column;gap:3px;text-align:left;font:inherit;font-size:13px;line-height:1.25;
+    background:#fff;color:var(--tinta);border:3px solid var(--tinta);border-radius:14px;padding:8px 11px;cursor:pointer;transition:transform .12s,background .12s}
+  .opcion strong{font-family:'Bangers',cursive;font-weight:400;font-size:28px;letter-spacing:1px;line-height:1}
+  .opcion em{font-weight:900;font-style:normal;font-size:11px;text-transform:uppercase;letter-spacing:.6px;opacity:.7}
+  .opcion[aria-pressed="true"]{background:var(--amarillo);box-shadow:4px 4px 0 var(--tinta);transform:translate(-2px,-2px)}
+  .opcion:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
+  .oficios{text-align:center;font-weight:800;font-size:13px;margin:10px 0 0}
+  .botonera{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .botonera .boton{margin:16px 0 0}
+  .boton.secundario{background:var(--azul);font-size:22px}
   .controles{font-size:13px;line-height:1.5;background:#fff;border:2px dashed var(--tinta);border-radius:12px;padding:8px 12px}
   .controles kbd{background:var(--tinta);color:#fff;border-radius:4px;padding:0 5px}
   .boton{pointer-events:auto;display:block;margin:16px auto 0;font-family:'Bangers';font-size:30px;letter-spacing:1px;
@@ -140,6 +152,8 @@
     .titulo{font-size:44px}
     .subtitulo{font-size:13px;margin:10px 0 2px} .lema{font-size:12px;margin-bottom:8px}
     .reparto{grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+    .reparto,.lema,.nota{display:none}
+    .opcion{font-size:11px;padding:6px 8px} .opcion strong{font-size:22px} .pregunta{font-size:14px;margin-top:8px} .oficios{font-size:11px}
     .reparto div{font-size:11px;padding:6px 8px} .reparto strong{font-size:13px}
     .controles{font-size:12px;line-height:1.4}
     .boton{font-size:26px;margin-top:12px}
@@ -201,9 +215,15 @@
     <h1 class="titulo">Chapuzas a<br>domicilio</h1>
     <p class="subtitulo">REFORMAS CHAPUCILLA S.L. · «Lo arreglamos todo… más o menos»</p>
     <p class="lema">Un homenaje en 3D a las telecomedias de chapuzas de los 90</p>
+    <p class="pregunta">¿Con qué chapuzas juegas?</p>
+    <div class="opciones">
+      <button type="button" class="opcion" data-pj="arricio" aria-pressed="true"><strong>🥖 Arricio</strong>
+        <span>El más chapuzas de la empresa. Calvo, barrigón y con el lápiz en la oreja. Lo que toca, lo rompe.</span><em>Modo difícil</em></button>
+      <button type="button" class="opcion" data-pj="jeremias" aria-pressed="false"><strong>🔧 Jeremías</strong>
+        <span>El otro chapuzas. Mono azul, gorra y una fe ciega en la cinta americana. Algo más fino… sólo algo.</span><em>Modo normal</em></button>
+    </div>
+    <p class="oficios">Hoy toca de todo: 🚿 fontanería · ⚡ electricidad · 🎨 pintura · 🪚 carpintería · 🧱 albañilería · 🌿 jardinería</p>
     <div class="reparto">
-      <div><strong>🔧 Paco Chapucilla</strong>Tú. El jefe. Mono azul, gorra y una fe ciega en la cinta americana.</div>
-      <div><strong>🥖 Ramón Tarugo</strong>Tu socio. Experto en almuerzos, siestas y en echarle la culpa «al de antes».</div>
       <div><strong>👵 Doña Remedios</strong>La clienta. Bata de flores, rulos y una paciencia que se acaba.</div>
       <div><strong>🐈 Michi</strong>El gato de la casa. Siempre en medio. Siempre.</div>
     </div>
@@ -213,7 +233,8 @@
       <span class="solo-teclado"><kbd>WASD</kbd>/<kbd>flechas</kbd> moverse · <kbd>Shift</kbd> correr · <kbd>E</kbd>/<kbd>Espacio</kbd> acción ·
       <kbd>P</kbd> pausa · <kbd>M</kbd> sonido.<br></span>
       <span class="solo-tactil">📱 <b>Joystick</b> (izquierda) para andar; al fondo, corres. Botón <b>«¡DALE!»</b> para todo lo demás.<br></span>
-      Truco: acércate a Ramón y pulsa acción para ponerle a trabajar (bajo tu propia responsabilidad).
+      Cada herramienta es de un oficio y, al cogerla, tu chapuzas se pone el gorro de ese oficio.<br>
+      Truco: acércate a tu compañero y pulsa acción para ponerle a trabajar (bajo tu propia responsabilidad).
     </div>
     <button class="boton" id="btn-empezar">¡A currar!</button>
     <p class="nota">Personajes y situaciones originales. Juego de fans sin relación oficial con ninguna serie.</p>
