@@ -132,7 +132,18 @@
     font-family:'Bangers';font-size:24px;background:var(--naranja);border:4px solid var(--tinta);box-shadow:4px 4px 0 var(--tinta);color:var(--tinta)}
   #btn-accion:active{transform:translate(2px,2px)}
 
+  .solo-tactil{display:none}
+  @media (pointer:coarse){ .solo-tactil{display:inline} .solo-teclado{display:none} }
   @media (max-width:760px){
+    .pantalla{align-items:flex-start;padding:10px}
+    .tarjeta{padding:14px 14px}
+    .titulo{font-size:44px}
+    .subtitulo{font-size:13px;margin:10px 0 2px} .lema{font-size:12px;margin-bottom:8px}
+    .reparto{grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+    .reparto div{font-size:11px;padding:6px 8px} .reparto strong{font-size:13px}
+    .controles{font-size:12px;line-height:1.4}
+    .boton{font-size:26px;margin-top:12px}
+    .factura{font-size:12px;padding:10px}
     #hud-izq{width:150px;gap:5px} #hud-izq .panel{padding:5px 8px;border-radius:10px;box-shadow:3px 3px 0 var(--tinta)}
     #reloj{font-size:22px} #reloj small{display:none} #dinero{font-size:18px}
     #paciencia-txt{font-size:10px} #herramienta{font-size:11px}
@@ -176,6 +187,7 @@
 <div id="botones" class="oculto">
   <button id="btn-pausa" title="Pausa (P)">⏸️</button>
   <button id="btn-sonido" title="Sonido (M)">🔊</button>
+  <button id="btn-pantalla" title="Pantalla completa">⛶</button>
 </div>
 
 <div id="tactil" class="oculto">
@@ -198,8 +210,9 @@
     <div class="controles">
       <b>Cómo se juega:</b> llegan encargos al piso. Coge la herramienta correcta de la mesa junto a la furgoneta,
       ve hasta el sitio y para la aguja en lo verde. Si fallas… <b>¡CHAPUZA!</b><br>
-      <kbd>WASD</kbd>/<kbd>flechas</kbd> moverse · <kbd>Shift</kbd> correr · <kbd>E</kbd>/<kbd>Espacio</kbd> acción ·
-      <kbd>P</kbd> pausa · <kbd>M</kbd> sonido. En el móvil: joystick y botón «¡DALE!».<br>
+      <span class="solo-teclado"><kbd>WASD</kbd>/<kbd>flechas</kbd> moverse · <kbd>Shift</kbd> correr · <kbd>E</kbd>/<kbd>Espacio</kbd> acción ·
+      <kbd>P</kbd> pausa · <kbd>M</kbd> sonido.<br></span>
+      <span class="solo-tactil">📱 <b>Joystick</b> (izquierda) para andar; al fondo, corres. Botón <b>«¡DALE!»</b> para todo lo demás.<br></span>
       Truco: acércate a Ramón y pulsa acción para ponerle a trabajar (bajo tu propia responsabilidad).
     </div>
     <button class="boton" id="btn-empezar">¡A currar!</button>

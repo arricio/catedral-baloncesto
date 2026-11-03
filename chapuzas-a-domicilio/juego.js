@@ -1117,9 +1117,18 @@ $('btn-pausa').addEventListener('click', alternarPausa);
 $('btn-seguir').addEventListener('click', alternarPausa);
 $('btn-sonido').addEventListener('click', alternarSonido);
 $('btn-empezar').addEventListener('click', empezar);
+$('btn-pantalla').addEventListener('click', pantallaCompleta);
+function pantallaCompleta() {
+  const d = document, el = d.documentElement;
+  try {
+    if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+    else (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el)?.catch?.(() => {});
+  } catch (e) { /* algunos móviles (iPhone) no lo permiten */ }
+}
 
 function empezar() {
   Sonido.init();
+  if (esTactil && !document.fullscreenElement) pantallaCompleta();
   reiniciar();
   $('portada').classList.add('oculto');
   $('final').classList.add('oculto');
