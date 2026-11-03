@@ -506,7 +506,7 @@ function crearPersonaje(o) {
   }
   if (o.calvo) {
     caja(0.06, 0.16, 0.2, 0x3a2a1c, -0.27, 0.07, -0.05, cabeza); caja(0.06, 0.16, 0.2, 0x3a2a1c, 0.27, 0.07, -0.05, cabeza);
-    const brillo = esfera(0.05, 0xffffff, 0.08, 0.25, 0.08, cabeza, 6); brillo.material = new THREE.MeshBasicMaterial({ color: 0xfff3e6 });
+    if (!o.gorra) { const brillo = esfera(0.05, 0xffffff, 0.08, 0.25, 0.08, cabeza, 6); brillo.material = new THREE.MeshBasicMaterial({ color: 0xfff3e6 }); }
     caja(0.03, 0.03, 0.18, 0xe8c547, 0.29, 0.1, 0.02, cabeza); // lápiz en la oreja
   }
   if (o.rulos) {
@@ -538,39 +538,6 @@ function crearPersonaje(o) {
   return { g, cuerpo, piernas, brazos, mano, cabeza, matCuerpo, colorCuerpo, pelosPunta, gorra, sombreros: {}, fase: 0 };
 }
 
-// Cada oficio tiene su sombrero: el chapuzas se lo pone al coger la herramienta
-function crearSombrero(oficio) {
-  const g = new THREE.Group();
-  const cupula = (color) => { const c = new THREE.Mesh(new THREE.SphereGeometry(0.31, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(color)); c.position.y = 0.05; g.add(c); return c; };
-  switch (oficio) {
-    case 'fontaneria': // gorra azul de fontanero
-      cilindro(0.28, 0.28, 0.16, 0x2f7fd8, 0, 0.18, 0, g, 14); caja(0.32, 0.03, 0.22, 0x2f7fd8, 0, 0.12, 0.3, g); break;
-    case 'electricidad': // casco blanco con linterna
-      cupula(0xf4f4f4); cilindro(0.33, 0.33, 0.03, 0xf4f4f4, 0, 0.06, 0, g, 16);
-      cilindro(0.06, 0.06, 0.08, 0xffd23f, 0, 0.2, 0.28, g, 8).rotation.x = Math.PI / 2; break;
-    case 'pintura': { // gorro de papel de periódico
-      const c = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.4, 4), mat(0xeeeeea)); c.position.y = 0.33; c.rotation.y = Math.PI / 4; c.scale.set(1.2, 1, 0.5); g.add(c);
-      caja(0.3, 0.06, 0.02, 0x555555, 0, 0.3, 0.11, g, false); break; }
-    case 'carpinteria': { // boina
-      const b = esfera(0.31, 0x2a2a2a, 0, 0.17, -0.02, g, 14); b.scale.set(1.05, 0.35, 1.05);
-      esfera(0.035, 0x2a2a2a, 0, 0.29, 0, g, 6); break; }
-    case 'albanileria': // casco amarillo de obra
-      cupula(0xffc21a); cilindro(0.37, 0.37, 0.03, 0xffc21a, 0, 0.06, 0, g, 16); caja(0.04, 0.05, 0.3, 0xe0a800, 0, 0.34, 0, g); break;
-    case 'jardineria': // sombrero de paja
-      cilindro(0.52, 0.52, 0.03, 0xe2c46a, 0, 0.12, 0, g, 18); cilindro(0.24, 0.28, 0.22, 0xe2c46a, 0, 0.23, 0, g, 14);
-      cilindro(0.285, 0.285, 0.05, 0xc0392b, 0, 0.15, 0, g, 14); break;
-  }
-  g.traverse(m => { if (m.isMesh) m.castShadow = true; });
-  return g;
-}
-function ponerSombrero(c, oficio) {
-  for (const k in c.sombreros) c.sombreros[k].visible = false;
-  if (oficio) {
-    if (!c.sombreros[oficio]) { c.sombreros[oficio] = crearSombrero(oficio); c.cabeza.add(c.sombreros[oficio]); }
-    c.sombreros[oficio].visible = true;
-  }
-  if (c.gorra) c.gorra.visible = !oficio;
-}
 
 function animarAndar(c, dt, vel, trabajando = false) {
   const v = Math.min(1, vel / 3);
@@ -624,11 +591,11 @@ const OFICIOS = {
 };
 const FRASE_OFICIO = {
   fontaneria: ['Fontanero titulado. Por correspondencia.', 'Hoy soy fontanero. Que tiemblen las tuberías.'],
-  electricidad: ['Electricista. Si no da calambre, no cuenta.', 'Casco puesto. Lo de los cables ya lo veremos.'],
-  pintura: ['Pintor de brocha gorda. Muy gorda.', '¡Gorro de periódico! Ya soy un artista.'],
-  carpinteria: ['Carpintero: mido una vez y corto tres.', 'Boina puesta. Ya soy carpintero de toda la vida.'],
-  albanileria: ['Albañil. ¡Masa, que se seca!', 'Casco de obra. Ahora sí que impongo.'],
-  jardineria: ['Jardinero. Las plantas me tienen miedo.', 'Sombrero de paja. Ya sólo me falta el botijo.'],
+  electricidad: ['Electricista. Si no da calambre, no cuenta.', 'Lo de los cables ya lo veremos sobre la marcha.'],
+  pintura: ['Pintor de brocha gorda. Muy gorda.', 'Esto lo pinto yo con los ojos cerrados. Y se notará.'],
+  carpinteria: ['Carpintero: mido una vez y corto tres.', 'Madera, clavos y fe. Mucha fe.'],
+  albanileria: ['Albañil. ¡Masa, que se seca!', 'Un poco de cemento y como nuevo.'],
+  jardineria: ['Jardinero. Las plantas me tienen miedo.', 'Esto se poda en un momentito.'],
 };
 const HERRAMIENTAS = {
   llave: { nombre: 'la llave inglesa', corto: 'Llave inglesa', icono: '🔧', oficio: 'fontaneria' },
@@ -825,7 +792,7 @@ const QUEJAS = {
   mesa: '¡Mi mesa! ¡Ahora es una mesa para enanitos!',
   agujero: '¡El agujero es más grande! ¡Ahora veo la cocina desde el sofá!',
   azulejos: '¡Los azulejos están torcidos! ¡Parece el baño de un barco!',
-  seto: '¡Mi seto! ¡Lo han dejado como la cabeza de Arricio!',
+  seto: '¡Mi seto! ¡Lo han dejado más pelado que una bombilla!',
 };
 
 // --- Grifo ---
@@ -1181,7 +1148,7 @@ function actualizarGlobos(dt) {
 // Los dos chapuzas de la empresa. Uno lo manejas tú («paco» en el código) y el otro va por libre («ramon»).
 const CHAPUZAS = {
   arricio: { nombre: 'Arricio', clase: 'ramon', voz: 190, alturaGlobo: 2.45,
-    c: crearPersonaje({ cuerpo: 0xe0782a, piernas: 'mono', ancho: 1.3, barriga: true, bigote: true, calvo: true, zapatos: 0x2a1a10 }) },
+    c: crearPersonaje({ cuerpo: 0xe0782a, piernas: 'mono', ancho: 1.3, barriga: true, bigote: true, calvo: true, gorra: 0x1f3f6f, zapatos: 0x2a1a10 }) },
   jeremias: { nombre: 'Jeremías', clase: 'paco', voz: 330, alturaGlobo: 2.35,
     c: crearPersonaje({ cuerpo: 0x2f5fa8, piernas: 'mono', gorra: 0xd8382c, bolsillo: 0xf2a33a, zapatos: 0x3b2a1c }) },
 };
@@ -1250,8 +1217,7 @@ function reiniciar() {
   TIPOS.forEach(t => { G.encargos[t] = { activo: false, t: 0, max: 0, ramon: false, cd: 0 }; Visual.poner(t, 'ok'); });
   limpiarPeligros();
   particulas.forEach(p => p.m.removeFromParent()); particulas.length = 0;
-  for (const m of Object.values(CHAPUZAS)) { m.c.brazos[0].rotation.z = 0; m.c.cuerpo.rotation.set(0, 0, 0); m.c.cuerpo.position.set(0, 0, 0); ponerSombrero(m.c, null); }
-  ramon.conSombrero = false;
+  for (const m of Object.values(CHAPUZAS)) { m.c.brazos[0].rotation.z = 0; m.c.cuerpo.rotation.set(0, 0, 0); m.c.cuerpo.position.set(0, 0, 0); }
   paco.c.g.position.set(-1, 0, 7.6); paco.c.g.rotation.y = Math.PI; paco.estado = 'normal'; paco.vx = paco.vz = 0; paco.tinte = 0; paco.boost = 0;
   soltarHerramienta();
   restaurarTinte(paco);
@@ -1639,16 +1605,13 @@ function coger(id) {
   paco.mallaHerr = m;
   Sonido.coger();
   const oficio = HERRAMIENTAS[id].oficio;
-  const cambia = paco.oficio !== oficio;
+  if (paco.oficio !== oficio && Math.random() < 0.6) decir(paco, pick(FRASE_OFICIO[oficio]), 2.4);
   paco.oficio = oficio;
-  ponerSombrero(paco.c, oficio);
-  if (cambia) { decir(paco, pick(FRASE_OFICIO[oficio]), 2.4); estrellitas(paco.c.g.position.x, 2.1, paco.c.g.position.z); }
 }
 function soltarHerramienta() {
   if (paco.mallaHerr) { paco.mallaHerr.removeFromParent(); paco.mallaHerr = null; }
   if (paco.herr) { const r = ranuras.find(x => x.id === paco.herr); r.malla.visible = true; }
   paco.herr = null; paco.oficio = null;
-  if (paco.c) ponerSombrero(paco.c, null);
 }
 function accion() {
   if (G.mini) { pararMini(); return; }
@@ -1688,7 +1651,6 @@ function asignarRamon(tipo, vel = 2.3) {
   if (ramon.encargo) G.encargos[ramon.encargo].ramon = false;
   ramon.estado = 'ayudar'; ramon.encargo = tipo; ramon.velAyuda = vel; ramon.trabajaT = 0;
   G.encargos[tipo].ramon = true;
-  ponerSombrero(ramon.c, ENCARGOS[tipo].oficio); ramon.conSombrero = true;
   const [x, z] = ENCARGOS[tipo].pie;
   irA(ramon, x, z);
 }
@@ -1700,7 +1662,6 @@ function actualizarRamon(dt) {
   switch (r.estado) {
     case 'idle':
       r.vel = 0;
-      if (r.conSombrero) { ponerSombrero(r.c, null); r.conSombrero = false; }
       if (r.t <= 0) {
         const libres = TIPOS.filter(t => G.encargos[t].activo && !G.encargos[t].ramon);
         const tirada = Math.random();
