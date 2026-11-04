@@ -49,6 +49,9 @@
 
   #pista{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);
     font-weight:900;font-size:16px;padding:8px 16px;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+  #flecha{position:absolute;left:50%;bottom:calc(max(24px,env(safe-area-inset-bottom)) + 52px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px;padding:5px 12px;max-width:min(560px,92vw)}
+  #flecha i{display:inline-block;font-style:normal;font-size:22px;color:var(--rojo);transition:transform .15s linear}
+  #flecha span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #pista kbd{display:inline-block;background:var(--tinta);color:#fff;border-radius:5px;padding:0 6px;margin:0 2px;font-family:inherit}
 
   #rotulo{position:absolute;left:50%;top:32%;transform:translate(-50%,-50%) rotate(-6deg);font-family:'Bangers';
@@ -173,6 +176,7 @@
     #hud-der{width:180px} .encargo{font-size:11px;padding:4px 6px} .encargo .ico{font-size:18px} .encargo .t{font-size:16px}
     .encargo .sub{display:none} #hud-der h3{font-size:18px}
     #pista{font-size:13px;bottom:200px} #mini{bottom:210px}
+    #flecha{bottom:92px;max-width:44vw;font-size:11px;padding:4px 8px} #flecha i{font-size:18px}
     .globo{font-size:14px;max-width:min(240px,80vw)}
     #toasts{width:60vw;top:auto;bottom:250px}
   }
@@ -199,6 +203,7 @@
   <div id="hud-der"><h3>📋 Encargos</h3><div id="lista-encargos"></div></div>
   <div id="toasts"></div>
   <div id="pista" class="panel oculto"></div>
+  <div id="flecha" class="panel oculto"><i>⬆</i><span></span></div>
   <div id="rotulo"></div>
 </div>
 
@@ -243,7 +248,8 @@
     </div>
     <div class="controles">
       <b>Cómo se juega:</b> los clientes <b>llaman al teléfono del taller</b> o <b>vienen al mostrador</b> a encargar el trabajo.
-      Coge las herramientas de la estantería (puedes llevar dos), ve a su casa y para la aguja en lo verde. Si fallas… <b>¡CHAPUZA!</b><br>
+      Coge las herramientas de la estantería (puedes llevar dos; para trabajos en alto, también la <b>escalera</b>),
+      <b>sube a la furgoneta</b> 🚐, sigue la flecha hasta el piso, la casa o la tienda y para la aguja en lo verde. Si fallas… <b>¡CHAPUZA!</b><br>
       🔊 Los personajes hablan: sube el volumen.<br>
       <span class="solo-teclado"><kbd>WASD</kbd>/<kbd>flechas</kbd> moverse · <kbd>Shift</kbd> correr · <kbd>E</kbd>/<kbd>Espacio</kbd> acción ·
       <kbd>P</kbd> pausa · <kbd>M</kbd> sonido.<br></span>

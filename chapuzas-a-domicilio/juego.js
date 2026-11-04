@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from './lib/addons/RoundedBoxGeometry.js';
 import { RoomEnvironment } from './lib/addons/RoomEnvironment.js';
 import { GLTFLoader } from './lib/addons/GLTFLoader.js';
+import { mergeGeometries } from './lib/addons/utils/BufferGeometryUtils.js';
 
 /* =========================================================================
    Utilidades
@@ -549,14 +550,47 @@ for (let i = 0; i < 4; i++) cajaR(0.6, 0.22, 0.42, 0xd8d2c4, -15.6 + (i % 2) * 0
 addCol(-16.0, -14.3, 1.2, 1.8);
 cilindro(0.2, 0.17, 0.35, 0x9aa3ab, -16.2, 0.18, 0.6, scene, 16).material = mat(0x9aa3ab, 0.4, 0.7);
 { const e = new THREE.Group(); e.position.set(-14.35, 0, -0.9); e.rotation.z = 0.18; scene.add(e); for (const z of [-0.25, 0.25]) caja(0.06, 2.4, 0.06, 0xb0b0b0, 0, 1.2, z, e); for (let i = 0; i < 7; i++) caja(0.05, 0.04, 0.5, 0xb0b0b0, 0, 0.3 + i * 0.32, 0, e); }
+// Más material de obra en el taller: pinturas, escaleras, tubos, cables, cajas de herramientas...
+for (let i = 0; i < 18; i++) {
+  const col = [0xd8382c, 0x2f5fa8, 0xf2a33a, 0x3fae5a, 0xe9e2d0, 0x7e57c2, 0xffffff, 0x8a5a3a][i % 8];
+  const fila = Math.floor(i / 6), k = i % 6;
+  const b = cilindro(0.17, 0.17, 0.32, mat(col, 0.5, 0.2), -19.4 + k * 0.42, 0.16 + fila * 0.33, -5.5 + (fila % 2) * 0.05, scene, 14);
+  cilindro(0.172, 0.172, 0.03, mat(0x9aa3ab, 0.3, 0.8), b.position.x, b.position.y + 0.16, b.position.z, scene, 14);
+}
+addCol(-19.7, -16.8, -5.8, -5.2);
+plano(2.6, 0.3, new THREE.MeshStandardMaterial({ roughness: 0.7, map: texCartel([['🎨 PINTURAS', 44, 34]], '#d8509a', '#ffffff', 780, 70) }), -18.35, 1.25, -5.88);
+for (const [x, rz] of [[-14.35, 0.16], [-14.4, 0.2]]) { const e = new THREE.Group(); e.position.set(x, 0, rz > 0.18 ? 2.9 : 2.3); e.rotation.z = rz; scene.add(e); for (const z of [-0.25, 0.25]) caja(0.06, 2.6, 0.06, 0xc9a26b, 0, 1.3, z, e); for (let i = 0; i < 8; i++) caja(0.05, 0.04, 0.5, 0xc9a26b, 0, 0.3 + i * 0.3, 0, e); }
+for (let i = 0; i < 6; i++) { const t = cilindro(0.05, 0.05, 3.2, mat(i % 2 ? 0xb87333 : 0xd9dde2, 0.3, 0.8), -30.6, 2.1 + i * 0.09, -4.6, scene, 8); t.rotation.x = Math.PI / 2; }
+for (const [x, z, col] of [[-30.3, -1.0, 0xd8382c], [-30.3, -2.9, 0x2f5fa8]]) cajaR(0.45, 0.25, 0.3, mat(col, 0.4), x, 1.07, z, scene, 0.04);
+cajaR(0.18, 0.16, 0.34, mat(0xf2a33a, 0.4), -30.35, 1.03, -3.3, scene, 0.04); // taladro
+for (const z of [3.9, 4.6]) { const r = cilindro(0.35, 0.35, 0.25, mat(0x1e1e1e, 0.7), -15.0, 0.35, z, scene, 18); r.rotation.x = Math.PI / 2; }
+addCol(-15.4, -14.6, 3.5, 5);
+cilindro(0.12, 0.12, 0.5, mat(0xd8382c, 0.4, 0.2), -24.6, 0.25, 4.7, scene, 12); // extintor
+for (let i = 0; i < 5; i++) cajaR(2.6, 0.06, 0.25, 0xc9a26b, -28.6, 0.05 + i * 0.07, -4.6 + (i % 2) * 0.05, scene, 0.01); // tablones
+// En la acera, delante del taller: hormigonera, carretilla y sacos
+{
+  const h = new THREE.Group(); h.position.set(-17.5, 0, 7.3); h.rotation.y = 0.5; scene.add(h);
+  const bombo = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 0.9, 16), mat(0xf2a33a, 0.5, 0.2)); bombo.position.set(0, 1.0, 0); bombo.rotation.z = 0.9; bombo.castShadow = true; h.add(bombo);
+  for (const zz of [-0.35, 0.35]) caja(0.06, 0.9, 0.06, 0x555555, 0, 0.45, zz, h);
+  const r = cilindro(0.22, 0.22, 0.1, 0x1e1e1e, -0.4, 0.22, 0, h, 14); r.rotation.x = Math.PI / 2;
+  addCol(-18.1, -16.9, 6.8, 7.8);
+  const c = new THREE.Group(); c.position.set(-15.7, 0, 7.0); c.rotation.y = -0.3; scene.add(c);
+  cajaR(0.9, 0.3, 0.6, mat(0x3fae5a, 0.5, 0.3), 0, 0.5, 0, c, 0.08); cilindro(0.15, 0.15, 0.08, 0x1e1e1e, 0.55, 0.15, 0, c, 12).rotation.x = Math.PI / 2;
+  for (const zz of [-0.25, 0.25]) caja(0.9, 0.04, 0.04, 0x555555, -0.7, 0.55, zz, c);
+  addCol(-16.3, -15.1, 6.6, 7.4);
+  for (let i = 0; i < 3; i++) cajaR(0.6, 0.22, 0.42, 0xd8d2c4, -20.4, 0.11 + i * 0.22, 6.3, scene, 0.08);
+  addCol(-20.7, -20.1, 6.1, 6.5);
+}
+
 // Bombilla colgando del taller
-const luzTaller = new THREE.PointLight(0xffe2b0, 10, 14, 1.5); luzTaller.position.set(-22, 2.6, -1); scene.add(luzTaller);
+
 // Póster de fútbol (genérico)
 plano(0.8, 1.1, new THREE.MeshStandardMaterial({ roughness: 0.9, map: texCartel([['⚽', 90, 70], ['EL EQUIPO', 30, 150], ['DEL BARRIO', 30, 190]], '#3fae5a', '#ffffff', 200, 260) }), -27, 1.8, -5.82);
 
 /* ---------- 2. La calle: furgoneta, farolas, árboles, edificios ---------- */
 function furgoneta(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
+  const ruedas = [];
   const blanco = mat(0xf4f4f0, 0.35, 0.2);
   cajaR(3.4, 1.9, 2.1, blanco, -0.5, 1.3, 0, g, 0.18);
   cajaR(1.3, 1.3, 2.0, blanco, 1.6, 1.0, 0, g, 0.18);
@@ -564,8 +598,10 @@ function furgoneta(x, z) {
   cajaR(0.9, 0.55, 0.05, mat(0x6fb3d9, 0.1, 0.3), 1.6, 1.38, 1.0, g, 0.02);
   cajaR(0.2, 0.28, 2.15, 0x2b2b2b, 2.3, 0.55, 0, g, 0.05);
   for (const [wx, wz] of [[-1.4, 1.02], [1.4, 1.02], [-1.4, -1.02], [1.4, -1.02]]) {
-    const r = cilindro(0.42, 0.42, 0.3, mat(0x1e1e1e, 0.9), wx, 0.42, wz, g, 22); r.rotation.x = Math.PI / 2;
-    const l = cilindro(0.22, 0.22, 0.32, mat(0xcfcfcf, 0.3, 0.8), wx, 0.42, wz, g, 14); l.rotation.x = Math.PI / 2;
+    const rg = new THREE.Group(); rg.position.set(wx, 0.42, wz); g.add(rg); ruedas.push(rg);
+    const r = cilindro(0.42, 0.42, 0.3, mat(0x1e1e1e, 0.9), 0, 0, 0, rg, 22); r.rotation.x = Math.PI / 2;
+    const l = cilindro(0.22, 0.22, 0.32, mat(0xcfcfcf, 0.3, 0.8), 0, 0, 0, rg, 14); l.rotation.x = Math.PI / 2;
+    caja(0.12, 0.05, 0.33, 0x888888, 0, 0.15, 0, rg, false);
   }
   const rot = new THREE.Mesh(new THREE.PlaneGeometry(3.1, 1.5), new THREE.MeshStandardMaterial({
     roughness: 0.5,
@@ -583,9 +619,17 @@ function furgoneta(x, z) {
   // Escalera en la baca
   for (const zz of [-0.3, 0.3]) caja(3.0, 0.06, 0.1, 0xb0b0b0, -0.5, 2.32, zz, g);
   for (let i = 0; i < 7; i++) caja(0.05, 0.05, 0.6, 0xb0b0b0, -1.9 + i * 0.47, 2.32, 0, g);
-  addCol(x - 2.0, x + 2.4, z - 1.1, z + 1.1);
+  // Faros
+  for (const zz of [-0.7, 0.7]) { const f = cajaR(0.05, 0.22, 0.32, mat(0xfff6c8, 0.2), 2.3, 0.95, zz, g, 0.03); f.material = new THREE.MeshStandardMaterial({ color: 0xfff6c8, emissive: 0xfff0a0, emissiveIntensity: 0.6 }); }
+  return { g, ruedas };
 }
-furgoneta(-27.5, 8.4);
+// La furgoneta del taller: se puede conducir (la colisión se calcula cada fotograma)
+const FURGO = (() => {
+  const f = furgoneta(-27.5, 8.4);
+  const col1 = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, furgo: true }, col2 = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, furgo: true };
+  colisiones.push(col1, col2);
+  return { ...f, vel: 0, dentro: false, col1, col2, motorT: 0 };
+})();
 function farola(x, z) {
   cilindro(0.07, 0.1, 3.8, mat(0x2b2b2b, 0.5, 0.6), x, 1.9, z, scene, 10);
   const c = cajaR(0.32, 0.4, 0.32, mat(0xfff3b0, 0.2), x, 3.9, z, scene, 0.06); c.material = new THREE.MeshStandardMaterial({ color: 0xfff3b0, emissive: 0x6a5a20, roughness: 0.3 });
@@ -601,18 +645,55 @@ function arbol(x, z, s = 1, alcorque = false) {
   addCol(x - 0.25, x + 0.25, z - 0.25, z + 0.25);
 }
 [[-20, 9.9], [-4, 9.9], [16, 9.9], [35, 9.9]].forEach(([x, z]) => arbol(x, z, 0.9, true));
-[[-36, -3], [-38, 4], [40, -2], [42, 6], [-6, -12], [3, -13], [10, -11.5], [-20, -10], [25, -13], [-28, -10]].forEach(([x, z], i) => arbol(x, z, 0.9 + (i % 3) * 0.25));
+[[-6, -12], [3, -13], [10, -11.5], [-20, -10], [25, -13], [-28, -10]].forEach(([x, z], i) => arbol(x, z, 0.9 + (i % 3) * 0.25));
 // Banco y contenedor
 addCol(1.2, 2.8, 9.65, 10.2); // el banco de la calle se construye con los encargos
 cajaR(1.4, 1.2, 1.0, mat(0x2e7d32, 0.5), 22, 0.6, 9.9, scene, 0.06); addCol(21.3, 22.7, 9.4, 10.4);
-// Límites de la calle (invisibles)
-addCol(-62, 62, 10.7, 11.5);
-addCol(-60, -55.2, 5, 11.5);
-addCol(57.2, 62, 5, 11.5);
+/* ---------- La ciudad: dos avenidas, la calle sur y un parque en medio ---------- */
+suelo(-150, 150, -60, 170, texCesped([70, 60]), -0.02, 1);
+suelo(70, 72, 10.6, 17.5, texAsfalto([1, 3]), 0.006);
+suelo(-70, -63, 17.5, 107, texAsfalto([2, 26]), 0.006);
+suelo(65, 72, 17.5, 107, texAsfalto([2, 26]), 0.006);
+suelo(-63, 65, 100, 107, texAsfalto([36, 2]), 0.007);
+suelo(-78, -70, 5, 113, texAcera([4, 54]), 0.008);
+suelo(72, 80, 5, 113, texAcera([4, 54]), 0.008);
+suelo(-70, 72, 107, 113, texAcera([71, 3]), 0.008);
+suelo(-70, -56, 5, 10.6, texAcera([7, 3]), 0.008);
+suelo(58, 72, 5, 10.6, texAcera([7, 3]), 0.008);
+suelo(-63, 65, 17.5, 20, texAcera([64, 1]), 0.008);
+suelo(-63, -60, 20, 100, texAcera([1, 40]), 0.008);
+suelo(62, 65, 20, 100, texAcera([1, 40]), 0.008);
+suelo(-60, 62, 97, 100, texAcera([61, 1]), 0.008);
+for (let z = 22; z < 98; z += 4) { caja(0.18, 0.02, 2, 0xf5f0d8, -66.5, 0.012, z, scene, false); caja(0.18, 0.02, 2, 0xf5f0d8, 68.5, 0.012, z, scene, false); }
+for (let x = -60; x < 64; x += 4) caja(2, 0.02, 0.18, 0xf5f0d8, x, 0.012, 103.5, scene, false);
+// Parque en el centro de la manzana (no se puede entrar con la furgoneta)
+suelo(-60, 62, 20, 97, texCesped([30, 20]), 0.01);
+addCol(-60, 62, 25.5, 97);
+for (let i = 0; i < 26; i++) arbol(-55 + (i % 13) * 9 + rand(-1, 1), 32 + Math.floor(i / 13) * 52 + rand(-3, 3), 1.1 + Math.random() * 0.4);
+for (let i = 0; i < 10; i++) arbol(-50 + i * 11, 60 + rand(-6, 6), 1.2);
+{ cilindro(3, 3.2, 0.6, mat(0xbdb7ab, 0.8), 1, 0.3, 62, scene, 28); cilindro(2.6, 2.6, 0.05, mat(0x3fa7d6, 0.05, 0.1), 1, 0.6, 62, scene, 28); cilindro(0.3, 0.4, 1.6, mat(0xbdb7ab, 0.8), 1, 0.8, 62, scene, 12); }
+for (let x = -60; x < 62; x += 2.5) cajaR(2.3, 0.7, 0.5, mat(0x3f8f3f, 0.95), x + 1.2, 0.35, 26, scene, 0.15);
+// Manzanas de edificios que rodean el barrio
+function edificio(x0, x1, z0, z1, h, color) {
+  const w = x1 - x0, d = z1 - z0;
+  caja(w, h, d, color, (x0 + x1) / 2, h / 2, (z0 + z1) / 2);
+  caja(w + 0.3, 0.3, d + 0.3, 0x8a6a4a, (x0 + x1) / 2, h, (z0 + z1) / 2);
+  addCol(x0, x1, z0, z1);
+}
+const COLS_EDIF = [0xd98c6a, 0xe8b07a, 0xc9a07a, 0xe3c4a0, 0xcf7f5e, 0xd9cfbf];
+edificio(-96, -52.2, -14, 4.8, 5, COLS_EDIF[0]);
+edificio(54.2, 96, -14, 4.8, 5, COLS_EDIF[1]);
+for (const [z0, z1] of [[5, 44], [60, 99], [100, 112]]) edificio(-96, -80, z0, z1, 5.5, pick(COLS_EDIF));
+for (const [z0, z1] of [[5, 27], [43, 57], [73, 112]]) edificio(80.5, 96, z0, z1, 5.5, pick(COLS_EDIF));
+for (const [x0, x1] of [[-96, 1.5], [16.5, 96]]) edificio(x0, x1, 113.5, 128, 5, pick(COLS_EDIF));
+edificio(-96, -80.5, 112, 128, 5, COLS_EDIF[2]);
+// Límites del mapa
+addCol(-110, -96, -30, 140); addCol(96, 110, -30, 140); addCol(-110, 110, 128, 140);
+[[-74, 20], [-74, 70], [76, 20], [76, 50], [76, 90], [-20, 110], [30, 110]].forEach(([x, z]) => farola(x, z));
 // Edificios del barrio enfrente: ladrillo y balcones de hierro
 const coloresEdif = [0xd98c6a, 0xe8b07a, 0xc9a07a, 0xe3c4a0, 0xcf7f5e];
 for (let i = 0; i < 16; i++) {
-  const x = -58 + i * 8, h = rand(9, 14);
+  const x = -58 + i * 8, h = rand(3.4, 4.2);
   caja(7.6, h, 5, coloresEdif[i % 5], x, h / 2, 22.5);
   caja(7.8, 0.3, 5.2, 0x8a6a4a, x, h, 22.5);
   for (let fy = 3.2; fy < h - 1; fy += 2.8) for (let fx = -2.5; fx <= 2.5; fx += 2.5) {
@@ -1024,6 +1105,30 @@ const DEF_MODELOS = {
     colores: { Punk_Body_2: 0x7ec8e3, Punk_Body_3: 0x7ec8e3, Punk_Legs_1: 0x2b2b2b },
     tinte: ['Punk_Body_2', 'Punk_Body_3'],
   },
+  paqui: {
+    archivo: 'paqui', altura: 1.66, ancho: 1, cabeza: 'Adventurer_Head_1', cuerpoMalla: 'Adventurer_Body_4',
+    ocultar: [],
+    colores: { Adventurer_Body_1: 0x3f8f3f, Adventurer_Body_3: 0x3f8f3f, Adventurer_Body_6: 0x3f8f3f, Adventurer_Legs_1: 0x34495e, Adventurer_Legs_2: 0x34495e, Adventurer_Legs_3: 0x34495e, Adventurer_Legs_5: 0x34495e },
+    tinte: ['Adventurer_Body_1', 'Adventurer_Body_3'],
+  },
+  andres: {
+    archivo: 'andres', altura: 1.78, ancho: 1, cabeza: 'Adventurer_Head_1', cuerpoMalla: 'Adventurer_Body_2',
+    ocultar: ['Backpack_1', 'Backpack_2', 'Backpack_3', 'Backpack_4'],
+    colores: { Adventurer_Body_1: 0xf4f4f4, Adventurer_Body_2: 0xbfd9ee, Adventurer_Legs_1: 0x4a4f58, Adventurer_Legs_2: 0x4a4f58 },
+    tinte: ['Adventurer_Body_1'], gafas: 0x333333,
+  },
+  quique: {
+    archivo: 'jeremias', altura: 1.74, ancho: 1, cabeza: 'Punk_Head_1', cuerpoMalla: 'Punk_Body_3',
+    ocultar: [],
+    colores: { Punk_Body_1: 0x1e1e1e, Punk_Body_3: 0x8a1f2b, Punk_Legs_2: 0x2b2b2b },
+    tinte: ['Punk_Body_1', 'Punk_Legs_2'],
+  },
+  encarna: {
+    archivo: 'encarna', altura: 1.62, ancho: 1, cabeza: 'Medieval_Head_3', cuerpoMalla: 'Medieval_Body_2',
+    ocultar: ['Sword_1', 'Sword_2', 'Sword_3'],
+    colores: { Medieval_Body_1: 0xf7f3ea, Medieval_Body_2: 0xf7f3ea, Medieval_Body_3: 0xe8dcc8, Medieval_Body_5: 0xd9cbb0, Medieval_Body_6: 0xf7f3ea, Medieval_Legs: 0x6b5b4b },
+    tinte: ['Medieval_Body_1', 'Medieval_Body_2'], gorroCocina: true,
+  },
   fermin: {
     archivo: 'fermin', altura: 1.66, ancho: 1, cabeza: 'King_Head_1', cuerpoMalla: 'King_Body_3',
     ocultar: ['King_Head_4'],
@@ -1085,7 +1190,9 @@ async function cargarModelo(def) {
     if (!o.isMesh) return;
     o.material = o.material.clone();
     o.material.roughness = 0.82; o.material.metalness = 0;
-    o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
+    o.castShadow = true; o.receiveShadow = true;
+    // Descarte fuera de cámara con margen (las animaciones mueven brazos y piernas)
+    o.geometry.computeBoundingSphere(); o.geometry.boundingSphere.radius *= 1.6;
     mallas[o.name] = o;
     if (def.ocultar.includes(o.name)) o.visible = false;
     if (def.colores[o.name] != null) o.material.color.setHex(def.colores[o.name]);
@@ -1113,6 +1220,7 @@ async function cargarModelo(def) {
   let gorra = null;
   if (def.gorra) { gorra = gorraBlanca(radio * (def.gorraR || 1.06), def.gorra === 'atras'); gorra.position.y = radio * (def.gorraY ?? -0.62); if (def.gorra === 'atras') gorra.rotation.z = 0.06; cabeza.add(gorra); }
   if (def.pelo) { const p = esfera(radio * 1.04, mat(def.pelo, 0.45), 0, -radio * 0.62, -radio * 0.08, cabeza, 22); p.scale.set(1, 0.72, 1); }
+  if (def.gorroCocina) { cilindro(radio * 0.95, radio * 0.9, radio * 0.9, mat(0xffffff, 0.7), 0, -radio * 0.05, -radio * 0.05, cabeza, 18); esfera(radio * 1.05, mat(0xffffff, 0.7), 0, radio * 0.45, -radio * 0.05, cabeza, 18).scale.set(1, 0.55, 1); }
   if (def.boina) { const b = esfera(radio * 1.12, mat(0x1e1e1e, 0.9), 0, -radio * 0.3, -radio * 0.06, cabeza, 22); b.scale.set(1.08, 0.36, 1.1); esfera(radio * 0.09, mat(0x1e1e1e, 0.9), 0, radio * 0.08, 0, cabeza, 8); }
   if (def.rulos) {
     const cols = [0xff8fb1, 0x8fd3ff, 0xfff08f, 0xb1ff8f];
@@ -1204,9 +1312,11 @@ const HERRAMIENTAS = {
   serrucho: { nombre: 'el serrucho', corto: 'Serrucho', icono: '🪚', oficio: 'carpinteria' },
   paleta: { nombre: 'la paleta y el cemento', corto: 'Paleta y cemento', icono: '🧱', oficio: 'albanileria' },
   tijeras: { nombre: 'las tijeras de podar', corto: 'Tijeras de podar', icono: '✂️', oficio: 'jardineria' },
+  escalera: { nombre: 'la escalera', corto: 'Escalera', icono: '🪜', oficio: 'escalera' },
 };
 const ORDEN_HERR = ['llave', 'desatascador', 'destornillador', 'bombilla', 'brocha', 'rodillo', 'martillo', 'serrucho', 'paleta', 'tijeras'];
 const FRASE_OFICIO = {
+  escalera: ['Escalera al hombro. Que nadie se ponga delante.', 'Con la escalera llego a todo. Menos a fin de mes.'],
   fontaneria: ['Fontanero titulado. Por correspondencia.', 'Hoy toca fontanería. Que tiemblen las tuberías.'],
   electricidad: ['Electricista. Si no da calambre, no cuenta.', 'Lo de los cables ya lo veremos sobre la marcha.'],
   pintura: ['Pintor de brocha gorda. Muy gorda.', 'Esto lo pinto yo con los ojos cerrados. Y se notará.'],
@@ -1259,6 +1369,10 @@ function crearHerramienta(id) {
       { const h = caja(0.012, 0.16, 0.16, gris, 0, 0.27, 0, g); h.rotation.x = Math.PI / 4; }
       esfera(0.05, mat(0x9a9a9a, 0.95), 0.02, 0.3, 0, g, 8);
       break;
+    case 'escalera':
+      for (const x of [-0.12, 0.12]) caja(0.035, 1.1, 0.035, mat(0xc9a26b, 0.7), x, 0.55, 0, g);
+      for (let i = 0; i < 5; i++) caja(0.24, 0.025, 0.025, mat(0xc9a26b, 0.7), 0, 0.12 + i * 0.22, 0, g);
+      break;
     case 'tijeras':
       { const a = cajaR(0.02, 0.3, 0.04, gris, -0.02, 0.32, 0, g, 0.008); a.rotation.z = 0.15; const b = cajaR(0.02, 0.3, 0.04, gris, 0.02, 0.32, 0, g, 0.008); b.rotation.z = -0.15; }
       { const a = cajaR(0.03, 0.2, 0.04, mat(0xc0392b, 0.5), -0.05, 0.09, 0, g, 0.012); a.rotation.z = -0.2; const b = cajaR(0.03, 0.2, 0.04, mat(0xc0392b, 0.5), 0.05, 0.09, 0, g, 0.012); b.rotation.z = 0.2; }
@@ -1277,6 +1391,12 @@ const ranuras = ORDEN_HERR.map((id, i) => {
   scene.add(m);
   return { id, x, z: -4.75, malla: m };
 });
+// La escalera que se puede coger está apoyada en la pared del fondo del taller
+{
+  const m = crearHerramienta('escalera'); m.scale.setScalar(2.2); m.position.set(-14.4, 0, -0.9); m.rotation.z = 0.12; scene.add(m);
+  ranuras.push({ id: 'escalera', x: -15.3, z: -0.9, malla: m });
+  plano(0.9, 0.24, new THREE.MeshStandardMaterial({ roughness: 0.7, map: texCartel([['🪜 ESCALERA', 40, 34]], '#555555', '#ffffff', 270, 70) }), -14.12, 2.7, -0.9, -Math.PI / 2);
+}
 for (const [k, o] of Object.entries(OFICIOS)) {
   const rs = ranuras.filter(r => HERRAMIENTAS[r.id].oficio === k);
   const x0 = rs[0].x, x1 = rs[rs.length - 1].x, ancho = x1 - x0 + 0.8;
@@ -1354,6 +1474,228 @@ function limpiarPeligros() { peligros.forEach(p => p.m.removeFromParent()); peli
 /* =========================================================================
    Encargos de los clientes y los objetos que se arreglan (o se rompen más)
    ========================================================================= */
+/* ---------- Locales de otros clientes: frutería, farmacia, bloque de pisos, panadería ---------- */
+const LOCALES = [];
+function construirLocal(L) {
+  suelo(L.x0, L.x1, L.z0, L.z1, L.suelo, 0.013);
+  const c = L.pared, lados = { N: [L.x0, L.z0, L.x1, L.z0], S: [L.x0, L.z1, L.x1, L.z1], O: [L.x0, L.z0, L.x0, L.z1], E: [L.x1, L.z0, L.x1, L.z1] };
+  for (const [lado, [a, b, cc, d]] of Object.entries(lados)) {
+    const alto = lado === 'N' && L.frente !== 'N' ? H_ALTA : H_BAJA;
+    if (lado === L.frente) {
+      const [p0, p1] = L.puerta;
+      if (lado === 'O' || lado === 'E') { pared(a, b, a, p0, alto, c); pared(a, p1, a, d, alto, c); }
+      else { pared(a, b, p0, b, alto, c); pared(p1, b, cc, b, alto, c); }
+    } else pared(a, b, cc, d, alto, c);
+  }
+  // Rótulo por fuera de la fachada
+  const [txt, sub, fondo] = L.rotulo;
+  const mapa = texLienzo(1024, 190, (g, w, h) => {
+    g.fillStyle = fondo; g.fillRect(0, 0, w, h); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '900 80px Nunito, Arial'; g.fillText(txt, w / 2, 70); g.font = '800 36px Nunito, Arial'; g.fillText(sub, w / 2, 145);
+  });
+  const m = new THREE.MeshStandardMaterial({ roughness: 0.6, map: mapa });
+  if (L.frente === 'O') plano(4.6, 1.0, m, L.x0 - 0.115, 0.78, (L.z0 + L.puerta[0]) / 2, -Math.PI / 2);
+  if (L.frente === 'E') plano(4.6, 1.0, m, L.x1 + 0.115, 0.78, (L.z0 + L.puerta[0]) / 2, Math.PI / 2);
+  if (L.frente === 'N') plano(4.6, 1.0, m, (L.x0 + L.puerta[0]) / 2 - 0.3, 0.78, L.z0 - 0.115, Math.PI);
+  LOCALES.push(L);
+}
+const LOC = {
+  fruteria: { id: 'fruteria', nombre: 'la Frutería Paqui', x0: 80, x1: 94, z0: 28, z1: 42, frente: 'O', puerta: [33, 37], pared: 0xe6f2d8, suelo: texBaldosa('#f4f1ea', '#9cc98a', [5, 5]), rotulo: ['FRUTERÍA PAQUI', 'Fruta del día · Verduras', '#3f8f3f'] },
+  farmacia: { id: 'farmacia', nombre: 'la Farmacia', x0: 80, x1: 94, z0: 58, z1: 72, frente: 'O', puerta: [63, 67], pared: 0xf2f6f2, suelo: texBaldosa('#ffffff', '#cfd8dc', [5, 5]), rotulo: ['FARMACIA', 'Ldo. Andrés · De guardia', '#2e8b57'] },
+  bloque: { id: 'bloque', nombre: 'el piso de Quique (3.º A)', x0: 2, x1: 16, z0: 113, z1: 125, frente: 'N', puerta: [7.5, 10.5], pared: 0xf1e2c4, suelo: texParquet([3, 3]), rotulo: ['Nº 12 · 3.º A', 'Bloque de viviendas', '#6b4321'] },
+  panaderia: { id: 'panaderia', nombre: 'la Panadería Encarna', x0: -94, x1: -80, z0: 45, z1: 59, frente: 'E', puerta: [50, 54], pared: 0xf7ead2, suelo: texBaldosa('#efe2c8', '#c9a26b', [5, 5]), rotulo: ['PANADERÍA ENCARNA', 'Pan de leña · Bollería', '#b5651d'] },
+};
+Object.values(LOC).forEach(construirLocal);
+// Muebles de cada local
+// Frutería: mostrador, cajas de fruta y báscula
+cajaR(3, 1.0, 0.8, 0x6b4321, 84, 0.5, 40.2, scene, 0.03); addCol(82.5, 85.5, 39.8, 40.6);
+cajaR(0.4, 0.15, 0.35, mat(0xd9dde2, 0.2, 0.8), 84.6, 1.08, 40.2, scene, 0.03);
+for (let i = 0; i < 6; i++) {
+  const x = 85 + (i % 3) * 2.2, z = 31.5 + Math.floor(i / 3) * 2;
+  cajaR(1.4, 0.5, 0.9, 0xb08a5a, x, 0.6, z, scene, 0.02); caja(0.06, 0.6, 0.06, 0x6b4321, x, 0.3, z);
+  const col = [0xd8382c, 0xff9f1a, 0xffd23f, 0x3fae5a, 0x7e57c2, 0xd8382c][i];
+  for (let k = 0; k < 8; k++) esfera(0.11, mat(col, 0.5), x - 0.5 + (k % 4) * 0.32, 0.92, z - 0.2 + Math.floor(k / 4) * 0.35, scene, 10);
+  addCol(x - 0.7, x + 0.7, z - 0.45, z + 0.45);
+}
+// Farmacia: mostrador y estanterías de medicinas
+cajaR(4, 1.0, 0.8, 0xffffff, 87, 0.5, 70.3, scene, 0.03); addCol(85, 89, 69.9, 70.7);
+for (let i = 0; i < 2; i++) { cajaR(3.4, 0.05, 0.4, 0xd9dde2, 87, 0.9 + i * 0.5, 71.7, scene, 0.01); for (let k = 0; k < 8; k++) cajaR(0.25, 0.3, 0.2, mat(pick([0xffffff, 0x8fc3d9, 0xd8382c, 0x3fae5a]), 0.6), 85.6 + k * 0.4, 1.08 + i * 0.5, 71.7, scene, 0.02); }
+// Piso de Quique: cama, sofá, mesa con el ordenador y pósters
+cajaR(2, 0.45, 2.6, 0x3a3f4a, 4.2, 0.25, 122.5, scene, 0.05); cajaR(1.9, 0.18, 1.6, 0x2b2b2b, 4.2, 0.55, 122.0, scene, 0.06); addCol(3.2, 5.2, 121.2, 123.8);
+cajaR(1.6, 0.05, 0.8, 0x8a5a3a, 12, 0.75, 123.5, scene, 0.02); cajaR(0.6, 0.4, 0.05, 0x1e1e1e, 12, 1.0, 123.6, scene, 0.02); addCol(11.2, 12.8, 123.1, 123.9);
+for (const x of [3.5, 12.5]) plano(0.8, 1.0, new THREE.MeshStandardMaterial({ roughness: 0.9, map: texCartel([['🤘', 70, 60], ['PUNK', 40, 140]], '#1e1e1e', '#ff2fd1', 200, 200) }), x, 1.0, 124.89, Math.PI);
+// Panadería: mostrador con barras de pan y estanterías
+cajaR(0.8, 1.0, 3, 0x8a5a3a, -82.2, 0.5, 47.5, scene, 0.03); addCol(-82.6, -81.8, 46, 49);
+for (let i = 0; i < 6; i++) { const b = capsula(0.07, 0.45, mat(0xd9a45a, 0.9), -82.2, 1.1, 46.3 + i * 0.4); b.rotation.x = Math.PI / 2; }
+for (let i = 0; i < 3; i++) cajaR(0.5, 0.05, 3, 0xc9a26b, -93.6, 0.7 + i * 0.5, 56.5, scene, 0.01);
+
+// Encargos genéricos: cada tipo sabe dibujarse, estropearse, arreglarse… o acabar en chapuza
+const INST = {};
+const vT = new THREE.Vector3();
+function crearTipoGenerico(tipo, g, L) {
+  const W = v => g.localToWorld(vT.set(v[0], v[1], v[2])).clone();
+  const i = { pie: [0, 0, 1.0], mira: [0, 1, 0], poner() {}, act() {}, fx() {} };
+  switch (tipo) {
+    case 'grifo': {
+      cajaR(1.0, 0.9, 0.6, 0xf0ede6, 0, 0.45, 0.3, g, 0.02); cajaR(1.04, 0.05, 0.64, mat(0x8f8f8f, 0.3, 0.3), 0, 0.92, 0.3, g, 0.01);
+      cilindro(0.035, 0.035, 0.3, mat(0xd9dde2, 0.15, 1), 0, 1.1, 0.12, g, 10); cajaR(0.04, 0.04, 0.22, mat(0xd9dde2, 0.15, 1), 0, 1.25, 0.22, g, 0.01);
+      i.pie = [0, 0, 1.15];
+      i.act = (dt, t, e) => { const w = W([0, 1.2, 0.32]); if (e === 'roto' && Math.random() < dt * 2.5) emitir(w.x, w.y, w.z, 1, { color: 0x5fb6e6, vel: 0, sube: 0.1, tam: 0.04, vida: 0.5, brilla: true }); if (e === 'chapuza' && t < 3) emitir(w.x, w.y + 0.1, w.z, 4, { color: [0x5fb6e6, 0xffffff], vel: 1.4, sube: 7, tam: 0.07, vida: 1.2, brilla: true }); };
+      i.fx = () => { Sonido.chof(); const w = W([0, 0, 1.3]); luego(0.5, () => crearCharco(w.x, w.z, 1.2)); };
+      break;
+    }
+    case 'enchufe': {
+      cajaR(0.22, 0.22, 0.05, 0xffffff, 0, 0.5, 0.03, g, 0.02);
+      const q = new THREE.Mesh(new THREE.CircleGeometry(0.45, 18), new THREE.MeshBasicMaterial({ color: 0x1a1a1a, transparent: true, opacity: 0.8 })); q.position.set(0, 0.55, 0.012); q.visible = false; g.add(q);
+      i.pie = [0, 0, 0.9];
+      i.poner = e => { q.visible = e === 'chapuza'; };
+      i.act = (dt, t, e) => { const w = W([0, 0.5, 0.1]); if (e === 'roto' && Math.random() < dt * 1.8) emitir(w.x, w.y, w.z, 5, { color: [0xffd23f, 0xffffff], brilla: true, vel: 1.2, sube: 1.5, tam: 0.03, vida: 0.35 }); };
+      i.fx = autor => { Sonido.zas(); const w = W([0, 0.5, 0.1]); emitir(w.x, w.y, w.z, 40, { color: [0xffd23f, 0xffffff, 0x8fd3ff], brilla: true, vel: 4, sube: 4, tam: 0.04, vida: 0.6 }); electrocutar(autor); empezarApagon(7); };
+      break;
+    }
+    case 'luz': {
+      cajaR(1.4, 0.08, 0.25, 0xdddddd, 0, 2.45, 0.2, g, 0.02);
+      const tubo = cilindro(0.05, 0.05, 1.2, 0xffffff, 0, 2.38, 0.2, g, 10); tubo.rotation.z = Math.PI / 2;
+      tubo.material = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xeaf6ff, emissiveIntensity: 1 });
+      const luz = { intensity: 0 }; // sólo brillo del tubo: una luz real por local pesaría demasiado en el móvil
+      i.pie = [0, 0, 1.0]; i.mira = [0, 2.3, 0.2];
+      i.poner = e => { tubo.material.emissiveIntensity = e === 'ok' ? 1 : 0; tubo.material.color.set(e === 'chapuza' ? 0x333333 : 0xffffff); luz.intensity = e === 'ok' ? 6 : 0; };
+      i.act = (dt, t, e) => { if (e === 'roto') { const on = Math.sin(t * 21) > 0.4 && Math.random() < 0.6; tubo.material.emissiveIntensity = on ? 1 : 0; luz.intensity = on ? 4 : 0; } };
+      i.fx = () => { Sonido.zas(); const w = W([0, 2.38, 0.2]); emitir(w.x, w.y, w.z, 30, { color: [0xffffff, 0xd8f2ff], brilla: true, cubo: true, vel: 3, sube: 2, tam: 0.04, vida: 0.8 }); empezarApagon(8); };
+      break;
+    }
+    case 'pared': {
+      const pl = plano(2.4, 1.8, new THREE.MeshStandardMaterial({ color: L.pared, roughness: 0.95 }), 0, 1.15, 0.012, 0, g);
+      i.pie = [0, 0, 0.85];
+      i.poner = e => { pl.material.map = e === 'roto' ? texDesconchada : e === 'chapuza' ? texChillona() : null; pl.material.color.set(e === 'ok' ? (i.yaPintada ? pick(COLORES_BONITOS) : L.pared) : 0xffffff); pl.material.needsUpdate = true; if (e === 'roto') i.yaPintada = true; };
+      i.fx = autor => { Sonido.chof(); const w = W([0, 1.2, 0.4]); const col = new THREE.Color(colorChillon()).getHex(); emitir(w.x, w.y, w.z, 40, { color: col, vel: 3, sube: 3, tam: 0.08, vida: 1.2 }); teñir(autor, col, 14); };
+      break;
+    }
+    case 'estante': {
+      const e1 = new THREE.Group(); e1.position.set(0, 1.4, 0.2); g.add(e1);
+      cajaR(2.0, 0.06, 0.4, 0xc9a26b, 0, 0, 0, e1, 0.01);
+      const cosas = []; for (let k = 0; k < 6; k++) cosas.push(cajaR(0.26, 0.26, 0.26, mat(pick([0xd8382c, 0xff9f1a, 0x3fae5a, 0xffd23f]), 0.6), -0.8 + k * 0.32, 0.16, 0, e1, 0.05));
+      i.pie = [0, 0, 1.0]; i.mira = [0, 1.4, 0];
+      i.poner = e => {
+        e1.rotation.set(0, 0, e === 'roto' ? 0.45 : e === 'chapuza' ? 1.35 : 0);
+        cosas.forEach((c2, k) => { if (e === 'ok') c2.position.set(-0.8 + k * 0.32, 0.16, 0); else { c2.position.set(-0.8 + k * 0.32 + rand(-0.2, 0.2), -1.25 - (e === 'chapuza' ? 0 : 0.1), 0.4 + rand(0, 0.5)); } });
+        if (e !== 'ok') cosas.forEach(c2 => { const w = c2.getWorldPosition(new THREE.Vector3()); c2.position.y += -w.y + 0.13; });
+      };
+      i.fx = () => { Sonido.crash(); const w = W([0, 1.3, 0.4]); emitir(w.x, w.y, w.z, 25, { color: [0xd8382c, 0xff9f1a, 0x3fae5a], vel: 2.5, sube: 2, tam: 0.07, vida: 1.2 }); };
+      break;
+    }
+    case 'puerta': {
+      cajaR(0.1, 2.2, 0.12, 0x9aa3ab, -0.6, 1.1, 0.1, g, 0.02); cajaR(0.1, 2.2, 0.12, 0x9aa3ab, 0.6, 1.1, 0.1, g, 0.02); cajaR(1.3, 0.1, 0.12, 0x9aa3ab, 0, 2.2, 0.1, g, 0.02);
+      const hoja = new THREE.Group(); hoja.position.set(-0.55, 0, 0.12); g.add(hoja);
+      const cr = cajaR(1.05, 2.05, 0.04, new THREE.MeshStandardMaterial({ color: 0xbfe3f2, roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.55 }), 0.53, 1.05, 0, hoja, 0.01);
+      i.pie = [0, 0, 1.2];
+      i.poner = e => { hoja.rotation.set(0, 0, 0); hoja.position.set(-0.55, 0, 0.12); cr.visible = true; if (e === 'roto') { hoja.rotation.z = -0.22; hoja.position.y = -0.05; } if (e === 'chapuza') { hoja.rotation.x = -1.5; hoja.position.set(-0.55, 0.05, 0.3); } };
+      i.fx = () => { Sonido.crash(); const w = W([0, 0.3, 0.8]); emitir(w.x, w.y, w.z, 30, { color: [0xbfe3f2, 0xffffff], brilla: true, cubo: true, vel: 2.5, sube: 2, tam: 0.05, vida: 1.2, gira: 6 }); };
+      break;
+    }
+    case 'rotulo': {
+      cilindro(0.05, 0.05, 1.0, 0x555555, 0, 2.2, 0.3, g, 8).rotation.x = Math.PI / 2;
+      const cruz = new THREE.Group(); cruz.position.set(0, 2.6, 0.75); cruz.rotation.y = Math.PI / 2; g.add(cruz);
+      const mt = new THREE.MeshStandardMaterial({ color: 0x2ecc71, emissive: 0x2ecc71, emissiveIntensity: 1, roughness: 0.4 });
+      cajaR(0.7, 0.22, 0.12, mt, 0, 0, 0, cruz, 0.02); cajaR(0.22, 0.7, 0.12, mt, 0, 0, 0, cruz, 0.02);
+      i.pie = [0, 0, 1.2]; i.mira = [0, 2.6, 0.75];
+      i.poner = e => { mt.emissiveIntensity = e === 'ok' ? 1 : 0; mt.color.set(e === 'chapuza' ? 0x333333 : 0x2ecc71); };
+      i.act = (dt, t, e) => { if (e === 'roto') mt.emissiveIntensity = Math.sin(t * 17) > 0.3 && Math.random() < 0.6 ? 1 : 0; };
+      i.fx = autor => { Sonido.zas(); const w = W([0, 2.6, 0.75]); emitir(w.x, w.y, w.z, 35, { color: [0x2ecc71, 0xffffff], brilla: true, vel: 3, sube: 2, tam: 0.04, vida: 0.7 }); electrocutar(autor); };
+      break;
+    }
+    case 'radiador': {
+      const rad = new THREE.Group(); rad.position.set(0, 0.45, 0.12); g.add(rad);
+      for (let k = 0; k < 8; k++) cajaR(0.1, 0.6, 0.12, 0xf3f3f3, -0.42 + k * 0.12, 0, 0, rad, 0.03);
+      cilindro(0.025, 0.025, 1.0, mat(0xd9dde2, 0.2, 0.9), 0, -0.32, 0, rad, 8).rotation.z = Math.PI / 2;
+      i.pie = [0, 0, 0.95];
+      i.act = (dt, t, e) => { const w = W([0.45, 0.2, 0.15]); if (e === 'roto' && Math.random() < dt * 3) emitir(w.x, w.y, w.z, 1, { color: 0x5fb6e6, vel: 0.1, sube: 0.1, tam: 0.04, vida: 0.5, brilla: true }); if (e === 'chapuza' && t < 3) emitir(w.x, w.y + 0.2, w.z, 3, { color: [0x5fb6e6, 0xffffff], vel: 2.5, sube: 3, tam: 0.06, vida: 1, brilla: true }); };
+      i.fx = () => { Sonido.chof(); const w = W([0, 0, 1.3]); luego(0.5, () => crearCharco(w.x, w.z, 1.2)); };
+      break;
+    }
+    case 'gotera': {
+      const mancha = new THREE.Mesh(new THREE.CircleGeometry(0.6, 18), new THREE.MeshBasicMaterial({ color: 0x8a7a5a, transparent: true, opacity: 0.6 })); mancha.position.set(0, 1.25, 0.012); g.add(mancha);
+      const cubo = cilindro(0.2, 0.16, 0.3, mat(0x2f5fa8, 0.5), 0, 0.15, 1.2, g, 14);
+      const cascote = cajaR(0.5, 0.15, 0.4, mat(0xcfc6b5, 1), 0.1, 0.08, 1.3, g, 0.04);
+      i.pie = [0.9, 0, 1.2]; i.mira = [0, 2.5, 1.2];
+      i.poner = e => { mancha.visible = e !== 'ok'; cubo.visible = e === 'roto'; cascote.visible = e === 'chapuza'; mancha.scale.setScalar(e === 'chapuza' ? 1.8 : 1); };
+      i.act = (dt, t, e) => { const w = W([0, 2.6, 1.2]); if (e === 'roto' && Math.random() < dt * 2) emitir(w.x, w.y, w.z, 1, { color: 0x5fb6e6, vel: 0, sube: 0, gravedad: 9, tam: 0.05, vida: 0.7, brilla: true }); };
+      i.fx = () => { Sonido.crash(); G.temblor = 0.4; const w = W([0, 2.5, 1.2]); emitir(w.x, w.y, w.z, 30, { color: [0xcfc6b5, 0xbdbdbd], cubo: true, vel: 1.5, sube: 0.5, tam: 0.08, vida: 1.4 }); luego(0.6, () => { const c2 = W([0, 0, 1.3]); crearCharco(c2.x, c2.z, 1.1); }); };
+      break;
+    }
+    case 'horno': {
+      cajaR(1.6, 1.6, 0.9, mat(0x9aa3ab, 0.35, 0.7), 0, 0.8, 0.5, g, 0.05);
+      const boca = plano(0.9, 0.5, new THREE.MeshStandardMaterial({ color: 0x1e1e1e, emissive: 0xff7a1a, emissiveIntensity: 0.8 }), 0, 0.95, 0.96, 0, g);
+      i.pie = [0, 0, 1.6]; i.mira = [0, 1, 0.5];
+      i.poner = e => { boca.material.emissiveIntensity = e === 'ok' ? 0.8 : 0.05; };
+      i.act = (dt, t, e) => { const w = W([0, 1.7, 0.6]); if (e === 'roto' && Math.random() < dt * 1.5) emitir(w.x, w.y, w.z, 1, { color: 0x777777, vel: 0.2, sube: 0.8, gravedad: -0.4, tam: 0.12, vida: 1.6, crece: 2 }); if (e === 'chapuza' && t < 4 && Math.random() < dt * 8) emitir(w.x, w.y, w.z, 2, { color: [0x333333, 0x222222], vel: 0.6, sube: 1.4, gravedad: -0.5, tam: 0.18, vida: 2, crece: 2.5 }); };
+      i.fx = autor => { Sonido.crash(); teñir(autor, 0x2a2a2a, 12); };
+      break;
+    }
+    case 'nevera': {
+      cajaR(2.0, 1.9, 0.8, 0xf3f3f3, 0, 0.95, 0.45, g, 0.05);
+      const cristal = plano(1.7, 1.3, new THREE.MeshStandardMaterial({ color: 0xbfe3f2, roughness: 0.05, metalness: 0.4, transparent: true, opacity: 0.7 }), 0, 1.05, 0.86, 0, g);
+      for (let k = 0; k < 10; k++) esfera(0.1, mat(pick([0xd8382c, 0x3fae5a, 0xffd23f]), 0.5), -0.7 + (k % 5) * 0.35, 0.6 + Math.floor(k / 5) * 0.6, 0.6, g, 8);
+      i.pie = [0, 0, 1.5]; i.mira = [0, 1, 0.45];
+      i.poner = e => { cristal.material.color.set(e === 'ok' ? 0xbfe3f2 : e === 'chapuza' ? 0xe8f8ff : 0x9a9a8a); };
+      i.act = (dt, t, e) => { const w = W([0.7, 0.2, 0.9]); if (e === 'roto' && Math.random() < dt * 2) emitir(w.x, w.y, w.z, 1, { color: 0x5fb6e6, vel: 0, sube: 0.05, tam: 0.04, vida: 0.5, brilla: true }); if (e === 'chapuza' && t < 3 && Math.random() < dt * 10) { const c2 = W([0, 1.2, 1.0]); emitir(c2.x, c2.y, c2.z, 2, { color: [0xe8f8ff, 0xffffff, 0xbfe3f2], cubo: true, vel: 2.5, sube: 2, tam: 0.07, vida: 1.6, gira: 5 }); } };
+      i.fx = autor => { Sonido.zas(); teñir(autor, 0x9fd8f2, 10); };
+      break;
+    }
+  }
+  return i;
+}
+// Encargos de los locales nuevos: dónde están, qué hace falta y qué dice el cliente
+const GENERADOS = [
+  { id: 'camara', lugar: 'fruteria', cliente: 'paqui', tipo: 'nevera', lado: 'E', off: 4, herr: 'destornillador', icono: '🧊', nombre: 'La cámara frigorífica no enfría',
+    pedido: ['¡Ay, que la cámara de la frutería no enfría! ¡Se me van a poner pochas las fresas!', 'La nevera grande de la frutería hace un ruido rarísimo y no enfría. ¡Vengan pronto!'],
+    queja: '¡Me han congelado la fruta! ¡Ahora vendo granizado de melón!', desperfecto: 'Cámara de la frutería convertida en congelador polar' },
+  { id: 'estanteria', lugar: 'fruteria', cliente: 'paqui', tipo: 'estante', lado: 'E', off: 10.5, herr: 'martillo', icono: '🍎', nombre: 'Se ha caído la estantería',
+    pedido: ['Se me ha caído la estantería de la frutería. ¡Tengo naranjas rodando por toda la tienda!', 'La estantería de la frutería se ha descolgado. Necesito que me la cuelguen bien.'],
+    queja: '¡Más naranjas por el suelo! ¡Esto parece la tomatina!', desperfecto: 'Estantería de la frutería otra vez en el suelo' },
+  { id: 'fluorescente', lugar: 'fruteria', cliente: 'paqui', tipo: 'luz', lado: 'N', off: 3.5, herr: 'bombilla', extra: 'escalera', icono: '💡', nombre: 'El fluorescente parpadea',
+    pedido: ['El fluorescente de la frutería parpadea. Parece una discoteca de las de antes.', 'Se me ha fundido la luz del techo de la frutería. No veo ni los tomates.'],
+    queja: '¡A oscuras! ¡Ahora no distingo un pimiento de un tomate!', desperfecto: 'Fluorescente de la frutería reventado' },
+  { id: 'cruz', lugar: 'farmacia', cliente: 'andres', tipo: 'rotulo', exterior: true, lado: 'O', off: 2.5, herr: 'bombilla', extra: 'escalera', icono: '➕', nombre: 'La cruz de la farmacia está fundida',
+    pedido: ['Buenos días, llamo de la farmacia. La cruz verde de la fachada está fundida y hoy estoy de guardia.', 'Se ha fundido la cruz de la farmacia. Sin cruz no me encuentra nadie.'],
+    queja: '¡La cruz echa chispas! ¡Parece una feria, no una farmacia!', desperfecto: 'Cruz verde de la farmacia chamuscada' },
+  { id: 'cristal', lugar: 'farmacia', cliente: 'andres', tipo: 'puerta', lado: 'N', off: 9, herr: 'destornillador', icono: '🚪', nombre: 'Puerta de cristal descolgada',
+    pedido: ['La puerta de cristal de la rebotica se ha descolgado. Necesito que la ajusten con cuidado.', 'Tengo la puerta de cristal de la farmacia torcida. ¿Pueden venir a ajustarla?'],
+    queja: '¡Han roto la puerta de cristal! ¡Esto no lo cura ni un jarabe!', desperfecto: 'Puerta de cristal de la farmacia hecha añicos' },
+  { id: 'pintarfarmacia', lugar: 'farmacia', cliente: 'andres', tipo: 'pared', lado: 'E', off: 9, herr: 'rodillo', icono: '🎨', nombre: 'Pintar la pared de la farmacia',
+    pedido: ['Quiero pintar la pared de la farmacia. Blanco hospital, por favor. Nada de inventos.', 'La pared de la farmacia está llena de manchas. ¿Pueden venir a pintarla?'],
+    queja: '¡Les dije blanco! ¡Esto es rosa chicle!', desperfecto: 'Pared de la farmacia en color «chicle de fresa»' },
+  { id: 'radiador', lugar: 'bloque', cliente: 'quique', tipo: 'radiador', lado: 'E', off: 4, herr: 'llave', icono: '♨️', nombre: 'El radiador pierde agua',
+    pedido: ['Tío, el radiador de mi piso pierde agua. Vivo en el bloque de la calle sur, el tercero A.', 'Oye, que el radiador hace glu glu y moja el suelo. ¿Venís al piso?'],
+    queja: '¡Tío, que me habéis hecho una piscina en el salón!', desperfecto: 'Radiador del 3.º A convertido en fuente' },
+  { id: 'gotera', lugar: 'bloque', cliente: 'quique', tipo: 'gotera', lado: 'S', off: 9, herr: 'paleta', extra: 'escalera', icono: '💧', nombre: 'Gotera en el techo',
+    pedido: ['Tengo una gotera en el techo del piso. Ya llevo tres cubos llenos, colega.', 'Me cae agua del techo, tío. El del cuarto dice que no es suyo.'],
+    queja: '¡Se ha caído medio techo! ¡Ahora veo la casa del vecino!', desperfecto: 'Medio techo del 3.º A en el suelo' },
+  { id: 'enchufequique', lugar: 'bloque', cliente: 'quique', tipo: 'enchufe', lado: 'O', off: 7, herr: 'destornillador', icono: '🔌', nombre: 'El enchufe hace chispas',
+    pedido: ['El enchufe de mi cuarto echa chispas y tengo que cargar la guitarra eléctrica. ¡Venid!', 'Tío, el enchufe hace bzzz y huele a quemado.'],
+    queja: '¡Se ha ido la luz en todo el bloque! ¡Mi vecina me va a matar!', desperfecto: 'Apagón en todo el bloque de pisos' },
+  { id: 'horno', lugar: 'panaderia', cliente: 'encarna', tipo: 'horno', lado: 'O', off: 3, herr: 'destornillador', icono: '🥖', nombre: 'El horno no calienta',
+    pedido: ['¡El horno de la panadería no calienta! ¡Tengo la masa esperando y la cola en la puerta!', 'El horno grande de la panadería echa humo y no cuece. ¡Socorro!'],
+    queja: '¡El pan ha salido carbonizado! ¡Esto parece carbón de la mina!', desperfecto: 'Horno de la panadería echando humo negro' },
+  { id: 'grifopan', lugar: 'panaderia', cliente: 'encarna', tipo: 'grifo', lado: 'O', off: 10, herr: 'llave', icono: '🚰', nombre: 'El grifo del obrador gotea',
+    pedido: ['El grifo del obrador de la panadería gotea sin parar. Me pierde el agua de la masa.', 'Tengo el grifo de la panadería goteando. ¿Pueden venir?'],
+    queja: '¡Me han inundado el obrador! ¡Ahora hago pan mojado!', desperfecto: 'Obrador de la panadería inundado' },
+  { id: 'paredpan', lugar: 'panaderia', cliente: 'encarna', tipo: 'pared', lado: 'N', off: 9, herr: 'brocha', icono: '🎨', nombre: 'Pintar la pared de la panadería',
+    pedido: ['Quiero pintar la pared de la panadería. Color pan tostado, a ser posible.', 'La pared de la panadería tiene más harina que pintura. ¡Hay que pintarla!'],
+    queja: '¡Esto no es color pan! ¡Esto es color pitufo!', desperfecto: 'Pared de la panadería en color pitufo' },
+];
+for (const gd of GENERADOS) {
+  const L = LOC[gd.lugar];
+  const g = new THREE.Group(); scene.add(g);
+  const pos = { N: [L.x0 + gd.off, L.z0 + 0.1, 0], S: [L.x0 + gd.off, L.z1 - 0.1, Math.PI], O: [L.x0 + 0.1, L.z0 + gd.off, Math.PI / 2], E: [L.x1 - 0.1, L.z0 + gd.off, -Math.PI / 2] }[gd.lado];
+  if (gd.exterior) { pos[0] = L.x0 - 0.12; pos[2] = -Math.PI / 2; }
+  g.position.set(pos[0], 0, pos[1]); g.rotation.y = pos[2]; g.updateMatrixWorld(true);
+  const ins = crearTipoGenerico(gd.tipo, g, L);
+  const pw = g.localToWorld(new THREE.Vector3(...ins.pie)), mw = g.localToWorld(new THREE.Vector3(...ins.mira));
+  ins.piePos = [pw.x, pw.z]; ins.miraPos = [mw.x, mw.z]; ins.gd = gd;
+  INST[gd.id] = ins;
+}
+
 const ENCARGOS = {
   grifo: { nombre: 'Grifo que gotea', herr: 'llave', cliente: 'remedios', sitio: 'Cocina', icono: '🚰', pie: [8.5, 0.05], mira: [8.5, -1.2] },
   vater: { nombre: 'Váter atascado', herr: 'desatascador', cliente: 'remedios', sitio: 'Baño', icono: '🚽', pie: [9.6, -6.35], mira: [9.6, -7.45] },
@@ -1366,7 +1708,7 @@ const ENCARGOS = {
   azulejos: { nombre: 'Poner los azulejos del baño', herr: 'paleta', cliente: 'remedios', sitio: 'Baño', icono: '🧱', pie: [10.1, -4.35], mira: [11, -4.35] },
   fachada: { nombre: 'Pintar la fachada del chalet', herr: 'rodillo', cliente: 'leopoldo', sitio: 'Fachada', icono: '🏠', pie: [29, -0.3], mira: [29, -1] },
   seto: { nombre: 'Podar el seto', herr: 'tijeras', cliente: 'leopoldo', sitio: 'Jardín', icono: '🌳', pie: [17.75, 3.0], mira: [17.75, 4.1] },
-  farola: { nombre: 'Arreglar la farola del jardín', herr: 'bombilla', cliente: 'leopoldo', sitio: 'Jardín', icono: '🏮', pie: [32.6, 3.3], mira: [32.6, 4.2] },
+  farola: { nombre: 'Arreglar la farola del jardín', herr: 'bombilla', extra: 'escalera', cliente: 'leopoldo', sitio: 'Jardín', icono: '🏮', pie: [32.6, 3.3], mira: [32.6, 4.2] },
   cafetera: { nombre: 'La cafetera pierde agua', herr: 'llave', cliente: 'puri', sitio: 'Barra', icono: '☕', pie: [-46, -1.2], mira: [-46, -2.3] },
   tragaperras: { nombre: 'La tragaperras echa chispas', herr: 'destornillador', cliente: 'puri', sitio: 'Bar', icono: '🎰', pie: [-50.5, 1.5], mira: [-51.9, 1.5] },
   taburete: { nombre: 'Arreglar el taburete roto', herr: 'martillo', cliente: 'puri', sitio: 'Bar', icono: '🪑', pie: [-39, 2.4], mira: [-39, 1.5] },
@@ -1376,6 +1718,10 @@ const ENCARGOS = {
   banco: { nombre: 'Arreglar el banco de la calle', herr: 'martillo', cliente: 'fermin', sitio: 'Calle', icono: '🪑', pie: [2, 9.1], mira: [2, 9.9] },
   fuente: { nombre: 'La fuente de la calle', herr: 'llave', cliente: 'fermin', sitio: 'Calle', icono: '⛲', pie: [-13.5, 9.1], mira: [-13.5, 9.9] },
 };
+for (const gd of GENERADOS) {
+  const ins = INST[gd.id];
+  ENCARGOS[gd.id] = { nombre: gd.nombre, herr: gd.herr, extra: gd.extra, cliente: gd.cliente, sitio: LOC[gd.lugar].nombre, icono: gd.icono, lejos: true, pie: ins.piePos, mira: ins.miraPos };
+}
 for (const d of Object.values(ENCARGOS)) d.oficio = HERRAMIENTAS[d.herr].oficio;
 const TIPOS = Object.keys(ENCARGOS);
 const DESPERFECTOS = {
@@ -1400,6 +1746,7 @@ const DESPERFECTOS = {
   banco: 'Banco de la calle hundido',
   fuente: 'Fuente de la calle convertida en géiser',
 };
+GENERADOS.forEach(gd => { DESPERFECTOS[gd.id] = gd.desperfecto; });
 const QUEJAS = {
   grifo: '¡Que me han hecho una fuente en la cocina! ¡Como la de Cibeles!',
   vater: '¡Ay, qué peste! ¡Abran las ventanas, por Dios!',
@@ -1423,6 +1770,9 @@ const QUEJAS = {
   fuente: '¡La fuente parece un géiser! ¡Me han mojado la boina!',
 };
 
+GENERADOS.forEach(gd => { QUEJAS[gd.id] = gd.queja; });
+// Todo lo creado hasta aquí directamente en la escena es decorado fijo (se fusiona para ir más rápido)
+const LIMITE_ESTATICO = scene.children.length;
 // --- Grifo ---
 const grifo = new THREE.Group(); grifo.position.set(8.5, 0.96, -1.2); scene.add(grifo);
 caja(0.8, 0.05, 0.5, mat(0x6b6b6b, 0.3, 0.6), 0, -0.01, 0.1, grifo, false);
@@ -1594,6 +1944,7 @@ const Visual = {
   estado: {}, t: {}, caida: 0,
   poner(tipo, est) {
     this.estado[tipo] = est; this.t[tipo] = 0;
+    if (INST[tipo]) { INST[tipo].poner(est); return; }
     switch (tipo) {
       case 'enchufe': quemadura.visible = est === 'chapuza'; break;
       case 'pared':
@@ -1681,6 +2032,7 @@ const Visual = {
       const est = this.estado[tipo];
       this.t[tipo] = (this.t[tipo] || 0) + dt;
       const t = this.t[tipo];
+      if (INST[tipo]) { INST[tipo].act(dt, t, est); continue; }
       if (tipo === 'grifo' && est === 'roto' && Math.random() < dt * 2.5)
         emitir(8.5, 1.25, -1.0, 1, { color: 0x5fb6e6, vel: 0, sube: 0.1, gravedad: 9, tam: 0.04, vida: 0.5, brilla: true });
       if (tipo === 'grifo' && est === 'chapuza' && t < 3)
@@ -1764,6 +2116,7 @@ const PUERTAS = [
 ];
 const NOMBRE_ZONA = { calle: 'la calle', taller: 'el taller', jardin: 'el chalet de Don Leopoldo', bar: 'el Bar El Rincón', pelu: 'la Peluquería Rosi', salon: 'casa de Doña Remedios', cocina: 'casa de Doña Remedios', dorm: 'casa de Doña Remedios', bano: 'casa de Doña Remedios' };
 function zona(x, z) {
+  for (const L of LOCALES) if (x >= L.x0 && x <= L.x1 && z >= L.z0 && z <= L.z1) return L.id;
   if (z > 5) return 'calle';
   if (x < -33) return 'bar';
   if (x < -12.5) return 'taller';
@@ -1772,6 +2125,7 @@ function zona(x, z) {
   if (z > -1.5) return x < 0 ? 'salon' : 'cocina';
   return x < 0 ? 'dorm' : 'bano';
 }
+LOCALES.forEach(L => { CENTROS[L.id] = [(L.x0 + L.x1) / 2, (L.z0 + L.z1) / 2]; NOMBRE_ZONA[L.id] = L.nombre; });
 function calcularRuta(x0, z0, x1, z1) {
   const za = zona(x0, z0), zb = zona(x1, z1);
   if (za === zb) return [[x1, z1]];
@@ -1912,6 +2266,38 @@ const FRASES = {
   socioInicio: ['Si suena, lo coges tú, que yo tengo las manos ocupadas con el bocadillo.'],
   socioSupervisa: ['Vale, vale, hazlo tú, que yo te superviso.'],
 };
+GENERADOS.forEach(gd => { FRASES.pedido[gd.id] = gd.pedido; });
+Object.assign(FRASES.plantado, { paqui: '¡Me vuelvo a la frutería!', andres: 'Me vuelvo a la farmacia.', quique: 'Paso, tío.', encarna: '¡Me vuelvo al horno!' });
+Object.assign(FRASES.llega, { paqui: ['¡Hola!'], andres: ['Buenos días.'], quique: ['¿Qué pasa, tío?'], encarna: ['¡Buenos días!'] });
+Object.assign(FRASES.fino, {
+  paqui: ['¡Qué maravilla! Os llevo un kilo de naranjas de regalo.', '¡Perfecto, chicos! Como nuevo.'],
+  andres: ['Excelente trabajo. Les recetaré un descanso.', 'Impecable. Ni en el colegio de farmacéuticos.'],
+  quique: ['¡Tío, qué crack! Os pongo en mi próxima canción.', '¡Brutal! Ha quedado de lujo.'],
+  encarna: ['¡Qué bien! Os guardo dos barras de pan calentitas.', '¡Ay, qué apañaos sois!'],
+});
+Object.assign(FRASES.bien, {
+  paqui: ['Bueno, apañao. Como la fruta de la semana pasada.'], andres: ['Correcto. Sin efectos secundarios, espero.'],
+  quique: ['Pse, vale. Me sirve, tío.'], encarna: ['Bueno, mientras funcione...'],
+});
+Object.assign(FRASES.chapuza, {
+  paqui: ['¡Mi frutería! ¡Qué disgusto más gordo!'], andres: ['¡Esto requiere un tratamiento de choque!'],
+  quique: ['¡Tío, qué desastre! ¡Mi casero me mata!'], encarna: ['¡Ay, mi panadería! ¡Mi negocio!'],
+});
+Object.assign(FRASES.expira, {
+  paqui: ['¡Ya lo arreglará mi cuñado!'], andres: ['He llamado a otra empresa. Más seria, espero.'],
+  quique: ['Paso, tío. Ya lo arreglo con cinta americana.'], encarna: ['¡Me he cansado de esperar!'],
+});
+Object.assign(FRASES.charla, {
+  paqui: ['Llevaos unas mandarinas, que están buenísimas.', 'Aquí la fruta es del día. Bueno, de ayer.'],
+  andres: ['¿Necesitan algo para la espalda? Con tanta obra...', 'Recuerden: la salud es lo primero. Y luego la factura.'],
+  quique: ['¿Os gusta el punk? Tengo un grupo: Los Desatascadores.', 'Mi casero dice que soy un desastre. Mirad quién habla.'],
+  encarna: ['¿Queréis una napolitana? Están recién hechas.', 'Me levanto a las cuatro de la mañana. Y vosotros a las diez.'],
+});
+FRASES.socioFurgo = ['¡Espérame, que me subo!', '¡Arranca, que llegamos tarde!', 'Conduce tú, que yo voy mirando el paisaje.'];
+FRASES.socioBaja = ['¿Ya hemos llegado? Qué mareo, tú.', 'Pues no conduces tan mal. Para lo que eres.'];
+FRASES.jugadorFurgo = ['¡Vámonos, que no llegamos!', '¡Agárrate, que vienen curvas!', 'Primera, segunda... ¿dónde estaba la tercera?'];
+FRASES.jugadorSinEscalera = ['Ahí arriba no llego sin la escalera.', 'Necesito la escalera. Está en el taller, apoyada en la pared.'];
+FRASES.socioLejos = ['Eso está muy lejos. Llévame en la furgoneta.', '¿Andando hasta allí? Ni loco. Vamos en la furgoneta.'];
 FRASES.llega.remedios = FRASES.remediosLlega; FRASES.llega.leopoldo = FRASES.leopoldoLlega;
 const nombres = t => t.replaceAll('{J}', paco.nombre).replaceAll('{S}', ramon.nombre);
 // Clave de cada grabación: quién habla + el texto exacto
@@ -2047,11 +2433,19 @@ const fermin = {
   casa: [-6, 8.4], paseo: [[-6, 8.4], [-1, 8.6], [4, 8.4]], espera: [-24.2, 3.6],
   estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 30,
 };
-const CLIENTES = { remedios, leopoldo, puri, rosi, fermin };
+function clienteLejano(id, nombre, clase, voz, perfil, casa, paseo, alt) {
+  return { id, nombre, clase, voz, alturaGlobo: alt, perfil, c: PJ[id] || crearPersonaje({ ropa: 0x888888, escala: 0.94 }), casa, paseo, espera: casa, vieneAlTaller: false,
+    estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 30 };
+}
+const paqui = clienteLejano('paqui', 'Paqui', 'puri', 450, { mujer: true, tono: 1.15, ritmo: 1.1 }, [86, 38], [[86, 38], [88, 34], [84, 36]], 2.15);
+const andres = clienteLejano('andres', 'Don Andrés', 'leopoldo', 260, { mujer: false, tono: 1.0, ritmo: 0.95 }, [87, 68.5], [[87, 68.5], [85, 64], [90, 66]], 2.4);
+const quique = clienteLejano('quique', 'Quique', 'paco', 360, { mujer: false, tono: 1.1, ritmo: 1.1 }, [9, 119], [[9, 119], [12, 117], [6, 118]], 2.35);
+const encarna = clienteLejano('encarna', 'Encarna', 'remedios', 480, { mujer: true, tono: 1.05, ritmo: 1.0 }, [-84, 52], [[-84, 52], [-86, 49], [-84, 56]], 2.2);
+const CLIENTES = { remedios, leopoldo, puri, rosi, fermin, paqui, andres, quique, encarna };
 const michi = { nombre: 'Michi', clase: 'michi', voz: 900, alturaGlobo: 0.9, c: crearGato(), estado: 'idle', t: 0, vel: 0, ruta: null, cdTropiezo: 0 };
 // El teléfono «habla» con la voz de quien llama
 const telEnt = { nombre: '📞', clase: 'tel', voz: 400, alturaGlobo: 0.9, perfil: null, c: { g: telefono } };
-const entidades = [paco, ramon, remedios, leopoldo, puri, rosi, fermin, michi, telEnt];
+const entidades = [paco, ramon, remedios, leopoldo, puri, rosi, fermin, paqui, andres, quique, encarna, michi, telEnt];
 
 const bocataSocio = new THREE.Group();
 { const pan = capsula(0.06, 0.25, mat(0xd9a45a, 0.9), 0, 0, 0, bocataSocio); pan.rotation.z = Math.PI / 2; }
@@ -2105,6 +2499,8 @@ function reiniciar() {
   limpiarPeligros();
   particulas.forEach(p => p.m.removeFromParent()); particulas.length = 0;
   for (const m of Object.values(CHAPUZAS)) { m.c.brazos[0].rotation.z = 0; m.c.cuerpo.rotation.set(0, 0, 0); m.c.cuerpo.position.set(0, 0, 0); }
+  FURGO.g.position.set(-27.5, 0, 8.4); FURGO.g.rotation.y = 0; FURGO.dentro = false; FURGO.vel = 0;
+  paco.c.g.visible = true; ramon.c.g.visible = true; ramon.enFurgo = false; G.objetivo = null;
   paco.c.g.position.set(-22, 0, 0.5); paco.c.g.rotation.y = 0; Object.assign(paco, { estado: 'normal', vx: 0, vz: 0, tinte: 0, boost: 0, auto: null });
   soltarHerramientas();
   restaurarTinte(paco);
@@ -2229,7 +2625,7 @@ function sumar(cant, motivo) {
   if (motivo) toast(`${cant >= 0 ? '+' : ''}${euros(cant)} · ${motivo}`, cant >= 0 ? 'mas' : 'menos');
 }
 function paciencia(d) { G.paciencia = clamp(G.paciencia + d, 0, 100); }
-const CASAS = { remedios: 'Casa de Doña Remedios', leopoldo: 'Chalet de Don Leopoldo', puri: 'Bar El Rincón', rosi: 'Peluquería Rosi', fermin: 'La calle (comunidad)' };
+const CASAS = { remedios: 'Casa de Doña Remedios', leopoldo: 'Chalet de Don Leopoldo', puri: 'Bar El Rincón', rosi: 'Peluquería Rosi', fermin: 'La calle (comunidad)', paqui: 'Frutería Paqui', andres: 'Farmacia', quique: 'Piso 3.º A (calle sur)', encarna: 'Panadería Encarna' };
 const nombreCasa = cl => CASAS[cl];
 function actualizarHUD() {
   const min = 9 * 60 + Math.floor(progreso() * 540);
@@ -2284,7 +2680,7 @@ function generarPedido() {
   if (!libres.length) return;
   const tipo = pick(libres);
   const cl = CLIENTES[ENCARGOS[tipo].cliente];
-  const puedePersona = cl.estado === 'casa' && !cl.pedido && !TIPOS.some(t => G.encargos[t].activo && ENCARGOS[t].cliente === cl.id);
+  const puedePersona = cl.vieneAlTaller !== false && cl.estado === 'casa' && !cl.pedido && !TIPOS.some(t => G.encargos[t].activo && ENCARGOS[t].cliente === cl.id);
   const puedeTel = !G.tel;
   if (!puedePersona && !puedeTel) return;
   const canal = puedePersona && (!puedeTel || Math.random() < 0.45) ? 'persona' : 'tel';
@@ -2303,7 +2699,7 @@ function generarPedido() {
 function activarEncargo(tipo) {
   const e = G.encargos[tipo];
   e.activo = true; e.pedido = false; e.ramon = false;
-  e.max = e.t = lerp(95, 70, progreso()) + rand(-4, 4);
+  e.max = e.t = lerp(95, 70, progreso()) + rand(-4, 4) + (ENCARGOS[tipo].lejos ? 50 : 0);
   G.stats.clientes.add(ENCARGOS[tipo].cliente);
 }
 function cancelarPedido(tipo) {
@@ -2371,6 +2767,7 @@ function resolver(tipo, resultado, quien = 'jugador') {
 }
 
 function efectoChapuza(tipo, autor) {
+  if (INST[tipo]) { INST[tipo].fx(autor); return; }
   const [px, pz] = ENCARGOS[tipo].pie;
   switch (tipo) {
     case 'grifo': Sonido.chof(); luego(0.5, () => crearCharco(px, pz + 0.3, 1.25)); break;
@@ -2507,6 +2904,7 @@ function objetivoCercano() {
     const [x, z] = ENCARGOS[t].pie;
     if (cerca(x, z, 1.25)) return { tipo: 'encargo', t };
   }
+  if (!FURGO.dentro && cerca(FURGO.g.position.x, FURGO.g.position.z, 3.0)) return { tipo: 'furgo' };
   if (cerca(ramon.c.g.position.x, ramon.c.g.position.z, 1.7)) return { tipo: 'socio' };
   for (const cl of Object.values(CLIENTES)) if (cerca(cl.c.g.position.x, cl.c.g.position.z, 1.7)) return { tipo: 'charla', cl };
   if (cerca(michi.c.g.position.x, michi.c.g.position.z, 1.3)) return { tipo: 'michi' };
@@ -2522,15 +2920,18 @@ function textoPista(o) {
     case 'encargo': {
       const d = ENCARGOS[o.t];
       if (G.encargos[o.t].ramon && ramon.trabajaT > 0 && ramon.encargo === o.t) return `${ramon.nombre} está en ello… (que Dios nos pille confesados)`;
-      if (paco.herrs.includes(d.herr)) return `<kbd>E</kbd> ¡A trabajar! ${d.icono} ${d.nombre}`;
+      if (listoPara(d)) return `<kbd>E</kbd> ¡A trabajar! ${d.icono} ${d.nombre}`;
+      if (paco.herrs.includes(d.herr)) return `Necesitas también ${H[d.extra].icono} ${H[d.extra].corto.toLowerCase()} · está en el taller`;
       if (!paco.herrs.length) return `Necesitas ${H[d.herr].icono} ${H[d.herr].corto} · está en el taller`;
       return `<kbd>E</kbd> Intentarlo con ${H[paco.herrs[0]].icono} ${H[paco.herrs[0]].corto.toLowerCase()}… (mala idea)`;
     }
+    case 'furgo': return '<kbd>E</kbd> 🚐 Subir a la furgoneta';
     case 'socio': return `<kbd>E</kbd> «¡${ramon.nombre}, a trabajar!»`;
     case 'charla': return `<kbd>E</kbd> Hablar con ${o.cl.nombre}`;
     case 'michi': return '<kbd>E</kbd> Acariciar a Michi';
   }
 }
+const listoPara = d => paco.herrs.includes(d.herr) && (!d.extra || paco.herrs.includes(d.extra));
 function irSolo(x, z, fin, aviso) {
   if (paco.estado !== 'normal' || G.mini) return;
   const p = paco.c.g.position;
@@ -2548,15 +2949,27 @@ function tocarLista(div) {
     irSolo(cl.c.g.position.x, cl.c.g.position.z + 1.1, () => { if (cl.estado === 'esperando') atenderCliente(cl); }, `🚶 Vas a atender a ${cl.nombre}…`);
   } else if (div.dataset.tipo) {
     const t = div.dataset.tipo, d = ENCARGOS[t];
-    const alTrabajo = () => {
-      const [x, z] = d.pie;
-      irSolo(x, z, () => { if (G.encargos[t].activo && paco.herrs.includes(d.herr)) empezarMini(t); }, `🚶 Vas a ${nombreCasa(d.cliente).toLowerCase()}…`);
-    };
-    if (paco.herrs.includes(d.herr)) alTrabajo();
-    else {
-      const r = ranuras.find(x => x.id === d.herr);
-      irSolo(r.x, r.z, () => { coger(d.herr); alTrabajo(); }, `🚶 Primero, a por ${HERRAMIENTAS[d.herr].nombre} al taller…`);
+    G.objetivo = t;
+    const p = paco.c.g.position;
+    const faltan = [d.herr, d.extra].filter(h => h && !paco.herrs.includes(h));
+    const enTaller = zona(p.x, p.z) === 'taller';
+    // Los sitios lejanos se van en furgoneta: se marca el destino y la flecha guía
+    if (paco.estado === 'conduciendo' || (d.lejos && !faltan.length) || (faltan.length && !enTaller && dist2D(p.x, p.z, -22, 0) > 40)) {
+      toast(faltan.length ? `🧭 Primero, al taller a por ${faltan.map(h => HERRAMIENTAS[h].icono).join(' ')} · sigue la flecha` : '🧭 Sigue la flecha · ¡mejor en furgoneta! 🚐');
+      return;
     }
+    const alTrabajo = () => {
+      if (d.lejos) { toast('🚐 ¡Ahora a la furgoneta! Sigue la flecha'); return; }
+      const [x, z] = d.pie;
+      irSolo(x, z, () => { if (G.encargos[t].activo && listoPara(d)) empezarMini(t); }, `🚶 Vas a ${nombreCasa(d.cliente).toLowerCase()}…`);
+    };
+    const siguiente = () => {
+      const f = [d.herr, d.extra].find(h => h && !paco.herrs.includes(h));
+      if (!f) { alTrabajo(); return; }
+      const r = ranuras.find(x => x.id === f);
+      irSolo(r.x, r.z, () => { coger(f); siguiente(); }, `🚶 A por ${HERRAMIENTAS[f].nombre}…`);
+    };
+    siguiente();
   }
 }
 $('lista-encargos').addEventListener('click', ev => { const div = ev.target.closest('.encargo'); if (div) tocarLista(div); });
@@ -2567,6 +2980,7 @@ function coger(id) {
   ranuras.find(x => x.id === id).malla.visible = false;
   const m = crearHerramienta(id);
   m.rotation.x = Math.PI / 2; m.position.set(0, -0.02, 0.02);
+  if (id === 'escalera') { m.rotation.set(0.2, 0, 0); m.position.set(0, -0.5, 0.15); }
   (paco.herrs.length === 1 ? paco.c.mano : paco.c.manoIzq).add(m);
   paco.mallas.push(m);
   Sonido.coger();
@@ -2583,6 +2997,7 @@ function soltarHerramienta(id) {
 function soltarHerramientas() { [...paco.herrs].forEach(soltarHerramienta); }
 function accion() {
   if (G.mini) { pararMini(); return; }
+  if (paco.estado === 'conduciendo') { bajarFurgo(); return; }
   if (paco.estado !== 'normal') return;
   const o = objetivoCercano();
   if (!o) return;
@@ -2593,13 +3008,15 @@ function accion() {
     case 'encargo': {
       const d = ENCARGOS[o.t];
       if (G.encargos[o.t].ramon && ramon.trabajaT > 0 && ramon.encargo === o.t) return;
-      if (paco.herrs.includes(d.herr)) { empezarMini(o.t); return; }
+      if (listoPara(d)) { empezarMini(o.t); return; }
+      if (paco.herrs.includes(d.herr)) { decir(paco, frase(FRASES.jugadorSinEscalera), 1); return; }
       if (!paco.herrs.length) { decir(paco, frase(FRASES.jugadorSinHerr, HERRAMIENTAS[d.herr].nombre), 1); return; }
       decir(paco, frase(FRASES.jugadorMalaHerr, HERRAMIENTAS[paco.herrs[0]].nombre), 1);
       paco.estado = 'trabajando'; paco.t = 1.2;
       luego(1.2, () => { if (G.encargos[o.t].activo) resolver(o.t, 'chapuza', 'jugador'); });
       break;
     }
+    case 'furgo': subirFurgo(); break;
     case 'socio': ordenarSocio(); break;
     case 'charla': decir(o.cl, frase(FRASES.charla[o.cl.id]), 1); break;
     case 'michi': Sonido.miau(); estrellitas(michi.c.g.position.x, 0.8, michi.c.g.position.z); break;
@@ -2607,10 +3024,69 @@ function accion() {
 }
 
 /* =========================================================================
+   La furgoneta: subir, conducir y bajar
+   ========================================================================= */
+function libreEn(x, z, r = 0.4) { return !colisiones.some(b => !b.furgo && x > b.minX - r && x < b.maxX + r && z > b.minZ - r && z < b.maxZ + r); }
+function subirFurgo() {
+  Object.assign(paco, { estado: 'conduciendo', auto: null, vx: 0, vz: 0 });
+  FURGO.dentro = true; paco.c.g.visible = false;
+  Sonido.tono(70, 0.6, 'sawtooth', 0.1, 150);
+  if (Math.random() < 0.5) decir(paco, frase(FRASES.jugadorFurgo), 0);
+  const r = ramon, q = r.c.g.position;
+  if (!r.enFurgo && !(r.estado === 'ayudar' && r.trabajaT > 0) && dist2D(q.x, q.z, FURGO.g.position.x, FURGO.g.position.z) < 14) {
+    if (r.encargo && G.encargos[r.encargo]) G.encargos[r.encargo].ramon = false;
+    Object.assign(r, { enFurgo: true, estado: 'furgo', ruta: null, dormido: false, sentado: false, encargo: null, trabajaT: 0 });
+    r.c.g.visible = false; r.c.cuerpo.rotation.set(0, 0, 0); r.c.cuerpo.position.set(0, 0, 0); bocataSocio.visible = false;
+    decir(r, frase(FRASES.socioFurgo), 0);
+  }
+}
+function bajarFurgo() {
+  const g = FURGO.g, th = g.rotation.y;
+  const lado = [Math.sin(th), Math.cos(th)], fw = [Math.cos(th), -Math.sin(th)];
+  const sitios = [[-1.9, 0], [1.9, 0], [0, -3.3], [0, 3.5], [-2.6, 1], [2.6, 1]].map(([a, b]) => [g.position.x + lado[0] * a + fw[0] * b, g.position.z + lado[1] * a + fw[1] * b]);
+  const libres = sitios.filter(([x, z]) => libreEn(x, z));
+  const sitio = libres[0] || sitios[0];
+  FURGO.dentro = false; FURGO.vel = 0;
+  paco.estado = 'normal'; paco.c.g.visible = true; paco.c.g.position.set(sitio[0], 0, sitio[1]);
+  Sonido.clonc();
+  if (ramon.enFurgo) {
+    const otro = libres[1] || sitio;
+    ramon.enFurgo = false; ramon.c.g.visible = true; ramon.c.g.position.set(otro[0], 0, otro[1]); ramon.estado = 'idle'; ramon.t = 3;
+    if (Math.random() < 0.6) decir(ramon, frase(FRASES.socioBaja), 0);
+  }
+}
+function conducir(dt, acel, giro) {
+  const f = FURGO, g = f.g;
+  if (acel > 0) f.vel += (f.vel < 0 ? 24 : 9) * acel * dt;
+  else if (acel < 0) f.vel += (f.vel > 0 ? 24 : 6) * acel * dt;
+  else f.vel *= Math.exp(-1.6 * dt);
+  f.vel = clamp(f.vel, -5, paco.boost > 0 ? 18 : 15);
+  g.rotation.y += giro * 1.8 * dt * clamp(f.vel / 5, -1, 1);
+  const th = g.rotation.y, fx = Math.cos(th), fz = -Math.sin(th);
+  const nx = g.position.x + fx * f.vel * dt, nz = g.position.z + fz * f.vel * dt;
+  const choca = [-1.7, 0, 1.9].some(o => !libreEn(nx + fx * o, nz + fz * o, 0.95));
+  if (choca) { if (Math.abs(f.vel) > 4) { Sonido.clonc(); G.temblor = 0.18; } f.vel *= -0.25; }
+  else { g.position.x = nx; g.position.z = nz; }
+  f.ruedas.forEach(r => { r.rotation.z -= f.vel * dt / 0.42; });
+  f.ruedas[1].rotation.y = f.ruedas[3].rotation.y = giro * 0.45;
+  f.motorT -= dt;
+  if (f.motorT <= 0) { Sonido.tono(42 + Math.abs(f.vel) * 7, 0.15, 'sawtooth', 0.03); f.motorT = 0.11; }
+}
+function actualizarColFurgo() {
+  const g = FURGO.g, th = g.rotation.y, fx = Math.cos(th), fz = -Math.sin(th);
+  [[FURGO.col1, -0.9], [FURGO.col2, 1.1]].forEach(([c, o]) => {
+    const cx = g.position.x + fx * o, cz = g.position.z + fz * o;
+    Object.assign(c, { minX: cx - 1.15, maxX: cx + 1.15, minZ: cz - 1.15, maxZ: cz + 1.15 });
+  });
+}
+
+/* =========================================================================
    El compañero (lo controla el juego)
    ========================================================================= */
 function ordenarSocio() {
-  const libres = TIPOS.filter(t => G.encargos[t].activo && !G.encargos[t].ramon);
+  const q = ramon.c.g.position;
+  const libres = TIPOS.filter(t => G.encargos[t].activo && !G.encargos[t].ramon && dist2D(q.x, q.z, ...ENCARGOS[t].pie) < 40);
+  if (!libres.length && TIPOS.some(t => G.encargos[t].activo)) { decir(ramon, frase(FRASES.socioLejos), 1); return; }
   ramon.c.cuerpo.rotation.set(0, 0, 0); ramon.c.cuerpo.position.set(0, 0, 0); bocataSocio.visible = false;
   ramon.dormido = false; ramon.sentado = false;
   if (!libres.length) { decir(ramon, frase(FRASES.socioOrdenSin), 1); ramon.estado = 'idle'; ramon.t = 4; return; }
@@ -2627,15 +3103,18 @@ function asignarSocio(tipo, vel = 2.4) {
 const cercaJugador = (e, r = 13) => dist2D(e.c.g.position.x, e.c.g.position.z, paco.c.g.position.x, paco.c.g.position.z) < r;
 function actualizarSocio(dt) {
   const r = ramon;
+  if (r.enFurgo) { r.c.g.position.copy(FURGO.g.position); return; }
   r.t -= dt;
   const pos = r.c.g.position;
   let trabajando = false;
+  const enBarrio = pos.z < 11 && pos.x > -56 && pos.x < 58;
   switch (r.estado) {
     case 'idle':
       r.vel = 0;
       if (r.t <= 0) {
-        const libres = TIPOS.filter(t => G.encargos[t].activo && !G.encargos[t].ramon);
+        const libres = TIPOS.filter(t => G.encargos[t].activo && !G.encargos[t].ramon && dist2D(pos.x, pos.z, ...ENCARGOS[t].pie) < 40);
         const tirada = Math.random();
+        if (!enBarrio) { if (libres.length && tirada < 0.35) asignarSocio(pick(libres)); else r.t = 4; break; }
         if (libres.length && tirada < 0.25) { if (cercaJugador(r)) decir(r, frase(FRASES.socioAyuda), 0); asignarSocio(pick(libres)); }
         else if (tirada < 0.5) { r.estado = 'almuerzo'; irA(r, -18, 3.55); if (cercaJugador(r)) decir(r, frase(FRASES.socioAlmuerzo), 0); }
         else if (tirada < 0.65) { r.estado = 'siesta'; irA(r, -29.2, 3.7); }
@@ -2827,6 +3306,29 @@ function actualizarJugador(dt) {
       paco.vel = 0; paco.vx = paco.vz = 0;
       animarAndar(c, dt, 0, true);
       break;
+    case 'conduciendo': {
+      let acel = 0, giro = 0;
+      if (teclas.has('w') || teclas.has('arrowup')) acel += 1;
+      if (teclas.has('s') || teclas.has('arrowdown')) acel -= 1;
+      if (teclas.has('a') || teclas.has('arrowleft')) giro += 1;
+      if (teclas.has('d') || teclas.has('arrowright')) giro -= 1;
+      if (joy.activo) {
+        // En el móvil: el joystick indica hacia dónde quieres ir y la furgoneta gira hacia allí
+        const m = Math.min(1, Math.hypot(joy.x, joy.z));
+        if (m > 0.2) {
+          const th = FURGO.g.rotation.y, fx = Math.cos(th), fz = -Math.sin(th);
+          const dx = joy.x / m, dz = joy.z / m;
+          const ang = Math.atan2(fx * dz - fz * dx, fx * dx + fz * dz);
+          if (Math.abs(ang) < 2.2) { acel = m; giro = clamp(-ang * 1.6, -1, 1); }
+          else { acel = 0.6 * m; giro = -Math.sign(ang); }
+        }
+      }
+      conducir(dt, acel, giro);
+      p.set(FURGO.g.position.x, 0, FURGO.g.position.z);
+      c.g.rotation.y = FURGO.g.rotation.y + Math.PI / 2;
+      paco.vel = 0;
+      break;
+    }
     case 'trabajando':
       paco.t -= dt; paco.vel = 0; paco.vx = paco.vz = 0;
       animarAndar(c, dt, 0, true);
@@ -2867,7 +3369,7 @@ function actualizarJugador(dt) {
       break;
     }
   }
-  resolverColision(p, 0.33);
+  if (paco.estado !== 'conduciendo') resolverColision(p, 0.33);
   if (paco.estado === 'normal' && paco.vel > 1.2) {
     for (let i = peligros.length - 1; i >= 0; i--) {
       const h = peligros[i];
@@ -2912,6 +3414,32 @@ function actualizarPeligros(dt) {
     if (h.tipo === 'charco') h.m.scale.setScalar(h.vida < 3 ? Math.max(0.01, h.vida / 3) : Math.min(1, h.m.scale.x + dt * 1.5));
     if (h.vida <= 0) { h.m.removeFromParent(); peligros.splice(i, 1); }
   }
+}
+function actualizarFlecha() {
+  const el = $('flecha');
+  const p = paco.c.g.position;
+  let obj = null, txt = '';
+  if (G.tel) { obj = [-16.5, -3.3]; txt = '📞 Teléfono del taller'; }
+  else {
+    const cl = Object.values(CLIENTES).find(c => c.estado === 'esperando');
+    if (cl) { obj = [cl.c.g.position.x, cl.c.g.position.z]; txt = `🚪 ${cl.nombre} te espera en el taller`; }
+  }
+  if (!obj) {
+    let t = G.objetivo && G.encargos[G.objetivo] && G.encargos[G.objetivo].activo ? G.objetivo : null;
+    if (!t) t = TIPOS.filter(x => G.encargos[x].activo).sort((a, b) => G.encargos[a].t - G.encargos[b].t)[0];
+    if (t) {
+      const d = ENCARGOS[t];
+      const falta = [d.herr, d.extra].find(h => h && !paco.herrs.includes(h));
+      if (falta) { const r = ranuras.find(x => x.id === falta); obj = [r.x, r.z]; txt = `🧰 Coge ${HERRAMIENTAS[falta].icono} ${HERRAMIENTAS[falta].corto} en el taller`; }
+      else { obj = d.pie; txt = `${d.icono} ${d.nombre} · ${CASAS[d.cliente]}`; }
+    }
+  }
+  const dist = obj ? dist2D(p.x, p.z, obj[0], obj[1]) : 0;
+  if (!obj || dist < 4) { el.classList.add('oculto'); return; }
+  el.classList.remove('oculto');
+  el.firstChild.style.transform = `rotate(${Math.atan2(obj[0] - p.x, -(obj[1] - p.z)) * 180 / Math.PI}deg)`;
+  const texto = `${txt} · ${Math.round(dist)} m${dist > 45 && !FURGO.dentro ? ' · 🚐' : ''}`;
+  if (el.lastChild.textContent !== texto) el.lastChild.textContent = texto;
 }
 function actualizarMarcadores(dt) {
   const tt = performance.now() / 1000;
@@ -2978,8 +3506,14 @@ function actualizarLuces(dt) {
 const camObjetivo = new THREE.Vector3(), camMira = new THREE.Vector3();
 function actualizarCamara(dt, inmediato = false) {
   const p = paco.c.g.position;
-  const lejos = (camera.aspect < 1 ? 1.12 : camera.aspect < 1.4 ? 1.1 : 1) * (G.zoom || 1);
-  camObjetivo.set(p.x, 11.5 * lejos, p.z + 9.5 * lejos);
+  let lejos = (camera.aspect < 1 ? 1.12 : camera.aspect < 1.4 ? 1.1 : 1) * (G.zoom || 1);
+  let bx = p.x, bz = p.z;
+  if (FURGO.dentro) {
+    lejos *= 1.55;
+    const th = FURGO.g.rotation.y;
+    bx += Math.cos(th) * FURGO.vel * 0.45; bz += -Math.sin(th) * FURGO.vel * 0.45;
+  }
+  camObjetivo.set(bx, 11.5 * lejos, bz + 9.5 * lejos);
   if (inmediato) camera.position.copy(camObjetivo);
   else camera.position.lerp(camObjetivo, 1 - Math.exp(-4 * dt));
   camMira.set(camera.position.x, 0.8, camera.position.z - 9.5 * lejos - 0.4);
@@ -3104,15 +3638,48 @@ function actualizarJuego(dt) {
   actualizarBocata(dt);
   actualizarPeligros(dt);
   actualizarMarcadores(dt);
+  actualizarColFurgo();
+  actualizarFlecha();
   Visual.actualizar(dt);
   const pista = $('pista');
-  const txt = G.mini || paco.estado !== 'normal' ? null : textoPista(objetivoCercano());
+  const txt = paco.estado === 'conduciendo' ? `<kbd>E</kbd> 🚐 Bajar de la furgoneta · ${NOMBRE_ZONA[zona(paco.c.g.position.x, paco.c.g.position.z)] || 'la calle'}`
+    : G.mini || paco.estado !== 'normal' ? null : textoPista(objetivoCercano());
   if (txt) { pista.innerHTML = esTactil ? txt.replace(/<kbd>E<\/kbd>/g, '<kbd>¡DALE!</kbd>') : txt; pista.classList.remove('oculto'); }
   else pista.classList.add('oculto');
   actualizarHUD();
   if (G.paciencia <= 0) terminar('fuera');
   else if (G.t >= DURACION) terminar('tiempo');
 }
+
+// Fusiona el decorado fijo por material: de cientos de piezas a unas pocas llamadas de dibujo
+function fusionarEstaticos() {
+  const grupos = new Map();
+  for (const m of scene.children.slice(0, LIMITE_ESTATICO)) {
+    if (!m.isMesh || m.children.length || m.material.transparent || m.userData.dinamico) continue;
+    // Se agrupa también por zonas de 40 m, para que lo que no se ve no se dibuje
+    const k = m.material.uuid + (m.castShadow ? '|s' : '') + '|' + Math.floor(m.position.x / 40) + ',' + Math.floor(m.position.z / 40);
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(m);
+  }
+  let antes = 0, despues = 0;
+  for (const lista of grupos.values()) {
+    if (lista.length < 2) continue;
+    const firma = g => Object.keys(g.attributes).sort().join() + (g.index ? '|i' : '');
+    const porFirma = new Map();
+    for (const m of lista) { m.updateMatrixWorld(true); const f = firma(m.geometry); if (!porFirma.has(f)) porFirma.set(f, []); porFirma.get(f).push(m); }
+    for (const ms of porFirma.values()) {
+      if (ms.length < 2) continue;
+      const fusion = mergeGeometries(ms.map(m => m.geometry.clone().applyMatrix4(m.matrixWorld)), false);
+      if (!fusion) continue;
+      const mm = new THREE.Mesh(fusion, ms[0].material);
+      mm.castShadow = ms[0].castShadow; mm.receiveShadow = true; mm.matrixAutoUpdate = false;
+      scene.add(mm); ms.forEach(m => scene.remove(m));
+      antes += ms.length; despues++;
+    }
+  }
+  console.info(`Decorado fusionado: ${antes} piezas → ${despues}`);
+}
+fusionarEstaticos();
 
 // Portada: los dos chapuzas posan delante del taller
 function posePortada() {
@@ -3145,7 +3712,7 @@ function bucle(ahora) {
 requestAnimationFrame(bucle);
 
 // Ganchos de depuración (sólo con ?debug en la URL)
-if (location.search.includes('debug')) window.__j = { camaraYa: () => actualizarCamara(0, true), catalogoFrases, claveVoz, G, PJ, camera, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
+if (location.search.includes('debug')) window.__j = { renderer, scene, FURGO, subirFurgo, bajarFurgo, conducir, INST, LOC, camaraYa: () => actualizarCamara(0, true), catalogoFrases, claveVoz, G, PJ, camera, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
 
 // Índice de voces grabadas: se carga al abrir la página
 VozGrabada.init();

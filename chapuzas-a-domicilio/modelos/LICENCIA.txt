@@ -7,3 +7,7 @@ Licencia CC0 1.0 (dominio público). Se han recortado animaciones y se recolorea
   puri.glb     <- Worker (mujeres)
   rosi.glb     <- Punk (mujeres)
   fermin.glb   <- King (hombres)
+  andres.glb   <- Adventurer (hombres)
+  paqui.glb    <- Adventurer (mujeres)
+  encarna.glb  <- Medieval (mujeres)
+  (Quique usa el mismo archivo que Jeremías, con otra ropa y su cresta)
