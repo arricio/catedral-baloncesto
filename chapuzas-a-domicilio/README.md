@@ -9,4 +9,4 @@ Juego 3D de humor para navegador (three.js, sin instalación). Personajes y situ
 - **Controles:** WASD/flechas para moverse, Shift para correr, E/Espacio para la acción, P para pausa y M para el sonido. En el móvil hay joystick y botón «¡DALE!».
 - `?debug` en la URL expone `window.__j` para hacer pruebas.
 
-three.js (licencia MIT) va incluido en `lib/`.
+three.js (licencia MIT) va incluido en `lib/`. Los personajes son modelos con esqueleto y animaciones de Quaternius (CC0), en `modelos/`.

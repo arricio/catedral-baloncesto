@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from './lib/addons/RoundedBoxGeometry.js';
 import { RoomEnvironment } from './lib/addons/RoomEnvironment.js';
+import { GLTFLoader } from './lib/addons/GLTFLoader.js';
 
 /* =========================================================================
    Utilidades
@@ -839,7 +840,14 @@ function crearPersonaje(o) {
   return { g, cuerpo, piernas, brazos, mano, manoIzq, cabeza, ojos, matRopa, colorRopa, pelosPunta, gorra, fase: 0, parpadeo: rand(1, 4) };
 }
 
-function animarAndar(c, dt, vel, trabajando = false) {
+function animarAndar(c, dt, vel, trabajando = false, forzar = null) {
+  if (c.mixer) {
+    const n = forzar || (trabajando ? 'Interact' : vel < 0.25 ? 'Idle' : vel < 5 ? 'Walk' : 'Run');
+    const ritmo = n === 'Walk' ? clamp(vel / 2.0, 0.6, 1.7) : n === 'Run' ? clamp(vel / 5.6, 0.8, 1.4) : 1;
+    c.anim(n, { ritmo, bucle: n !== 'Death' });
+    c.mixer.update(dt);
+    return;
+  }
   const v = Math.min(1, vel / 3);
   c.fase += dt * (4 + vel * 2.2);
   const sw = Math.sin(c.fase) * 0.6 * v;
@@ -879,6 +887,189 @@ function crearGato() {
   scene.add(g);
   g.traverse(m => { if (m.isMesh) m.castShadow = true; });
   return { g, cuerpo, patas, cola, cab, fase: 0 };
+}
+
+/* =========================================================================
+   Personajes 3D con esqueleto y animaciones (modelos CC0 de Quaternius)
+   ========================================================================= */
+// Dibujos de la ropa calculados en el propio material: cuadros, manchas de pintura y flores
+function aplicarPatron(malla, tipo) {
+  const m = malla.material;
+  malla.geometry.computeBoundingBox();
+  const bb = malla.geometry.boundingBox;
+  const alto = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
+  const celda = alto / ({ cuadros: 11, manchas: 8, flores: 12 }[tipo]);
+  m.customProgramCacheKey = () => 'patron-' + tipo;
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uCelda = { value: celda };
+    sh.vertexShader = 'varying vec3 vPat;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vPat = position;');
+    const comun = 'varying vec3 vPat;\nuniform float uCelda;\nfloat hashP(vec3 p){ return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }\n';
+    const codigo = {
+      cuadros: `
+        vec3 q = vPat / uCelda;
+        float a = step(0.5, fract(q.x)), b = step(0.5, fract(q.y)), c2 = step(0.5, fract(q.z));
+        float linea = max(max(step(0.9, fract(q.x * 2.0)), step(0.9, fract(q.y * 2.0))), step(0.9, fract(q.z * 2.0)));
+        vec3 col = mix(vec3(0.10, 0.16, 0.32), vec3(0.86, 0.87, 0.9), 0.3 * (a + b + c2));
+        diffuseColor.rgb = mix(col, vec3(0.04), linea * 0.55);`,
+      manchas: `
+        vec3 q = vPat / uCelda; vec3 ce = floor(q); vec3 f = fract(q);
+        float h = hashP(ce); vec3 o = vec3(hashP(ce + 1.3), hashP(ce + 2.7), hashP(ce + 4.1)) * 0.6 + 0.2;
+        float d = length(f - o);
+        if (h > 0.45 && d < 0.14 + 0.16 * hashP(ce + 9.1)) diffuseColor.rgb = h > 0.88 ? vec3(0.9, 0.9, 0.86) : vec3(0.2, 0.42, 0.8);`,
+      flores: `
+        vec3 q = vPat / uCelda; vec3 ce = floor(q); vec3 f = fract(q);
+        float h = hashP(ce); vec3 o = vec3(hashP(ce + 1.3), hashP(ce + 2.7), hashP(ce + 4.1)) * 0.5 + 0.25;
+        float d = length(f - o);
+        if (h > 0.3) { if (d < 0.09) diffuseColor.rgb = vec3(0.86, 0.3, 0.2); else if (d < 0.24) diffuseColor.rgb = vec3(1.0, 0.92, 0.6); }`,
+    }[tipo];
+    sh.fragmentShader = comun + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n' + codigo);
+  };
+  m.needsUpdate = true;
+}
+// Gorra blanca de las de toda la vida (visera hacia delante o hacia atrás)
+function gorraBlanca(radio, haciaAtras) {
+  const g = new THREE.Group();
+  const blanco = mat(0xf1f0ea, 0.85);
+  const cup = new THREE.Mesh(new THREE.SphereGeometry(radio, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), blanco);
+  cup.scale.set(1.02, 0.82, 1.08); cup.castShadow = true; g.add(cup);
+  const visera = new THREE.Mesh(new THREE.CylinderGeometry(radio * 0.95, radio * 0.95, 0.012, 24, 1, false, -Math.PI / 2.6, Math.PI / 1.3), blanco);
+  visera.position.set(0, 0.006, radio * 0.42); visera.scale.set(0.95, 1, 1.15); visera.rotation.x = 0.08; visera.castShadow = true; g.add(visera);
+  esfera(radio * 0.08, blanco, 0, radio * 0.82, 0, g, 8);
+  if (haciaAtras) g.rotation.y = Math.PI;
+  return g;
+}
+const DEF_MODELOS = {
+  arricio: {
+    archivo: 'arricio', altura: 1.74, ancho: 1, cabeza: 'Farmer_Head_1', cuerpoMalla: 'Farmer_Body_1',
+    ocultar: ['Farmer_Head_2', 'Farmer_Head_4'],
+    colores: { Farmer_Pants: 0x8e9884, Farmer_Body_2: 0x8e9884, Farmer_Body_4: 0xc9a27e },
+    patrones: { Farmer_Body_1: 'cuadros', Farmer_Pants: 'manchas', Farmer_Body_2: 'manchas' },
+    tinte: ['Farmer_Pants', 'Farmer_Body_2'], gorra: 'delante', gorraY: -0.22, gorraR: 1.18,
+  },
+  jeremias: {
+    archivo: 'jeremias', altura: 1.76, ancho: 1, cabeza: 'Punk_Head_1', cuerpoMalla: 'Punk_Body_3',
+    ocultar: ['Punk_Head_2', 'Punk_Head_3', 'Punk_Head_4'],
+    colores: { Punk_Body_1: 0xeaa3b4, Punk_Body_3: 0xeeeeea, Punk_Legs_1: 0x8a9580, Punk_Legs_2: 0x8a9580 },
+    tinte: ['Punk_Body_1', 'Punk_Legs_1', 'Punk_Legs_2'], gorra: 'atras', gorraY: -0.72, gorraR: 1.08,
+  },
+  leopoldo: {
+    archivo: 'leopoldo', altura: 1.8, ancho: 1, cabeza: 'Worker_Head_2', cuerpoMalla: 'Worker_Body_3',
+    ocultar: ['Worker_Head_1'],
+    colores: { Worker_Body_1: 0x2c313c, Worker_Body_2: 0x2c313c, Worker_Body_3: 0xf3f3f3, Worker_Legs_1: 0x2c313c, Worker_Legs_2: 0x2c313c, Worker_Head_5: 0x1a1410 },
+    tinte: ['Worker_Body_2', 'Worker_Legs_1', 'Worker_Legs_2'], pelo: 0x141414, corbata: 0xa0182b,
+  },
+  remedios: {
+    archivo: 'remedios', altura: 1.6, ancho: 1, cabeza: 'Suit_Head_1', cuerpoMalla: 'Suit_Body_1',
+    ocultar: [],
+    colores: { Suit_Body_1: 0xd9709d, Suit_Legs: 0xd9709d, Suit_Body_2: 0xf6d3df, Suit_Head_2: 0xb9b9b9, Suit_Head_3: 0xa8a8a8, Suit_Feet_1: 0xff9ec4 },
+    patrones: { Suit_Body_1: 'flores', Suit_Legs: 'flores' },
+    tinte: ['Suit_Body_1', 'Suit_Legs'], rulos: true, gafas: 0x6b3a2a,
+  },
+};
+const cargadorGLTF = new GLTFLoader();
+async function cargarModelo(def) {
+  const gltf = await cargadorGLTF.loadAsync(`modelos/${def.archivo}.glb`);
+  const g = new THREE.Group();
+  const cuerpo = new THREE.Group(); g.add(cuerpo);
+  const modelo = gltf.scene; cuerpo.add(modelo);
+  const mallas = {};
+  modelo.traverse(o => {
+    if (!o.isMesh) return;
+    o.material = o.material.clone();
+    o.material.roughness = 0.82; o.material.metalness = 0;
+    o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
+    mallas[o.name] = o;
+    if (def.ocultar.includes(o.name)) o.visible = false;
+    if (def.colores[o.name] != null) o.material.color.setHex(def.colores[o.name]);
+    if (def.patrones?.[o.name]) aplicarPatron(o, def.patrones[o.name]);
+  });
+  // Escala a la altura deseada y con los pies en el suelo
+  modelo.updateMatrixWorld(true);
+  let caja = new THREE.Box3().setFromObject(modelo, true);
+  const k = def.altura / (caja.max.y - caja.min.y);
+  modelo.scale.set(k * def.ancho, k, k * def.ancho);
+  modelo.updateMatrixWorld(true);
+  caja = new THREE.Box3().setFromObject(modelo, true);
+  modelo.position.y -= caja.min.y;
+  modelo.updateMatrixWorld(true);
+  const huesos = {};
+  modelo.traverse(o => { if (o.isBone) huesos[o.name] = o; });
+  const enHueso = (hueso, obj, pos) => { obj.position.copy(pos); obj.updateMatrixWorld(true); (hueso || modelo).attach(obj); };
+  // Cabeza: se colocan gorra, pelo, rulos y gafas encima del hueso de la cabeza
+  const cajaCab = new THREE.Box3().setFromObject(mallas[def.cabeza], true);
+  const radio = (cajaCab.max.x - cajaCab.min.x) / 2;
+  const centro = cajaCab.getCenter(new THREE.Vector3());
+  const cabeza = new THREE.Group();
+  enHueso(huesos.Head, cabeza, new THREE.Vector3(centro.x, cajaCab.max.y, centro.z));
+  let gorra = null;
+  if (def.gorra) { gorra = gorraBlanca(radio * (def.gorraR || 1.06), def.gorra === 'atras'); gorra.position.y = radio * (def.gorraY ?? -0.62); if (def.gorra === 'atras') gorra.rotation.z = 0.06; cabeza.add(gorra); }
+  if (def.pelo) { const p = esfera(radio * 1.04, mat(def.pelo, 0.45), 0, -radio * 0.62, -radio * 0.08, cabeza, 22); p.scale.set(1, 0.72, 1); }
+  if (def.rulos) {
+    const cols = [0xff8fb1, 0x8fd3ff, 0xfff08f, 0xb1ff8f];
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const r = cilindro(radio * 0.2, radio * 0.2, radio * 0.5, mat(cols[i % 4], 0.5), Math.cos(a) * radio * 0.62, -radio * 0.12, Math.sin(a) * radio * 0.62 - radio * 0.1, cabeza, 10);
+      r.rotation.z = Math.PI / 2; r.rotation.y = -a;
+    }
+  }
+  if (def.gafas) for (const l of [-1, 1]) {
+    const gafa = new THREE.Mesh(new THREE.TorusGeometry(radio * 0.24, radio * 0.035, 8, 18), mat(def.gafas, 0.4));
+    gafa.position.set(radio * 0.36 * l, -radio * 1.02, cajaCab.max.z - centro.z + 0.004); cabeza.add(gafa);
+  }
+  // Pelos de punta (al electrocutarse)
+  const pelosPunta = new THREE.Group(); cabeza.add(pelosPunta); pelosPunta.visible = false;
+  for (let i = 0; i < 9; i++) {
+    const c = new THREE.Mesh(new THREE.ConeGeometry(radio * 0.14, radio * 1.1, 6), mat(0x2a1a10));
+    const a = (i / 9) * Math.PI * 2;
+    c.position.set(Math.cos(a) * radio * 0.55, radio * 0.35, Math.sin(a) * radio * 0.55);
+    c.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5);
+    pelosPunta.add(c);
+  }
+  if (def.corbata) {
+    const cc = new THREE.Box3().setFromObject(mallas[def.cuerpoMalla], true);
+    const corb = cajaR(0.06, 0.28, 0.015, mat(def.corbata, 0.5), 0, 0, 0, scene, 0.01);
+    scene.remove(corb);
+    enHueso(huesos.Chest || huesos.Torso, corb, new THREE.Vector3(cc.getCenter(new THREE.Vector3()).x, cc.max.y - 0.2, cc.max.z + 0.005));
+  }
+  // Manos: aquí van las herramientas y el bocadillo
+  const pos = new THREE.Vector3();
+  const mano = new THREE.Group(), manoIzq = new THREE.Group();
+  huesos.WristR.getWorldPosition(pos); enHueso(huesos.WristR, mano, pos.clone().add(new THREE.Vector3(0, -0.07, 0.03)));
+  huesos.WristL.getWorldPosition(pos); enHueso(huesos.WristL, manoIzq, pos.clone().add(new THREE.Vector3(0, -0.07, 0.03)));
+  // Animaciones
+  const mixer = new THREE.AnimationMixer(modelo);
+  const acciones = {};
+  for (const clip of gltf.animations) acciones[clip.name.replace('CharacterArmature|', '')] = mixer.clipAction(clip);
+  const tinte = def.tinte.map(n => mallas[n]?.material).filter(Boolean);
+  const c = {
+    g, cuerpo, modelo, mixer, acciones, actual: null, accion: null,
+    mano, manoIzq, cabeza, gorra, pelosPunta, fase: 0,
+    piernas: [new THREE.Object3D(), new THREE.Object3D()], brazos: [new THREE.Object3D(), new THREE.Object3D()],
+    matsTinte: tinte, coloresTinte: tinte.map(m => m.color.clone()),
+    anim(nombre, { ritmo = 1, bucle = true, fundido = 0.22 } = {}) {
+      const a = this.acciones[nombre] || this.acciones.Idle;
+      if (!a) return;
+      if (this.accion === a) { a.timeScale = ritmo; return; }
+      a.reset(); a.setLoop(bucle ? THREE.LoopRepeat : THREE.LoopOnce, Infinity); a.clampWhenFinished = !bucle; a.timeScale = ritmo;
+      a.enabled = true; a.setEffectiveWeight(1); a.fadeIn(fundido).play();
+      if (this.accion) this.accion.fadeOut(fundido);
+      this.accion = a; this.actual = nombre;
+    },
+  };
+  c.anim('Idle', { fundido: 0 });
+  mixer.update(0.01);
+  scene.add(g);
+  return c;
+}
+// Se cargan los cuatro personajes antes de empezar (si fallan, se usan los de piezas)
+const PJ = {};
+{
+  const btn = $('btn-empezar');
+  btn.disabled = true; const txt = btn.textContent; btn.textContent = 'Cargando…';
+  await Promise.all(Object.entries(DEF_MODELOS).map(async ([id, def]) => {
+    try { PJ[id] = await cargarModelo(def); } catch (e) { console.warn('No se pudo cargar el modelo', id, e); }
+  }));
+  btn.disabled = false; btn.textContent = txt;
 }
 
 /* =========================================================================
@@ -1458,11 +1649,11 @@ const frase = (lista, h) => nombres(pick(lista).replaceAll('{h}', h || ''));
 const CHAPUZAS = {
   arricio: {
     nombre: 'Arricio', clase: 'ramon', voz: 190, alturaGlobo: 2.45, perfil: { mujer: false, tono: 0.72, ritmo: 0.98 }, chapucero: 0.6,
-    c: crearPersonaje({ ropa: 0xd9752a, peto: 0xc4651f, bolsillo: 0xe8c547, manga: 0xe9e2d0, ancho: 1.3, barriga: true, bigote: 0x2a1a10, patillas: 0x3a2a1c, gorra: 0x1f3f6f, lapiz: true, zapatos: 0x2a1a10 }),
+    c: PJ.arricio || crearPersonaje({ ropa: 0x8e9884, peto: 0x7f8a76, manga: 0x24365c, ancho: 1.3, barriga: true, patillas: 0x3a2a1c, gorra: 0xf1f0ea, lapiz: true, zapatos: 0x2a1a10 }),
   },
   jeremias: {
     nombre: 'Jeremías', clase: 'paco', voz: 330, alturaGlobo: 2.35, perfil: { mujer: false, tono: 1.05, ritmo: 1.05 }, chapucero: 0.35,
-    c: crearPersonaje({ ropa: 0x2f5fa8, peto: 0x274f8c, bolsillo: 0xf2a33a, manga: 0xdfe6ee, pelo: 0x3a2a1c, gorra: 0xc8322b, zapatos: 0x3b2a1c }),
+    c: PJ.jeremias || crearPersonaje({ ropa: 0xeaa3b4, pierna: 0x8a9580, manga: 0xeaa3b4, pelo: 0x3a2a1c, gorra: 0xf1f0ea, zapatos: 0x3b2a1c }),
   },
 };
 const paco = { estado: 'normal', t: 0, vel: 0, vx: 0, vz: 0, herrs: [], mallas: [], tinte: 0, boost: 0 };
@@ -1483,14 +1674,14 @@ const texBata = texLienzo(64, 64, (g) => {
 }, [2, 2]);
 const remedios = {
   id: 'remedios', nombre: 'Doña Remedios', clase: 'remedios', voz: 520, alturaGlobo: 2.15, perfil: { mujer: true, tono: 1.3, ritmo: 1.05 },
-  c: crearPersonaje({ ropa: 0xffffff, falda: true, pierna: 0xf0c4a0, rulos: true, gafas: 0x6b3a2a, escala: 0.92, zapatos: 0xff9ec4, cejas: 0x8a8a8a }),
+  c: PJ.remedios || crearPersonaje({ ropa: 0xd9709d, falda: true, pierna: 0xf0c4a0, rulos: true, gafas: 0x6b3a2a, escala: 0.92, zapatos: 0xff9ec4, cejas: 0x8a8a8a }),
   casa: [-3.5, 3], paseo: [[-4, 2.5], [-6.5, 0.5], [3.5, 2], [-3, 3.5]], espera: [-26.6, 2.6],
   estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 25,
 };
-remedios.c.matRopa.map = texBata; remedios.c.matRopa.needsUpdate = true; remedios.c.colorRopa.set(0xffffff);
+if (!PJ.remedios) { remedios.c.matRopa.map = texBata; remedios.c.matRopa.needsUpdate = true; remedios.c.colorRopa.set(0xffffff); }
 const leopoldo = {
   id: 'leopoldo', nombre: 'Don Leopoldo', clase: 'leopoldo', voz: 240, alturaGlobo: 2.4, perfil: { mujer: false, tono: 0.85, ritmo: 0.9 },
-  c: crearPersonaje({ ropa: 0x3a3f4a, camisaPecho: 0xffffff, corbata: 0xa0182b, pelo: 0x141414, bigote: 0x141414, bigoteFino: true, zapatos: 0x111111, piel: 0xf3cfb0 }),
+  c: PJ.leopoldo || crearPersonaje({ ropa: 0x3a3f4a, camisaPecho: 0xffffff, corbata: 0xa0182b, pelo: 0x141414, bigote: 0x141414, bigoteFino: true, zapatos: 0x111111, piel: 0xf3cfb0 }),
   casa: [26, 2.2], paseo: [[26, 2.2], [24, 3.8], [28, 3.2], [26.5, 0.4]], espera: [-25.0, 2.6],
   estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 30,
 };
@@ -1868,8 +2059,16 @@ function electrocutar(e) {
   if (e === paco) { paco.estado = 'electro'; paco.t = 1.6; }
   else luego(6, () => { e.c.pelosPunta.visible = false; });
 }
-function teñir(e, color, seg) { e.c.matRopa.color.set(color); e.c.matRopa.map = null; e.c.matRopa.needsUpdate = true; e.tinte = seg; }
-function restaurarTinte(e) { e.c.matRopa.color.copy(e.c.colorRopa); e.c.pelosPunta.visible = false; e.tinte = 0; }
+function teñir(e, color, seg) {
+  if (e.c.matsTinte) e.c.matsTinte.forEach(m => m.color.set(color));
+  else { e.c.matRopa.color.set(color); e.c.matRopa.map = null; e.c.matRopa.needsUpdate = true; }
+  e.tinte = seg;
+}
+function restaurarTinte(e) {
+  if (e.c.matsTinte) e.c.matsTinte.forEach((m, i) => m.color.copy(e.c.coloresTinte[i]));
+  else e.c.matRopa.color.copy(e.c.colorRopa);
+  e.c.pelosPunta.visible = false; e.tinte = 0;
+}
 
 function resbalar(motivo) {
   if (paco.estado !== 'normal') return;
@@ -2047,19 +2246,21 @@ function actualizarSocio(dt) {
     case 'almuerzo':
       if (r.sentado) {
         bocataSocio.visible = true;
+        animarAndar(r.c, dt, 0, false, r.c.mixer ? 'Idle_Neutral' : null);
         r.c.brazos[1].rotation.x = -1.6 + Math.sin(performance.now() / 180) * 0.25;
         if (r.t <= 0) { r.sentado = false; bocataSocio.visible = false; r.c.cuerpo.position.y = 0; r.estado = 'idle'; r.t = rand(1, 3); G.stats.bocatasSocio++; sumar(-3, `Bocadillo de ${r.nombre} (a cuenta del taller)`); }
       } else if (caminar(r, dt, 2.0)) {
-        r.sentado = true; r.t = rand(10, 15); r.c.g.rotation.y = Math.PI; r.c.cuerpo.position.y = -0.36;
+        r.sentado = true; r.t = rand(10, 15); r.c.g.rotation.y = Math.PI; r.c.cuerpo.position.y = r.c.mixer ? 0 : -0.36;
       }
       break;
     case 'siesta':
       if (r.dormido) {
+        animarAndar(r.c, dt, 0, false, r.c.mixer ? 'Idle_Neutral' : null);
         if (Math.random() < dt * 1.3) emitir(pos.x, 1.0, pos.z, 1, { color: 0xffffff, brilla: true, cubo: true, vel: 0.2, sube: 0.6, gravedad: -0.2, tam: 0.09, vida: 1.6 });
         if (r.t <= 0) { r.dormido = false; r.c.cuerpo.rotation.set(0, 0, 0); r.c.cuerpo.position.set(0, 0, 0); r.estado = 'idle'; r.t = rand(1, 3); }
       } else if (caminar(r, dt, 1.9)) {
         r.dormido = true; r.t = rand(10, 14); r.c.g.rotation.y = Math.PI / 2;
-        r.c.cuerpo.rotation.set(0, 0, Math.PI / 2 - 0.1); r.c.cuerpo.position.set(-0.8, 0.7, 0);
+        r.c.cuerpo.rotation.set(0, 0, Math.PI / 2 - 0.1); r.c.cuerpo.position.set(-0.85, 0.62, 0);
         if (cercaJugador(r)) decir(r, frase(FRASES.socioSiesta), 0);
       }
       break;
@@ -2113,7 +2314,7 @@ function actualizarCliente(cl, dt) {
     }
     case 'yendoTaller':
       if (caminar(cl, dt, 1.9)) {
-        cl.estado = 'esperando'; cl.esperaT = 40; cl.c.g.rotation.y = Math.PI;
+        cl.estado = 'esperando'; cl.esperaT = 40; cl.c.g.rotation.y = Math.PI; cl.saludo = 2.2;
         Sonido.timbre();
         decir(cl, nombres(pick(cl.id === 'remedios' ? FRASES.remediosLlega : FRASES.leopoldoLlega)), 1);
       }
@@ -2137,8 +2338,9 @@ function actualizarCliente(cl, dt) {
       if (caminar(cl, dt, 1.8)) { cl.estado = 'casa'; cl.t = 1; }
       break;
   }
+  if (cl.saludo > 0) cl.saludo -= dt;
   if (cl.estado !== 'esperando') animarAndar(cl.c, dt, cl.vel);
-  else animarAndar(cl.c, dt, 0);
+  else animarAndar(cl.c, dt, 0, false, cl.saludo > 0 ? 'Wave' : null);
   // Brazos en jarras si los clientes están hartos
   const jarras = G.paciencia < 40;
   cl.c.brazos[0].rotation.z = jarras ? 0.6 : 0; cl.c.brazos[1].rotation.z = jarras ? -0.6 : 0;
@@ -2208,6 +2410,7 @@ function actualizarJugador(dt) {
       break;
     case 'electro':
       paco.t -= dt; paco.vel = 0;
+      animarAndar(c, dt, 0, false, 'HitRecieve');
       c.cuerpo.position.set(rand(-0.06, 0.06), rand(0, 0.08), rand(-0.06, 0.06));
       c.brazos[0].rotation.x = c.brazos[1].rotation.x = -2.8 + rand(-0.3, 0.3);
       if (Math.random() < dt * 20) emitir(p.x, rand(0.5, 2), p.z, 2, { color: [0xffd23f, 0x8fd3ff], brilla: true, vel: 2, sube: 1, tam: 0.03, vida: 0.3 });
@@ -2223,6 +2426,13 @@ function actualizarJugador(dt) {
       paco.vx *= Math.exp(-2 * dt); paco.vz *= Math.exp(-2 * dt);
       p.x += paco.vx * dt; p.z += paco.vz * dt;
       paco.vel = 0;
+      if (c.mixer) {
+        // Con esqueleto: vuelta en el aire y caída de verdad
+        if (t < 0.45) { c.g.rotation.y += dt * 22; c.cuerpo.position.y = Math.sin(t / 0.45 * Math.PI) * 0.5; animarAndar(c, dt, 0, false, 'HitRecieve'); }
+        else { c.cuerpo.position.y = 0; animarAndar(c, dt, 0, false, 'Death'); }
+        if (t >= dur + 0.6) { paco.estado = 'normal'; c.cuerpo.rotation.set(0, 0, 0); c.cuerpo.position.set(0, 0, 0); }
+        break;
+      }
       if (t < 0.45) { c.g.rotation.y += dt * 22; c.cuerpo.position.y = Math.sin(t / 0.45 * Math.PI) * 0.5; }
       else if (t < 0.65) { c.cuerpo.rotation.x = lerp(0, -1.45, (t - 0.45) / 0.2); c.cuerpo.position.y = 0.15; }
       else if (t < dur - 0.35) {
@@ -2344,7 +2554,7 @@ function actualizarLuces(dt) {
 const camObjetivo = new THREE.Vector3(), camMira = new THREE.Vector3();
 function actualizarCamara(dt, inmediato = false) {
   const p = paco.c.g.position;
-  const lejos = camera.aspect < 1 ? 1.5 : camera.aspect < 1.4 ? 1.18 : 1;
+  const lejos = (camera.aspect < 1 ? 1.5 : camera.aspect < 1.4 ? 1.18 : 1) * (G.zoom || 1);
   camObjetivo.set(p.x, 11.5 * lejos, p.z + 9.5 * lejos);
   if (inmediato) camera.position.copy(camObjetivo);
   else camera.position.lerp(camObjetivo, 1 - Math.exp(-4 * dt));
@@ -2498,7 +2708,7 @@ function bucle(ahora) {
   if (G.jugando && !G.pausa) actualizarJuego(dt);
   else if (!G.jugando && !G.fin) {
     const elegido = CHAPUZAS[eleccion].c, otro = CHAPUZAS[eleccion === 'arricio' ? 'jeremias' : 'arricio'].c;
-    animarAndar(elegido, dt, 0); animarAndar(otro, dt, 0);
+    animarAndar(elegido, dt, 0, false, 'Wave'); animarAndar(otro, dt, 0);
     elegido.brazos[0].rotation.z = Math.sin(ahora / 300) * 0.3 + 2.6;
     otro.brazos[0].rotation.z = lerp(otro.brazos[0].rotation.z, 0, 0.1);
     paco.c = elegido; // la cámara sigue al elegido en la portada
@@ -2511,4 +2721,4 @@ function bucle(ahora) {
 requestAnimationFrame(bucle);
 
 // Ganchos de depuración (sólo con ?debug en la URL)
-if (location.search.includes('debug')) window.__j = { G, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
+if (location.search.includes('debug')) window.__j = { G, PJ, camera, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
