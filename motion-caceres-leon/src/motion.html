@@ -15,15 +15,19 @@ canvas{display:block;width:100vw;height:56.25vw;max-height:100vh;max-width:177.7
 </head>
 <body>
 <canvas id="cv" width="1920" height="1080"></canvas>
+<script src="match-data.js"></script>
 <script>
 'use strict';
 /* =====================================================================
    CÁCERES vs CULTURAL LEONESA — 2ª FEB · Jornada 6
    Animación determinista: renderFrame(t) dibuja el instante t (segundos).
    ===================================================================== */
-const W = 1920, H = 1080, DURATION = 37.0;
-const VOICE = 30.0;                      // inicio de la locución final
-const WORDS = [0.0, 0.75, 1.38, 1.78];   // CÁCERES · Y LEÓN · MOLAN · MOGOLLÓN
+const W = 1920, H = 1080, DURATION = 48.5;
+const MATCH0 = 21.0;                     // inicio del partido
+const RESULT0 = 38.0;                    // pantalla RESULTADO
+const VOICE = 39.6;                      // inicio de la locución
+// tiempos de cada palabra dentro de la locución (medidos sobre el audio)
+const VW = { que: 3.32, cac: 3.5, leo: 4.15, molan: 4.78, mog: 5.25, end: 6.05 };
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
 
@@ -81,12 +85,14 @@ async function load() {
 /* ---------- impactos: sacudida + destello ---------- */
 const HITS = [
   { t: 0.0, s: 6, f: 0, c: '#fff' },
-  { t: 4.0, s: 20, f: .85, c: '#d9ffe6' }, { t: 8.0, s: 20, f: .85, c: '#ffe0e4' },
-  { t: 12.0, s: 36, f: 1, c: '#ffffff' }, { t: 16.0, s: 10, f: .5, c: '#fff' }, { t: 20.0, s: 10, f: .45, c: '#fff' },
-  { t: 24.0, s: 4, f: .35, c: '#fff6e0' },
-  { t: 28.0, s: 8, f: .2, c: '#fff' }, { t: 28.5, s: 6, f: .12, c: '#fff' }, { t: 29.0, s: 8, f: .2, c: '#fff' }, { t: 29.5, s: 8, f: .2, c: '#fff' },
-  { t: VOICE + WORDS[0], s: 34, f: 1, c: '#ffffff' }, { t: VOICE + WORDS[1], s: 16, f: .35, c: '#ffe9ec' },
-  { t: VOICE + WORDS[2], s: 18, f: .35, c: '#fff3cf' }, { t: VOICE + WORDS[3], s: 30, f: .6, c: '#fff3cf' },
+  { t: 5.0, s: 20, f: .85, c: '#d9ffe6' }, { t: 9.0, s: 20, f: .85, c: '#ffe0e4' },
+  { t: 13.0, s: 36, f: 1, c: '#ffffff' }, { t: 17.0, s: 10, f: .45, c: '#fff' },
+  { t: MATCH0, s: 6, f: .5, c: '#fff' },
+  ...window.MATCH.shots.map(s => ({ t: MATCH0 + s.arr, s: s.kind === 'dunk' ? 26 : 12, f: s.kind === 'dunk' ? .45 : .22, c: s.team === 'C' ? '#d9ffe6' : '#ffe0e4' })),
+  { t: MATCH0 + window.MATCH.buzzer, s: 14, f: .3, c: '#fff' },
+  { t: RESULT0, s: 30, f: .9, c: '#fff6dc' }, { t: RESULT0 + 2.2, s: 10, f: .4, c: '#fff' },
+  { t: VOICE + VW.cac, s: 8, f: .12, c: '#d9ffe6' }, { t: VOICE + VW.leo, s: 8, f: .12, c: '#ffe0e4' },
+  { t: VOICE + VW.end - 0.05, s: 26, f: .55, c: '#fff3cf' },
 ];
 function shakeAt(t) {
   let x = 0, y = 0, z = 0;
@@ -246,49 +252,59 @@ function pill(x, y, label, value, col, a, align = 'left') {
 /* =====================================================================
    ESCENAS
    ===================================================================== */
-// 0 — INTRO (0–4 s)
+// 0 — INTRO (0–5 s)
 function sIntro(t) {
   ctx.fillStyle = C.ink; ctx.fillRect(0, 0, W, H);
-  // halos de color de ambos equipos
   glowCircle(380, 540, 900, C.green, .22 * prog(t, .2, 1.6));
   glowCircle(1540, 540, 900, C.red, .22 * prog(t, .2, 1.6));
   courtLines(t - .3, .10, W / 2, H / 2, 1 + t * .03);
   embers(t, C.greenL, C.redL, .5 * prog(t, .3, 1.5));
-  // línea de luz que se abre
   const lp = E.outExpo(prog(t, .05, 1.2));
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   const lg = ctx.createLinearGradient(W / 2 - 900 * lp, 0, W / 2 + 900 * lp, 0);
   lg.addColorStop(0, 'rgba(0,161,62,0)'); lg.addColorStop(.25, 'rgba(53,224,122,.9)'); lg.addColorStop(.5, '#fff'); lg.addColorStop(.75, 'rgba(255,74,92,.9)'); lg.addColorStop(1, 'rgba(227,12,37,0)');
-  ctx.fillStyle = lg; ctx.globalAlpha = 1 - prog(t, 3.3, 3.9);
-  ctx.fillRect(W / 2 - 900 * lp, 588, 1800 * lp, 3);
-  glowCircle(W / 2, 590, 260 * lp, '#ffffff', .35 * (1 - prog(t, 1, 3)));
+  ctx.fillStyle = lg; ctx.globalAlpha = 1 - prog(t, 4.3, 4.9);
+  ctx.fillRect(W / 2 - 900 * lp, 745, 1800 * lp, 3);
+  glowCircle(W / 2, 746, 260 * lp, '#ffffff', .35 * (1 - prog(t, 1, 3)));
   ctx.restore();
-
-  const out = E.inExpo(prog(t, 3.45, 4.0));
+  const out = E.inExpo(prog(t, 4.45, 5.0));
   ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(1 + out * 2.5, 1 + out * 2.5); ctx.translate(-W / 2, -H / 2);
   ctx.globalAlpha = 1 - out;
-  // kicker
   const k = prog(t, .5, 1.4);
-  text('LIGA  ·  2ª FEB', W / 2, 330, { font: 'Mont', weight: 800, size: 34, ls: lerp(40, 18, E.outCubic(k)), alpha: k, fill: 'rgba(255,255,255,.85)' });
-  // JORNADA 6
-  revealText('JORNADA', W / 2 - 110, 545, prog(t, .9, 1.7), { size: 210, ls: 6, fill: '#fff' });
+  text('LIGA  ·  2ª FEB', W / 2, 165, { font: 'Mont', weight: 800, size: 34, ls: lerp(40, 18, E.outCubic(k)), alpha: k, fill: 'rgba(255,255,255,.85)' });
+  revealText('JORNADA', W / 2 - 110, 375, prog(t, .9, 1.7), { size: 200, ls: 6, fill: '#fff' });
   const six = prog(t, 1.35, 1.85);
   if (six > 0) {
-    ctx.save(); ctx.translate(W / 2 + 470, 470); const s6 = lerp(2.4, 1, E.outExpo(six)); ctx.scale(s6, s6);
+    ctx.save(); ctx.translate(W / 2 + 455, 300); const s6 = lerp(2.4, 1, E.outExpo(six)); ctx.scale(s6, s6);
     const g6 = ctx.createLinearGradient(0, -110, 0, 80); g6.addColorStop(0, '#fff6d6'); g6.addColorStop(.5, C.gold); g6.addColorStop(1, C.goldD);
-    text('6', 0, 75, { size: 230, fill: g6, alpha: E.outCubic(six), glow: 'rgba(241,194,50,.7)', glowSize: 40 });
+    text('6', 0, 75, { size: 220, fill: g6, alpha: E.outCubic(six), glow: 'rgba(241,194,50,.7)', glowSize: 40 });
     ctx.restore();
   }
-  // fecha
-  const dp = prog(t, 1.9, 2.6);
-  text('SÁBADO  7  DE  NOVIEMBRE', W / 2, 670, { font: 'Mont', weight: 700, size: 40, ls: lerp(30, 12, E.outCubic(dp)), alpha: dp, fill: '#fff' });
-  const tp = prog(t, 2.4, 3.1);
-  text('CÁCERES', W / 2 - 60, 760, { size: 56, ls: 6, align: 'right', alpha: tp, fill: C.greenL, glow: rgba(C.green, .8), glowSize: 20 });
-  text('VS', W / 2, 760, { size: 40, ls: 2, alpha: tp, fill: C.gold });
-  text('CULTURAL LEONESA', W / 2 + 60, 760, { size: 56, ls: 6, align: 'left', alpha: tp, fill: C.redL, glow: rgba(C.red, .8), glowSize: 20 });
+  const dp = prog(t, 1.9, 2.5);
+  text('SÁBADO  7  DE  NOVIEMBRE', W / 2, 475, { font: 'Mont', weight: 700, size: 42, ls: lerp(30, 12, E.outCubic(dp)), alpha: dp, fill: '#fff' });
+  const hp = prog(t, 2.3, 2.75), he = E.outExpo(hp);
+  if (hp > 0) {
+    ctx.save(); ctx.translate(W / 2, 560); ctx.scale(lerp(1.8, 1, he), lerp(1.8, 1, he));
+    const gh = ctx.createLinearGradient(0, -70, 0, 10); gh.addColorStop(0, '#fff6d6'); gh.addColorStop(1, C.gold);
+    text('19:00 HORAS', 0, 20, { size: 92, ls: 8, fill: gh, alpha: clamp(hp * 3), glow: 'rgba(241,194,50,.6)', glowSize: 30 });
+    ctx.restore();
+  }
+  const pp = prog(t, 2.75, 3.3);
+  ctx.save(); ctx.globalAlpha = pp;
+  const pw = measure('PABELLÓN MULTIUSOS DE CÁCERES', 44, 'Mont', 900, 10) + 90;
+  ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.strokeStyle = 'rgba(241,194,50,.75)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(W / 2 - pw / 2, 620, pw, 84, 42); ctx.fill(); ctx.stroke();
+  // icono de ubicación
+  ctx.fillStyle = C.gold; ctx.beginPath(); ctx.arc(W / 2 - pw / 2 + 44, 652, 11, Math.PI, 0); ctx.lineTo(W / 2 - pw / 2 + 44, 680); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(W / 2 - pw / 2 + 44, 652, 4, 0, 6.283); ctx.fill();
+  text('PABELLÓN MULTIUSOS DE CÁCERES', W / 2 + 18, 678, { font: 'Mont', weight: 900, size: 44, ls: lerp(18, 10, E.outCubic(pp)), fill: '#fff' });
   ctx.restore();
-  // barrido de luz hacia la siguiente escena
-  const sw = prog(t, 3.55, 4.0);
+  const tp = prog(t, 3.3, 3.9);
+  text('CÁCERES', W / 2 - 60, 850, { size: 64, ls: 6, align: 'right', alpha: tp, fill: C.greenL, glow: rgba(C.green, .8), glowSize: 20 });
+  text('VS', W / 2, 850, { size: 44, ls: 2, alpha: tp, fill: C.gold });
+  text('CULTURAL LEONESA', W / 2 + 60, 850, { size: 64, ls: 6, align: 'left', alpha: tp, fill: C.redL, glow: rgba(C.red, .8), glowSize: 20 });
+  ctx.restore();
+  const sw = prog(t, 4.55, 5.0);
   if (sw > 0) { ctx.save(); ctx.globalAlpha = E.inCubic(sw) * .9; ctx.fillStyle = C.greenD; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 }
 
@@ -421,79 +437,12 @@ function sVS(t) {
   // información del partido
   const ip = prog(u, 1.2, 1.8);
   ctx.save(); ctx.globalAlpha = ip;
-  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.roundRect(W / 2 - 430, 950, 860, 70, 35); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.roundRect(W / 2 - 560, 950, 1120, 70, 35); ctx.fill();
   ctx.strokeStyle = 'rgba(241,194,50,.7)'; ctx.lineWidth = 2; ctx.stroke();
-  text('SÁBADO 7 NOV  ·  JORNADA 6  ·  2ª FEB', W / 2, 996, { font: 'Mont', weight: 800, size: 30, ls: 6, fill: '#fff' });
+  text('SÁBADO 7 NOV  ·  19:00 H  ·  PABELLÓN MULTIUSOS DE CÁCERES', W / 2, 996, { font: 'Mont', weight: 800, size: 28, ls: 5, fill: '#fff' });
   ctx.restore();
   ctx.restore();
   if (zIn > 0) { ctx.fillStyle = `rgba(255,255,255,${E.inCubic(prog(u, 3.7, 4.0))})`; ctx.fillRect(0, 0, W, H); }
-}
-
-// 4 — CAMISETAS (16–20 s)
-const SHINE = document.createElement('canvas'); const SG = SHINE.getContext('2d');
-function jersey(k, x, y, h, p, u, shineT, col) {
-  const im = IMG[k], w = im.width / im.height * h;
-  const e = E.outExpo(p);
-  const sx = Math.max(.02, Math.sin(e * Math.PI / 2)) * (1 - .05 * Math.pow(Math.sin(u * 1.1 + x), 2));
-  const yy = y + (1 - e) * 260 + Math.sin(u * 1.5 + x) * 8;
-  const rot = Math.sin(u * .9 + x) * .015;
-  ctx.save(); ctx.globalAlpha = clamp(p * 3);
-  // sombra/reflejo en el suelo
-  ctx.save(); ctx.translate(x, y + h / 2 + 6); ctx.scale(sx, 1);
-  ctx.drawImage(REFL[k], -w / 2, 0, w, h * .45); ctx.restore();
-  // camiseta + brillo
-  SHINE.width = Math.ceil(w); SHINE.height = Math.ceil(h);
-  SG.drawImage(im, 0, 0, w, h);
-  SG.globalCompositeOperation = 'source-atop';
-  const sp = lerp(-.4, 1.4, prog(u, shineT, shineT + 1.0));
-  const sg = SG.createLinearGradient(w * (sp - .25), 0, w * (sp + .25), h * .5);
-  sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.38)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
-  SG.fillStyle = sg; SG.fillRect(0, 0, w, h); SG.globalCompositeOperation = 'source-over';
-  ctx.translate(x, yy); ctx.rotate(rot); ctx.scale(sx, 1);
-  ctx.shadowColor = rgba(col, .55); ctx.shadowBlur = 60;
-  ctx.drawImage(SHINE, -w / 2, -h / 2, w, h);
-  ctx.restore();
-}
-function sJerseys(t) {
-  const u = t;
-  ctx.fillStyle = '#06070a'; ctx.fillRect(0, 0, W, H);
-  // suelo
-  const fl = ctx.createLinearGradient(0, 760, 0, H); fl.addColorStop(0, '#0d0f14'); fl.addColorStop(1, '#020203');
-  ctx.fillStyle = fl; ctx.fillRect(0, 840, W, H - 840);
-  glowCircle(560, 520, 700, C.green, .35); glowCircle(1360, 520, 700, C.red, .35);
-  // números gigantes detrás
-  const np = E.outCubic(prog(u, .1, 1.2));
-  text('88', 560 - 60 + u * 12, 820, { size: 760, fill: null, stroke: rgba(C.greenL, .22 * np), lw: 3 });
-  text('24', 1360 + 60 - u * 12, 820, { size: 760, fill: null, stroke: rgba(C.redL, .22 * np), lw: 3 });
-  // focos cenitales
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (const [x, col] of [[560, '#e8fff0'], [1360, '#fff0f2']]) {
-    const a = .16 * prog(u, 0, .4) * (1 + .1 * Math.sin(u * 7 + x));
-    const g = ctx.createLinearGradient(0, -50, 0, 900); g.addColorStop(0, rgba(col, a * 1.6)); g.addColorStop(1, rgba(col, 0));
-    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - 50, -50); ctx.lineTo(x + 50, -50); ctx.lineTo(x + 380, 900); ctx.lineTo(x - 380, 900); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = rgba(col, a * .8); ctx.beginPath(); ctx.ellipse(x, 905, 360, 40, 0, 0, 6.283); ctx.fill();
-  }
-  ctx.restore();
-  embers(u + 9, C.greenL, C.redL, .4);
-  const out = E.inExpo(prog(u, 3.55, 4.0));
-  ctx.save(); ctx.translate(0, -out * 1300);
-  jersey('jc', 560, 470, 690, prog(u, .05, .85), u, 1.2, C.green);
-  jersey('jl', 1360, 470, 690, prog(u, .25, 1.05), u, 1.6, C.red);
-  ctx.restore();
-  // título
-  const tp = prog(u, .3, 1.0);
-  ctx.save(); ctx.globalAlpha = 1 - out;
-  text('LAS  EQUIPACIONES', W / 2, 92, { font: 'Mont', weight: 900, size: 36, ls: lerp(36, 20, E.outCubic(tp)), alpha: tp, fill: '#fff' });
-  const lw = 160 * E.outExpo(prog(u, .6, 1.2));
-  ctx.fillStyle = C.green; ctx.fillRect(W / 2 - 230 - lw, 80, lw, 4);
-  ctx.fillStyle = C.red; ctx.fillRect(W / 2 + 230, 80, lw, 4);
-  // etiquetas
-  revealText('CÁCERES', 560, 990, prog(u, .9, 1.5), { size: 74, ls: 6, fill: '#fff' });
-  revealText('CULTURAL LEONESA', 1360, 990, prog(u, 1.05, 1.65), { size: 74, ls: 4, fill: '#fff' });
-  const bw = 120 * E.outExpo(prog(u, 1.2, 1.7));
-  ctx.fillStyle = C.green; ctx.fillRect(560 - bw, 1012, bw * 2, 6);
-  ctx.fillStyle = C.red; ctx.fillRect(1360 - bw, 1012, bw * 2, 6);
-  ctx.restore();
 }
 
 // 5 — CLASIFICACIÓN (20–24 s)
@@ -564,176 +513,365 @@ function sStats(t) {
 const BOK = (() => { const r = mulberry(21); return Array.from({ length: 40 }, () => ({ x: r() * W, y: r() * H, r: 30 + r() * 120, v: 8 + r() * 25, ph: r() * 6, c: r() })); })();
 function heartPt(th, s) { return [16 * Math.pow(Math.sin(th), 3) * s, -(13 * Math.cos(th) - 5 * Math.cos(2 * th) - 2 * Math.cos(3 * th) - Math.cos(4 * th)) * s]; }
 function heartPath(s) { ctx.beginPath(); for (let i = 0; i <= 200; i++) { const [x, y] = heartPt(i / 200 * Math.PI * 2, s); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); }
-function sBrother(t) {
-  const u = t;
-  const bg = ctx.createLinearGradient(0, 0, W, 0); bg.addColorStop(0, '#022412'); bg.addColorStop(.5, '#0b0a0c'); bg.addColorStop(1, '#2a0409');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+// 6 — EL PARTIDO (21–38 s): las camisetas juegan y encestan en las dos canastas
+const M = window.MATCH;
+const RIM = { L: 190, R: 1730, y: 470 };
+const FLOOR_Y = 903, BALL_R = 22, BALL_FLOOR = FLOOR_Y - BALL_R, HAND_Y = 700;
+const DIR = { C: 1, L: -1 };
+const IMGK = { C: 'jc', L: 'jl' };
+function courtPt(u, v) { const y = lerp(660, 1065, v); return [lerp(lerp(150, 20, v), lerp(1770, 1900, v), u), y]; }
+function hermite(keys, t) {
+  if (t <= keys[0][0]) return keys[0][1];
+  const n = keys.length; if (t >= keys[n - 1][0]) return keys[n - 1][1];
+  let i = 0; while (keys[i + 1][0] < t) i++;
+  const [t0, x0] = keys[i], [t1, x1] = keys[i + 1];
+  const slope = j => { const a = keys[Math.max(0, j - 1)], b = keys[Math.min(n - 1, j + 1)]; return (b[1] - a[1]) / (b[0] - a[0] || 1); };
+  const h = t1 - t0, s = (t - t0) / h, m0 = slope(i) * h, m1 = slope(i + 1) * h;
+  const s2 = s * s, s3 = s2 * s;
+  return (2 * s3 - 3 * s2 + 1) * x0 + (s3 - 2 * s2 + s) * m0 + (-2 * s3 + 3 * s2) * x1 + (s3 - s2) * m1;
+}
+function jumpH(team, m) {
+  for (const [s, p, e, h] of (team === 'C' ? M.jumpsC : M.jumpsL)) {
+    if (m < s || m > e) continue;
+    return m < p ? h * Math.sin(Math.PI / 2 * (m - s) / (p - s)) : h * Math.cos(Math.PI / 2 * (m - p) / (e - p));
+  }
+  return 0;
+}
+const px = (team, m) => hermite(team === 'C' ? M.keysC : M.keysL, m);
+const hand = (team, m, dunk) => [px(team, m) + DIR[team] * (dunk ? 12 : 28), 560 - jumpH(team, m) - (dunk ? 34 : 0)];
+const rimX = team => team === 'C' ? RIM.R : RIM.L;
+function dribblePos(d, m) {
+  const [s, , team] = d;
+  return [px(team, m) + DIR[team] * 62, BALL_FLOOR - (BALL_FLOOR - HAND_Y) * Math.abs(Math.cos(Math.PI * M.dribbleFreq * (m - s)))];
+}
+function fallPos(x0, y0, tau) { // caída con botes desde (x0,y0)
+  let y = y0, v = 250; const dt = 1 / 240;
+  for (let t = 0; t < tau; t += dt) { v += 2400 * dt; y += v * dt; if (y > BALL_FLOOR) { y = BALL_FLOOR; v = -Math.abs(v) * .55; } }
+  return y;
+}
+function ballAt(m) {
+  if (m < 0.4) return [960, lerp(650, 420, E.outCubic(m / .4))];
+  if (m < 0.6) { const a = [960, 420], b = dribblePos(M.dribbles[0], .6), p = E.inOutCubic((m - .4) / .2); return [lerp(a[0], b[0], p), lerp(a[1], b[1], p)]; }
+  for (const d of M.dribbles) if (m >= d[0] && m < d[1]) return dribblePos(d, m);
+  for (const h of M.holds) if (m >= h[0] && m < h[1]) {
+    const d = M.dribbles.find(d => Math.abs(d[1] - h[0]) < 1e-6);
+    const a = dribblePos(d, h[0]), b = hand(h[2], m, h[1] - h[0] > .3), p = E.outCubic(prog(m, h[0], h[0] + .1));
+    return [lerp(a[0], b[0], p), lerp(a[1], b[1], p)];
+  }
+  for (let i = 0; i < M.shots.length; i++) {
+    const s = M.shots[i], rx = rimX(s.team);
+    if (m >= s.rel && m < s.arr) {
+      const a = hand(s.team, s.rel, s.kind === 'dunk'), p = (m - s.rel) / (s.arr - s.rel);
+      return [lerp(a[0], rx, p), lerp(a[1], RIM.y - 4, p) - 4 * s.h * p * (1 - p)];
+    }
+    if (m >= s.arr && m < s.next) {
+      if (m < s.arr + .2) return [rx, lerp(RIM.y - 4, RIM.y + 80, E.inCubic((m - s.arr) / .2) * .6 + (m - s.arr) / .2 * .4)];
+      const nd = M.dribbles.find(d => Math.abs(d[0] - s.next) < 1e-6);
+      const tx = nd ? dribblePos(nd, s.next)[0] : 560;
+      const tau = m - s.arr - .2, span = s.next - s.arr - .2;
+      let pos = [lerp(rx, tx, E.outCubic(clamp(tau / span))), fallPos(rx, RIM.y + 80, tau)];
+      if (nd && m > s.next - .2) { const b = dribblePos(nd, s.next), p = E.inOutCubic(prog(m, s.next - .2, s.next)); pos = [lerp(pos[0], b[0], p), lerp(pos[1], b[1], p)]; }
+      return pos;
+    }
+  }
+  return [560, BALL_FLOOR];
+}
+function scoreAt(m) {
+  let c = 0, l = 0; for (const s of M.shots) if (m >= s.arr) { if (s.team === 'C') c += s.pts; else l += s.pts; }
+  return [c, l];
+}
+const CROWD = (() => {
+  const r = mulberry(404), out = [];
+  for (let row = 0; row < 8; row++) {
+    const y = 330 + row * 38, rad = 9 + row * 0.9, gap = 24 + row * 1.6;
+    for (let x = -20 + (row % 2) * gap / 2; x < W + 20; x += gap) {
+      const k = r(); const fan = x < W / 2 ? (k < .25 ? C.green : null) : (k < .25 ? C.red : null);
+      out.push({ x: x + (r() - .5) * 6, y, rad: rad * (.85 + r() * .3), col: fan || ['#1a1d24', '#22262e', '#2a2e37', '#15171c'][Math.floor(r() * 4)], ph: r() * 6, jump: r() < .6, side: x < W / 2 ? 'C' : 'L', flash: r() });
+    }
+  }
+  return out;
+})();
+function crowd(m) {
+  let cheerC = 0, cheerL = 0;
+  for (const s of M.shots) { const d = m - s.arr; if (d > 0 && d < 2.5) { const k = Math.exp(-d * 1.8); if (s.team === 'C') cheerC = Math.max(cheerC, k); else cheerL = Math.max(cheerL, k); } }
+  const fin = m > M.buzzer ? Math.exp(-(m - M.buzzer) * .8) : 0;
+  for (const p of CROWD) {
+    const ch = Math.max(p.side === 'C' ? cheerC : cheerL, fin, .08);
+    const dy = p.jump ? -14 * ch * Math.abs(Math.sin(m * 9 + p.ph)) : 0;
+    ctx.fillStyle = p.col;
+    ctx.beginPath(); ctx.arc(p.x, p.y + dy, p.rad, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(p.x, p.y + dy + p.rad * 2.1, p.rad * 1.7, p.rad * 1.3, 0, Math.PI, 0); ctx.fill();
+    if (p.jump && ch > .3 && Math.sin(m * 9 + p.ph) > .7) { // brazos arriba
+      ctx.strokeStyle = p.col; ctx.lineWidth = 4; ctx.beginPath();
+      ctx.moveTo(p.x - p.rad, p.y + dy + p.rad); ctx.lineTo(p.x - p.rad * 1.6, p.y + dy - p.rad * 1.6);
+      ctx.moveTo(p.x + p.rad, p.y + dy + p.rad); ctx.lineTo(p.x + p.rad * 1.6, p.y + dy - p.rad * 1.6); ctx.stroke();
+    }
+    // flashes de cámaras
+    const fl = Math.sin(m * 3.1 + p.flash * 100);
+    if (p.flash < .05 && fl > .985) glowCircle(p.x, p.y + dy, 26, '#ffffff', .9);
+  }
+}
+function arena(m) {
+  // techo y gradas
+  const g = ctx.createLinearGradient(0, 0, 0, 660); g.addColorStop(0, '#05060a'); g.addColorStop(1, '#141820');
+  ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, 900);
+  glowCircle(200, 300, 700, C.green, .18); glowCircle(1720, 300, 700, C.red, .18);
+  for (let i = 0; i < 6; i++) { const x = 160 + i * 320; glowCircle(x, 40, 120, '#fff6e0', .55); }
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (const b of BOK) {
-    const x = b.x + Math.sin(u * .3 + b.ph) * 40, y = b.y - u * b.v;
-    const col = x < W / 2 ? C.greenL : C.redL;
-    glowCircle(x, y, b.r, b.c < .7 ? col : C.gold, .10 * (.6 + .4 * Math.sin(u + b.ph)));
+  for (let i = 0; i < 6; i++) {
+    const x = 160 + i * 320, gg = ctx.createLinearGradient(0, 40, 0, 900);
+    gg.addColorStop(0, 'rgba(255,246,224,.10)'); gg.addColorStop(1, 'rgba(255,246,224,0)');
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.moveTo(x - 30, 40); ctx.lineTo(x + 30, 40); ctx.lineTo(x + 260, 900); ctx.lineTo(x - 260, 900); ctx.closePath(); ctx.fill();
   }
   ctx.restore();
-  const out = prog(u, 3.6, 4.0);
-  ctx.save(); ctx.globalAlpha = 1 - out;
-  const hx = W / 2, hy = 420, hs = 15.5;
-  const p = E.inOutCubic(prog(u, .25, 1.6));
-  // escudos a los lados
-  const cp = E.outExpo(prog(u, .1, .8));
-  img(IMG.cac, lerp(-200, 470, cp), hy + 10 + Math.sin(u * 1.5) * 6, 300, { alpha: cp, glow: rgba(C.green, .7), glowSize: 50 });
-  img(IMG.leo, lerp(W + 200, 1450, cp), hy + 10 + Math.sin(u * 1.5 + 1) * 6, 300, { alpha: cp, glow: rgba(C.red, .7), glowSize: 50 });
-  ctx.save(); ctx.translate(hx, hy);
-  const done = prog(u, 1.55, 1.9);
-  const beat = done > 0 ? 1 + .05 * Math.pow(Math.max(0, Math.sin((u - 1.9) * Math.PI * 2)), 8) + .04 * E.outBack(done) - .04 : 1;
+  // pancarta superior
+  ctx.fillStyle = '#0b0d12'; ctx.fillRect(-200, 228, W + 400, 64);
+  ctx.fillStyle = C.green; ctx.fillRect(-200, 228, W / 2 + 200, 4); ctx.fillStyle = C.red; ctx.fillRect(W / 2, 228, W / 2 + 200, 4);
+  text('PABELLÓN MULTIUSOS DE CÁCERES', W / 2, 276, { size: 46, ls: 12, fill: '#ffffff', glow: 'rgba(255,255,255,.4)', glowSize: 14 });
+  crowd(m);
+  // marcador LED a ras de pista
+  ctx.fillStyle = '#07080b'; ctx.fillRect(-200, 616, W + 400, 46);
+  ctx.save(); ctx.beginPath(); ctx.rect(-200, 616, W + 400, 46); ctx.clip();
+  const msg = 'CÁCERES  ·  CULTURAL LEONESA  ·  2ª FEB  ·  JORNADA 6  ·  DOS AFICIONES HERMANADAS  ·  ';
+  ctx.font = '800 26px Mont'; ctx.letterSpacing = '6px'; const mw = ctx.measureText(msg).width;
+  for (let x = -((m * 160) % mw) - 200; x < W + 200; x += mw) text(msg, x, 648, { font: 'Mont', weight: 800, size: 26, ls: 6, align: 'left', fill: C.gold });
+  ctx.restore();
+}
+function floor_() {
+  // parqué en perspectiva
+  const [fl, fr, nl, nr] = [courtPt(0, 0), courtPt(1, 0), courtPt(0, 1), courtPt(1, 1)];
+  const g = ctx.createLinearGradient(0, 660, 0, 1080); g.addColorStop(0, '#8a5a2e'); g.addColorStop(1, '#c58b4e');
+  ctx.fillStyle = g; ctx.fillRect(-200, 660, W + 400, 520);
+  ctx.save(); ctx.globalAlpha = .18; ctx.strokeStyle = '#4a2c12'; ctx.lineWidth = 1.5;
+  for (let i = -40; i <= 80; i++) { const xb = -600 + i * 46, xt = lerp(960, xb, .42); ctx.beginPath(); ctx.moveTo(xt, 660); ctx.lineTo(xb, 1080); ctx.stroke(); }
+  ctx.restore();
+  // pintura de las zonas
+  ctx.save(); ctx.globalAlpha = .55;
+  for (const [u0, u1, col] of [[0, .207, C.redD], [.793, 1, C.greenD]]) {
+    const a = courtPt(u0, .337), b = courtPt(u1, .337), c = courtPt(u1, .663), d = courtPt(u0, .663);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.lineTo(...c); ctx.lineTo(...d); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+  // brillo del barniz
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 6; i++) { ctx.save(); ctx.translate(160 + i * 320, 800); ctx.scale(1, .22); glowCircle(0, 0, 260, '#fff2d8', .22); ctx.restore(); }
+  ctx.restore();
+  // líneas
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+  const path = pts => { ctx.beginPath(); pts.forEach((p, i) => { const q = courtPt(p[0], p[1]); i ? ctx.lineTo(...q) : ctx.moveTo(...q); }); ctx.stroke(); };
+  path([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]);
+  path([[.5, 0], [.5, 1]]);
+  const circ = (cu, cv, ru, rv, a0, a1) => { const pts = []; for (let i = 0; i <= 60; i++) { const a = lerp(a0, a1, i / 60); pts.push([cu + ru * Math.cos(a), cv + rv * Math.sin(a)]); } path(pts); };
+  circ(.5, .5, .064, .12, 0, 6.283);
+  for (const [s, hu] of [[1, .056], [-1, .944]]) {
+    const u0 = s > 0 ? 0 : 1, u1 = s > 0 ? .207 : .793;
+    path([[u0, .337], [u1, .337], [u1, .663], [u0, .663]]);
+    circ(u1, .5, .064, .12, s > 0 ? -Math.PI / 2 : Math.PI / 2, s > 0 ? Math.PI / 2 : Math.PI * 1.5);
+    const pts = []; for (let i = 0; i <= 60; i++) { const a = lerp(-1.35, 1.35, i / 60); pts.push([hu + s * 6.75 / 28 * Math.cos(a), .5 + 6.75 / 15 * Math.sin(a)]); } path(pts);
+  }
+  ctx.restore();
+}
+function hoopBack(side, m) {
+  const s = side === 'L' ? 1 : -1, rx = side === 'L' ? RIM.L : RIM.R;
+  const baseX = rx - s * 150;
+  // poste acolchado
+  ctx.fillStyle = '#16181d'; ctx.fillRect(baseX - 18, 360, 36, 520);
+  ctx.fillStyle = side === 'L' ? C.red : C.green; ctx.fillRect(baseX - 22, 700, 44, 180);
+  ctx.fillStyle = '#0c0d10'; ctx.beginPath(); ctx.ellipse(baseX, 880, 70, 14, 0, 0, 6.283); ctx.fill();
+  ctx.strokeStyle = '#2a2d35'; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(baseX, 380); ctx.lineTo(rx - s * 60, 380); ctx.stroke();
+  // tablero de cristal visto en 3/4
+  const bx = rx - s * 48;
+  ctx.save(); ctx.fillStyle = 'rgba(200,225,255,.16)'; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(bx, 330); ctx.lineTo(bx + s * 30, 316); ctx.lineTo(bx + s * 30, 470); ctx.lineTo(bx, 492); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 3; ctx.strokeRect(Math.min(bx, bx + s * 26) + 4, 410, 18, 50);
+  ctx.restore();
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.min(bx, bx + s * 26), 466, 26, 6);
+}
+function hoopFront(side, m) {
+  const rx = side === 'L' ? RIM.L : RIM.R;
+  let ry = RIM.y;
+  const dunk = M.shots.find(s => s.kind === 'dunk' && (s.team === 'C' ? 'R' : 'L') === side);
+  if (dunk && m > dunk.arr) ry += 8 * Math.exp(-(m - dunk.arr) * 6) * Math.sin((m - dunk.arr) * 42);
+  let sw = 0; for (const s of M.shots) if ((s.team === 'C' ? 'R' : 'L') === side && m > s.arr) { const d = m - s.arr; if (d < 2) sw = Math.exp(-d * 4) * Math.sin(d * 22); }
+  // red
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2;
+  const top = i => [rx + 36 * Math.cos(i / 8 * Math.PI * 2), ry + 9 * Math.sin(i / 8 * Math.PI * 2)];
+  const bot = i => [rx + (20 - 6 * Math.abs(sw)) * Math.cos(i / 8 * Math.PI * 2) + sw * 8, ry + 78 + 9 * Math.abs(sw) * 2 + 5 * Math.sin(i / 8 * Math.PI * 2)];
+  for (let i = 0; i < 8; i++) { const a = top(i), b = bot(i + 1), c = bot(i - 1); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.moveTo(...a); ctx.lineTo(...c); ctx.stroke(); }
+  ctx.beginPath(); for (let i = 0; i <= 8; i++) { const b = bot(i); i ? ctx.lineTo(...b) : ctx.moveTo(...b); } ctx.stroke();
+  ctx.restore();
+  // aro
+  ctx.save(); ctx.strokeStyle = '#ff5a1f'; ctx.lineWidth = 6; ctx.shadowColor = 'rgba(255,90,31,.6)'; ctx.shadowBlur = 12;
+  ctx.beginPath(); ctx.ellipse(rx, ry, 36, 9, 0, 0, 6.283); ctx.stroke(); ctx.restore();
+}
+function ball(x, y, rot, shadow = true) {
+  if (shadow) { const k = clamp(1 - (BALL_FLOOR - y) / 600, .25, 1); ctx.fillStyle = `rgba(0,0,0,${.35 * k})`; ctx.beginPath(); ctx.ellipse(x, FLOOR_Y + 2, 26 * k, 7 * k, 0, 0, 6.283); ctx.fill(); }
+  ctx.save(); ctx.translate(x, y);
+  const g = ctx.createRadialGradient(-7, -8, 3, 0, 0, BALL_R); g.addColorStop(0, '#ffb066'); g.addColorStop(.6, '#e8661c'); g.addColorStop(1, '#9c3b0b');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, BALL_R, 0, 6.283); ctx.fill();
+  ctx.save(); ctx.clip(); ctx.rotate(rot); ctx.strokeStyle = '#2a1206'; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(-BALL_R, 0); ctx.lineTo(BALL_R, 0); ctx.moveTo(0, -BALL_R); ctx.lineTo(0, BALL_R); ctx.stroke();
+  ctx.beginPath(); ctx.arc(-BALL_R * 1.25, 0, BALL_R * .95, -1, 1); ctx.stroke();
+  ctx.beginPath(); ctx.arc(BALL_R * 1.25, 0, BALL_R * .95, Math.PI - 1, Math.PI + 1); ctx.stroke();
+  ctx.restore(); ctx.restore();
+}
+function player(team, m) {
+  const x = px(team, m), vx = (px(team, m + .02) - px(team, m - .02)) / .04, j = jumpH(team, m);
+  const run = clamp(Math.abs(vx) / 450);
+  const bob = -Math.abs(Math.sin(m * 10 + (team === 'C' ? 0 : 1.3))) * 9 * run;
+  const y = 680 - j + bob, h = 280, im = IMG[IMGK[team]], w = im.width / im.height * h;
+  const col = team === 'C' ? C.greenL : C.redL;
+  // sombra
+  const k = 1 - j / 380; ctx.fillStyle = `rgba(0,0,0,${.45 * k})`; ctx.beginPath(); ctx.ellipse(x, FLOOR_Y + 2, 80 * k, 15 * k, 0, 0, 6.283); ctx.fill();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, FLOOR_Y); ctx.scale(1, .25); glowCircle(0, 0, 150, col, .25 * k); ctx.restore();
+  // estela de velocidad
+  if (Math.abs(vx) > 380) for (let g = 1; g <= 3; g++) img(im, x - vx * .028 * g, y, h, { alpha: .10 / g, rot: clamp(vx / 3000, -.12, .12) });
+  img(im, x, y, h, { rot: clamp(vx / 3000, -.12, .12), glow: rgba(col, .45), glowSize: 30 });
+}
+function popups(m) {
+  for (const s of M.shots) {
+    const d = m - s.arr; if (d < 0 || d > 1.3) continue;
+    const x = rimX(s.team), col = s.team === 'C' ? C.greenL : C.redL, a = 1 - prog(d, .9, 1.3), up = E.outCubic(prog(d, 0, 1.3)) * 70;
+    const lbl = { dunk: '¡MATE!', three: '¡TRIPLE!', layup: '¡SOBRE LA BOCINA!', jump: '¡CANASTA!' }[s.kind];
+    const sc = lerp(1.8, 1, E.outExpo(prog(d, 0, .25)));
+    const cx = s.team === 'C' ? x - 210 : x + 210;
+    ctx.save(); ctx.translate(cx, 440 - up); ctx.scale(sc, sc);
+    text(lbl, 0, 20, { size: 64, ls: 4, fill: '#fff', alpha: a, glow: col, glowSize: 30, stroke: 'rgba(0,0,0,.6)', lw: 8 });
+    ctx.restore();
+    burst(x, RIM.y + 30, s.arr, m, [col, '#fff', C.gold], 50, 700, 70 + Math.round(s.arr * 10));
+  }
+}
+function scoreboard(m) {
+  const a = prog(m, 0, .4);
+  ctx.save(); ctx.globalAlpha = a;
+  const x0 = W / 2 - 520, y0 = 26, w = 1040, h = 120;
+  ctx.fillStyle = 'rgba(6,7,10,.86)'; ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x0, y0, w, h, 22); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.green; ctx.beginPath(); ctx.roundRect(x0, y0, 420, 8, [22, 0, 0, 0]); ctx.fill();
+  ctx.fillStyle = C.red; ctx.beginPath(); ctx.roundRect(x0 + w - 420, y0, 420, 8, [0, 22, 0, 0]); ctx.fill();
+  img(IMG.cac, x0 + 62, y0 + 64, 78); img(IMG.leo, x0 + w - 62, y0 + 64, 80);
+  text('CÁCERES', x0 + 118, y0 + 82, { size: 44, ls: 3, align: 'left', fill: '#fff' });
+  text('C. LEONESA', x0 + w - 118, y0 + 82, { size: 44, ls: 3, align: 'right', fill: '#fff' });
+  // centro del marcador: sin números, solo VS (parpadea con la bocina final)
+  const fin = m >= M.buzzer;
+  ctx.fillStyle = fin ? (Math.sin(m * 14) > 0 ? '#b3121f' : '#5a0810') : '#000'; ctx.beginPath(); ctx.roundRect(W / 2 - 92, y0 + 16, 184, 88, 14); ctx.fill();
+  const g = ctx.createLinearGradient(0, y0 + 30, 0, y0 + 100); g.addColorStop(0, '#fff6d6'); g.addColorStop(1, C.gold);
+  text('VS', W / 2, y0 + 90, { size: 70, ls: 4, fill: g, glow: 'rgba(241,194,50,.6)', glowSize: 16 });
+  ctx.restore();
+}
+function sMatch(t) {
+  const m = t;
+  const [bx, by] = ballAt(m);
+  // cámara que sigue al balón
+  const camX = clamp((bx - 960) * .05, -40, 40), z = 1.0;
+  ctx.save(); ctx.translate(W / 2, 600); ctx.scale(z, z); ctx.translate(-W / 2 - camX, -600);
+  arena(m); floor_();
+  hoopBack('L', m); hoopBack('R', m);
+  // orden de dibujo: defensor detrás, atacante delante
+  let att = 'C'; for (const d of M.dribbles) if (m >= d[0] - .7) att = d[2];
+  for (const tm of (att === 'C' ? ['L', 'C'] : ['C', 'L'])) player(tm, m);
+  const spin = m * (Math.abs(by - BALL_FLOOR) > 5 ? 9 : 4) + bx / BALL_R * .4;
+  ball(bx, by, spin);
+  hoopFront('L', m); hoopFront('R', m);
+  popups(m);
+  ctx.restore();
+  scoreboard(m);
+  // inicio: rótulo "¡EMPIEZA EL PARTIDO!"
+  const ia = Math.min(prog(m, .05, .3), 1 - prog(m, 1.3, 1.7));
+  if (ia > 0) {
+    ctx.save(); ctx.globalAlpha = ia; ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 470, W, 120);
+    revealText('¡QUE EMPIECE EL PARTIDO!', W / 2, 560, prog(m, .05, .45), { size: 84, ls: 6, fill: '#fff', glow: 'rgba(241,194,50,.6)', glowSize: 20 });
+    ctx.restore();
+  }
+  // final del partido
+  const fa = prog(m, 15.75, 16.05);
+  if (fa > 0) {
+    ctx.save(); ctx.globalAlpha = fa;
+    const bw = W * E.outExpo(fa);
+    const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(0,80,30,.85)'); g.addColorStop(.5, 'rgba(5,5,8,.9)'); g.addColorStop(1, 'rgba(110,5,18,.85)');
+    ctx.fillStyle = g; ctx.fillRect(W / 2 - bw / 2, 430, bw, 190);
+    ctx.fillStyle = C.gold; ctx.fillRect(W / 2 - bw / 2, 430, bw, 4); ctx.fillRect(W / 2 - bw / 2, 616, bw, 4);
+    revealText('¡FINAL DEL PARTIDO!', W / 2, 560, prog(m, 15.8, 16.2), { size: 110, ls: 8, fill: '#fff', glow: 'rgba(255,255,255,.5)', glowSize: 24 });
+    ctx.restore();
+  }
+  const wo = prog(m, 16.7, 17.0); if (wo > 0) { ctx.fillStyle = `rgba(255,255,255,${E.inCubic(wo)})`; ctx.fillRect(0, 0, W, H); }
+}
+
+// 7 — RESULTADO (38–48,5 s): escudos + corazón + "DOS AFICIONES HERMANADAS" + locución
+function sResult(t) {
+  const u = t, vo = VOICE - RESULT0; // inicio de la voz (relativo)
+  const bg = ctx.createLinearGradient(0, 0, W, 0); bg.addColorStop(0, '#032a15'); bg.addColorStop(.5, '#0b0a0d'); bg.addColorStop(1, '#2e050b');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  rays(W / 2, 520, 24, 1400, u * .08, C.gold, '#ffffff', .07);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const b of BOK) { const x = b.x + Math.sin(u * .3 + b.ph) * 40, y = ((b.y - u * b.v) % H + H) % H; glowCircle(x, y, b.r, b.c < .7 ? (x < W / 2 ? C.greenL : C.redL) : C.gold, .09 * (.6 + .4 * Math.sin(u + b.ph))); }
+  ctx.restore();
+  embers(u + 40, C.greenL, C.redL, .5);
+  const fo = prog(u, 9.6, 10.5);
+  ctx.save(); ctx.globalAlpha = 1 - fo;
+  // RESULTADO
+  const rp = prog(u, .05, .4), re = E.outExpo(rp);
+  if (rp > 0) {
+    ctx.save(); ctx.translate(W / 2, 185); const s = lerp(2.4, 1, re) * (1 + .01 * Math.sin(u * 2)); ctx.scale(s, s);
+    const g = ctx.createLinearGradient(0, -120, 0, 10); g.addColorStop(0, '#fff8dc'); g.addColorStop(.55, C.gold); g.addColorStop(1, '#a8740c');
+    text('RESULTADO', 0, 50, { size: 170, ls: 18, fill: g, alpha: clamp(rp * 4), stroke: 'rgba(0,0,0,.5)', lw: 8, glow: 'rgba(241,194,50,.7)', glowSize: 40 });
+    ctx.restore();
+    const lw = 380 * E.outExpo(prog(u, .35, .9));
+    ctx.fillStyle = C.green; ctx.fillRect(W / 2 - 40 - lw, 268, lw, 5); ctx.fillStyle = C.red; ctx.fillRect(W / 2 + 40, 268, lw, 5);
+    ctx.save(); ctx.translate(W / 2, 270); ctx.rotate(Math.PI / 4); ctx.fillStyle = C.gold; ctx.globalAlpha *= prog(u, .4, .7); ctx.fillRect(-9, -9, 18, 18); ctx.restore();
+  }
+  // escudos (laten con la voz al decir su nombre)
+  const pulse = t0 => u > t0 ? 1 + .18 * Math.exp(-(u - t0) * 5) * Math.cos((u - t0) * 9) : 1;
+  const cp = E.outExpo(prog(u, .5, 1.2)), hy = 530;
+  const mog = vo + VW.end - 0.05; // explosión al terminar «mogollón»
+  const big = pulse(mog);
+  img(IMG.cac, lerp(-250, 500, cp), hy + Math.sin(u * 1.5) * 6, 320, { s: pulse(vo + VW.cac) * (u > mog ? lerp(1, 1.06, E.outCubic(prog(u, mog, mog + .5))) : 1), alpha: cp, glow: rgba(C.greenL, .7), glowSize: 60 });
+  img(IMG.leo, lerp(W + 250, 1420, cp), hy + Math.sin(u * 1.5 + 1) * 6, 320, { s: pulse(vo + VW.leo) * (u > mog ? lerp(1, 1.06, E.outCubic(prog(u, mog, mog + .5))) : 1), alpha: cp, glow: rgba(C.redL, .7), glowSize: 60 });
+  // corazón que dibujan los dos colores
+  const hs = 13, p = E.inOutCubic(prog(u, 1.0, 2.2)), done = prog(u, 2.15, 2.5);
+  ctx.save(); ctx.translate(W / 2, hy);
+  const beat = done > 0 ? (1 + .05 * Math.pow(Math.max(0, Math.sin((u - 2.5) * Math.PI * 2)), 8)) * big : 1;
   ctx.scale(beat, beat);
   if (done > 0) {
     heartPath(hs);
-    const hg = ctx.createLinearGradient(-280, 0, 280, 0); hg.addColorStop(0, C.green); hg.addColorStop(.5, '#f6f6f6'); hg.addColorStop(1, C.red);
-    ctx.save(); ctx.globalAlpha = done * .92; ctx.fillStyle = hg; ctx.shadowColor = 'rgba(255,255,255,.6)'; ctx.shadowBlur = 60; ctx.fill(); ctx.restore();
+    const hg = ctx.createLinearGradient(-240, 0, 240, 0); hg.addColorStop(0, C.green); hg.addColorStop(.5, '#f6f6f6'); hg.addColorStop(1, C.red);
+    ctx.save(); ctx.globalAlpha = done * .94; ctx.fillStyle = hg; ctx.shadowColor = 'rgba(255,255,255,.6)'; ctx.shadowBlur = 60; ctx.fill(); ctx.restore();
     ctx.save(); ctx.globalAlpha = done; ctx.clip();
-    text('C', -95, 75, { size: 210, fill: 'rgba(255,255,255,.95)', glow: 'rgba(0,80,30,.8)', glowSize: 20 });
-    text('L', 95, 75, { size: 210, fill: 'rgba(255,255,255,.95)', glow: 'rgba(90,0,10,.8)', glowSize: 20 });
+    text('C', -80, 64, { size: 180, fill: 'rgba(255,255,255,.95)', glow: 'rgba(0,80,30,.8)', glowSize: 20 });
+    text('L', 80, 64, { size: 180, fill: 'rgba(255,255,255,.95)', glow: 'rgba(90,0,10,.8)', glowSize: 20 });
     ctx.restore();
   }
-  // trazos que se unen
-  ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   for (const side of [-1, 1]) {
-    const col = side < 0 ? C.greenL : C.redL;
-    ctx.beginPath(); let last = null;
-    const n = Math.floor(120 * p);
-    for (let i = 0; i <= n; i++) {
-      const th = side < 0 ? Math.PI + i / 120 * Math.PI : Math.PI - i / 120 * Math.PI;
-      const pt = heartPt(th, hs); i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]); last = pt;
-    }
-    ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 30; ctx.stroke();
-    if (last && p < 1 && p > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glowCircle(last[0], last[1], 60, '#ffffff', .9); ctx.restore(); }
+    const col = side < 0 ? C.greenL : C.redL; ctx.beginPath(); let last = null; const n = Math.floor(120 * p);
+    for (let i = 0; i <= n; i++) { const th = side < 0 ? Math.PI + i / 120 * Math.PI : Math.PI - i / 120 * Math.PI; const pt = heartPt(th, hs); i ? ctx.lineTo(...pt) : ctx.moveTo(...pt); last = pt; }
+    if (n > 0) { ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 30; ctx.stroke(); }
+    if (last && p > 0 && p < 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glowCircle(last[0], last[1], 60, '#ffffff', .9); ctx.restore(); }
   }
   ctx.restore();
-  burst(hx, hy - 5 * hs, 1.6, u, [C.greenL, C.redL, '#fff', C.gold], 90, 1000, 31);
-  shock(hx, hy, 1.6, u, '#ffffff', 700, 14);
-  // textos
-  revealText('DOS AFICIONES', W / 2, 800, prog(u, 1.7, 2.3), { size: 120, ls: 8, fill: '#fff' });
-  const hp = prog(u, 2.1, 2.7);
-  const gh = ctx.createLinearGradient(W / 2 - 400, 0, W / 2 + 400, 0); gh.addColorStop(0, C.greenL); gh.addColorStop(.5, '#ffffff'); gh.addColorStop(1, C.redL);
-  revealText('HERMANADAS', W / 2, 935, hp, { size: 140, ls: 14, fill: gh, glow: 'rgba(255,255,255,.35)', glowSize: 30 });
-  const sp = prog(u, 2.6, 3.2);
-  text('UNA AMISTAD MÁS GRANDE QUE CUALQUIER RESULTADO', W / 2, 1010, { font: 'Mont', weight: 700, size: 28, ls: lerp(18, 7, E.outCubic(sp)), alpha: sp, fill: 'rgba(255,255,255,.85)' });
+  burst(W / 2, hy - 5 * hs, 2.2, u, [C.greenL, C.redL, '#fff', C.gold], 90, 1000, 31);
+  shock(W / 2, hy, 2.2, u, '#ffffff', 700, 14);
+  burst(W / 2, hy, mog, u, [C.gold, '#fff', C.greenL, C.redL], 140, 1600, 52);
+  shock(W / 2, hy, mog, u, C.gold, 1200, 30);
+  // DOS AFICIONES HERMANADAS
+  revealText('DOS AFICIONES', W / 2, 830, prog(u, 2.4, 3.0), { size: 110, ls: 8, fill: '#fff' });
+  const gh = ctx.createLinearGradient(W / 2 - 420, 0, W / 2 + 420, 0); gh.addColorStop(0, C.greenL); gh.addColorStop(.5, '#ffffff'); gh.addColorStop(1, C.redL);
+  revealText('HERMANADAS', W / 2, 965, prog(u, 2.75, 3.35), { size: 140, ls: 14, fill: gh, glow: 'rgba(255,255,255,.35)', glowSize: 30 });
+  const fp = prog(u, 3.3, 3.9);
+  text('SÁBADO 7 NOV  ·  19:00 H  ·  PABELLÓN MULTIUSOS DE CÁCERES  ·  2ª FEB  ·  J6', W / 2, 1040, { font: 'Mont', weight: 800, size: 22, ls: lerp(14, 5, E.outCubic(fp)), alpha: fp * .85, fill: '#fff' });
   ctx.restore();
-  if (out > 0) { ctx.fillStyle = `rgba(0,0,0,${E.inCubic(out)})`; ctx.fillRect(0, 0, W, H); }
-}
-
-// 7 — CUENTA ATRÁS (28–30 s)
-function sBuild(t) {
-  const u = t;
-  ctx.fillStyle = '#020203'; ctx.fillRect(0, 0, W, H);
-  if (u > 1.75) { // apagón antes del golpe final
-    const k = prog(u, 1.75, 2.0);
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createLinearGradient(W / 2 - 700 * (1 - k), 0, W / 2 + 700 * (1 - k), 0);
-    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 538, W, 4); ctx.restore();
-    return;
-  }
-  const beat = u % .5, pulse = Math.exp(-beat * 9), fast = u > 1.0 ? Math.exp(-(u % .125) * 25) : 0;
-  glowCircle(500, 540, 900, C.green, .30 + .25 * pulse);
-  glowCircle(1420, 540, 900, C.red, .30 + .25 * pulse);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 6; i++) {
-    const a = Math.sin(u * 2 + i) * .5, x = 160 + i * 320;
-    const g = ctx.createLinearGradient(0, H, 0, 0); g.addColorStop(0, `rgba(255,255,255,${.12 * (.5 + pulse)})`); g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.save(); ctx.translate(x, H + 40); ctx.rotate(a); ctx.fillStyle = g;
-    ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(20, 0); ctx.lineTo(160, -1300); ctx.lineTo(-160, -1300); ctx.closePath(); ctx.fill(); ctx.restore();
-  }
-  ctx.restore();
-  embers(u * 3 + 20, C.greenL, C.redL, .6);
-  const cp = E.outExpo(prog(u, 0, .5));
-  img(IMG.cac, lerp(-300, 260, cp), 540, 300 * (1 + .06 * pulse), { alpha: cp });
-  img(IMG.leo, lerp(W + 300, W - 260, cp), 540, 300 * (1 + .06 * pulse), { alpha: cp });
-  const s = 1 + .06 * pulse + .03 * fast + u * .04;
-  ctx.save(); ctx.translate(W / 2, 540); ctx.scale(s, s);
-  const ep = prog(u, 0, .25);
-  text('ESTE', 0, -95, { size: 120, ls: 30, alpha: ep, fill: 'rgba(255,255,255,.9)' });
-  const gs = ctx.createLinearGradient(0, -60, 0, 160); gs.addColorStop(0, '#ffffff'); gs.addColorStop(1, '#cfd6dd');
-  text('SÁBADO', 0, 150, { size: 270, ls: 10, alpha: ep, fill: gs, glow: 'rgba(255,255,255,.5)', glowSize: 40 * (.4 + pulse) });
-  ctx.restore();
-  const dp = prog(u, .5, .9);
-  text('7 DE NOVIEMBRE  ·  JORNADA 6  ·  2ª FEB', W / 2, 870, { font: 'Mont', weight: 800, size: 36, ls: 10, alpha: dp, fill: C.gold });
-}
-
-// 8 — FINAL (30–37 s)
-function slamWord(str, x, y, size, t0, u, fill, glow, align = 'left') {
-  const p = prog(u, t0, t0 + .28); if (p <= 0) return;
-  const e = E.outExpo(p);
-  const w = measure(str, size, 'Anton', 400, 4);
-  const cx = align === 'left' ? x + w / 2 : x;
-  ctx.save(); ctx.translate(cx, y - size * .38); const s = lerp(2.3, 1, e) * (1 + .012 * Math.sin((u - t0) * 2.5)); ctx.scale(s, s);
-  if (p < 1) for (let g = 1; g <= 2; g++) { ctx.save(); ctx.scale(1 + g * .18 * (1 - e), 1 + g * .18 * (1 - e)); text(str, 0, size * .38, { size, ls: 4, fill: 'rgba(255,255,255,.18)' }); ctx.restore(); }
-  text(str, 0, size * .38, { size, ls: 4, fill, alpha: clamp(p * 5), glow, glowSize: 45, stroke: 'rgba(0,0,0,.55)', lw: 8 });
-  const fl = Math.exp(-(u - t0) * 7);
-  if (fl > .02) text(str, 0, size * .38, { size, ls: 4, fill: `rgba(255,255,255,${fl * .9})` });
-  ctx.restore();
-}
-function sFinal(t) {
-  const u = t;
-  const bg = ctx.createRadialGradient(W / 2, 330, 50, W / 2, 540, 1300); bg.addColorStop(0, '#1b1b22'); bg.addColorStop(1, '#030305');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  glowCircle(380, 300, 900, C.green, .45); glowCircle(1540, 300, 900, C.red, .45);
-  rays(W / 2, 300, 28, 1500, u * .18, C.greenL, C.redL, .16);
-  rays(W / 2, 300, 14, 1100, -u * .1, C.gold, '#ffffff', .08);
-  embers(u + 30, C.greenL, C.redL, .8);
-  shock(W / 2, 300, 0, u, '#fff', 1500, 40);
-  burst(W / 2, 300, 0, u, [C.greenL, C.redL, C.gold, '#fff'], 140, 1700, 41);
-  // escudos y corazón
-  const cp = prog(u, 0, .3), ce = E.outExpo(cp);
-  for (const [k, x, d] of [['cac', 690, -1], ['leo', 1230, 1]]) {
-    img(IMG[k], x + d * (1 - ce) * 400, 300 + Math.sin(u * 1.6 + d) * 8, 330, { s: lerp(1.6, 1, ce), alpha: clamp(cp * 3), glow: rgba(k === 'cac' ? C.greenL : C.redL, .7), glowSize: 60 });
-  }
-  const hb = 1 + .12 * Math.pow(Math.max(0, Math.sin(u * Math.PI * 2)), 10);
-  ctx.save(); ctx.translate(W / 2, 300); ctx.scale(hb * ce, hb * ce); heartPath(3.6);
-  const hg = ctx.createLinearGradient(-60, 0, 60, 0); hg.addColorStop(0, C.greenL); hg.addColorStop(1, C.redL);
-  ctx.fillStyle = hg; ctx.shadowColor = '#fff'; ctx.shadowBlur = 30; ctx.fill(); ctx.restore();
-  // frase sincronizada con la voz
-  const sz1 = 150, y1 = 650;
-  const w1 = [measure('CÁCERES', sz1, 'Anton', 400, 4), measure('Y', sz1, 'Anton', 400, 4), measure('LEÓN,', sz1, 'Anton', 400, 4)];
-  const gap = 40, tot1 = w1[0] + w1[1] + w1[2] + gap * 2;
-  let x = W / 2 - tot1 / 2;
-  slamWord('CÁCERES', x, y1, sz1, WORDS[0], u, '#ffffff', rgba(C.green, 1)); x += w1[0] + gap;
-  slamWord('Y', x, y1, sz1, WORDS[1], u, C.gold, 'rgba(241,194,50,.8)'); x += w1[1] + gap;
-  slamWord('LEÓN,', x, y1, sz1, WORDS[1] + .06, u, '#ffffff', rgba(C.red, 1));
-  const sz2 = 205, y2 = 880;
-  const w2 = [measure('MOLAN', sz2, 'Anton', 400, 4), measure('MOGOLLÓN', sz2, 'Anton', 400, 4)];
-  const tot2 = w2[0] + w2[1] + gap * 1.2;
-  x = W / 2 - tot2 / 2;
-  const sh = lerp(-.3, 1.3, prog(u, 2.9, 3.9));
-  const gg = ctx.createLinearGradient(0, y2 - 170, 0, y2);
-  gg.addColorStop(0, '#fff7d1'); gg.addColorStop(.5, C.gold); gg.addColorStop(1, '#b8800f');
-  const g2 = ctx.createLinearGradient(W / 2 - 900, 0, W / 2 + 900, 0);
-  g2.addColorStop(0, C.gold); g2.addColorStop(clamp(sh - .08), C.gold); g2.addColorStop(clamp(sh), '#ffffff'); g2.addColorStop(clamp(sh + .08), C.gold); g2.addColorStop(1, C.gold);
-  const fillMG = (u > 2.9 && u < 3.95) ? g2 : gg;
-  slamWord('MOLAN', x, y2, sz2, WORDS[2], u, fillMG, 'rgba(241,194,50,.9)'); x += w2[0] + gap * 1.2;
-  slamWord('MOGOLLÓN', x, y2, sz2, WORDS[3], u, fillMG, 'rgba(241,194,50,.9)');
-  if (u > WORDS[3]) burst(W / 2, 800, WORDS[3], u, [C.gold, '#fff', C.greenL, C.redL], 120, 1600, 52);
-  // brasas extra ascendiendo tras el golpe final (sin confeti)
-  if (u > WORDS[3]) embers(u * 1.6 + 50, C.gold, '#ffffff', .55 * prog(u, WORDS[3], WORDS[3] + .6));
-  // pie
-  const fp = prog(u, 2.8, 3.4);
-  text('SÁBADO 7 NOV  ·  JORNADA 6  ·  2ª FEB  ·  CÁCERES  VS  CULTURAL LEONESA', W / 2, 1015, { font: 'Mont', weight: 800, size: 26, ls: lerp(16, 6, E.outCubic(fp)), alpha: fp, fill: 'rgba(255,255,255,.8)' });
-  // fundido final
-  const fo = prog(u, 6.2, 7.0);
   if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${E.inOutCubic(fo)})`; ctx.fillRect(0, 0, W, H); }
 }
 
 /* ---------- rótulo fijo (HUD) ---------- */
 function hud(t) {
-  const a = Math.min(prog(t, 4.3, 4.9), 1 - prog(t, 29.2, 29.6)); if (a <= 0) return;
+  const a = Math.min(prog(t, 5.3, 5.9), 1 - prog(t, 20.5, 20.9)); if (a <= 0) return;
   ctx.save(); ctx.globalAlpha = a;
   ctx.fillStyle = C.gold; ctx.fillRect(60, 46, 6, 40);
   text('2ª FEB', 82, 76, { font: 'Mont', weight: 900, size: 26, ls: 4, align: 'left', fill: '#fff' });
   text('JORNADA 6', 82 + measure('2ª FEB', 26, 'Mont', 900, 4) + 22, 76, { font: 'Mont', weight: 600, size: 24, ls: 4, align: 'left', fill: 'rgba(255,255,255,.7)' });
-  text('SÁBADO 7 NOV', W - 60, 76, { font: 'Mont', weight: 800, size: 24, ls: 4, align: 'right', fill: 'rgba(255,255,255,.8)' });
-  // barra de progreso
-  const p = prog(t, 4, 30);
+  text('SÁBADO 7 NOV  ·  19:00 H', W - 60, 76, { font: 'Mont', weight: 800, size: 24, ls: 4, align: 'right', fill: 'rgba(255,255,255,.8)' });
+  const p = prog(t, 5, 21);
   const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, C.green); g.addColorStop(.5, C.gold); g.addColorStop(1, C.red);
   ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(0, H - 6, W, 6);
   ctx.fillStyle = g; ctx.fillRect(0, H - 6, W * p, 6);
@@ -744,8 +882,8 @@ function hud(t) {
    COMPOSICIÓN
    ===================================================================== */
 const SCENES = [
-  [0, 4, sIntro], [4, 8, t => sTeam(t, 'cac')], [8, 12, t => sTeam(t, 'leo')], [12, 16, sVS],
-  [16, 20, sJerseys], [20, 24, sStats], [24, 28, sBrother], [28, 30, sBuild], [30, DURATION, sFinal],
+  [0, 5, sIntro], [5, 9, t => sTeam(t, 'cac')], [9, 13, t => sTeam(t, 'leo')], [13, 17, sVS],
+  [17, 21, sStats], [MATCH0, RESULT0, sMatch], [RESULT0, DURATION, sResult],
 ];
 function renderFrame(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
