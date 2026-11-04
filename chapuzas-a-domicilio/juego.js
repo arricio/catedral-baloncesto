@@ -968,7 +968,10 @@ const DEF_MODELOS = {
 };
 const cargadorGLTF = new GLTFLoader();
 async function cargarModelo(def) {
-  const gltf = await cargadorGLTF.loadAsync(`modelos/${def.archivo}.glb`);
+  // En GitHub los modelos son .glb; en la página publicada van con extensión .wasm (mismo contenido binario)
+  let gltf;
+  try { gltf = await cargadorGLTF.loadAsync(`modelos/${def.archivo}.glb`); }
+  catch (e) { gltf = await cargadorGLTF.loadAsync(`modelos/${def.archivo}.glb.wasm`); }
   const g = new THREE.Group();
   const cuerpo = new THREE.Group(); g.add(cuerpo);
   const modelo = gltf.scene; cuerpo.add(modelo);
