@@ -944,13 +944,13 @@ const DEF_MODELOS = {
     ocultar: ['Farmer_Head_2', 'Farmer_Head_4'],
     colores: { Farmer_Pants: 0x8e9884, Farmer_Body_2: 0x8e9884, Farmer_Body_4: 0xc9a27e },
     patrones: { Farmer_Body_1: 'cuadros', Farmer_Pants: 'manchas', Farmer_Body_2: 'manchas' },
-    tinte: ['Farmer_Pants', 'Farmer_Body_2'], gordo: true, gorra: 'delante', gorraY: -0.22, gorraR: 1.18,
+    tinte: ['Farmer_Pants', 'Farmer_Body_2'], gordo: 0.62, gorra: 'delante', gorraY: -0.22, gorraR: 1.18,
   },
   jeremias: {
     archivo: 'jeremias', altura: 1.76, ancho: 1, cabeza: 'Punk_Head_1', cuerpoMalla: 'Punk_Body_3',
     ocultar: ['Punk_Head_2', 'Punk_Head_3', 'Punk_Head_4'],
     colores: { Punk_Body_1: 0xeaa3b4, Punk_Body_3: 0xeeeeea, Punk_Legs_1: 0x8a9580, Punk_Legs_2: 0x8a9580 },
-    tinte: ['Punk_Body_1', 'Punk_Legs_1', 'Punk_Legs_2'], gorra: 'atras', gorraY: -0.72, gorraR: 1.08,
+    tinte: ['Punk_Body_1', 'Punk_Legs_1', 'Punk_Legs_2'], gordo: 0.2, gorra: 'atras', gorraY: -0.72, gorraR: 1.08,
   },
   leopoldo: {
     archivo: 'leopoldo', altura: 1.8, ancho: 1, cabeza: 'Worker_Head_2', cuerpoMalla: 'Worker_Body_3',
@@ -968,7 +968,7 @@ const DEF_MODELOS = {
 };
 // Engorda el cuerpo moviendo los vértices según el hueso que los mueve (tripa, pecho, caderas y muslos).
 // No se escala el esqueleto, así que la cabeza, la gorra y las animaciones no se deforman.
-function engordar(modelo) {
+function engordar(modelo, cuanto = 1) {
   const FACTOR = { Hips: 1.45, Abdomen: 1.8, Torso: 1.65, Chest: 1.38, Neck: 1.18, UpperLegL: 1.3, UpperLegR: 1.3, ShoulderL: 1.15, ShoulderR: 1.15, UpperArmL: 1.15, UpperArmR: 1.15 };
   const TRIPA = { Abdomen: 0.22, Torso: 0.17, Hips: 0.09, Chest: 0.06 };
   modelo.updateMatrixWorld(true);
@@ -992,7 +992,7 @@ function engordar(modelo) {
         f += (FACTOR[n] || 1) * peso; t += (TRIPA[n] || 0) * peso; w += peso;
       }
       if (!w) continue;
-      f /= w; t /= w;
+      f = 1 + (f / w - 1) * cuanto; t = (t / w) * cuanto;
       if (f === 1 && !t) continue;
       tmp.fromBufferAttribute(pos, i).applyMatrix4(aMundo);
       const dx = tmp.x - ejeX.x, dz = tmp.z - ejeX.z;
@@ -1035,7 +1035,7 @@ async function cargarModelo(def) {
   caja = new THREE.Box3().setFromObject(modelo, true);
   modelo.position.y -= caja.min.y;
   modelo.updateMatrixWorld(true);
-  if (def.gordo) engordar(modelo);
+  if (def.gordo) engordar(modelo, def.gordo);
   const huesos = {};
   modelo.traverse(o => { if (o.isBone) huesos[o.name] = o; });
   const enHueso = (hueso, obj, pos) => { obj.position.copy(pos); obj.updateMatrixWorld(true); (hueso || modelo).attach(obj); };
