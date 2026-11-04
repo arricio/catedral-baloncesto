@@ -431,8 +431,8 @@ const COL_PARED = 0xf1e2c4, COL_REMATE = 0x7d5235;
 
 suelo(-70, 70, -50, 50, texCesped([40, 40]), 0, 1);
 suelo(-70, 70, 10.6, 17.5, texAsfalto([28, 3]), 0.006);
-suelo(-34, 38, 5, 10.6, texAcera([36, 3]), 0.008);
-caja(72, 0.14, 0.25, 0xbab3a6, 2, 0.07, 10.6, scene, false); // bordillo
+suelo(-56, 58, 5, 10.6, texAcera([57, 3]), 0.008);
+caja(114, 0.14, 0.25, 0xbab3a6, 1, 0.07, 10.6, scene, false); // bordillo
 for (let x = -66; x < 70; x += 4) caja(2, 0.02, 0.18, 0xf5f0d8, x, 0.012, 14, scene, false);
 // Pasos de cebra
 for (let i = 0; i < 6; i++) caja(0.5, 0.02, 6.6, 0xf3f0e6, -8 + i * 0.9, 0.013, 14.1, scene, false);
@@ -449,7 +449,7 @@ function pared(x1, z1, x2, z2, h, color = COL_PARED) {
 }
 // Medianeras entre edificios (no se puede pasar)
 const matLadrillo = new THREE.MeshStandardMaterial({ map: texLadrillo([2, 2]), roughness: 0.95 });
-for (const x of [-12.5, 12.5]) { caja(3, 1.45, 13.2, matLadrillo, x, 0.725, -1.6); caja(3.06, 0.08, 13.26, COL_REMATE, x, 1.45, -1.6); addCol(x - 1.5, x + 1.5, -8.2, 5); }
+for (const x of [-12.5, 12.5]) { caja(3, 1.45, 13.2, matLadrillo, x, 0.725, -1.6); addCol(x - 1.5, x + 1.5, -8.2, 5); }
 
 /* ---------- 1. El taller de Arricio y Jeremías ---------- */
 suelo(-31, -14, -6, 5, texHormigon([4, 3]), 0.01, 0.95);
@@ -591,7 +591,7 @@ function farola(x, z) {
   const c = cajaR(0.32, 0.4, 0.32, mat(0xfff3b0, 0.2), x, 3.9, z, scene, 0.06); c.material = new THREE.MeshStandardMaterial({ color: 0xfff3b0, emissive: 0x6a5a20, roughness: 0.3 });
   addCol(x - 0.15, x + 0.15, z - 0.15, z + 0.15);
 }
-[-32, -9, 8, 30].forEach(x => farola(x, 10.1));
+[-50, -32, -9, 8, 30, 50].forEach(x => farola(x, 10.1));
 function arbol(x, z, s = 1, alcorque = false) {
   if (alcorque) caja(1.1, 0.04, 1.1, 0x6b4f35, x, 0.02, z, scene, false);
   cilindro(0.16 * s, 0.24 * s, 1.8 * s, 0x6e4a2c, x, 0.9 * s, z, scene, 10);
@@ -603,18 +603,16 @@ function arbol(x, z, s = 1, alcorque = false) {
 [[-20, 9.9], [-4, 9.9], [16, 9.9], [35, 9.9]].forEach(([x, z]) => arbol(x, z, 0.9, true));
 [[-36, -3], [-38, 4], [40, -2], [42, 6], [-6, -12], [3, -13], [10, -11.5], [-20, -10], [25, -13], [-28, -10]].forEach(([x, z], i) => arbol(x, z, 0.9 + (i % 3) * 0.25));
 // Banco y contenedor
-cajaR(1.6, 0.08, 0.45, 0x8a5a3a, 2, 0.48, 9.9, scene, 0.02); cajaR(1.6, 0.4, 0.06, 0x8a5a3a, 2, 0.75, 10.15, scene, 0.02);
-for (const dx of [-0.65, 0.65]) caja(0.06, 0.48, 0.4, 0x333333, 2 + dx, 0.24, 9.95);
-addCol(1.2, 2.8, 9.65, 10.2);
+addCol(1.2, 2.8, 9.65, 10.2); // el banco de la calle se construye con los encargos
 cajaR(1.4, 1.2, 1.0, mat(0x2e7d32, 0.5), 22, 0.6, 9.9, scene, 0.06); addCol(21.3, 22.7, 9.4, 10.4);
 // Límites de la calle (invisibles)
-addCol(-40, 44, 10.7, 11.5);
-addCol(-36, -33.2, 5, 11.5);
-addCol(37.2, 40, 5, 11.5);
+addCol(-62, 62, 10.7, 11.5);
+addCol(-60, -55.2, 5, 11.5);
+addCol(57.2, 62, 5, 11.5);
 // Edificios del barrio enfrente: ladrillo y balcones de hierro
 const coloresEdif = [0xd98c6a, 0xe8b07a, 0xc9a07a, 0xe3c4a0, 0xcf7f5e];
-for (let i = 0; i < 12; i++) {
-  const x = -42 + i * 8, h = rand(9, 14);
+for (let i = 0; i < 16; i++) {
+  const x = -58 + i * 8, h = rand(9, 14);
   caja(7.6, h, 5, coloresEdif[i % 5], x, h / 2, 22.5);
   caja(7.8, 0.3, 5.2, 0x8a6a4a, x, h, 22.5);
   for (let fy = 3.2; fy < h - 1; fy += 2.8) for (let fx = -2.5; fx <= 2.5; fx += 2.5) {
@@ -750,6 +748,51 @@ cajaR(0.7, 0.12, 1.8, 0xffffff, 31, 0.35, 2.8, scene, 0.04); cajaR(0.7, 0.08, 0.
 addCol(30.6, 31.4, 1.8, 3.7);
 cilindro(0.03, 0.03, 2.2, 0xdddddd, 29.6, 1.1, 2.6, scene, 6);
 { const s = new THREE.Mesh(new THREE.ConeGeometry(1.3, 0.5, 10), mat(0xd8382c, 0.8)); s.position.set(29.6, 2.3, 2.6); s.castShadow = true; scene.add(s); }
+
+// Medianeras con los locales nuevos
+{ caja(4, 1.45, 11, matLadrillo, -33, 0.725, -0.5); addCol(-35, -31, -6, 5); }
+{ caja(2, 1.45, 14, matLadrillo, 37, 0.725, -2); addCol(36, 38, -9, 5); }
+function rotuloLocal(txt, sub, fondo, x) {
+  plano(6.2, 1.15, new THREE.MeshStandardMaterial({
+    roughness: 0.6, map: texLienzo(1024, 190, (g, w, h) => {
+      g.fillStyle = fondo; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '900 84px Nunito, Arial'; g.fillText(txt, w / 2, 70);
+      g.font = '800 36px Nunito, Arial'; g.fillText(sub, w / 2, 145);
+    }),
+  }), x, 0.78, 5.115);
+}
+/* ---------- 5. Bar El Rincón (Puri) ---------- */
+suelo(-52, -35, -4, 5, texBaldosa('#d9c7a8', '#8a5a3a', [6, 3]));
+pared(-52, -4, -35, -4, H_ALTA, 0xe9d6b0);
+pared(-52, -4, -52, 5, H_ALTA, 0xe9d6b0);
+pared(-35, -4, -35, 5, H_ALTA, 0xe9d6b0);
+pared(-52, 5, -45, 5, H_BAJA, 0xe9d6b0);
+pared(-41, 5, -35, 5, H_BAJA, 0xe9d6b0);
+rotuloLocal('BAR EL RINCÓN', 'Cañas · Tapas · Bocadillos', '#7a1f2b', -48.5);
+rotuloLocal('MENÚ DEL DÍA', 'Cocido los jueves', '#2e6b3a', -38);
+cajaR(12, 1.05, 0.8, 0x6b3a20, -44, 0.52, -2.25, scene, 0.03);
+cajaR(12.2, 0.07, 0.95, 0xc79a5b, -44, 1.06, -2.25, scene, 0.02);
+addCol(-50, -38, -2.7, -1.8);
+for (let i = 0; i < 3; i++) caja(12, 0.05, 0.35, 0x8a5a3a, -44, 1.4 + i * 0.45, -3.8);
+for (let i = 0; i < 24; i++) cilindro(0.05, 0.06, 0.32, mat(pick([0x2e6b3a, 0x7a1f2b, 0xd8b04a, 0x3b5bdb]), 0.2, 0.1), -49.5 + (i % 12) * 0.95, 1.6 + Math.floor(i / 12) * 0.45, -3.8, scene, 8);
+for (const x of [-49, -48, -44, -43, -41, -40]) { cilindro(0.2, 0.2, 0.06, 0x7a1f2b, x, 0.75, -1.45, scene, 14); cilindro(0.03, 0.03, 0.75, 0x444444, x, 0.37, -1.45, scene, 6); }
+cajaR(1.2, 0.06, 0.8, 0xc79a5b, -48.5, 0.75, 2.6, scene, 0.02); cilindro(0.05, 0.05, 0.75, 0x444444, -48.5, 0.37, 2.6, scene, 8);
+addCol(-49.1, -47.9, 2.2, 3.0);
+plano(1.1, 0.8, new THREE.MeshStandardMaterial({ roughness: 0.8, map: texCartel([['⚽ HOY', 54, 50], ['DERBI', 60, 120]], '#1e1e1e', '#ffd23f', 256, 180) }), -35.12, 2.0, 0.5, -Math.PI / 2);
+/* ---------- 6. Peluquería Rosi (Rosi) ---------- */
+suelo(38, 54, -4, 5, texBaldosa('#ffffff', '#f2b8c6', [6, 3]));
+pared(38, -4, 54, -4, H_ALTA, 0xf7e1e8);
+pared(38, -4, 38, 5, H_ALTA, 0xf7e1e8);
+pared(54, -4, 54, 5, H_ALTA, 0xf7e1e8);
+pared(38, 5, 44.5, 5, H_BAJA, 0xf7e1e8);
+pared(47.5, 5, 54, 5, H_BAJA, 0xf7e1e8);
+rotuloLocal('PELUQUERÍA ROSI', 'Cortes · Tintes · Permanentes', '#c2185b', 41.25);
+rotuloLocal('SIN CITA PREVIA', '(y sin prisa)', '#7e57c2', 50.75);
+{ const g = new THREE.Group(); g.position.set(52.6, 0, 2.5); g.rotation.y = -Math.PI / 2; scene.add(g);
+  cajaR(2.2, 0.42, 0.8, 0xb04a7a, 0, 0.3, 0, g, 0.08); cajaR(2.2, 0.6, 0.22, 0x9a3a6a, 0, 0.6, -0.32, g, 0.08); addCol(52.2, 53.0, 1.4, 3.6); }
+for (let i = 0; i < 4; i++) cilindro(0.08, 0.1, 0.25, mat(pick([0xc2185b, 0x7e57c2, 0xffd23f, 0x3fae5a]), 0.3), 45.8 + i * 0.4, 1.18, -3.65, scene, 10);
+
 
 /* =========================================================================
    Personajes
@@ -969,6 +1012,24 @@ const DEF_MODELOS = {
     patrones: { Suit_Body_1: 'flores', Suit_Legs: 'flores' },
     tinte: ['Suit_Body_1', 'Suit_Legs'], rulos: true, gafas: 0x6b3a2a,
   },
+  puri: {
+    archivo: 'puri', altura: 1.66, ancho: 1, cabeza: 'Worker_Head_1', cuerpoMalla: 'Worker_Body_4',
+    ocultar: ['Worker_Head_2'],
+    colores: { Worker_Body_2: 0x7a1f2b, Worker_Body_3: 0x7a1f2b, Worker_Body_4: 0xf3f3f3, Worker_Legs_1: 0x2b2b2b, Worker_Legs_2: 0x2b2b2b },
+    tinte: ['Worker_Body_2', 'Worker_Body_3'],
+  },
+  rosi: {
+    archivo: 'rosi', altura: 1.68, ancho: 1, cabeza: 'Punk_Head_1', cuerpoMalla: 'Punk_Body_2',
+    ocultar: [],
+    colores: { Punk_Body_2: 0x7ec8e3, Punk_Body_3: 0x7ec8e3, Punk_Legs_1: 0x2b2b2b },
+    tinte: ['Punk_Body_2', 'Punk_Body_3'],
+  },
+  fermin: {
+    archivo: 'fermin', altura: 1.66, ancho: 1, cabeza: 'King_Head_1', cuerpoMalla: 'King_Body_3',
+    ocultar: ['King_Head_4'],
+    colores: { King_Body_1: 0x7a5a3a, King_Body_2: 0x7a5a3a, King_Body_3: 0xd9cfb8, King_Body_4: 0x5a4630, King_Legs_1: 0x5d5d5d, King_Legs_2: 0x5d5d5d, King_Legs_3: 0x5d5d5d, King_Feet: 0x222222 },
+    tinte: ['King_Body_1', 'King_Body_2'], boina: true,
+  },
 };
 // Engorda el cuerpo moviendo los vértices según el hueso que los mueve (tripa, pecho, caderas y muslos).
 // No se escala el esqueleto, así que la cabeza, la gorra y las animaciones no se deforman.
@@ -1052,6 +1113,7 @@ async function cargarModelo(def) {
   let gorra = null;
   if (def.gorra) { gorra = gorraBlanca(radio * (def.gorraR || 1.06), def.gorra === 'atras'); gorra.position.y = radio * (def.gorraY ?? -0.62); if (def.gorra === 'atras') gorra.rotation.z = 0.06; cabeza.add(gorra); }
   if (def.pelo) { const p = esfera(radio * 1.04, mat(def.pelo, 0.45), 0, -radio * 0.62, -radio * 0.08, cabeza, 22); p.scale.set(1, 0.72, 1); }
+  if (def.boina) { const b = esfera(radio * 1.12, mat(0x1e1e1e, 0.9), 0, -radio * 0.3, -radio * 0.06, cabeza, 22); b.scale.set(1.08, 0.36, 1.1); esfera(radio * 0.09, mat(0x1e1e1e, 0.9), 0, radio * 0.08, 0, cabeza, 8); }
   if (def.rulos) {
     const cols = [0xff8fb1, 0x8fd3ff, 0xfff08f, 0xb1ff8f];
     for (let i = 0; i < 8; i++) {
@@ -1305,6 +1367,14 @@ const ENCARGOS = {
   fachada: { nombre: 'Pintar la fachada del chalet', herr: 'rodillo', cliente: 'leopoldo', sitio: 'Fachada', icono: '🏠', pie: [29, -0.3], mira: [29, -1] },
   seto: { nombre: 'Podar el seto', herr: 'tijeras', cliente: 'leopoldo', sitio: 'Jardín', icono: '🌳', pie: [17.75, 3.0], mira: [17.75, 4.1] },
   farola: { nombre: 'Arreglar la farola del jardín', herr: 'bombilla', cliente: 'leopoldo', sitio: 'Jardín', icono: '🏮', pie: [32.6, 3.3], mira: [32.6, 4.2] },
+  cafetera: { nombre: 'La cafetera pierde agua', herr: 'llave', cliente: 'puri', sitio: 'Barra', icono: '☕', pie: [-46, -1.2], mira: [-46, -2.3] },
+  tragaperras: { nombre: 'La tragaperras echa chispas', herr: 'destornillador', cliente: 'puri', sitio: 'Bar', icono: '🎰', pie: [-50.5, 1.5], mira: [-51.9, 1.5] },
+  taburete: { nombre: 'Arreglar el taburete roto', herr: 'martillo', cliente: 'puri', sitio: 'Bar', icono: '🪑', pie: [-39, 2.4], mira: [-39, 1.5] },
+  secador: { nombre: 'El secador de casco no va', herr: 'destornillador', cliente: 'rosi', sitio: 'Peluquería', icono: '💇', pie: [51.5, -1.5], mira: [51.5, -2.9] },
+  lavacabezas: { nombre: 'Lavacabezas atascado', herr: 'desatascador', cliente: 'rosi', sitio: 'Peluquería', icono: '🚿', pie: [41.5, -2.3], mira: [41.5, -3.35] },
+  espejo: { nombre: 'Colgar el espejo grande', herr: 'martillo', cliente: 'rosi', sitio: 'Peluquería', icono: '🪞', pie: [46.5, -2.6], mira: [46.5, -3.9] },
+  banco: { nombre: 'Arreglar el banco de la calle', herr: 'martillo', cliente: 'fermin', sitio: 'Calle', icono: '🪑', pie: [2, 9.1], mira: [2, 9.9] },
+  fuente: { nombre: 'La fuente de la calle', herr: 'llave', cliente: 'fermin', sitio: 'Calle', icono: '⛲', pie: [-13.5, 9.1], mira: [-13.5, 9.9] },
 };
 for (const d of Object.values(ENCARGOS)) d.oficio = HERRAMIENTAS[d.herr].oficio;
 const TIPOS = Object.keys(ENCARGOS);
@@ -1321,6 +1391,14 @@ const DESPERFECTOS = {
   fachada: 'Fachada estilo «discoteca de verano»',
   seto: 'Seto podado hasta dejarlo calvo',
   farola: 'Farola del jardín fundida a chispazos',
+  cafetera: 'Géiser de café en el Bar El Rincón',
+  tragaperras: 'Tragaperras soltando monedas y chispas',
+  taburete: 'Taburete reducido a banquito',
+  secador: 'Secador de casco echando humo',
+  lavacabezas: 'Fiesta de la espuma en la peluquería',
+  espejo: 'Espejo roto: siete años de mala suerte',
+  banco: 'Banco de la calle hundido',
+  fuente: 'Fuente de la calle convertida en géiser',
 };
 const QUEJAS = {
   grifo: '¡Que me han hecho una fuente en la cocina! ¡Como la de Cibeles!',
@@ -1335,6 +1413,14 @@ const QUEJAS = {
   fachada: '¡Mi fachada! ¡Parece una discoteca de verano! ¡Qué dirán en el club!',
   seto: '¡Mi seto! ¡Lo han dejado más pelado que una bombilla!',
   farola: '¡Mi farola! ¡Ha hecho más chispas que los fuegos artificiales del pueblo!',
+  cafetera: '¡El café me ha salido por el techo! ¡Parece un volcán!',
+  tragaperras: '¡La tragaperras está soltando monedas sola! ¡Recójanlas, que son mías!',
+  taburete: '¡Lo han dejado peor! ¡Ahora el taburete es un banquito!',
+  secador: '¡El secador ha echado humo! ¡Mi clienta ha salido con la permanente hecha!',
+  lavacabezas: '¡Espuma por todas partes! ¡Esto parece una fiesta de la espuma!',
+  espejo: '¡Siete años de mala suerte! ¡Y era mi espejo bueno!',
+  banco: '¡El banco se ha hundido! ¡Ahora nos sentaremos en el suelo!',
+  fuente: '¡La fuente parece un géiser! ¡Me han mojado la boina!',
 };
 
 // --- Grifo ---
@@ -1451,6 +1537,57 @@ const globoFarola = esfera(0.22, 0xffffff, 0, 2.45, 0, farolaJ, 16);
 globoFarola.material = new THREE.MeshStandardMaterial({ color: 0xfff6d0, emissive: 0xffd98a, emissiveIntensity: 1, roughness: 0.2 });
 const luzFarola = new THREE.PointLight(0xffd98a, 4, 6, 1.6); luzFarola.position.set(32.6, 2.4, 4.2); scene.add(luzFarola);
 addCol(32.45, 32.75, 4.05, 4.35);
+// --- Cafetera del bar ---
+const cafetera = new THREE.Group(); cafetera.position.set(-46, 1.1, -2.3); scene.add(cafetera);
+cajaR(0.85, 0.55, 0.45, mat(0xd9dde2, 0.2, 0.9), 0, 0.28, 0, cafetera, 0.05);
+cajaR(0.85, 0.08, 0.45, mat(0x7a1f2b, 0.4), 0, 0.6, 0, cafetera, 0.02);
+for (const dx of [-0.2, 0.2]) { caja(0.06, 0.12, 0.06, mat(0x333333, 0.3, 0.7), dx, 0.12, 0.25, cafetera); cilindro(0.06, 0.05, 0.08, 0xffffff, dx, 0.04, 0.3, cafetera, 10); }
+// --- Máquina tragaperras ---
+const tragaperras = new THREE.Group(); tragaperras.position.set(-51.5, 0, 1.5); tragaperras.rotation.y = Math.PI / 2; scene.add(tragaperras);
+cajaR(0.75, 1.6, 0.6, 0xb8322b, 0, 0.8, 0, tragaperras, 0.06);
+const pantallaTP = plano(0.55, 0.4, new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0xffd23f, emissiveIntensity: 0.6 }), 0, 1.2, 0.31, 0, tragaperras);
+for (let i = 0; i < 3; i++) cilindro(0.06, 0.06, 0.12, 0xffd23f, -0.15 + i * 0.15, 1.2, 0.33, tragaperras, 10).rotation.x = Math.PI / 2;
+cilindro(0.025, 0.025, 0.45, mat(0xcccccc, 0.2, 0.9), 0.43, 1.0, 0, tragaperras, 8); esfera(0.06, 0xd8382c, 0.43, 1.25, 0, tragaperras, 10);
+addCol(-51.9, -51.1, 1.1, 1.9);
+// --- Taburete del bar ---
+const taburete = new THREE.Group(); taburete.position.set(-39, 0, 1.5); scene.add(taburete);
+const asientoT = cilindro(0.22, 0.22, 0.07, 0x7a1f2b, 0, 0.75, 0, taburete, 16);
+const patasT = [0, 1, 2].map(i => { const a = i * 2.09; const pt = cilindro(0.025, 0.025, 0.75, 0x6b4321, Math.cos(a) * 0.15, 0.37, Math.sin(a) * 0.15, taburete, 6); return pt; });
+// --- Secador de casco ---
+const secador = new THREE.Group(); secador.position.set(51.5, 0, -2.9); scene.add(secador);
+cajaR(0.7, 0.45, 0.6, 0x7e57c2, 0, 0.45, 0, secador, 0.08); cajaR(0.7, 0.6, 0.15, 0x6a47b0, 0, 0.85, -0.25, secador, 0.06);
+cilindro(0.03, 0.03, 1.5, mat(0xcccccc, 0.2, 0.9), 0, 0.75, -0.42, secador, 8);
+const cascoSec = new THREE.Mesh(new THREE.SphereGeometry(0.3, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat(0xf2b8c6, 0.4));
+cascoSec.position.set(0, 1.55, -0.1); cascoSec.castShadow = true; secador.add(cascoSec);
+addCol(51.1, 51.9, -3.5, -2.4);
+// --- Lavacabezas ---
+const lavacabezas = new THREE.Group(); lavacabezas.position.set(41.5, 0, -3.35); scene.add(lavacabezas);
+cilindro(0.15, 0.2, 0.75, 0xffffff, 0, 0.37, 0, lavacabezas, 12);
+const pila = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mat(0xffffff, 0.15)); pila.position.y = 0.95; lavacabezas.add(pila);
+const aguaPila = cilindro(0.28, 0.28, 0.02, 0x8fc3d9, 0, 0.9, 0, lavacabezas, 16);
+addCol(41.1, 41.9, -3.8, -2.9);
+// --- Espejo de la peluquería ---
+cajaR(2, 0.9, 0.5, 0xf7e1e8, 46.5, 0.45, -3.65, scene, 0.03); addCol(45.5, 47.5, -3.9, -3.4);
+const espejo = new THREE.Group(); scene.add(espejo);
+cajaR(1.3, 1.3, 0.06, mat(0xd4af37, 0.3, 0.8), 0, 0, 0, espejo, 0.04);
+const lunaEspejo = plano(1.15, 1.15, new THREE.MeshStandardMaterial({ color: 0xcfe6f2, roughness: 0.05, metalness: 0.9 }), 0, 0, 0.035, 0, espejo);
+const texEspejoRoto = texLienzo(256, 256, (g, w, h) => {
+  g.fillStyle = '#cfe6f2'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(30,30,40,.8)'; g.lineWidth = 3;
+  for (let i = 0; i < 12; i++) { g.beginPath(); g.moveTo(w / 2, h / 2); let x = w / 2, y = h / 2; const a = rand(0, 7); for (let k = 0; k < 4; k++) { x += Math.cos(a + rand(-0.4, 0.4)) * rand(20, 50); y += Math.sin(a + rand(-0.4, 0.4)) * rand(20, 50); g.lineTo(x, y); } g.stroke(); }
+});
+const POS_ESPEJO = { p: new THREE.Vector3(46.5, 1.7, -3.85) }, POS_ESPEJO_SUELO = { p: new THREE.Vector3(47.9, 0.68, -3.6) };
+// --- Banco de la calle ---
+const banco = new THREE.Group(); banco.position.set(2, 0, 9.9); scene.add(banco);
+const asientoB = cajaR(1.6, 0.08, 0.45, 0x8a5a3a, 0, 0.48, 0, banco, 0.02);
+const respaldoB = cajaR(1.6, 0.4, 0.06, 0x8a5a3a, 0, 0.75, 0.25, banco, 0.02);
+const patasB = [-0.65, 0.65].map(dx => caja(0.06, 0.48, 0.4, 0x333333, dx, 0.24, 0.05, banco));
+// --- Fuente de la calle ---
+const fuente = new THREE.Group(); fuente.position.set(-13.5, 0, 9.9); scene.add(fuente);
+cilindro(0.18, 0.24, 1.0, mat(0x8a8f96, 0.5, 0.4), 0, 0.5, 0, fuente, 12);
+cilindro(0.3, 0.22, 0.12, mat(0x8a8f96, 0.5, 0.4), 0, 0.15, -0.25, fuente, 14);
+cajaR(0.06, 0.06, 0.25, mat(0xcccccc, 0.2, 0.9), 0, 0.95, -0.12, fuente, 0.02);
+addCol(-13.8, -13.2, 9.6, 10.2);
 
 // Estado visual de cada sitio: 'ok' | 'roto' | 'chapuza'
 const Visual = {
@@ -1506,6 +1643,32 @@ const Visual = {
         setoPelos.visible = est === 'roto'; setoPino.visible = est === 'chapuza';
         setoBase.scale.y = est === 'chapuza' ? 0.22 : 1; setoBase.position.y = est === 'chapuza' ? 0.1 : 0.45;
         break;
+      case 'taburete':
+        taburete.rotation.set(0, 0, 0); taburete.position.y = 0;
+        patasT.forEach(pt => { pt.scale.y = 1; pt.position.y = 0.37; }); asientoT.position.y = 0.75;
+        if (est === 'roto') { taburete.rotation.z = 1.45; taburete.position.y = 0.22; }
+        if (est === 'chapuza') { patasT.forEach(pt => { pt.scale.y = 0.35; pt.position.y = 0.13; }); asientoT.position.y = 0.28; }
+        break;
+      case 'tragaperras':
+        pantallaTP.material.emissiveIntensity = est === 'chapuza' ? 0 : 0.6;
+        break;
+      case 'secador':
+        cascoSec.rotation.x = est === 'chapuza' ? 0.7 : 0; cascoSec.material = mat(est === 'chapuza' ? 0x333333 : 0xf2b8c6, 0.4);
+        break;
+      case 'lavacabezas':
+        aguaPila.material = mat(est === 'ok' ? 0x8fc3d9 : est === 'chapuza' ? 0xffffff : 0x9a8a6a, 0.2);
+        break;
+      case 'espejo':
+        if (est === 'roto') { espejo.position.copy(POS_ESPEJO_SUELO.p); espejo.rotation.set(-0.25, 0, 0); lunaEspejo.material.map = null; }
+        else if (est === 'chapuza') { espejo.position.copy(POS_ESPEJO.p); espejo.rotation.set(0, 0, 0.35); lunaEspejo.material.map = texEspejoRoto; }
+        else { espejo.position.copy(POS_ESPEJO.p); espejo.rotation.set(0, 0, 0); lunaEspejo.material.map = null; }
+        lunaEspejo.material.needsUpdate = true;
+        break;
+      case 'banco':
+        respaldoB.rotation.x = 0; respaldoB.position.set(0, 0.75, 0.25); asientoB.position.y = 0.48; patasB.forEach(pt => { pt.visible = true; });
+        if (est === 'roto') { respaldoB.rotation.x = -1.4; respaldoB.position.set(0, 0.06, 0.55); }
+        if (est === 'chapuza') { asientoB.position.y = 0.06; patasB.forEach(pt => { pt.visible = false; }); respaldoB.rotation.x = 0.5; respaldoB.position.set(0, 0.25, 0.35); }
+        break;
       case 'farola':
         globoFarola.material.emissiveIntensity = est === 'ok' ? 1 : 0;
         globoFarola.material.color.set(est === 'chapuza' ? 0x333333 : 0xfff6d0);
@@ -1544,6 +1707,28 @@ const Visual = {
       }
       if (tipo === 'vater' && est === 'chapuza' && t < 4 && Math.random() < dt * 6)
         emitir(9.6, 0.8, -7.3, 2, { color: [0x9acd32, 0x7bb026, 0xb8e05a], vel: 0.6, sube: 1.4, gravedad: -0.4, tam: 0.16, vida: 2, crece: 2.5 });
+      if (tipo === 'cafetera' && est === 'roto' && Math.random() < dt * 4)
+        emitir(-46 + rand(-0.3, 0.3), 1.2, -2.0, 1, { color: [0x5fb6e6, 0xffffff], vel: 0.3, sube: 0.6, tam: 0.04, vida: 0.6, brilla: true });
+      if (tipo === 'cafetera' && est === 'chapuza' && t < 3)
+        emitir(-46, 1.8, -2.3, 4, { color: [0x5a3a1c, 0x7b4a28, 0xd9b38c], vel: 1.5, sube: 6, tam: 0.07, vida: 1.2 });
+      if (tipo === 'tragaperras' && est === 'roto') {
+        pantallaTP.material.emissive.setHex(pick([0xffd23f, 0xff2fd1, 0x39ff14, 0x00e5ff]));
+        if (Math.random() < dt * 2) emitir(-51.2, 1.0, 1.5, 4, { color: [0xffd23f, 0xffffff], brilla: true, vel: 1.2, sube: 1.5, tam: 0.03, vida: 0.35, vx: 1 });
+      }
+      if (tipo === 'tragaperras' && est === 'chapuza' && t < 2.5 && Math.random() < dt * 10)
+        emitir(-51.1, 0.9, 1.5, 3, { color: [0xffd23f, 0xd4af37], cubo: true, vel: 2.5, sube: 3, tam: 0.07, vida: 1.6, vx: 2.5, gira: 8 });
+      if (tipo === 'secador' && est === 'roto' && Math.random() < dt * 1.5)
+        emitir(51.5, 1.55, -3.0, 4, { color: [0xffd23f, 0xffffff], brilla: true, vel: 1.2, sube: 1.2, tam: 0.03, vida: 0.35 });
+      if (tipo === 'secador' && est === 'chapuza' && t < 4 && Math.random() < dt * 5)
+        emitir(51.5, 1.7, -3.0, 2, { color: [0x555555, 0x333333], vel: 0.3, sube: 1.2, gravedad: -0.6, tam: 0.14, vida: 1.8, crece: 2 });
+      if (tipo === 'lavacabezas' && est === 'roto' && Math.random() < dt * 2)
+        emitir(41.5, 0.95, -3.35, 1, { color: 0x9a8a6a, vel: 0.1, sube: 0.6, gravedad: 0.5, tam: 0.05, vida: 0.8 });
+      if (tipo === 'lavacabezas' && est === 'chapuza' && t < 4 && Math.random() < dt * 8)
+        emitir(41.5, 1.0, -3.3, 2, { color: [0xffffff, 0xf2f2ff, 0xe8f6ff], vel: 0.8, sube: 1.2, gravedad: -0.2, tam: 0.18, vida: 2.2, crece: 2.5 });
+      if (tipo === 'fuente' && est === 'roto' && Math.random() < dt * 2)
+        emitir(-13.5, 0.92, 9.75, 1, { color: 0x5fb6e6, vel: 0, sube: 0.1, gravedad: 9, tam: 0.04, vida: 0.4, brilla: true });
+      if (tipo === 'fuente' && est === 'chapuza' && t < 3)
+        emitir(-13.5, 1.0, 9.8, 4, { color: [0x5fb6e6, 0xbfe8ff, 0xffffff], vel: 1.2, sube: 7, tam: 0.07, vida: 1.2, brilla: true });
       if (tipo === 'mesa' && est === 'roto') { tablero.rotation.z = -0.07 + Math.sin(t * 7) * 0.03; tablero.rotation.x = Math.sin(t * 5) * 0.02; }
       if (tipo === 'seto' && est === 'roto' && Math.random() < dt * 1.5)
         emitir(17.75 + rand(-1.4, 1.4), 1.2, 4.0, 1, { color: 0x4fa04f, vel: 0.3, sube: 0.2, gravedad: 1.5, tam: 0.05, vida: 1.4, cubo: true, gira: 4 });
@@ -1565,20 +1750,24 @@ const Visual = {
 /* =========================================================================
    Navegación por zonas (calle, taller, casa, jardín)
    ========================================================================= */
-const CENTROS = { calle: [0, 7.8], taller: [-22, 0], jardin: [26, 2], salon: [-5.5, 1.75], cocina: [5.5, 1.75], dorm: [-5.5, -4.75], bano: [5.5, -4.75] };
+const CENTROS = { calle: [0, 7.8], taller: [-22, 0], jardin: [26, 2], bar: [-43, 0.5], pelu: [46, 0.5], salon: [-5.5, 1.75], cocina: [5.5, 1.75], dorm: [-5.5, -4.75], bano: [5.5, -4.75] };
 const PUERTAS = [
   { a: 'calle', b: 'taller', x: -22, z: 5, eje: 'z' },
   { a: 'calle', b: 'salon', x: -2, z: 5, eje: 'z' },
   { a: 'calle', b: 'jardin', x: 24.25, z: 5, eje: 'z' },
+  { a: 'calle', b: 'bar', x: -43, z: 5, eje: 'z' },
+  { a: 'calle', b: 'pelu', x: 46, z: 5, eje: 'z' },
   { a: 'salon', b: 'cocina', x: 0, z: 2, eje: 'x' },
   { a: 'salon', b: 'dorm', x: -5, z: -1.5, eje: 'z' },
   { a: 'cocina', b: 'bano', x: 5, z: -1.5, eje: 'z' },
   { a: 'dorm', b: 'bano', x: 0, z: -4.5, eje: 'x' },
 ];
-const NOMBRE_ZONA = { calle: 'la calle', taller: 'el taller', jardin: 'el chalet de Don Leopoldo', salon: 'casa de Doña Remedios', cocina: 'casa de Doña Remedios', dorm: 'casa de Doña Remedios', bano: 'casa de Doña Remedios' };
+const NOMBRE_ZONA = { calle: 'la calle', taller: 'el taller', jardin: 'el chalet de Don Leopoldo', bar: 'el Bar El Rincón', pelu: 'la Peluquería Rosi', salon: 'casa de Doña Remedios', cocina: 'casa de Doña Remedios', dorm: 'casa de Doña Remedios', bano: 'casa de Doña Remedios' };
 function zona(x, z) {
   if (z > 5) return 'calle';
+  if (x < -33) return 'bar';
   if (x < -12.5) return 'taller';
+  if (x > 37) return 'pelu';
   if (x > 12.5) return 'jardin';
   if (z > -1.5) return x < 0 ? 'salon' : 'cocina';
   return x < 0 ? 'dorm' : 'bano';
@@ -1622,7 +1811,7 @@ function caminar(e, dt, vel) {
   e.vel = vel;
   return false;
 }
-const PUNTOS_SOCIO = [[-22, -1], [-19, -3], [-27, -2.5], [-16, 7], [-6, 7.2], [8, 7.5], [-5, 2.5], [3, 1], [6, 0.8], [-5, -3.5], [4, -4], [26, 3], [-12, 7.5]];
+const PUNTOS_SOCIO = [[-44, 0.5], [-40, 7], [44, 0.5], [40, 7.5], [-22, -1], [-19, -3], [-27, -2.5], [-16, 7], [-6, 7.2], [8, 7.5], [-5, 2.5], [3, 1], [6, 0.8], [-5, -3.5], [4, -4], [26, 3], [-12, 7.5]];
 const PUNTOS_MICHI = [[-5, 2.5], [-3, 0.5], [-8, 2], [3, 1], [6, 0.8], [8, 3.5], [-5, -3.5], [-7, -5], [-4.5, -6], [4, -4], [6.5, -5], [8, -3.5]];
 
 /* =========================================================================
@@ -1642,32 +1831,63 @@ const FRASES = {
     fachada: ['Buenas. Necesito que me pinten la fachada del chalet. Algo elegante, por favor.', 'Mi nieto me ha pintado la fachada con rotulador. Vengan a dejarla decente.'],
     seto: ['El seto de mi jardín parece una selva. Quiero que me lo poden con elegancia.', 'Necesito el seto recto como una regla. Pago bien... si queda bien.'],
     farola: ['La farola de mi jardín parpadea. Parece una discoteca. Vengan a arreglarla.', 'Se me ha fundido la farola del jardín. Y el sábado tengo una cena.'],
+    cafetera: ['¡Que la cafetera del bar pierde agua por todas partes! ¡Y tengo la barra llena!', 'La cafetera hace un ruido de locomotora y no sale ni un cortado. ¡Vengan al bar!'],
+    tragaperras: ['La máquina tragaperras del bar echa chispas. Y encima no da premio.', 'La tragaperras se ha vuelto loca: luces, pitidos... ¡Vengan a arreglarla!'],
+    taburete: ['Se me ha roto un taburete del bar y el del butano casi se mata. ¿Pueden venir?', 'Tengo un taburete cojo que tira a los clientes al suelo. ¡Vengan al bar!'],
+    secador: ['El secador de casco de la peluquería echa chispas. Tengo a una clienta con los rulos puestos.', 'El secador grande hace chas, chas, y huele a pelo quemado. ¡Socorro!'],
+    lavacabezas: ['El lavacabezas está atascado. Ahí abajo hay más pelo que en una alfombra.', 'No traga el lavacabezas de la peluquería. Y tengo tres tintes esperando.'],
+    espejo: ['Se me ha descolgado el espejo grande. ¡Sin espejo no puedo trabajar, que no me veo!', 'Cuélguenme el espejo de la peluquería, que las clientas se peinan a ciegas.'],
+    banco: ['Soy Fermín, el presidente de la comunidad. El banco de la calle está roto y los jubilados no tenemos dónde sentarnos.', 'Se ha roto el banco de la calle. ¡Y es donde arreglamos el mundo por las mañanas!'],
+    fuente: ['La fuente de la calle no echa agua. Y en verano es un servicio público.', 'Oigan, la fuente de la calle gotea más que mi nariz en invierno.'],
   },
   remediosLlega: ['¡Oiga! ¿Hay alguien en este taller?', '¡Buenos días! ¿Está {J}? Que vengo a encargarles una cosa.', '¡Holaaa! ¡Que vengo a encargar algo!'],
   leopoldoLlega: ['Buenos días. ¿Es aquí lo de las reformas? Huele a cemento.', 'Buenas. Vengo a contratar sus... servicios.'],
-  plantado: { remedios: '¡Pues me voy a otro taller! ¡Aquí no atiende ni el gato!', leopoldo: 'Llevo esperando un buen rato. Buscaré a otros profesionales.' },
+  plantado: {
+    remedios: '¡Pues me voy a otro taller! ¡Aquí no atiende ni el gato!', leopoldo: 'Llevo esperando un buen rato. Buscaré a otros profesionales.',
+    puri: '¡Me vuelvo al bar, que se me van los clientes!', rosi: '¡Pues me voy, que tengo un tinte en marcha!', fermin: 'Lo pondré en el acta de la comunidad: ¡aquí no atienden!',
+  },
+  llega: {
+    puri: ['¡Buenas! Vengo corriendo, que he dejado el bar solo.', '¡Hola, chicos! ¿Me atendéis rapidito, que tengo la barra llena?'],
+    rosi: ['¡Holaaa! Vengo con los rulos de una clienta en el bolsillo.', '¡Hola, guapos! Que tengo un apaño en la peluquería.'],
+    fermin: ['Buenos días. Vengo en nombre de la comunidad de vecinos.', 'Buenas. A ver si me atienden antes de que me jubile otra vez.'],
+  },
   aceptar: ['¡Ahora mismo vamos para allá!', '¡Eso está hecho! En un ratito estamos ahí.', '¡Marchando! Coja asiento en su casa, que ya vamos.'],
   telefonoCoge: ['¡Arricio y Jeremías, reformas! ¿Dígame?', '¿Sí? ¡Taller de Arricio y Jeremías, dígame!'],
   telefonoCuelga: ['¡Vamos para allá!', 'Apuntado. ¡En un momento estamos ahí!'],
   fino: {
     remedios: ['¡Anda! Si hasta ha quedado bien.', '¡Qué manos tiene usted, {J}! Ni mi difunto, que en paz descanse.', '¡Esto lo cuento en la peluquería!'],
     leopoldo: ['Impecable. Ni el jardinero de la embajada.', 'Vaya, vaya. Me han sorprendido. Gratamente.'],
+    puri: ['¡Qué arte! Os invito a una caña. Bueno, a media.', '¡Perfecto! Ni el técnico de la marca.'],
+    rosi: ['¡Divino! Os hago un corte de pelo gratis.', '¡Ay, qué bien ha quedado, cariño!'],
+    fermin: ['Muy bien. Lo aprobaremos en la próxima junta.', 'Así da gusto. Como en mis tiempos.'],
   },
   bien: {
     remedios: ['Pse. Pasable.', 'Ha quedado... apañao.', 'Bueno, mientras funcione...'],
     leopoldo: ['Correcto. Sin más.', 'Bueno. Aceptable, para el barrio.'],
+    puri: ['Bueno, mientras funcione...', 'Apañao. Como el bocadillo de ayer.'],
+    rosi: ['Mmm, pasable, cielo.', 'Bueno, no está mal.'],
+    fermin: ['Aceptable, sin más.', 'Bien, bien. Regulín, pero bien.'],
   },
   chapuza: {
     remedios: ['¡¿PERO QUÉ HAN HECHO?!', '¡Esto lo pago yo de mi pensión!', '¡Ay, mi casa! ¡Ay, mi casita!'],
     leopoldo: ['¡Esto es intolerable!', '¡Llamaré a mi abogado! ¡Y a mi otro abogado!'],
+    puri: ['¡Mi bar! ¡Me lo cierran los de Sanidad!', '¡Esto no lo paga ni el seguro!'],
+    rosi: ['¡Ay, mi peluquería! ¡Qué disgusto!', '¡Esto es peor que un tinte mal puesto!'],
+    fermin: ['¡Esto va directo al acta de la comunidad!', '¡En mis tiempos esto se arreglaba con una cuerda y fe!'],
   },
   expira: {
     remedios: ['¡Pues ya lo arreglará mi sobrino, que hace un curso por internet!', '¡Llevo toda la mañana esperando! ¡Ni que fueran del Ayuntamiento!'],
     leopoldo: ['He llamado a una empresa seria. Si es que existe.', 'Ya no hace falta que vengan. Gracias por nada.'],
+    puri: ['¡Ya he llamado a mi cuñado, que es manitas!', 'Me he cansado de esperar. ¡Se os acabó el café gratis!'],
+    rosi: ['¡Me he cansado! Ya lo arreglará mi primo.', '¡Pues nada, sin vosotros!'],
+    fermin: ['La comunidad buscará otra empresa.', 'He esperado más que en la cola del médico.'],
   },
   charla: {
     remedios: ['¿Quieren un cafelito? Bueno, no, que luego se entretienen.', 'No pisen la alfombra, que es persa. De los chinos, pero persa.', '{J}, ¿usted no salía con la del quinto?', 'Mi vecina dice que ustedes son los de la chapuza del ascensor.'],
     leopoldo: ['No pisen el césped, que es inglés.', '¿Ustedes hacen factura con membrete?', 'En mi club de golf no se hablaría de otra cosa.'],
+    puri: ['¿Os pongo un cafelito? Invita la casa. Bueno, a medias.', 'Aquí se viene a tomar algo, no a trabajar. Bueno, vosotros sí.'],
+    rosi: ['¿Y si os hago unas mechas? Os quitarían diez años.', 'Aquí me entero de todos los chismes del barrio.'],
+    fermin: ['En mis tiempos las obras duraban lo que tenían que durar.', 'Yo vigilo las obras del barrio. Es mi trabajo de jubilado.'],
   },
   socioAlmuerzo: ['Primero el almuerzo, que sin gasolina el motor no arranca.', 'Un bocata de chorizo y estoy contigo, {J}.', 'Es mi descanso sindical, {J}.'],
   socioSiesta: ['Me echo cinco minutillos... para pensar la estrategia.', 'No estoy durmiendo. Estoy midiendo el techo con los ojos cerrados.'],
@@ -1692,6 +1912,7 @@ const FRASES = {
   socioInicio: ['Si suena, lo coges tú, que yo tengo las manos ocupadas con el bocadillo.'],
   socioSupervisa: ['Vale, vale, hazlo tú, que yo te superviso.'],
 };
+FRASES.llega.remedios = FRASES.remediosLlega; FRASES.llega.leopoldo = FRASES.leopoldoLlega;
 const nombres = t => t.replaceAll('{J}', paco.nombre).replaceAll('{S}', ramon.nombre);
 // Clave de cada grabación: quién habla + el texto exacto
 function claveVoz(voz, texto) {
@@ -1716,9 +1937,8 @@ function catalogoFrases() {
     Object.values(FRASE_OFICIO).forEach(l => expandir(l).forEach(t => add(J, t)));
     for (const [tipo, l] of Object.entries(FRASES.pedido)) expandir(l).forEach(t => add(ENCARGOS[tipo].cliente, t));
     for (const [tipo, q] of Object.entries(QUEJAS)) add(ENCARGOS[tipo].cliente, nombres(q));
-    expandir(FRASES.remediosLlega).forEach(t => add('remedios', t));
-    expandir(FRASES.leopoldoLlega).forEach(t => add('leopoldo', t));
-    for (const cl of ['remedios', 'leopoldo']) {
+    for (const cl of Object.keys(FRASES.llega)) {
+      expandir(FRASES.llega[cl]).forEach(t => add(cl, t));
       add(cl, nombres(FRASES.plantado[cl]));
       for (const g of ['fino', 'bien', 'chapuza', 'expira', 'charla']) expandir(FRASES[g][cl]).forEach(t => add(cl, t));
     }
@@ -1809,11 +2029,29 @@ const leopoldo = {
   casa: [26, 2.2], paseo: [[26, 2.2], [24, 3.8], [28, 3.2], [26.5, 0.4]], espera: [-25.0, 2.6],
   estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 30,
 };
-const CLIENTES = { remedios, leopoldo };
+const puri = {
+  id: 'puri', nombre: 'Puri', clase: 'puri', voz: 460, alturaGlobo: 2.15, perfil: { mujer: true, tono: 1.1, ritmo: 1.1 },
+  c: PJ.puri || crearPersonaje({ ropa: 0x7a1f2b, camisaPecho: 0xf3f3f3, pierna: 0x2b2b2b, pelo: 0x3a2a1c, escala: 0.94 }),
+  casa: [-42.5, 0.3], paseo: [[-42.5, 0.3], [-47, 0.2], [-40, 0.8]], espera: [-27.4, 3.6],
+  estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 30,
+};
+const rosi = {
+  id: 'rosi', nombre: 'Rosi', clase: 'rosi', voz: 560, alturaGlobo: 2.15, perfil: { mujer: true, tono: 1.4, ritmo: 1.15 },
+  c: PJ.rosi || crearPersonaje({ ropa: 0x7ec8e3, pierna: 0x2b2b2b, pelo: 0xd9509a, escala: 0.94 }),
+  casa: [46, 0.5], paseo: [[46, 0.5], [44, -1], [49, 0]], espera: [-25.8, 3.6],
+  estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 30,
+};
+const fermin = {
+  id: 'fermin', nombre: 'Don Fermín', clase: 'fermin', voz: 200, alturaGlobo: 2.2, perfil: { mujer: false, tono: 0.7, ritmo: 0.85 },
+  c: PJ.fermin || crearPersonaje({ ropa: 0x7a5a3a, camisaPecho: 0xd9cfb8, pierna: 0x5d5d5d, bigote: 0xeeeeee, escala: 0.94 }),
+  casa: [-6, 8.4], paseo: [[-6, 8.4], [-1, 8.6], [4, 8.4]], espera: [-24.2, 3.6],
+  estado: 'casa', t: 0, vel: 0, ruta: null, pedido: null, esperaT: 0, charlaT: 30,
+};
+const CLIENTES = { remedios, leopoldo, puri, rosi, fermin };
 const michi = { nombre: 'Michi', clase: 'michi', voz: 900, alturaGlobo: 0.9, c: crearGato(), estado: 'idle', t: 0, vel: 0, ruta: null, cdTropiezo: 0 };
 // El teléfono «habla» con la voz de quien llama
 const telEnt = { nombre: '📞', clase: 'tel', voz: 400, alturaGlobo: 0.9, perfil: null, c: { g: telefono } };
-const entidades = [paco, ramon, remedios, leopoldo, michi, telEnt];
+const entidades = [paco, ramon, remedios, leopoldo, puri, rosi, fermin, michi, telEnt];
 
 const bocataSocio = new THREE.Group();
 { const pan = capsula(0.06, 0.25, mat(0xd9a45a, 0.9), 0, 0, 0, bocataSocio); pan.rotation.z = Math.PI / 2; }
@@ -1826,7 +2064,7 @@ const bocata = new THREE.Group();
   for (let i = 0; i < 4; i++) { const a = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.022, 6, 12), mat(0xf6e7b0, 0.7)); a.position.set(-0.15 + i * 0.1, 0.06, 0.06); bocata.add(a); }
 }
 bocata.visible = false; scene.add(bocata);
-const PUNTOS_BOCATA = [[-21, -1], [-3, 7.5], [6, 6.8], [-8, 2.6], [3.5, 0.6], [-5, -4], [19, 7.5], [27, 3.5], [-16, 6.5]];
+const PUNTOS_BOCATA = [[-44, 2.5], [45, 2], [-21, -1], [-3, 7.5], [6, 6.8], [-8, 2.6], [3.5, 0.6], [-5, -4], [19, 7.5], [27, 3.5], [-16, 6.5]];
 
 // Marcadores flotantes: dónde hay que ir
 const marcadores = [];
@@ -1991,7 +2229,8 @@ function sumar(cant, motivo) {
   if (motivo) toast(`${cant >= 0 ? '+' : ''}${euros(cant)} · ${motivo}`, cant >= 0 ? 'mas' : 'menos');
 }
 function paciencia(d) { G.paciencia = clamp(G.paciencia + d, 0, 100); }
-const nombreCasa = cl => cl === 'leopoldo' ? 'Chalet de Don Leopoldo' : 'Casa de Doña Remedios';
+const CASAS = { remedios: 'Casa de Doña Remedios', leopoldo: 'Chalet de Don Leopoldo', puri: 'Bar El Rincón', rosi: 'Peluquería Rosi', fermin: 'La calle (comunidad)' };
+const nombreCasa = cl => CASAS[cl];
 function actualizarHUD() {
   const min = 9 * 60 + Math.floor(progreso() * 540);
   $('reloj').firstChild.nodeValue = `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
@@ -2036,7 +2275,7 @@ function actualizarHUD() {
 /* =========================================================================
    Pedidos: llaman por teléfono o vienen al taller
    ========================================================================= */
-function maxPendientes() { const p = progreso(); return p < 0.25 ? 2 : p < 0.6 ? 3 : 4; }
+function maxPendientes() { const p = progreso(); return p < 0.2 ? 3 : p < 0.55 ? 4 : 5; }
 function generarPedido() {
   const pendientes = TIPOS.filter(t => G.encargos[t].activo || G.encargos[t].pedido).length;
   if (pendientes >= maxPendientes()) return;
@@ -2063,7 +2302,7 @@ function generarPedido() {
 function activarEncargo(tipo) {
   const e = G.encargos[tipo];
   e.activo = true; e.pedido = false; e.ramon = false;
-  e.max = e.t = lerp(85, 60, progreso()) + rand(-4, 4);
+  e.max = e.t = lerp(95, 70, progreso()) + rand(-4, 4);
   G.stats.clientes.add(ENCARGOS[tipo].cliente);
 }
 function cancelarPedido(tipo) {
@@ -2161,6 +2400,14 @@ function efectoChapuza(tipo, autor) {
       break;
     case 'farola': Sonido.zas(); electrocutar(autor); break;
     case 'vater': Sonido.chof(); Sonido.plop(); luego(0.6, () => crearCharco(px, pz + 0.4, 1.3, 0x9ab86a)); break;
+    case 'cafetera': Sonido.chof(); luego(0.6, () => crearCharco(px, pz + 0.3, 1.2, 0x6b4a2a)); break;
+    case 'tragaperras': Sonido.zas(); Sonido.fanfarria(); empezarApagon(6); break;
+    case 'taburete': Sonido.crash(); emitir(-39, 0.4, 1.5, 20, { color: [0x6b4321, 0x7a1f2b], cubo: true, vel: 2, sube: 2.5, tam: 0.05, vida: 1 }); break;
+    case 'secador': Sonido.zas(); electrocutar(autor); break;
+    case 'lavacabezas': Sonido.plop(); Sonido.chof(); luego(0.6, () => crearCharco(px, pz + 0.3, 1.2, 0xeaf6ff)); break;
+    case 'espejo': Sonido.crash(); emitir(46.5, 1.5, -3.6, 25, { color: [0xcfe6f2, 0xffffff], brilla: true, cubo: true, vel: 2, sube: 2.5, tam: 0.05, vida: 1.2, gira: 6 }); break;
+    case 'banco': Sonido.crash(); G.temblor = 0.4; emitir(2, 0.3, 9.9, 20, { color: [0x8a5a3a, 0xc79a5b], cubo: true, vel: 2, sube: 2, tam: 0.05, vida: 1 }); break;
+    case 'fuente': Sonido.chof(); luego(0.6, () => crearCharco(px, pz, 1.3)); break;
     case 'mesa':
       Sonido.crash();
       emitir(5, 0.5, 3.3, 30, { color: [0x8a5a3a, 0xc79a5b, 0xe8c99a], cubo: true, vel: 2.5, sube: 3, tam: 0.05, vida: 1.2 });
@@ -2474,7 +2721,7 @@ function actualizarCliente(cl, dt) {
       if (caminar(cl, dt, 1.9)) {
         cl.estado = 'esperando'; cl.esperaT = 40; cl.c.g.rotation.y = Math.PI; cl.saludo = 2.2;
         Sonido.timbre();
-        decir(cl, nombres(pick(cl.id === 'remedios' ? FRASES.remediosLlega : FRASES.leopoldoLlega)), 1);
+        decir(cl, frase(FRASES.llega[cl.id]), 1);
       }
       break;
     case 'esperando': {
@@ -2812,7 +3059,7 @@ function actualizarJuego(dt) {
   G.t += dt;
   for (let i = G.cola.length - 1; i >= 0; i--) if (G.cola[i].t <= G.t) { const f = G.cola[i].fn; G.cola.splice(i, 1); f(); }
   G.pedidoT -= dt;
-  if (G.pedidoT <= 0) { generarPedido(); G.pedidoT = lerp(20, 11, progreso()) + rand(-3, 3); }
+  if (G.pedidoT <= 0) { generarPedido(); G.pedidoT = lerp(15, 8, progreso()) + rand(-2, 2); }
   // Teléfono sonando
   if (G.tel) {
     G.tel.t -= dt; G.tel.ringT -= dt;
@@ -2897,7 +3144,7 @@ function bucle(ahora) {
 requestAnimationFrame(bucle);
 
 // Ganchos de depuración (sólo con ?debug en la URL)
-if (location.search.includes('debug')) window.__j = { catalogoFrases, claveVoz, G, PJ, camera, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
+if (location.search.includes('debug')) window.__j = { camaraYa: () => actualizarCamara(0, true), catalogoFrases, claveVoz, G, PJ, camera, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
 
 // Índice de voces grabadas: se carga al abrir la página
 VozGrabada.init();

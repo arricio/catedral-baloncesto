@@ -4,3 +4,6 @@ Licencia CC0 1.0 (dominio público). Se han recortado animaciones y se recolorea
   jeremias.glb <- Punk (hombres)
   leopoldo.glb <- Worker (hombres)
   remedios.glb <- Suit (mujeres)
+  puri.glb     <- Worker (mujeres)
+  rosi.glb     <- Punk (mujeres)
+  fermin.glb   <- King (hombres)
