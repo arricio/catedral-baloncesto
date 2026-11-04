@@ -64,13 +64,18 @@
   @keyframes toast{0%{opacity:0;transform:translateY(-10px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
 
   /* Bocadillos de diálogo */
-  #bocadillos{position:fixed;inset:0;pointer-events:none;z-index:4}
-  .globo{position:absolute;transform:translate(-50%,-100%);background:#fff;border:3px solid var(--tinta);border-radius:16px;
-    padding:6px 11px;font-weight:800;font-size:14px;max-width:230px;text-align:center;line-height:1.2;
-    box-shadow:3px 3px 0 rgba(0,0,0,.35)}
+  .globo{position:fixed;z-index:4;pointer-events:none;transform:translate(-50%,-100%);background:#fff;border:3px solid var(--tinta);border-radius:16px;
+    padding:8px 14px;font-weight:800;font-size:16px;width:max-content;max-width:min(300px,80vw);text-align:center;line-height:1.3;
+    box-shadow:4px 4px 0 rgba(0,0,0,.35);animation:globo .18s ease-out}
+  @keyframes globo{from{transform:translate(-50%,-90%) scale(.85);opacity:0}to{transform:translate(-50%,-100%);opacity:1}}
+  .globo.lejos{border-style:dashed}
+  .globo.lejos::after{display:none}
+  .globo.leopoldo b{color:#3a3f4a} .globo.tel b{color:#b8322b}
   .globo::after{content:'';position:absolute;left:50%;bottom:-12px;margin-left:-8px;border:8px solid transparent;border-top-color:var(--tinta)}
   .globo b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;opacity:.65}
   .globo.paco b{color:var(--azul)} .globo.ramon b{color:var(--naranja-osc)} .globo.remedios b{color:#a0307a} .globo.michi b{color:#666}
+  .encargo.aviso{background:#fff1c9}
+  #lugar{font-size:12px;font-weight:900;margin-top:4px}
 
   /* Minijuego */
   #mini{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);width:min(520px,92vw);z-index:6;text-align:center}
@@ -159,12 +164,13 @@
     .boton{font-size:26px;margin-top:12px}
     .factura{font-size:12px;padding:10px}
     #hud-izq{width:150px;gap:5px} #hud-izq .panel{padding:5px 8px;border-radius:10px;box-shadow:3px 3px 0 var(--tinta)}
-    #reloj{font-size:22px} #reloj small{display:none} #dinero{font-size:18px}
+    #reloj{font-size:22px} #reloj small{display:none} #dinero{font-size:18px} #lugar{font-size:10px}
+    #paciencia-txt span:first-child{font-size:0} #paciencia-txt span:first-child::after{content:'Clientes';font-size:10px}
     #paciencia-txt{font-size:10px} #herramienta{font-size:11px}
     #hud-der{width:180px} .encargo{font-size:11px;padding:4px 6px} .encargo .ico{font-size:18px} .encargo .t{font-size:16px}
     .encargo .sub{display:none} #hud-der h3{font-size:18px}
     #pista{font-size:13px;bottom:200px} #mini{bottom:210px}
-    .globo{font-size:12px;max-width:170px}
+    .globo{font-size:14px;max-width:min(240px,80vw)}
     #toasts{width:60vw;top:auto;bottom:250px}
   }
 </style>
@@ -172,16 +178,17 @@
 </head>
 <body>
 
-<div id="bocadillos"></div>
+<div id="globo" class="globo oculto"></div>
 
 <div id="hud" class="oculto">
   <div id="hud-izq">
     <div class="panel">
-      <div id="reloj">09:00<small>Jornada en casa de Doña Remedios</small></div>
+      <div id="reloj">09:00<small>Taller de Arricio y Jeremías</small></div>
       <div id="dinero">0 €</div>
+      <div id="lugar"></div>
     </div>
     <div class="panel">
-      <div id="paciencia-txt"><span>Paciencia de la clienta</span><span id="cara">😊</span></div>
+      <div id="paciencia-txt"><span>Paciencia de los clientes</span><span id="cara">😊</span></div>
       <div class="barra"><i id="paciencia" style="width:100%"></i></div>
     </div>
     <div class="panel" id="herramienta">🧰 Manos vacías</div>
@@ -213,23 +220,25 @@
 <div id="portada" class="pantalla">
   <div class="tarjeta">
     <h1 class="titulo">Chapuzas a<br>domicilio</h1>
-    <p class="subtitulo">REFORMAS CHAPUCILLA S.L. · «Lo arreglamos todo… más o menos»</p>
-    <p class="lema">Un homenaje en 3D a las telecomedias de chapuzas de los 90</p>
+    <p class="subtitulo">ARRICIO Y JEREMÍAS · Reformas y chapuzas a domicilio</p>
+    <p class="lema">Un taller de barrio, un teléfono que no para y dos chapuzas con muchas ganas… de almorzar</p>
     <p class="pregunta">¿Con qué chapuzas juegas?</p>
     <div class="opciones">
       <button type="button" class="opcion" data-pj="arricio" aria-pressed="true"><strong>🥖 Arricio</strong>
-        <span>El más chapuzas de la empresa. Gorra, barriga, bigote y el lápiz en la oreja. Lo que toca, lo rompe.</span><em>Modo difícil</em></button>
+        <span>El más chapucero haciendo las cosas. Gorra, barriga, bigote y el lápiz en la oreja. Lo que toca, lo rompe.</span></button>
       <button type="button" class="opcion" data-pj="jeremias" aria-pressed="false"><strong>🔧 Jeremías</strong>
-        <span>El otro chapuzas. Mono azul, gorra y una fe ciega en la cinta americana. Algo más fino… sólo algo.</span><em>Modo normal</em></button>
+        <span>Menos chapucero que su socio. Mono azul, gorra roja y una fe ciega en la cinta americana.</span></button>
     </div>
     <p class="oficios">Hoy toca de todo: 🚿 fontanería · ⚡ electricidad · 🎨 pintura · 🪚 carpintería · 🧱 albañilería · 🌿 jardinería</p>
     <div class="reparto">
-      <div><strong>👵 Doña Remedios</strong>La clienta. Bata de flores, rulos y una paciencia que se acaba.</div>
+      <div><strong>👵 Doña Remedios</strong>Vecina del barrio. Bata de flores, rulos y siempre algo roto en casa.</div>
+      <div><strong>🎩 Don Leopoldo</strong>Vive en un chalet con piscina. Exigente, elegante y con abogado.</div>
       <div><strong>🐈 Michi</strong>El gato de la casa. Siempre en medio. Siempre.</div>
     </div>
     <div class="controles">
-      <b>Cómo se juega:</b> llegan encargos al piso. Coge la herramienta correcta de la mesa junto a la furgoneta,
-      ve hasta el sitio y para la aguja en lo verde. Si fallas… <b>¡CHAPUZA!</b><br>
+      <b>Cómo se juega:</b> los clientes <b>llaman al teléfono del taller</b> o <b>vienen al mostrador</b> a encargar el trabajo.
+      Coge las herramientas de la estantería (puedes llevar dos), ve a su casa y para la aguja en lo verde. Si fallas… <b>¡CHAPUZA!</b><br>
+      🔊 Los personajes hablan: sube el volumen.<br>
       <span class="solo-teclado"><kbd>WASD</kbd>/<kbd>flechas</kbd> moverse · <kbd>Shift</kbd> correr · <kbd>E</kbd>/<kbd>Espacio</kbd> acción ·
       <kbd>P</kbd> pausa · <kbd>M</kbd> sonido.<br></span>
       <span class="solo-tactil">📱 <b>Joystick</b> (izquierda) para andar; al fondo, corres. Botón <b>«¡DALE!»</b> para todo lo demás.<br></span>
@@ -244,7 +253,7 @@
 <div id="pausa" class="pantalla oculto">
   <div class="tarjeta" style="text-align:center">
     <h1 class="titulo" style="font-size:60px">Pausa para<br>el bocata</h1>
-    <p class="lema" style="margin-top:16px">«Diez minutillos, que esto no se va a ir a ningún sitio» — Ramón</p>
+    <p class="lema" style="margin-top:16px">«Diez minutillos, que esto no se va a ir a ningún sitio» — el compañero</p>
     <button class="boton" id="btn-seguir">Seguir currando</button>
   </div>
 </div>
