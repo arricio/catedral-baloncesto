@@ -473,7 +473,7 @@ const rotuloTaller = plano(6.6, 1.15, new THREE.MeshStandardMaterial({
 }), -27.5, 0.78, 5.115);
 plano(5.6, 1.15, new THREE.MeshStandardMaterial({
   roughness: 0.6,
-  map: texCartel([['☎ 91 555 12 34', 70, 55], ['Fontanería · Pintura · Albañilería · Electricidad', 30, 120]], '#f2a33a', '#2a1e12', 1024, 180),
+  map: texCartel([['☎ 555 123 456', 70, 55], ['Fontanería · Pintura · Albañilería · Electricidad', 30, 120]], '#f2a33a', '#2a1e12', 1024, 180),
 }), -17, 0.78, 5.115);
 // Estantería de herramientas
 caja(8.9, 2.2, 0.06, 0x8a6a48, -24.6, 1.1, -5.86, scene, true);
@@ -576,7 +576,7 @@ function furgoneta(x, z) {
       c.font = '900 58px Nunito, Arial'; c.fillText('ARRICIO Y', w / 2, 62);
       c.font = '900 58px Nunito, Arial'; c.fillText('JEREMÍAS', w / 2, 124);
       c.fillStyle = '#2a1e12'; c.font = '800 26px Nunito, Arial'; c.fillText('Reformas y chapuzas a domicilio', w / 2, 179);
-      c.font = '800 28px Nunito, Arial'; c.fillText('☎ 91 555 12 34', w / 2, 230);
+      c.font = '800 28px Nunito, Arial'; c.fillText('☎ 555 123 456', w / 2, 230);
     }),
   }));
   rot.position.set(-0.5, 1.35, 1.06); g.add(rot);
