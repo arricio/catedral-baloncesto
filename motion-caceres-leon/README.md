@@ -1,6 +1,6 @@
 # Cáceres vs Cultural Leonesa — Motion Graphics (2ª FEB · Jornada 6)
 
-Vídeo de 48,5 s, 1920×1080 (16:9), 30 fps: `caceres-leon-jornada6.mp4` (página de reproducción: `index.html`).
+Vídeo de 49,5 s, 1920×1080 (16:9), 30 fps: `caceres-leon-jornada6.mp4` (página de reproducción: `index.html`).
 
 ## Escenas
 | Tiempo | Escena |
@@ -10,8 +10,8 @@ Vídeo de 48,5 s, 1920×1080 (16:9), 30 fps: `caceres-leon-jornada6.mp4` (págin
 | 9–13 s | Presentación de la Cultural Leonesa |
 | 13–17 s | Cara a cara «VS» |
 | 17–21 s | Clasificación: 4-1 frente a 4-1 |
-| 21–38 s | El partido: las camisetas juegan y encestan en las dos canastas (marcador sin números) |
-| 38–48,5 s | RESULTADO → escudos con el corazón → «DOS AFICIONES HERMANADAS» + locución |
+| 21–39 s | El partido: las camisetas juegan y encestan en las dos canastas (marcador sin números); al acabar se abrazan y se ponen de frente a la cámara |
+| 39–49,5 s | RESULTADO → escudos con el corazón → «DOS AFICIONES HERMANADAS» + locución |
 
 Locución: «El resultado final del partido es… ¡que Cáceres y León molan mogollón!» (voz con acento de España generada con OpenAI `gpt-4o-mini-tts`, `src/assets/locucion.wav`).
 
@@ -23,6 +23,6 @@ Locución: «El resultado final del partido es… ¡que Cáceres y León molan m
 
 Regenerar:
 ```bash
-python3 src/music.py banda.wav src/assets/locucion.wav 39.6 48.5
+python3 src/music.py banda.wav src/assets/locucion.wav 40.6 49.5
 node src/render.js caceres-leon-jornada6.mp4 banda.wav 30
 ```

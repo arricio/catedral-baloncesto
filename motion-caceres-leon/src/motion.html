@@ -22,10 +22,10 @@ canvas{display:block;width:100vw;height:56.25vw;max-height:100vh;max-width:177.7
    CÁCERES vs CULTURAL LEONESA — 2ª FEB · Jornada 6
    Animación determinista: renderFrame(t) dibuja el instante t (segundos).
    ===================================================================== */
-const W = 1920, H = 1080, DURATION = 48.5;
+const W = 1920, H = 1080, DURATION = 49.5;
 const MATCH0 = 21.0;                     // inicio del partido
-const RESULT0 = 38.0;                    // pantalla RESULTADO
-const VOICE = 39.6;                      // inicio de la locución
+const RESULT0 = 39.0;                    // pantalla RESULTADO
+const VOICE = 40.6;                      // inicio de la locución
 // tiempos de cada palabra dentro de la locución (medidos sobre el audio)
 const VW = { que: 3.32, cac: 3.5, leo: 4.15, molan: 4.78, mog: 5.25, end: 6.05 };
 const cv = document.getElementById('cv');
@@ -715,6 +715,10 @@ function ball(x, y, rot, shadow = true) {
   ctx.beginPath(); ctx.arc(BALL_R * 1.25, 0, BALL_R * .95, Math.PI - 1, Math.PI + 1); ctx.stroke();
   ctx.restore(); ctx.restore();
 }
+function hugTilt(team, m) {
+  const k = E.inOutCubic(prog(m, 16.2, 16.5)) * (1 - E.inOutCubic(prog(m, 16.95, 17.3)));
+  return (team === 'C' ? 1 : -1) * .12 * k;
+}
 function player(team, m) {
   const x = px(team, m), vx = (px(team, m + .02) - px(team, m - .02)) / .04, j = jumpH(team, m);
   const run = clamp(Math.abs(vx) / 450);
@@ -725,13 +729,17 @@ function player(team, m) {
   const k = 1 - j / 380; ctx.fillStyle = `rgba(0,0,0,${.45 * k})`; ctx.beginPath(); ctx.ellipse(x, FLOOR_Y + 2, 80 * k, 15 * k, 0, 0, 6.283); ctx.fill();
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, FLOOR_Y); ctx.scale(1, .25); glowCircle(0, 0, 150, col, .25 * k); ctx.restore();
   // estela de velocidad
-  if (Math.abs(vx) > 380) for (let g = 1; g <= 3; g++) img(im, x - vx * .028 * g, y, h, { alpha: .10 / g, rot: clamp(vx / 3000, -.12, .12) });
-  img(im, x, y, h, { rot: clamp(vx / 3000, -.12, .12), glow: rgba(col, .45), glowSize: 30 });
+  const hug = hugTilt(team, m), rot = m > 16.1 ? hug : clamp(vx / 3000, -.12, .12);
+  if (Math.abs(vx) > 380) for (let g = 1; g <= 3; g++) img(im, x - vx * .028 * g, y, h, { alpha: .10 / g, rot });
+  // el giro del abrazo se hace desde la base de la camiseta (se inclinan una hacia la otra)
+  ctx.save(); ctx.translate(x, y + h / 2); ctx.rotate(rot); ctx.translate(-x, -(y + h / 2));
+  img(im, x, y, h, { glow: rgba(col, .45), glowSize: 30 });
+  ctx.restore();
 }
 function popups(m) {
   for (const s of M.shots) {
-    const d = m - s.arr; if (d < 0 || d > 1.3) continue;
-    const x = rimX(s.team), col = s.team === 'C' ? C.greenL : C.redL, a = 1 - prog(d, .9, 1.3), up = E.outCubic(prog(d, 0, 1.3)) * 70;
+    const d = m - s.arr, life = s.kind === 'layup' ? .55 : 1.3; if (d < 0 || d > life) continue;
+    const x = rimX(s.team), col = s.team === 'C' ? C.greenL : C.redL, a = 1 - prog(d, life - .35, life), up = E.outCubic(prog(d, 0, 1.3)) * 70;
     const lbl = { dunk: '¡MATE!', three: '¡TRIPLE!', layup: '¡SOBRE LA BOCINA!', jump: '¡CANASTA!' }[s.kind];
     const sc = lerp(1.8, 1, E.outExpo(prog(d, 0, .25)));
     const cx = s.team === 'C' ? x - 210 : x + 210;
@@ -772,6 +780,13 @@ function sMatch(t) {
   for (const tm of (att === 'C' ? ['L', 'C'] : ['C', 'L'])) player(tm, m);
   const spin = m * (Math.abs(by - BALL_FLOOR) > 5 ? 9 : 4) + bx / BALL_R * .4;
   ball(bx, by, spin);
+  // corazones que salen del abrazo
+  for (let i = 0; i < 7; i++) {
+    const t0 = 16.35 + i * .12, d = m - t0; if (d < 0 || d > 1.1) continue;
+    const r = mulberry(500 + i); const hx = 960 + (r() - .5) * 160 + Math.sin(d * 5 + i) * 18, hy2 = 520 - d * 170;
+    ctx.save(); ctx.translate(hx, hy2); const sc = (.9 + r() * .8) * E.outBack(clamp(d / .3)); ctx.scale(sc, sc);
+    ctx.globalAlpha = 1 - prog(d, .7, 1.1); heartPath(1.6); ctx.fillStyle = i % 2 ? C.redL : C.greenL; ctx.shadowColor = '#fff'; ctx.shadowBlur = 12; ctx.fill(); ctx.restore();
+  }
   hoopFront('L', m); hoopFront('R', m);
   popups(m);
   ctx.restore();
@@ -784,17 +799,17 @@ function sMatch(t) {
     ctx.restore();
   }
   // final del partido
-  const fa = prog(m, 15.75, 16.05);
+  const fa = prog(m, 16.1, 16.4);
   if (fa > 0) {
     ctx.save(); ctx.globalAlpha = fa;
     const bw = W * E.outExpo(fa);
     const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(0,80,30,.85)'); g.addColorStop(.5, 'rgba(5,5,8,.9)'); g.addColorStop(1, 'rgba(110,5,18,.85)');
-    ctx.fillStyle = g; ctx.fillRect(W / 2 - bw / 2, 430, bw, 190);
-    ctx.fillStyle = C.gold; ctx.fillRect(W / 2 - bw / 2, 430, bw, 4); ctx.fillRect(W / 2 - bw / 2, 616, bw, 4);
-    revealText('¡FINAL DEL PARTIDO!', W / 2, 560, prog(m, 15.8, 16.2), { size: 110, ls: 8, fill: '#fff', glow: 'rgba(255,255,255,.5)', glowSize: 24 });
+    ctx.fillStyle = g; ctx.fillRect(W / 2 - bw / 2, 300, bw, 150);
+    ctx.fillStyle = C.gold; ctx.fillRect(W / 2 - bw / 2, 300, bw, 4); ctx.fillRect(W / 2 - bw / 2, 446, bw, 4);
+    revealText('¡FINAL DEL PARTIDO!', W / 2, 415, prog(m, 16.15, 16.55), { size: 110, ls: 8, fill: '#fff', glow: 'rgba(255,255,255,.5)', glowSize: 24 });
     ctx.restore();
   }
-  const wo = prog(m, 16.7, 17.0); if (wo > 0) { ctx.fillStyle = `rgba(255,255,255,${E.inCubic(wo)})`; ctx.fillRect(0, 0, W, H); }
+  const wo = prog(m, 17.7, 18.0); if (wo > 0) { ctx.fillStyle = `rgba(255,255,255,${E.inCubic(wo)})`; ctx.fillRect(0, 0, W, H); }
 }
 
 // 7 — RESULTADO (38–48,5 s): escudos + corazón + "DOS AFICIONES HERMANADAS" + locución
