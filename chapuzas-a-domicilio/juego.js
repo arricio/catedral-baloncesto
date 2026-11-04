@@ -2275,7 +2275,8 @@ function actualizarHUD() {
 /* =========================================================================
    Pedidos: llaman por teléfono o vienen al taller
    ========================================================================= */
-function maxPendientes() { const p = progreso(); return p < 0.2 ? 3 : p < 0.55 ? 4 : 5; }
+// Como mucho dos encargos a la vez (contando los que aún hay que atender: teléfono o cliente esperando)
+function maxPendientes() { return 2; }
 function generarPedido() {
   const pendientes = TIPOS.filter(t => G.encargos[t].activo || G.encargos[t].pedido).length;
   if (pendientes >= maxPendientes()) return;
