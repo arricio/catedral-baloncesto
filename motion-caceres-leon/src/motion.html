@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cáceres vs Cultural Leonesa — Motion Graphics</title>
+<style>
+@font-face{font-family:Anton;src:url(fonts/anton-latin-400-normal.woff2) format('woff2');font-weight:400}
+@font-face{font-family:Mont;src:url(fonts/montserrat-latin-500-normal.woff2) format('woff2');font-weight:500}
+@font-face{font-family:Mont;src:url(fonts/montserrat-latin-700-normal.woff2) format('woff2');font-weight:700}
+@font-face{font-family:Mont;src:url(fonts/montserrat-latin-800-normal.woff2) format('woff2');font-weight:800}
+@font-face{font-family:Mont;src:url(fonts/montserrat-latin-900-normal.woff2) format('woff2');font-weight:900}
+html,body{margin:0;background:#000;overflow:hidden}
+canvas{display:block;width:100vw;height:56.25vw;max-height:100vh;max-width:177.78vh;margin:auto}
+</style>
+</head>
+<body>
+<canvas id="cv" width="1920" height="1080"></canvas>
+<script>
+'use strict';
+/* =====================================================================
+   CÁCERES vs CULTURAL LEONESA — 2ª FEB · Jornada 6
+   Animación determinista: renderFrame(t) dibuja el instante t (segundos).
+   ===================================================================== */
+const W = 1920, H = 1080, DURATION = 37.0;
+const VOICE = 30.0;                      // inicio de la locución final
+const WORDS = [0.0, 0.75, 1.38, 1.78];   // CÁCERES · Y LEÓN · MOLAN · MOGOLLÓN
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+const C = {
+  ink: '#05070b', green: '#00A13E', greenL: '#35e07a', greenD: '#00381a',
+  red: '#E30C25', redL: '#ff4a5c', redD: '#4a0610', gold: '#F1C232', goldD: '#9c6b0c',
+  white: '#ffffff'
+};
+
+/* ---------- utilidades ---------- */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, x) => a + (b - a) * x;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const E = {
+  outExpo: x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x),
+  inExpo: x => x <= 0 ? 0 : Math.pow(2, 10 * x - 10),
+  outCubic: x => 1 - Math.pow(1 - x, 3),
+  inCubic: x => x * x * x,
+  inOutCubic: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+  outBack: (x, s = 1.7) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2),
+  outQuart: x => 1 - Math.pow(1 - x, 4),
+};
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function fadeWin(t, a, b, fi = .3, fo = .3) { return Math.min(prog(t, a, a + fi), 1 - prog(t, b - fo, b)); }
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+
+/* ---------- recursos ---------- */
+const IMG = {};
+const SRC = { cac: 'assets/escudo_caceres.png', leo: 'assets/escudo_leon.png', jc: 'assets/jersey_caceres.png', jl: 'assets/jersey_leon.png' };
+const REFL = {}, GRAIN = [];
+
+async function load() {
+  await Promise.all(Object.entries(SRC).map(([k, s]) => new Promise((ok, ko) => { const i = new Image(); i.onload = () => { IMG[k] = i; ok(); }; i.onerror = ko; i.src = s; })));
+  await Promise.all(['400 100px Anton', '500 40px Mont', '700 40px Mont', '800 40px Mont', '900 40px Mont'].map(f => document.fonts.load(f, 'ÁÉÓ ª Ñ')));
+  // reflejos de las camisetas (precalculados)
+  for (const k of ['jc', 'jl']) {
+    const im = IMG[k], c = document.createElement('canvas');
+    c.width = im.width; c.height = im.height * .45;
+    const g = c.getContext('2d');
+    g.translate(0, im.height); g.scale(1, -1); g.drawImage(im, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalCompositeOperation = 'destination-in';
+    const gr = g.createLinearGradient(0, 0, 0, c.height); gr.addColorStop(0, 'rgba(0,0,0,.38)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height);
+    REFL[k] = c;
+  }
+  // grano de película
+  for (let s = 0; s < 4; s++) {
+    const c = document.createElement('canvas'); c.width = 480; c.height = 270;
+    const g = c.getContext('2d'), d = g.createImageData(480, 270), r = mulberry(99 + s);
+    for (let i = 0; i < d.data.length; i += 4) { const v = r() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+    g.putImageData(d, 0, 0); GRAIN.push(c);
+  }
+}
+
+/* ---------- impactos: sacudida + destello ---------- */
+const HITS = [
+  { t: 0.0, s: 6, f: 0, c: '#fff' },
+  { t: 4.0, s: 20, f: .85, c: '#d9ffe6' }, { t: 8.0, s: 20, f: .85, c: '#ffe0e4' },
+  { t: 12.0, s: 36, f: 1, c: '#ffffff' }, { t: 16.0, s: 10, f: .5, c: '#fff' }, { t: 20.0, s: 10, f: .45, c: '#fff' },
+  { t: 24.0, s: 4, f: .35, c: '#fff6e0' },
+  { t: 28.0, s: 8, f: .2, c: '#fff' }, { t: 28.5, s: 6, f: .12, c: '#fff' }, { t: 29.0, s: 8, f: .2, c: '#fff' }, { t: 29.5, s: 8, f: .2, c: '#fff' },
+  { t: VOICE + WORDS[0], s: 34, f: 1, c: '#ffffff' }, { t: VOICE + WORDS[1], s: 16, f: .35, c: '#ffe9ec' },
+  { t: VOICE + WORDS[2], s: 18, f: .35, c: '#fff3cf' }, { t: VOICE + WORDS[3], s: 30, f: .6, c: '#fff3cf' },
+];
+function shakeAt(t) {
+  let x = 0, y = 0, z = 0;
+  for (const h of HITS) {
+    const d = t - h.t; if (d < 0 || d > 1.2) continue;
+    const a = h.s * Math.exp(-d * 7);
+    x += a * Math.sin(d * 71 + h.t * 3); y += a * Math.cos(d * 59 + h.t * 7) * .8;
+    z += h.s / 900 * Math.exp(-d * 9);
+  }
+  return { x, y, z };
+}
+function flashAt(t) {
+  let best = null, a = 0;
+  for (const h of HITS) { const d = t - h.t; if (d < 0 || d > 1) continue; const v = h.f * Math.exp(-d * 9); if (v > a) { a = v; best = h; } }
+  return best ? { a, c: best.c } : null;
+}
+
+/* ---------- primitivas ---------- */
+function text(str, x, y, o = {}) {
+  ctx.save();
+  ctx.font = `${o.weight || 400} ${o.size || 60}px ${o.font || 'Anton'}`;
+  ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+  ctx.letterSpacing = (o.ls || 0) + 'px';
+  ctx.globalAlpha *= (o.alpha == null ? 1 : o.alpha);
+  if (o.glow) { ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowSize || 30; }
+  if (o.stroke) { ctx.lineWidth = o.lw || 3; ctx.strokeStyle = o.stroke; ctx.lineJoin = 'round'; ctx.strokeText(str, x, y); }
+  if (o.fill !== null) { ctx.fillStyle = o.fill || '#fff'; ctx.fillText(str, x, y); }
+  ctx.restore();
+}
+function measure(str, size, font = 'Anton', weight = 400, ls = 0) {
+  ctx.save(); ctx.font = `${weight} ${size}px ${font}`; ctx.letterSpacing = ls + 'px'; const w = ctx.measureText(str).width; ctx.restore(); return w;
+}
+function img(im, x, y, h, o = {}) {
+  const w = im.width / im.height * h;
+  ctx.save(); ctx.globalAlpha *= (o.alpha == null ? 1 : o.alpha);
+  ctx.translate(x, y); if (o.rot) ctx.rotate(o.rot); ctx.scale((o.sx || 1) * (o.s || 1), (o.s || 1));
+  if (o.glow) { ctx.shadowColor = o.glow; ctx.shadowBlur = o.glowSize || 60; }
+  ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore();
+}
+// revelado de texto con máscara (sube desde abajo)
+function revealText(str, x, y, p, o = {}) {
+  const size = o.size || 60;
+  ctx.save();
+  const w = measure(str, size, o.font, o.weight, o.ls) + 40;
+  let x0 = x - w / 2; if (o.align === 'left') x0 = x - 20; if (o.align === 'right') x0 = x - w + 20;
+  ctx.beginPath(); ctx.rect(x0, y - size * 1.05, w, size * 1.32); ctx.clip();
+  text(str, x, y + (1 - E.outExpo(p)) * size * 1.25, o);
+  ctx.restore();
+}
+function glowCircle(x, y, r, col, a) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, rgba(col, a)); g.addColorStop(1, rgba(col, 0));
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+function rays(x, y, n, r, rot, colA, colB, a) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const a0 = i / n * Math.PI * 2, w = Math.PI / n * .55;
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+    const col = i % 2 ? colA : colB; g.addColorStop(0, rgba(col, a)); g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, r, a0 - w, a0 + w); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+function stripes(t, col, a, speed = 60, gap = 90, wdt = 30) {
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = col;
+  ctx.translate(W / 2, H / 2); ctx.rotate(-Math.PI / 5);
+  const off = (t * speed) % gap;
+  for (let x = -1600 + off; x < 1600; x += gap) ctx.fillRect(x, -1400, wdt, 2800);
+  ctx.restore();
+}
+function marquee(str, y, size, t, speed, col, a) {
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.font = `400 ${size}px Anton`; ctx.letterSpacing = '6px';
+  const w = ctx.measureText(str + '  ').width;
+  let x = -((t * speed) % w + w) % w - w;
+  ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.textBaseline = 'middle';
+  for (; x < W + w; x += w) ctx.strokeText(str + '  ', x, y);
+  ctx.restore();
+}
+// partículas tipo brasa (posición analítica)
+const EMB = (() => { const r = mulberry(5); return Array.from({ length: 160 }, () => ({ x: r() * W, y: r() * H, v: 30 + r() * 120, s: 1 + r() * 3.5, ph: r() * 6.28, sw: 10 + r() * 40, k: r() })); })();
+function embers(t, colA, colB, a = 1) {
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const p of EMB) {
+    const y = ((p.y - t * p.v) % (H + 40) + H + 40) % (H + 40) - 20;
+    const x = p.x + Math.sin(t * .8 + p.ph) * p.sw;
+    const tw = .5 + .5 * Math.sin(t * 3 + p.ph * 3);
+    ctx.globalAlpha = a * (.25 + .6 * tw);
+    ctx.fillStyle = p.k < .5 ? colA : colB;
+    ctx.beginPath(); ctx.arc(x, y, p.s, 0, 6.283); ctx.fill();
+  }
+  ctx.restore();
+}
+function shock(x, y, t0, t, col, maxR = 900, lw = 26) {
+  const p = prog(t, t0, t0 + .9); if (p <= 0 || p >= 1) return;
+  const e = E.outExpo(p);
+  ctx.save(); ctx.globalAlpha = 1 - p; ctx.strokeStyle = col; ctx.lineWidth = lw * (1 - p) + 1;
+  ctx.shadowColor = col; ctx.shadowBlur = 30;
+  ctx.beginPath(); ctx.arc(x, y, 60 + maxR * e, 0, 6.283); ctx.stroke();
+  ctx.globalAlpha = (1 - p) * .5; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(x, y, 40 + maxR * .7 * E.outExpo(clamp(p * 1.3)), 0, 6.283); ctx.stroke();
+  ctx.restore();
+}
+// estallido de chispas
+function burst(x, y, t0, t, cols, n = 70, speed = 900, seed = 1) {
+  const d = t - t0; if (d < 0 || d > 1.6) return;
+  const r = mulberry(seed);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const ang = r() * 6.283, v = speed * (.35 + r() * .9), life = .7 + r() * .8, col = cols[i % cols.length];
+    if (d > life) continue;
+    const k = d / life, dist = v * (1 - Math.exp(-d * 3.2)) / 3.2;
+    const px = x + Math.cos(ang) * dist, py = y + Math.sin(ang) * dist + 120 * d * d;
+    const tail = 26 * (1 - k);
+    ctx.globalAlpha = 1 - k; ctx.strokeStyle = col; ctx.lineWidth = 2 + 3 * (1 - k);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - Math.cos(ang) * tail, py - Math.sin(ang) * tail); ctx.stroke();
+  }
+  ctx.restore();
+}
+function vignette(a = .75) {
+  const g = ctx.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, H * 1.05);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${a})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function courtLines(t, a, cx = W / 2, cy = H / 2, s = 1) {
+  ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+  ctx.translate(cx, cy); ctx.scale(s, s);
+  const p = E.inOutCubic(prog(t, 0, 2.2));
+  ctx.setLineDash([3000 * p, 3000]);
+  ctx.beginPath(); ctx.arc(0, 0, 180, -Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, 60, -Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -700); ctx.lineTo(0, 700); ctx.stroke();
+  ctx.beginPath(); ctx.rect(-1100, -560, 2200, 1120); ctx.stroke();
+  for (const sg of [-1, 1]) {
+    ctx.beginPath(); ctx.rect(sg * 1100 - (sg > 0 ? 380 : 0), -160, 380, 320); ctx.stroke();
+    ctx.beginPath(); ctx.arc(sg * 720, 0, 160, sg > 0 ? Math.PI / 2 : -Math.PI / 2, sg > 0 ? Math.PI * 1.5 : Math.PI / 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(sg * 1000, 0, 560, sg > 0 ? Math.PI * .62 : -Math.PI * .38, sg > 0 ? Math.PI * 1.38 : Math.PI * .38); ctx.stroke();
+  }
+  ctx.restore();
+}
+function pill(x, y, label, value, col, a, align = 'left') {
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.font = '800 26px Mont'; ctx.letterSpacing = '6px';
+  const lw = ctx.measureText(label).width;
+  ctx.font = '400 64px Anton'; ctx.letterSpacing = '2px';
+  const vw = ctx.measureText(value).width;
+  const w = lw + vw + 90, h = 92;
+  const x0 = align === 'left' ? x : x - w;
+  ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.strokeStyle = rgba(col, .9); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x0, y - h / 2, w, h, 46); ctx.fill(); ctx.stroke();
+  text(label, x0 + 36, y + 9, { font: 'Mont', weight: 800, size: 26, ls: 6, align: 'left', fill: 'rgba(255,255,255,.75)' });
+  text(value, x0 + 36 + lw + 22, y + 24, { size: 64, ls: 2, align: 'left', fill: '#fff', glow: col, glowSize: 20 });
+  ctx.restore();
+}
+
+/* =====================================================================
+   ESCENAS
+   ===================================================================== */
+// 0 — INTRO (0–4 s)
+function sIntro(t) {
+  ctx.fillStyle = C.ink; ctx.fillRect(0, 0, W, H);
+  // halos de color de ambos equipos
+  glowCircle(380, 540, 900, C.green, .22 * prog(t, .2, 1.6));
+  glowCircle(1540, 540, 900, C.red, .22 * prog(t, .2, 1.6));
+  courtLines(t - .3, .10, W / 2, H / 2, 1 + t * .03);
+  embers(t, C.greenL, C.redL, .5 * prog(t, .3, 1.5));
+  // línea de luz que se abre
+  const lp = E.outExpo(prog(t, .05, 1.2));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const lg = ctx.createLinearGradient(W / 2 - 900 * lp, 0, W / 2 + 900 * lp, 0);
+  lg.addColorStop(0, 'rgba(0,161,62,0)'); lg.addColorStop(.25, 'rgba(53,224,122,.9)'); lg.addColorStop(.5, '#fff'); lg.addColorStop(.75, 'rgba(255,74,92,.9)'); lg.addColorStop(1, 'rgba(227,12,37,0)');
+  ctx.fillStyle = lg; ctx.globalAlpha = 1 - prog(t, 3.3, 3.9);
+  ctx.fillRect(W / 2 - 900 * lp, 588, 1800 * lp, 3);
+  glowCircle(W / 2, 590, 260 * lp, '#ffffff', .35 * (1 - prog(t, 1, 3)));
+  ctx.restore();
+
+  const out = E.inExpo(prog(t, 3.45, 4.0));
+  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(1 + out * 2.5, 1 + out * 2.5); ctx.translate(-W / 2, -H / 2);
+  ctx.globalAlpha = 1 - out;
+  // kicker
+  const k = prog(t, .5, 1.4);
+  text('LIGA  ·  2ª FEB', W / 2, 330, { font: 'Mont', weight: 800, size: 34, ls: lerp(40, 18, E.outCubic(k)), alpha: k, fill: 'rgba(255,255,255,.85)' });
+  // JORNADA 6
+  revealText('JORNADA', W / 2 - 110, 545, prog(t, .9, 1.7), { size: 210, ls: 6, fill: '#fff' });
+  const six = prog(t, 1.35, 1.85);
+  if (six > 0) {
+    ctx.save(); ctx.translate(W / 2 + 470, 470); const s6 = lerp(2.4, 1, E.outExpo(six)); ctx.scale(s6, s6);
+    const g6 = ctx.createLinearGradient(0, -110, 0, 80); g6.addColorStop(0, '#fff6d6'); g6.addColorStop(.5, C.gold); g6.addColorStop(1, C.goldD);
+    text('6', 0, 75, { size: 230, fill: g6, alpha: E.outCubic(six), glow: 'rgba(241,194,50,.7)', glowSize: 40 });
+    ctx.restore();
+  }
+  // fecha
+  const dp = prog(t, 1.9, 2.6);
+  text('SÁBADO  7  DE  NOVIEMBRE', W / 2, 670, { font: 'Mont', weight: 700, size: 40, ls: lerp(30, 12, E.outCubic(dp)), alpha: dp, fill: '#fff' });
+  const tp = prog(t, 2.4, 3.1);
+  text('CÁCERES', W / 2 - 60, 760, { size: 56, ls: 6, align: 'right', alpha: tp, fill: C.greenL, glow: rgba(C.green, .8), glowSize: 20 });
+  text('VS', W / 2, 760, { size: 40, ls: 2, alpha: tp, fill: C.gold });
+  text('CULTURAL LEONESA', W / 2 + 60, 760, { size: 56, ls: 6, align: 'left', alpha: tp, fill: C.redL, glow: rgba(C.red, .8), glowSize: 20 });
+  ctx.restore();
+  // barrido de luz hacia la siguiente escena
+  const sw = prog(t, 3.55, 4.0);
+  if (sw > 0) { ctx.save(); ctx.globalAlpha = E.inCubic(sw) * .9; ctx.fillStyle = C.greenD; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+}
+
+// 1/2 — PRESENTACIÓN DE EQUIPO
+function sTeam(t, team) {
+  const isC = team === 'cac';
+  const col = isC ? C.green : C.red, colL = isC ? C.greenL : C.redL, colD = isC ? C.greenD : C.redD;
+  const cx = isC ? 590 : 1330, cy = 520;
+  const u = t;
+  // fondo
+  const bg = ctx.createLinearGradient(isC ? 0 : W, 0, isC ? W : 0, 0);
+  bg.addColorStop(0, colD); bg.addColorStop(.6, '#07090d'); bg.addColorStop(1, '#030405');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  stripes(u, colL, .05, isC ? 70 : -70);
+  marquee(isC ? 'CÁCERES  ·  CÁCERES  ·  CÁCERES' : 'CULTURAL LEONESA  ·  LEÓN', 150, 210, u, isC ? 90 : -90, rgba(colL, 1), .12);
+  marquee(isC ? 'BALONCESTO  ·  EXTREMADURA' : 'BALONCESTO  ·  LEÓN', 960, 210, u, isC ? -70 : 70, rgba(colL, 1), .10);
+  rays(cx, cy, 18, 1100, u * .12 * (isC ? 1 : -1), colL, '#ffffff', .07 * prog(u, 0, .5));
+  glowCircle(cx, cy, 650, col, .55);
+  embers(u + (isC ? 0 : 7), colL, '#ffffff', .65);
+  shock(cx, cy, 0, u, colL, 1000);
+  shock(cx, cy, .12, u, '#ffffff', 700, 12);
+  burst(cx, cy, 0, u, [colL, '#ffffff', C.gold], 80, 1100, isC ? 3 : 4);
+
+  const out = E.inExpo(prog(u, 3.5, 4.0));
+  const dir = isC ? -1 : 1;
+  ctx.save(); ctx.translate(dir * out * 2200, 0);
+  // escudo con estela de movimiento
+  const sp = prog(u, 0, .38), se = E.outExpo(sp);
+  const s = lerp(2.6, 1, se) * (1 + .025 * Math.sin(u * 2)), bob = Math.sin(u * 1.6) * 8;
+  const im = IMG[team];
+  if (sp < 1) for (let g = 1; g <= 3; g++) img(im, cx, cy + bob, 560, { s: s * (1 + g * .12 * (1 - se)), alpha: .18 * (1 - se) });
+  img(im, cx, cy + bob, 560, { s, alpha: clamp(sp * 4), glow: rgba(colL, .55), glowSize: 70 });
+
+  // bloque de texto
+  const tx = isC ? 1040 : 880, al = isC ? 'left' : 'right';
+  const kick = prog(u, .35, .9);
+  text(isC ? 'CIUDAD MONUMENTAL' : 'CIUDAD DE LEÓN', tx, isC ? 255 : 220, { font: 'Mont', weight: 800, size: 30, ls: lerp(26, 12, E.outCubic(kick)), align: al, alpha: kick, fill: colL });
+  if (isC) {
+    revealText('CÁCERES', tx, 500, prog(u, .3, 1.0), { size: 220, ls: 4, align: 'left', fill: '#fff', glow: rgba(col, .6), glowSize: 30 });
+  } else {
+    revealText('CULTURAL', tx, 430, prog(u, .3, .95), { size: 165, ls: 4, align: 'right', fill: '#fff', glow: rgba(col, .6), glowSize: 30 });
+    revealText('LEONESA', tx, 590, prog(u, .45, 1.1), { size: 165, ls: 4, align: 'right', fill: '#fff', glow: rgba(col, .6), glowSize: 30 });
+  }
+  // barra de color
+  const bw = 640 * E.outExpo(prog(u, .7, 1.3));
+  ctx.fillStyle = col; ctx.fillRect(isC ? tx : tx - bw, isC ? 535 : 625, bw, 10);
+  ctx.fillStyle = '#fff'; ctx.fillRect(isC ? tx : tx - bw * .3, isC ? 535 : 625, bw * .3, 10);
+  const sb = prog(u, .95, 1.5);
+  text('BALONCESTO', tx, isC ? 610 : 700, { font: 'Mont', weight: 900, size: 46, ls: lerp(30, 16, E.outCubic(sb)), align: al, alpha: sb, fill: '#fff' });
+  // balance
+  const pb = E.outBack(prog(u, 1.4, 1.9));
+  ctx.save(); ctx.globalAlpha = clamp(pb);
+  const py = isC ? 720 : 810;
+  ctx.translate(tx, py); ctx.scale(clamp(pb, 0, 1.2), clamp(pb, 0, 1.2)); ctx.translate(-tx, -py);
+  pill(tx, py, 'BALANCE', '4V · 1D', colL, 1, al);
+  ctx.restore();
+  ctx.restore();
+
+  // cortinilla diagonal hacia la siguiente escena
+  const w = E.inOutCubic(prog(u, 3.55, 4.0));
+  if (w > 0) {
+    ctx.save();
+    const nc = isC ? C.redD : '#0a0a0a';
+    ctx.fillStyle = nc;
+    ctx.beginPath();
+    if (isC) { const x = W + 400 - w * (W + 900); ctx.moveTo(x, 0); ctx.lineTo(W + 600, 0); ctx.lineTo(W + 600, H); ctx.lineTo(x - 400, H); }
+    else { const x = -400 + w * (W + 900); ctx.moveTo(x, 0); ctx.lineTo(-600, 0); ctx.lineTo(-600, H); ctx.lineTo(x + 400, H); }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = isC ? C.redL : '#fff'; ctx.lineWidth = 8; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 30; ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// 3 — VS (12–16 s)
+function sVS(t) {
+  const u = t;
+  const zIn = E.inExpo(prog(u, 3.55, 4.0));
+  ctx.save(); ctx.translate(W / 2, 520); const zs = 1 + u * .015 + zIn * 3; ctx.scale(zs, zs); ctx.translate(-W / 2, -520);
+  // pantalla partida en diagonal
+  const topX = 1060, botX = 860;
+  ctx.save(); ctx.beginPath(); ctx.moveTo(-200, -200); ctx.lineTo(topX + 20, -200); ctx.lineTo(botX - 20, H + 200); ctx.lineTo(-200, H + 200); ctx.closePath(); ctx.clip();
+  let g = ctx.createRadialGradient(520, 520, 50, 520, 520, 1100); g.addColorStop(0, '#0c7d3a'); g.addColorStop(.55, C.greenD); g.addColorStop(1, '#010703');
+  ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, H + 400);
+  stripes(u, C.greenL, .06, 80);
+  marquee('CÁCERES  ·  CÁCERES', 120, 180, u, 80, C.greenL, .13);
+  ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.moveTo(topX - 20, -200); ctx.lineTo(W + 200, -200); ctx.lineTo(W + 200, H + 200); ctx.lineTo(botX + 20, H + 200); ctx.closePath(); ctx.clip();
+  g = ctx.createRadialGradient(1400, 520, 50, 1400, 520, 1100); g.addColorStop(0, '#9b0a1d'); g.addColorStop(.55, C.redD); g.addColorStop(1, '#0a0103');
+  ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, H + 400);
+  stripes(u, C.redL, .06, -80);
+  marquee('CULTURAL LEONESA  ·  LEÓN', 960, 180, u, -80, C.redL, .13);
+  ctx.restore();
+  courtLines(10, .07, W / 2, 520, 1.05);
+  embers(u + 3, C.greenL, C.redL, .7);
+  // rayo en la línea de división
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const r = mulberry(Math.floor(u * 15) + 11);
+  for (let pass = 0; pass < 2; pass++) {
+    ctx.beginPath(); ctx.moveTo(topX, -10);
+    for (let i = 1; i <= 24; i++) { const k = i / 24; ctx.lineTo(lerp(topX, botX, k) + (r() - .5) * (pass ? 50 : 22), lerp(-10, H + 10, k)); }
+    ctx.strokeStyle = pass ? 'rgba(255,240,200,.35)' : '#fff'; ctx.lineWidth = pass ? 2 : 5; ctx.shadowColor = C.gold; ctx.shadowBlur = 40; ctx.stroke();
+  }
+  ctx.restore();
+  // escudos
+  for (const [k, x, d] of [['cac', 500, -1], ['leo', 1420, 1]]) {
+    const p = prog(u, 0, .32), e = E.outExpo(p);
+    const s = lerp(1.9, 1, e) * (1 + .02 * Math.sin(u * 2.2 + d));
+    const xx = x + d * (1 - e) * 500;
+    glowCircle(xx, 500, 420, k === 'cac' ? C.greenL : C.redL, .35);
+    img(IMG[k], xx, 500 + Math.sin(u * 1.8 + d) * 7, 470, { s, alpha: clamp(p * 3), glow: 'rgba(0,0,0,.6)', glowSize: 40 });
+  }
+  shock(W / 2, 520, 0, u, '#fff', 1300, 34);
+  burst(W / 2, 520, .05, u, [C.gold, '#fff', C.greenL, C.redL], 120, 1500, 9);
+  // VS
+  rays(W / 2, 520, 24, 900, u * .25, C.gold, '#ffffff', .12 * prog(u, .1, .6));
+  const vp = prog(u, .08, .45), ve = E.outExpo(vp);
+  if (vp > 0) {
+    ctx.save(); ctx.translate(W / 2, 520); const vs = lerp(3.2, 1, ve) * (1 + .03 * Math.sin(u * 4)); ctx.scale(vs, vs); ctx.rotate(lerp(-.25, 0, ve));
+    const gv = ctx.createLinearGradient(0, -130, 0, 110); gv.addColorStop(0, '#fffbe8'); gv.addColorStop(.45, C.gold); gv.addColorStop(.55, '#c98d10'); gv.addColorStop(1, '#7a4d05');
+    text('VS', 0, 95, { size: 270, ls: -4, fill: gv, alpha: clamp(vp * 3), stroke: '#1a1000', lw: 10, glow: 'rgba(241,194,50,.8)', glowSize: 50 });
+    ctx.restore();
+  }
+  // nombres
+  const np = prog(u, .55, 1.1);
+  revealText('CÁCERES', 500, 860, np, { size: 92, ls: 4, fill: '#fff' });
+  revealText('CULTURAL LEONESA', 1420, 860, prog(u, .65, 1.2), { size: 78, ls: 3, fill: '#fff' });
+  const bw = 320 * E.outExpo(prog(u, .8, 1.3));
+  ctx.fillStyle = C.greenL; ctx.fillRect(500 - bw / 2, 885, bw, 7);
+  ctx.fillStyle = C.redL; ctx.fillRect(1420 - bw / 2, 885, bw, 7);
+  // información del partido
+  const ip = prog(u, 1.2, 1.8);
+  ctx.save(); ctx.globalAlpha = ip;
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.roundRect(W / 2 - 430, 950, 860, 70, 35); ctx.fill();
+  ctx.strokeStyle = 'rgba(241,194,50,.7)'; ctx.lineWidth = 2; ctx.stroke();
+  text('SÁBADO 7 NOV  ·  JORNADA 6  ·  2ª FEB', W / 2, 996, { font: 'Mont', weight: 800, size: 30, ls: 6, fill: '#fff' });
+  ctx.restore();
+  ctx.restore();
+  if (zIn > 0) { ctx.fillStyle = `rgba(255,255,255,${E.inCubic(prog(u, 3.7, 4.0))})`; ctx.fillRect(0, 0, W, H); }
+}
+
+// 4 — CAMISETAS (16–20 s)
+const SHINE = document.createElement('canvas'); const SG = SHINE.getContext('2d');
+function jersey(k, x, y, h, p, u, shineT, col) {
+  const im = IMG[k], w = im.width / im.height * h;
+  const e = E.outExpo(p);
+  const sx = Math.max(.02, Math.sin(e * Math.PI / 2)) * (1 - .05 * Math.pow(Math.sin(u * 1.1 + x), 2));
+  const yy = y + (1 - e) * 260 + Math.sin(u * 1.5 + x) * 8;
+  const rot = Math.sin(u * .9 + x) * .015;
+  ctx.save(); ctx.globalAlpha = clamp(p * 3);
+  // sombra/reflejo en el suelo
+  ctx.save(); ctx.translate(x, y + h / 2 + 6); ctx.scale(sx, 1);
+  ctx.drawImage(REFL[k], -w / 2, 0, w, h * .45); ctx.restore();
+  // camiseta + brillo
+  SHINE.width = Math.ceil(w); SHINE.height = Math.ceil(h);
+  SG.drawImage(im, 0, 0, w, h);
+  SG.globalCompositeOperation = 'source-atop';
+  const sp = lerp(-.4, 1.4, prog(u, shineT, shineT + 1.0));
+  const sg = SG.createLinearGradient(w * (sp - .25), 0, w * (sp + .25), h * .5);
+  sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.38)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+  SG.fillStyle = sg; SG.fillRect(0, 0, w, h); SG.globalCompositeOperation = 'source-over';
+  ctx.translate(x, yy); ctx.rotate(rot); ctx.scale(sx, 1);
+  ctx.shadowColor = rgba(col, .55); ctx.shadowBlur = 60;
+  ctx.drawImage(SHINE, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+function sJerseys(t) {
+  const u = t;
+  ctx.fillStyle = '#06070a'; ctx.fillRect(0, 0, W, H);
+  // suelo
+  const fl = ctx.createLinearGradient(0, 760, 0, H); fl.addColorStop(0, '#0d0f14'); fl.addColorStop(1, '#020203');
+  ctx.fillStyle = fl; ctx.fillRect(0, 840, W, H - 840);
+  glowCircle(560, 520, 700, C.green, .35); glowCircle(1360, 520, 700, C.red, .35);
+  // números gigantes detrás
+  const np = E.outCubic(prog(u, .1, 1.2));
+  text('88', 560 - 60 + u * 12, 820, { size: 760, fill: null, stroke: rgba(C.greenL, .22 * np), lw: 3 });
+  text('24', 1360 + 60 - u * 12, 820, { size: 760, fill: null, stroke: rgba(C.redL, .22 * np), lw: 3 });
+  // focos cenitales
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const [x, col] of [[560, '#e8fff0'], [1360, '#fff0f2']]) {
+    const a = .16 * prog(u, 0, .4) * (1 + .1 * Math.sin(u * 7 + x));
+    const g = ctx.createLinearGradient(0, -50, 0, 900); g.addColorStop(0, rgba(col, a * 1.6)); g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - 50, -50); ctx.lineTo(x + 50, -50); ctx.lineTo(x + 380, 900); ctx.lineTo(x - 380, 900); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = rgba(col, a * .8); ctx.beginPath(); ctx.ellipse(x, 905, 360, 40, 0, 0, 6.283); ctx.fill();
+  }
+  ctx.restore();
+  embers(u + 9, C.greenL, C.redL, .4);
+  const out = E.inExpo(prog(u, 3.55, 4.0));
+  ctx.save(); ctx.translate(0, -out * 1300);
+  jersey('jc', 560, 470, 690, prog(u, .05, .85), u, 1.2, C.green);
+  jersey('jl', 1360, 470, 690, prog(u, .25, 1.05), u, 1.6, C.red);
+  ctx.restore();
+  // título
+  const tp = prog(u, .3, 1.0);
+  ctx.save(); ctx.globalAlpha = 1 - out;
+  text('LAS  EQUIPACIONES', W / 2, 92, { font: 'Mont', weight: 900, size: 36, ls: lerp(36, 20, E.outCubic(tp)), alpha: tp, fill: '#fff' });
+  const lw = 160 * E.outExpo(prog(u, .6, 1.2));
+  ctx.fillStyle = C.green; ctx.fillRect(W / 2 - 230 - lw, 80, lw, 4);
+  ctx.fillStyle = C.red; ctx.fillRect(W / 2 + 230, 80, lw, 4);
+  // etiquetas
+  revealText('CÁCERES', 560, 990, prog(u, .9, 1.5), { size: 74, ls: 6, fill: '#fff' });
+  revealText('CULTURAL LEONESA', 1360, 990, prog(u, 1.05, 1.65), { size: 74, ls: 4, fill: '#fff' });
+  const bw = 120 * E.outExpo(prog(u, 1.2, 1.7));
+  ctx.fillStyle = C.green; ctx.fillRect(560 - bw, 1012, bw * 2, 6);
+  ctx.fillStyle = C.red; ctx.fillRect(1360 - bw, 1012, bw * 2, 6);
+  ctx.restore();
+}
+
+// 5 — CLASIFICACIÓN (20–24 s)
+function card(x, y, w, h, team, u, delay) {
+  const isC = team === 'cac', col = isC ? C.green : C.red, colL = isC ? C.greenL : C.redL;
+  const p = E.outExpo(prog(u, delay, delay + .6));
+  ctx.save(); ctx.translate((isC ? -1 : 1) * (1 - p) * 900, 0); ctx.globalAlpha = clamp(p * 2);
+  const g = ctx.createLinearGradient(x, y, x, y + h); g.addColorStop(0, rgba(col, .30)); g.addColorStop(1, 'rgba(255,255,255,.03)');
+  ctx.fillStyle = g; ctx.strokeStyle = rgba(colL, .8); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 28); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x, y, w, 12, [28, 28, 0, 0]); ctx.fill();
+  img(IMG[team], x + 130, y + 140, 190, { glow: 'rgba(0,0,0,.6)', glowSize: 20 });
+  text(isC ? 'CÁCERES' : 'CULTURAL', x + 250, y + 125, { size: 66, ls: 3, align: 'left', fill: '#fff' });
+  text(isC ? 'BALONCESTO' : 'LEONESA', x + 250, y + 185, { font: 'Mont', weight: 800, size: 30, ls: 8, align: 'left', fill: colL });
+  // contadores
+  const v = Math.floor(4 * E.outCubic(prog(u, delay + .5, delay + 1.3)) + 1e-6);
+  const d = Math.floor(1 * prog(u, delay + 1.0, delay + 1.4) + 1e-6);
+  text(String(v), x + 170, y + 470, { size: 230, fill: '#fff', glow: rgba(colL, .7), glowSize: 30 });
+  text('VICTORIAS', x + 170, y + 520, { font: 'Mont', weight: 800, size: 26, ls: 8, fill: 'rgba(255,255,255,.75)' });
+  text(String(d), x + w - 170, y + 470, { size: 230, fill: 'rgba(255,255,255,.55)' });
+  text('DERROTA', x + w - 170, y + 520, { font: 'Mont', weight: 800, size: 26, ls: 8, fill: 'rgba(255,255,255,.55)' });
+  ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(x + w / 2 - 1, y + 290, 2, 240);
+  // segmentos 4-1
+  const sw = (w - 120 - 4 * 14) / 5;
+  for (let i = 0; i < 5; i++) {
+    const sp = E.outExpo(prog(u, delay + .6 + i * .14, delay + .9 + i * .14));
+    const sx = x + 60 + i * (sw + 14);
+    ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fillRect(sx, y + h - 70, sw, 22);
+    ctx.fillStyle = i < 4 ? colL : 'rgba(255,255,255,.55)';
+    ctx.fillRect(sx, y + h - 70, sw * sp, 22);
+  }
+  ctx.restore();
+}
+function sStats(t) {
+  const u = t;
+  ctx.fillStyle = '#05070b'; ctx.fillRect(0, 0, W, H);
+  glowCircle(300, 600, 900, C.green, .3); glowCircle(1620, 600, 900, C.red, .3);
+  ctx.save(); ctx.globalAlpha = .06; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+  for (let x = (u * 20) % 80; x < W; x += 80) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 80) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.restore();
+  embers(u + 13, C.greenL, C.redL, .35);
+  const out = prog(u, 3.6, 4.0);
+  ctx.save(); ctx.globalAlpha = 1 - out;
+  const kp = prog(u, .05, .6);
+  text('2ª FEB  ·  TRAS 5 JORNADAS', W / 2, 92, { font: 'Mont', weight: 800, size: 30, ls: lerp(30, 12, E.outCubic(kp)), alpha: kp, fill: C.gold });
+  revealText('CLASIFICACIÓN', W / 2, 215, prog(u, .1, .7), { size: 120, ls: 8, fill: '#fff' });
+  card(150, 290, 720, 620, 'cac', u, .3);
+  card(1050, 290, 720, 620, 'leo', u, .45);
+  // badge "="
+  const bp = prog(u, 1.7, 2.1), be = E.outBack(bp, 2.4);
+  if (bp > 0) {
+    ctx.save(); ctx.translate(W / 2, 600); ctx.scale(be, be);
+    glowCircle(0, 0, 200, C.gold, .45);
+    ctx.fillStyle = '#0b0b0b'; ctx.strokeStyle = C.gold; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(0, 0, 78, 0, 6.283); ctx.fill(); ctx.stroke();
+    text('=', 0, 42, { size: 120, fill: C.gold });
+    ctx.restore();
+  }
+  const dp = prog(u, 2.0, 2.6);
+  const gd = ctx.createLinearGradient(0, 930, 0, 1030); gd.addColorStop(0, '#fff6d6'); gd.addColorStop(1, C.gold);
+  revealText('DUELO DE IGUALES', W / 2, 1025, dp, { size: 100, ls: 10, fill: gd, glow: 'rgba(241,194,50,.6)', glowSize: 30 });
+  ctx.restore();
+  if (out > 0) { ctx.fillStyle = `rgba(0,0,0,${E.inCubic(out)})`; ctx.fillRect(0, 0, W, H); }
+}
+
+// 6 — HERMANAMIENTO (24–28 s)
+const BOK = (() => { const r = mulberry(21); return Array.from({ length: 40 }, () => ({ x: r() * W, y: r() * H, r: 30 + r() * 120, v: 8 + r() * 25, ph: r() * 6, c: r() })); })();
+function heartPt(th, s) { return [16 * Math.pow(Math.sin(th), 3) * s, -(13 * Math.cos(th) - 5 * Math.cos(2 * th) - 2 * Math.cos(3 * th) - Math.cos(4 * th)) * s]; }
+function heartPath(s) { ctx.beginPath(); for (let i = 0; i <= 200; i++) { const [x, y] = heartPt(i / 200 * Math.PI * 2, s); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); }
+function sBrother(t) {
+  const u = t;
+  const bg = ctx.createLinearGradient(0, 0, W, 0); bg.addColorStop(0, '#022412'); bg.addColorStop(.5, '#0b0a0c'); bg.addColorStop(1, '#2a0409');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const b of BOK) {
+    const x = b.x + Math.sin(u * .3 + b.ph) * 40, y = b.y - u * b.v;
+    const col = x < W / 2 ? C.greenL : C.redL;
+    glowCircle(x, y, b.r, b.c < .7 ? col : C.gold, .10 * (.6 + .4 * Math.sin(u + b.ph)));
+  }
+  ctx.restore();
+  const out = prog(u, 3.6, 4.0);
+  ctx.save(); ctx.globalAlpha = 1 - out;
+  const hx = W / 2, hy = 420, hs = 15.5;
+  const p = E.inOutCubic(prog(u, .25, 1.6));
+  // escudos a los lados
+  const cp = E.outExpo(prog(u, .1, .8));
+  img(IMG.cac, lerp(-200, 470, cp), hy + 10 + Math.sin(u * 1.5) * 6, 300, { alpha: cp, glow: rgba(C.green, .7), glowSize: 50 });
+  img(IMG.leo, lerp(W + 200, 1450, cp), hy + 10 + Math.sin(u * 1.5 + 1) * 6, 300, { alpha: cp, glow: rgba(C.red, .7), glowSize: 50 });
+  ctx.save(); ctx.translate(hx, hy);
+  const done = prog(u, 1.55, 1.9);
+  const beat = done > 0 ? 1 + .05 * Math.pow(Math.max(0, Math.sin((u - 1.9) * Math.PI * 2)), 8) + .04 * E.outBack(done) - .04 : 1;
+  ctx.scale(beat, beat);
+  if (done > 0) {
+    heartPath(hs);
+    const hg = ctx.createLinearGradient(-280, 0, 280, 0); hg.addColorStop(0, C.green); hg.addColorStop(.5, '#f6f6f6'); hg.addColorStop(1, C.red);
+    ctx.save(); ctx.globalAlpha = done * .92; ctx.fillStyle = hg; ctx.shadowColor = 'rgba(255,255,255,.6)'; ctx.shadowBlur = 60; ctx.fill(); ctx.restore();
+    ctx.save(); ctx.globalAlpha = done; ctx.clip();
+    text('C', -95, 75, { size: 210, fill: 'rgba(255,255,255,.95)', glow: 'rgba(0,80,30,.8)', glowSize: 20 });
+    text('L', 95, 75, { size: 210, fill: 'rgba(255,255,255,.95)', glow: 'rgba(90,0,10,.8)', glowSize: 20 });
+    ctx.restore();
+  }
+  // trazos que se unen
+  ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const side of [-1, 1]) {
+    const col = side < 0 ? C.greenL : C.redL;
+    ctx.beginPath(); let last = null;
+    const n = Math.floor(120 * p);
+    for (let i = 0; i <= n; i++) {
+      const th = side < 0 ? Math.PI + i / 120 * Math.PI : Math.PI - i / 120 * Math.PI;
+      const pt = heartPt(th, hs); i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]); last = pt;
+    }
+    ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 30; ctx.stroke();
+    if (last && p < 1 && p > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glowCircle(last[0], last[1], 60, '#ffffff', .9); ctx.restore(); }
+  }
+  ctx.restore();
+  burst(hx, hy - 5 * hs, 1.6, u, [C.greenL, C.redL, '#fff', C.gold], 90, 1000, 31);
+  shock(hx, hy, 1.6, u, '#ffffff', 700, 14);
+  // textos
+  revealText('DOS AFICIONES', W / 2, 800, prog(u, 1.7, 2.3), { size: 120, ls: 8, fill: '#fff' });
+  const hp = prog(u, 2.1, 2.7);
+  const gh = ctx.createLinearGradient(W / 2 - 400, 0, W / 2 + 400, 0); gh.addColorStop(0, C.greenL); gh.addColorStop(.5, '#ffffff'); gh.addColorStop(1, C.redL);
+  revealText('HERMANADAS', W / 2, 935, hp, { size: 140, ls: 14, fill: gh, glow: 'rgba(255,255,255,.35)', glowSize: 30 });
+  const sp = prog(u, 2.6, 3.2);
+  text('UNA AMISTAD MÁS GRANDE QUE CUALQUIER RESULTADO', W / 2, 1010, { font: 'Mont', weight: 700, size: 28, ls: lerp(18, 7, E.outCubic(sp)), alpha: sp, fill: 'rgba(255,255,255,.85)' });
+  ctx.restore();
+  if (out > 0) { ctx.fillStyle = `rgba(0,0,0,${E.inCubic(out)})`; ctx.fillRect(0, 0, W, H); }
+}
+
+// 7 — CUENTA ATRÁS (28–30 s)
+function sBuild(t) {
+  const u = t;
+  ctx.fillStyle = '#020203'; ctx.fillRect(0, 0, W, H);
+  if (u > 1.75) { // apagón antes del golpe final
+    const k = prog(u, 1.75, 2.0);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createLinearGradient(W / 2 - 700 * (1 - k), 0, W / 2 + 700 * (1 - k), 0);
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 538, W, 4); ctx.restore();
+    return;
+  }
+  const beat = u % .5, pulse = Math.exp(-beat * 9), fast = u > 1.0 ? Math.exp(-(u % .125) * 25) : 0;
+  glowCircle(500, 540, 900, C.green, .30 + .25 * pulse);
+  glowCircle(1420, 540, 900, C.red, .30 + .25 * pulse);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 6; i++) {
+    const a = Math.sin(u * 2 + i) * .5, x = 160 + i * 320;
+    const g = ctx.createLinearGradient(0, H, 0, 0); g.addColorStop(0, `rgba(255,255,255,${.12 * (.5 + pulse)})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.save(); ctx.translate(x, H + 40); ctx.rotate(a); ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(20, 0); ctx.lineTo(160, -1300); ctx.lineTo(-160, -1300); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+  embers(u * 3 + 20, C.greenL, C.redL, .6);
+  const cp = E.outExpo(prog(u, 0, .5));
+  img(IMG.cac, lerp(-300, 260, cp), 540, 300 * (1 + .06 * pulse), { alpha: cp });
+  img(IMG.leo, lerp(W + 300, W - 260, cp), 540, 300 * (1 + .06 * pulse), { alpha: cp });
+  const s = 1 + .06 * pulse + .03 * fast + u * .04;
+  ctx.save(); ctx.translate(W / 2, 540); ctx.scale(s, s);
+  const ep = prog(u, 0, .25);
+  text('ESTE', 0, -95, { size: 120, ls: 30, alpha: ep, fill: 'rgba(255,255,255,.9)' });
+  const gs = ctx.createLinearGradient(0, -60, 0, 160); gs.addColorStop(0, '#ffffff'); gs.addColorStop(1, '#cfd6dd');
+  text('SÁBADO', 0, 150, { size: 270, ls: 10, alpha: ep, fill: gs, glow: 'rgba(255,255,255,.5)', glowSize: 40 * (.4 + pulse) });
+  ctx.restore();
+  const dp = prog(u, .5, .9);
+  text('7 DE NOVIEMBRE  ·  JORNADA 6  ·  2ª FEB', W / 2, 870, { font: 'Mont', weight: 800, size: 36, ls: 10, alpha: dp, fill: C.gold });
+}
+
+// 8 — FINAL (30–37 s)
+function slamWord(str, x, y, size, t0, u, fill, glow, align = 'left') {
+  const p = prog(u, t0, t0 + .28); if (p <= 0) return;
+  const e = E.outExpo(p);
+  const w = measure(str, size, 'Anton', 400, 4);
+  const cx = align === 'left' ? x + w / 2 : x;
+  ctx.save(); ctx.translate(cx, y - size * .38); const s = lerp(2.3, 1, e) * (1 + .012 * Math.sin((u - t0) * 2.5)); ctx.scale(s, s);
+  if (p < 1) for (let g = 1; g <= 2; g++) { ctx.save(); ctx.scale(1 + g * .18 * (1 - e), 1 + g * .18 * (1 - e)); text(str, 0, size * .38, { size, ls: 4, fill: 'rgba(255,255,255,.18)' }); ctx.restore(); }
+  text(str, 0, size * .38, { size, ls: 4, fill, alpha: clamp(p * 5), glow, glowSize: 45, stroke: 'rgba(0,0,0,.55)', lw: 8 });
+  const fl = Math.exp(-(u - t0) * 7);
+  if (fl > .02) text(str, 0, size * .38, { size, ls: 4, fill: `rgba(255,255,255,${fl * .9})` });
+  ctx.restore();
+}
+function sFinal(t) {
+  const u = t;
+  const bg = ctx.createRadialGradient(W / 2, 330, 50, W / 2, 540, 1300); bg.addColorStop(0, '#1b1b22'); bg.addColorStop(1, '#030305');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  glowCircle(380, 300, 900, C.green, .45); glowCircle(1540, 300, 900, C.red, .45);
+  rays(W / 2, 300, 28, 1500, u * .18, C.greenL, C.redL, .16);
+  rays(W / 2, 300, 14, 1100, -u * .1, C.gold, '#ffffff', .08);
+  embers(u + 30, C.greenL, C.redL, .8);
+  shock(W / 2, 300, 0, u, '#fff', 1500, 40);
+  burst(W / 2, 300, 0, u, [C.greenL, C.redL, C.gold, '#fff'], 140, 1700, 41);
+  // escudos y corazón
+  const cp = prog(u, 0, .3), ce = E.outExpo(cp);
+  for (const [k, x, d] of [['cac', 690, -1], ['leo', 1230, 1]]) {
+    img(IMG[k], x + d * (1 - ce) * 400, 300 + Math.sin(u * 1.6 + d) * 8, 330, { s: lerp(1.6, 1, ce), alpha: clamp(cp * 3), glow: rgba(k === 'cac' ? C.greenL : C.redL, .7), glowSize: 60 });
+  }
+  const hb = 1 + .12 * Math.pow(Math.max(0, Math.sin(u * Math.PI * 2)), 10);
+  ctx.save(); ctx.translate(W / 2, 300); ctx.scale(hb * ce, hb * ce); heartPath(3.6);
+  const hg = ctx.createLinearGradient(-60, 0, 60, 0); hg.addColorStop(0, C.greenL); hg.addColorStop(1, C.redL);
+  ctx.fillStyle = hg; ctx.shadowColor = '#fff'; ctx.shadowBlur = 30; ctx.fill(); ctx.restore();
+  // frase sincronizada con la voz
+  const sz1 = 150, y1 = 650;
+  const w1 = [measure('CÁCERES', sz1, 'Anton', 400, 4), measure('Y', sz1, 'Anton', 400, 4), measure('LEÓN,', sz1, 'Anton', 400, 4)];
+  const gap = 40, tot1 = w1[0] + w1[1] + w1[2] + gap * 2;
+  let x = W / 2 - tot1 / 2;
+  slamWord('CÁCERES', x, y1, sz1, WORDS[0], u, '#ffffff', rgba(C.green, 1)); x += w1[0] + gap;
+  slamWord('Y', x, y1, sz1, WORDS[1], u, C.gold, 'rgba(241,194,50,.8)'); x += w1[1] + gap;
+  slamWord('LEÓN,', x, y1, sz1, WORDS[1] + .06, u, '#ffffff', rgba(C.red, 1));
+  const sz2 = 205, y2 = 880;
+  const w2 = [measure('MOLAN', sz2, 'Anton', 400, 4), measure('MOGOLLÓN', sz2, 'Anton', 400, 4)];
+  const tot2 = w2[0] + w2[1] + gap * 1.2;
+  x = W / 2 - tot2 / 2;
+  const sh = lerp(-.3, 1.3, prog(u, 2.9, 3.9));
+  const gg = ctx.createLinearGradient(0, y2 - 170, 0, y2);
+  gg.addColorStop(0, '#fff7d1'); gg.addColorStop(.5, C.gold); gg.addColorStop(1, '#b8800f');
+  const g2 = ctx.createLinearGradient(W / 2 - 900, 0, W / 2 + 900, 0);
+  g2.addColorStop(0, C.gold); g2.addColorStop(clamp(sh - .08), C.gold); g2.addColorStop(clamp(sh), '#ffffff'); g2.addColorStop(clamp(sh + .08), C.gold); g2.addColorStop(1, C.gold);
+  const fillMG = (u > 2.9 && u < 3.95) ? g2 : gg;
+  slamWord('MOLAN', x, y2, sz2, WORDS[2], u, fillMG, 'rgba(241,194,50,.9)'); x += w2[0] + gap * 1.2;
+  slamWord('MOGOLLÓN', x, y2, sz2, WORDS[3], u, fillMG, 'rgba(241,194,50,.9)');
+  if (u > WORDS[3]) burst(W / 2, 800, WORDS[3], u, [C.gold, '#fff', C.greenL, C.redL], 120, 1600, 52);
+  // brasas extra ascendiendo tras el golpe final (sin confeti)
+  if (u > WORDS[3]) embers(u * 1.6 + 50, C.gold, '#ffffff', .55 * prog(u, WORDS[3], WORDS[3] + .6));
+  // pie
+  const fp = prog(u, 2.8, 3.4);
+  text('SÁBADO 7 NOV  ·  JORNADA 6  ·  2ª FEB  ·  CÁCERES  VS  CULTURAL LEONESA', W / 2, 1015, { font: 'Mont', weight: 800, size: 26, ls: lerp(16, 6, E.outCubic(fp)), alpha: fp, fill: 'rgba(255,255,255,.8)' });
+  // fundido final
+  const fo = prog(u, 6.2, 7.0);
+  if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${E.inOutCubic(fo)})`; ctx.fillRect(0, 0, W, H); }
+}
+
+/* ---------- rótulo fijo (HUD) ---------- */
+function hud(t) {
+  const a = Math.min(prog(t, 4.3, 4.9), 1 - prog(t, 29.2, 29.6)); if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.fillStyle = C.gold; ctx.fillRect(60, 46, 6, 40);
+  text('2ª FEB', 82, 76, { font: 'Mont', weight: 900, size: 26, ls: 4, align: 'left', fill: '#fff' });
+  text('JORNADA 6', 82 + measure('2ª FEB', 26, 'Mont', 900, 4) + 22, 76, { font: 'Mont', weight: 600, size: 24, ls: 4, align: 'left', fill: 'rgba(255,255,255,.7)' });
+  text('SÁBADO 7 NOV', W - 60, 76, { font: 'Mont', weight: 800, size: 24, ls: 4, align: 'right', fill: 'rgba(255,255,255,.8)' });
+  // barra de progreso
+  const p = prog(t, 4, 30);
+  const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, C.green); g.addColorStop(.5, C.gold); g.addColorStop(1, C.red);
+  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(0, H - 6, W, 6);
+  ctx.fillStyle = g; ctx.fillRect(0, H - 6, W * p, 6);
+  ctx.restore();
+}
+
+/* =====================================================================
+   COMPOSICIÓN
+   ===================================================================== */
+const SCENES = [
+  [0, 4, sIntro], [4, 8, t => sTeam(t, 'cac')], [8, 12, t => sTeam(t, 'leo')], [12, 16, sVS],
+  [16, 20, sJerseys], [20, 24, sStats], [24, 28, sBrother], [28, 30, sBuild], [30, DURATION, sFinal],
+];
+function renderFrame(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.shadowBlur = 0;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const sh = shakeAt(t);
+  ctx.save();
+  ctx.translate(W / 2 + sh.x, H / 2 + sh.y); ctx.scale(1 + sh.z + .02, 1 + sh.z + .02); ctx.translate(-W / 2, -H / 2);
+  for (const [a, b, fn] of SCENES) if (t >= a && t < b) { ctx.save(); fn(t - a); ctx.restore(); }
+  ctx.restore();
+  hud(t);
+  vignette(.7);
+  const f = flashAt(t);
+  if (f) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba(f.c.length === 7 ? f.c : '#ffffff', f.a * .85); ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  // grano
+  ctx.save(); ctx.globalAlpha = .05; ctx.globalCompositeOperation = 'overlay';
+  ctx.drawImage(GRAIN[Math.floor(t * 24) % 4], 0, 0, W, H); ctx.restore();
+}
+window.renderFrame = renderFrame;
+window.ready = load().then(() => { renderFrame(0); return true; });
+
+// vista previa en tiempo real si no se está renderizando
+if (!/render/.test(location.search)) {
+  window.ready.then(() => {
+    const a = new Audio('assets/banda_sonora.m4a'); let t0 = null;
+    document.body.addEventListener('click', () => { a.currentTime = 0; a.play().catch(() => { }); t0 = performance.now(); });
+    (function loop(now) { const t = t0 == null ? 0 : ((now - t0) / 1000) % DURATION; renderFrame(t); requestAnimationFrame(loop); })(performance.now());
+  });
+}
+</script>
+</body>
+</html>
