@@ -197,6 +197,7 @@ const Dialogo = {
     if (!e || !texto) return;
     if (prio === 0 && (this.actual || this.cola.length)) return;
     if (this.actual && this.actual.e === e && this.actual.texto === texto) return;
+    if (window.VozGrabadaPrecarga) window.VozGrabadaPrecarga(e, texto);
     if (this.cola.length >= 3) {
       const i = this.cola.findIndex(x => x.prio < prio);
       if (i >= 0) this.cola.splice(i, 1); else if (prio < 2) return;
@@ -209,7 +210,7 @@ const Dialogo = {
     if (a) {
       a.t += dt;
       // Si la voz no arranca en 1,5 s (dispositivo sin voz en español), seguimos sin ella
-      if (a.hablado && !a.empezo && a.t > 1.5) { a.hablado = false; Voz.callar(); }
+      if (a.hablado && !a.empezo && a.t > (a.grabada ? 3 : 1.5)) { a.hablado = false; Voz.callar(); }
       const vozLista = !a.hablado || a.vozFin;
       if ((vozLista && a.t >= a.dur) || a.t > a.dur + 7) { this.actual = null; this.hueco = 0.45; }
       return;
@@ -220,10 +221,13 @@ const Dialogo = {
     const n = sig.texto.length;
     this.actual = { ...sig, t: 0, dur: clamp(1.4 + n * 0.065, 2.8, 8), vozFin: false, hablado: false };
     const act = this.actual;
-    act.hablado = Voz.hablar(sig.texto, sig.e.perfil, () => { act.vozFin = true; }, () => { act.empezo = true; });
+    const vozId = sig.e.vozId || sig.e.id;
+    act.hablado = window.VozGrabadaHablar ? window.VozGrabadaHablar(vozId, sig.texto, sig.e === telEnt, () => { act.empezo = true; }, () => { act.vozFin = true; }) : false;
+    if (act.hablado) act.grabada = true;
+    else act.hablado = Voz.hablar(sig.texto, sig.e.perfil, () => { act.vozFin = true; }, () => { act.empezo = true; });
     if (!act.hablado) Sonido.voz(sig.e.voz || 400, clamp(Math.round(n / 7), 2, 8));
   },
-  limpiar() { this.cola = []; this.actual = null; this.hueco = 0; Voz.callar(); },
+  limpiar() { this.cola = []; this.actual = null; this.hueco = 0; Voz.callar(); window.VozGrabadaCallar && window.VozGrabadaCallar(); },
 };
 const decir = (e, texto, prio = 1) => Dialogo.decir(e, texto, prio);
 
@@ -623,7 +627,7 @@ for (let i = 0; i < 12; i++) {
   cajaR(3, 2.2, 0.1, mat(0x7a5a3a, 0.6), x, 1.1, 19.98, scene, 0.02);
 }
 // Fachadas traseras sobre las casas (ladrillo), para cerrar el barrio
-caja(26, 7, 1, matLadrillo, -22.5, 3.5, -7.2);
+caja(26, 3, 1, matLadrillo, -22.5, 1.5, -7.2);
 
 /* ---------- 3. El piso de Doña Remedios ---------- */
 suelo(-11, 0, -1.5, 5, texParquet([3, 2]));
@@ -1683,13 +1687,89 @@ const FRASES = {
   jugadorMalaHerr: ['¿Con {h}? Bueno... por probar...', 'Con {h} también se puede. Creo.'],
   jugadorSinHerr: ['Para esto necesito {h}. Está en la estantería del taller.', 'Sin {h} no hay manera. ¡Al taller!'],
   jugadorGato: ['¡Michi, quita de en medio!', '¡Este gato me quiere matar!'],
+  jugadorInicio: ['Otro día en el taller. A ver si hoy suena el teléfono, {S}.'],
+  jugadorBocata: ['¡Bocata de calamares! ¡Esto da alas!', 'Esto no se lo digas a {S}...'],
+  socioInicio: ['Si suena, lo coges tú, que yo tengo las manos ocupadas con el bocadillo.'],
+  socioSupervisa: ['Vale, vale, hazlo tú, que yo te superviso.'],
 };
 const nombres = t => t.replaceAll('{J}', paco.nombre).replaceAll('{S}', ramon.nombre);
+// Clave de cada grabación: quién habla + el texto exacto
+function claveVoz(voz, texto) {
+  let h = 0x811c9dc5; const s = voz + '|' + texto;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return voz.slice(0, 3) + h.toString(16).padStart(8, '0');
+}
+// Todas las frases que puede decir cada personaje (para grabarlas), en las dos combinaciones de papeles
+function catalogoFrases() {
+  const out = new Map();
+  const add = (voz, t) => { const k = claveVoz(voz, t); out.set(k, { voz, texto: t, archivo: k + '.mp3' }); };
+  const expandir = (lista) => lista.flatMap(t => t.includes('{h}') ? Object.values(HERRAMIENTAS).map(H => t.replaceAll('{h}', H.nombre)) : [t]).map(nombres);
+  const antes = paco.id;
+  for (const yo of ['arricio', 'jeremias']) {
+    asignarPapeles(yo);
+    const J = paco.id, S = ramon.id;
+    for (const [k, v] of Object.entries(FRASES)) {
+      if (!Array.isArray(v)) continue;
+      if (k.startsWith('jugador') || ['aceptar', 'telefonoCoge', 'telefonoCuelga'].includes(k)) expandir(v).forEach(t => add(J, t));
+      if (k.startsWith('socio')) expandir(v).forEach(t => add(S, t));
+    }
+    Object.values(FRASE_OFICIO).forEach(l => expandir(l).forEach(t => add(J, t)));
+    for (const [tipo, l] of Object.entries(FRASES.pedido)) expandir(l).forEach(t => add(ENCARGOS[tipo].cliente, t));
+    for (const [tipo, q] of Object.entries(QUEJAS)) add(ENCARGOS[tipo].cliente, nombres(q));
+    expandir(FRASES.remediosLlega).forEach(t => add('remedios', t));
+    expandir(FRASES.leopoldoLlega).forEach(t => add('leopoldo', t));
+    for (const cl of ['remedios', 'leopoldo']) {
+      add(cl, nombres(FRASES.plantado[cl]));
+      for (const g of ['fino', 'bien', 'chapuza', 'expira', 'charla']) expandir(FRASES[g][cl]).forEach(t => add(cl, t));
+    }
+  }
+  asignarPapeles(antes);
+  return [...out.values()];
+}
+// Reproduce las frases grabadas (archivos de audio): suenan en cualquier móvil, también dentro de apps
+const VozGrabada = {
+  indice: null, buffers: new Map(), fuente: null,
+  async init() {
+    if (this.indice) return;
+    try { const r = await fetch('voces/indice.json'); if (r.ok) this.indice = new Set(await r.json()); } catch (e) { /* sin grabaciones */ }
+  },
+  tiene(voz, texto) { return !!(this.indice && voz && this.indice.has(claveVoz(voz, texto))); },
+  cargar(voz, texto) {
+    const k = claveVoz(voz, texto);
+    if (!this.buffers.has(k)) {
+      this.buffers.set(k, fetch(`voces/${k}.mp3`).then(r => r.arrayBuffer()).then(b => new Promise((ok, mal) => Sonido.ctx.decodeAudioData(b, ok, mal))).catch(() => null));
+    }
+    return this.buffers.get(k);
+  },
+  hablar(voz, texto, telefono, alEmpezar, alAcabar) {
+    if (!Sonido.ctx || !Sonido.on || !this.tiene(voz, texto)) return false;
+    this.cargar(voz, texto).then(buf => {
+      if (!buf) { alAcabar(); return; }
+      this.callar();
+      const src = Sonido.ctx.createBufferSource(); src.buffer = buf;
+      const g = Sonido.ctx.createGain(); g.gain.value = 1.6;
+      let nodo = src;
+      if (telefono) { // sonido de teléfono antiguo
+        const f1 = Sonido.ctx.createBiquadFilter(); f1.type = 'highpass'; f1.frequency.value = 450;
+        const f2 = Sonido.ctx.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = 3000;
+        src.connect(f1); f1.connect(f2); nodo = f2;
+      }
+      nodo.connect(g); g.connect(Sonido.master);
+      src.onended = () => { if (this.fuente === src) this.fuente = null; alAcabar(); };
+      src.start(); this.fuente = src; alEmpezar();
+    });
+    return true;
+  },
+  callar() { try { this.fuente?.stop(); } catch (e) { /* nada */ } this.fuente = null; },
+};
 const frase = (lista, h) => nombres(pick(lista).replaceAll('{h}', h || ''));
 
 /* =========================================================================
    Entidades
    ========================================================================= */
+window.VozGrabadaHablar = (...a) => VozGrabada.hablar(...a);
+window.VozGrabadaCallar = () => VozGrabada.callar();
+window.VozGrabadaPrecarga = (e, texto) => { const v = e.vozId || e.id; if (Sonido.ctx && VozGrabada.tiene(v, texto)) VozGrabada.cargar(v, texto); };
 const CHAPUZAS = {
   arricio: {
     nombre: 'Arricio', clase: 'ramon', voz: 190, alturaGlobo: 2.45, perfil: { mujer: false, tono: 0.72, ritmo: 0.98 }, chapucero: 0.6,
@@ -1787,7 +1867,7 @@ function reiniciar() {
   limpiarPeligros();
   particulas.forEach(p => p.m.removeFromParent()); particulas.length = 0;
   for (const m of Object.values(CHAPUZAS)) { m.c.brazos[0].rotation.z = 0; m.c.cuerpo.rotation.set(0, 0, 0); m.c.cuerpo.position.set(0, 0, 0); }
-  paco.c.g.position.set(-22, 0, 0.5); paco.c.g.rotation.y = 0; Object.assign(paco, { estado: 'normal', vx: 0, vz: 0, tinte: 0, boost: 0 });
+  paco.c.g.position.set(-22, 0, 0.5); paco.c.g.rotation.y = 0; Object.assign(paco, { estado: 'normal', vx: 0, vz: 0, tinte: 0, boost: 0, auto: null });
   soltarHerramientas();
   restaurarTinte(paco);
   ramon.c.g.position.set(-18.6, 0, 3.4); ramon.c.g.rotation.y = Math.PI;
@@ -1848,6 +1928,7 @@ function alternarPausa() {
   $('pausa').classList.toggle('oculto', !G.pausa);
   Musica.activa = !G.pausa;
   Voz.pausar(G.pausa);
+  try { if (Sonido.ctx) (G.pausa ? Sonido.ctx.suspend() : Sonido.ctx.resume()); } catch (e) { /* nada */ }
 }
 function alternarSonido() { $('btn-sonido').textContent = Sonido.alternar() ? '🔊' : '🔇'; }
 function pantallaCompleta() {
@@ -1874,6 +1955,7 @@ function empezar() {
   asignarPapeles(eleccion);
   Sonido.init();
   Voz.init();
+  VozGrabada.init();
   if (esTactil && !document.fullscreenElement) pantallaCompleta();
   reiniciar();
   $('portada').classList.add('oculto');
@@ -1883,9 +1965,9 @@ function empezar() {
   $('tactil').classList.toggle('oculto', !esTactil);
   G.jugando = true;
   Musica.activa = true; Musica.paso = 0; Musica.siguiente = 0;
-  decir(paco, nombres('Otro día en el taller. A ver si hoy suena el teléfono, {S}.'), 2);
-  decir(ramon, 'Si suena, lo coges tú, que yo tengo las manos ocupadas con el bocadillo.', 2);
-  toast('🧰 Las herramientas están en la estantería del fondo del taller');
+  decir(paco, frase(FRASES.jugadorInicio), 2);
+  decir(ramon, frase(FRASES.socioInicio), 2);
+  toast(esTactil ? '👆 Toca un aviso o un encargo de la lista y tu chapuzas irá solo' : '🧰 Las herramientas están en la estantería del fondo del taller');
 }
 
 /* =========================================================================
@@ -1995,17 +2077,18 @@ function cogerTelefono() {
   const tipo = tel.tipo, cl = CLIENTES[ENCARGOS[tipo].cliente];
   Object.assign(telEnt, { nombre: `📞 ${cl.nombre}`, perfil: cl.perfil, voz: cl.voz });
   auricular.position.set(0.1, 0.45, 0.25); auricular.rotation.set(0.3, 0, 0.4);
-  decir(paco, pick(FRASES.telefonoCoge), 2);
-  decir(telEnt, pick(FRASES.pedido[tipo]), 2);
-  decir(paco, pick(FRASES.telefonoCuelga), 2);
+  telEnt.vozId = cl.id;
+  decir(paco, frase(FRASES.telefonoCoge), 2);
+  decir(telEnt, frase(FRASES.pedido[tipo]), 2);
+  decir(paco, frase(FRASES.telefonoCuelga), 2);
   activarEncargo(tipo);
   luego(9, () => { auricular.position.set(0, 0.17, -0.02); auricular.rotation.set(0, 0, 0); });
 }
 function atenderCliente(cl) {
   const tipo = cl.pedido; if (!tipo) return;
   cl.pedido = null; cl.estado = 'volviendo';
-  decir(cl, pick(FRASES.pedido[tipo]), 2);
-  decir(paco, pick(FRASES.aceptar), 2);
+  decir(cl, frase(FRASES.pedido[tipo]), 2);
+  decir(paco, frase(FRASES.aceptar), 2);
   activarEncargo(tipo);
   luego(1, () => irA(cl, cl.casa[0], cl.casa[1]));
 }
@@ -2030,7 +2113,7 @@ function resolver(tipo, resultado, quien = 'jugador') {
     G.temblor = 0.35;
     efectoChapuza(tipo, autor);
     decir(autor, frase(quien === 'jugador' ? FRASES.jugadorChapuza : FRASES.socioChapuza), 1);
-    if (cerca) decir(cl, Math.random() < 0.7 ? QUEJAS[tipo] : pick(FRASES.chapuza[cl.id]), 2);
+    if (cerca) decir(cl, nombres(Math.random() < 0.7 ? QUEJAS[tipo] : pick(FRASES.chapuza[cl.id])), 2);
   } else {
     Visual.poner(tipo, 'ok');
     const fino = resultado === 'fino';
@@ -2116,6 +2199,7 @@ function restaurarTinte(e) {
 
 function resbalar(motivo) {
   if (paco.estado !== 'normal') return;
+  paco.auto = null;
   paco.estado = 'resbalon'; paco.t = 0; paco.dur = motivo === 'gato' ? 1.2 : 1.7;
   G.stats.resbalones++;
   sumar(2, 'Plus de peligrosidad (resbalón)');
@@ -2134,7 +2218,7 @@ function empezarMini(tipo) {
   G.mini = { tipo, p: Math.random() < 0.5 ? 0 : 1, dir: 1, vel: lerp(0.8, 1.45, p) * rand(0.9, 1.1), centro, ancho, fino: ancho * 0.3 };
   if (G.mini.p === 1) G.mini.dir = -1;
   const e = G.encargos[tipo];
-  if (e.ramon && ramon.encargo === tipo) { e.ramon = false; ramon.encargo = null; ramon.trabajaT = 0; ramon.estado = 'idle'; ramon.t = 2; decir(ramon, 'Vale, vale, hazlo tú, que yo te superviso.', 0); }
+  if (e.ramon && ramon.encargo === tipo) { e.ramon = false; ramon.encargo = null; ramon.trabajaT = 0; ramon.estado = 'idle'; ramon.t = 2; decir(ramon, frase(FRASES.socioSupervisa), 0); }
   paco.estado = 'mini';
   $('mini-titulo').textContent = `${ENCARGOS[tipo].icono} ${ENCARGOS[tipo].nombre}`;
   $('mini-verde').style.left = (centro - ancho / 2) * 100 + '%';
@@ -2199,6 +2283,36 @@ function textoPista(o) {
     case 'michi': return '<kbd>E</kbd> Acariciar a Michi';
   }
 }
+function irSolo(x, z, fin, aviso) {
+  if (paco.estado !== 'normal' || G.mini) return;
+  const p = paco.c.g.position;
+  paco.auto = { ruta: calcularRuta(p.x, p.z, x, z), fin, vigila: 1.2, ultX: p.x, ultZ: p.z };
+  if (aviso) toast(aviso);
+}
+// Al tocar un aviso o un encargo de la lista, el chapuzas va solo y lo hace
+function tocarLista(div) {
+  if (!G.jugando || G.pausa) return;
+  if (div.dataset.aviso === 'tel' && G.tel) {
+    irSolo(-16.5, -3.3, () => { if (G.tel) cogerTelefono(); }, '🚶 Vas a coger el teléfono…');
+  } else if (div.dataset.cliente) {
+    const cl = CLIENTES[div.dataset.cliente];
+    if (cl.estado !== 'esperando') return;
+    irSolo(cl.c.g.position.x, cl.c.g.position.z + 1.1, () => { if (cl.estado === 'esperando') atenderCliente(cl); }, `🚶 Vas a atender a ${cl.nombre}…`);
+  } else if (div.dataset.tipo) {
+    const t = div.dataset.tipo, d = ENCARGOS[t];
+    const alTrabajo = () => {
+      const [x, z] = d.pie;
+      irSolo(x, z, () => { if (G.encargos[t].activo && paco.herrs.includes(d.herr)) empezarMini(t); }, `🚶 Vas a ${nombreCasa(d.cliente).toLowerCase()}…`);
+    };
+    if (paco.herrs.includes(d.herr)) alTrabajo();
+    else {
+      const r = ranuras.find(x => x.id === d.herr);
+      irSolo(r.x, r.z, () => { coger(d.herr); alTrabajo(); }, `🚶 Primero, a por ${HERRAMIENTAS[d.herr].nombre} al taller…`);
+    }
+  }
+}
+$('lista-encargos').addEventListener('click', ev => { const div = ev.target.closest('.encargo'); if (div) tocarLista(div); });
+
 function coger(id) {
   if (paco.herrs.length >= 2) soltarHerramienta(paco.herrs[0]);
   paco.herrs.push(id);
@@ -2208,7 +2322,7 @@ function coger(id) {
   (paco.herrs.length === 1 ? paco.c.mano : paco.c.manoIzq).add(m);
   paco.mallas.push(m);
   Sonido.coger();
-  if (Math.random() < 0.4) decir(paco, pick(FRASE_OFICIO[HERRAMIENTAS[id].oficio]), 0);
+  if (Math.random() < 0.4) decir(paco, frase(FRASE_OFICIO[HERRAMIENTAS[id].oficio]), 0);
 }
 function soltarHerramienta(id) {
   const i = paco.herrs.indexOf(id); if (i < 0) return;
@@ -2370,7 +2484,7 @@ function actualizarCliente(cl, dt) {
       // Impaciencia: da golpecitos con el pie
       cl.c.piernas[1].rotation.x = cl.esperaT < 15 ? Math.max(0, Math.sin(performance.now() / 120)) * -0.3 : 0;
       if (cl.esperaT <= 0) {
-        decir(cl, FRASES.plantado[cl.id], 2);
+        decir(cl, nombres(FRASES.plantado[cl.id]), 2);
         paciencia(-10); G.stats.plantados++;
         toast(`😤 ${cl.nombre} se ha ido sin que nadie le atienda`, 'menos');
         cancelarPedido(cl.pedido); cl.pedido = null;
@@ -2430,6 +2544,24 @@ function actualizarJugador(dt) {
       if (teclas.has('a') || teclas.has('arrowleft')) ix -= 1;
       if (teclas.has('d') || teclas.has('arrowright')) ix += 1;
       if (joy.activo) { ix += joy.x; iz += joy.z; }
+      // Ir andando solo (al tocar un aviso o un encargo). Si el jugador se mueve, se cancela.
+      if (paco.auto) {
+        if (ix || iz) { paco.auto = null; toast('🕹️ Vuelves a llevarlo tú'); }
+        else {
+          const a = paco.auto, [tx, tz] = a.ruta[0];
+          const dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz);
+          if (d < (a.ruta.length > 1 ? 0.35 : 0.2)) {
+            a.ruta.shift();
+            if (!a.ruta.length) { paco.auto = null; paco.vx = paco.vz = 0; a.fin && a.fin(); break; }
+          } else { ix = dx / d; iz = dz / d; }
+          // Si se queda atascado, se cancela
+          a.vigila -= dt;
+          if (a.vigila <= 0) {
+            if (dist2D(p.x, p.z, a.ultX, a.ultZ) < 0.3) { paco.auto = null; toast('🚧 No encuentro el camino, llévame tú'); }
+            a.vigila = 1.2; a.ultX = p.x; a.ultZ = p.z;
+          }
+        }
+      }
       const len = Math.hypot(ix, iz);
       if (len > 1) { ix /= len; iz /= len; }
       const corre = teclas.has('shift') || (joy.activo && Math.hypot(joy.x, joy.z) > 0.92);
@@ -2502,7 +2634,7 @@ function actualizarJugador(dt) {
     bocata.visible = false; G.bocataT = rand(35, 50);
     paco.boost = 12; G.stats.bocatasJugador++;
     Sonido.nam();
-    decir(paco, nombres(pick(['¡Bocata de calamares! ¡Esto da alas!', 'Esto no se lo digas a {S}...'])), 0);
+    decir(paco, frase(FRASES.jugadorBocata), 0);
     estrellitas(p.x, 1.2, p.z);
   }
 }
@@ -2598,7 +2730,7 @@ function actualizarLuces(dt) {
 const camObjetivo = new THREE.Vector3(), camMira = new THREE.Vector3();
 function actualizarCamara(dt, inmediato = false) {
   const p = paco.c.g.position;
-  const lejos = (camera.aspect < 1 ? 1.5 : camera.aspect < 1.4 ? 1.18 : 1) * (G.zoom || 1);
+  const lejos = (camera.aspect < 1 ? 1.12 : camera.aspect < 1.4 ? 1.1 : 1) * (G.zoom || 1);
   camObjetivo.set(p.x, 11.5 * lejos, p.z + 9.5 * lejos);
   if (inmediato) camera.position.copy(camObjetivo);
   else camera.position.lerp(camObjetivo, 1 - Math.exp(-4 * dt));
@@ -2706,7 +2838,7 @@ function actualizarJuego(dt) {
       paciencia(-15);
       const cl = CLIENTES[ENCARGOS[t].cliente];
       toast(`⌛ ${cl.nombre} se ha cansado de esperar: ${ENCARGOS[t].nombre}`, 'menos');
-      if (cercaJugador(cl, 16)) decir(cl, pick(FRASES.expira[cl.id]), 1);
+      if (cercaJugador(cl, 16)) decir(cl, frase(FRASES.expira[cl.id]), 1);
       Sonido.trombon();
     }
   }
@@ -2765,4 +2897,7 @@ function bucle(ahora) {
 requestAnimationFrame(bucle);
 
 // Ganchos de depuración (sólo con ?debug en la URL)
-if (location.search.includes('debug')) window.__j = { G, PJ, camera, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
+if (location.search.includes('debug')) window.__j = { catalogoFrases, claveVoz, G, PJ, camera, CHAPUZAS, CLIENTES, asignarPapeles, paco, ramon, remedios, leopoldo, michi, resolver, generarPedido, activarEncargo, cogerTelefono, atenderCliente, empezarMini, coger, terminar, ordenarSocio, crearPlatano, resbalar, Dialogo, Voz };
+
+// Índice de voces grabadas: se carga al abrir la página
+VozGrabada.init();

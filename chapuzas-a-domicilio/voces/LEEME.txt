@@ -1,0 +1,4 @@
+Frases grabadas con Piper (motor de voz neuronal libre) y voces en español de España:
+  es_ES-davefx-medium (Arricio, Don Leopoldo) y es_ES-sharvard-medium (Jeremías, Doña Remedios).
+Cada archivo se llama con una clave de quién habla + el texto exacto (función claveVoz en juego.js).
+Si se cambia o añade una frase, hay que volver a grabarla; si falta la grabación, el juego usa la voz del sistema o el «bla-bla».

@@ -36,6 +36,9 @@
   #hud-der{position:absolute;top:max(10px,env(safe-area-inset-top));right:10px;width:250px;display:flex;flex-direction:column;gap:6px}
   #hud-der h3{margin:0 0 2px;font-family:'Bangers';font-size:22px;letter-spacing:1px;color:#fff;text-shadow:2px 2px 0 var(--tinta)}
   .encargo{display:flex;gap:8px;align-items:center;padding:6px 9px;font-size:13px;font-weight:800;line-height:1.15}
+  #lista-encargos .encargo[data-tipo],#lista-encargos .encargo.aviso{pointer-events:auto;cursor:pointer;touch-action:manipulation}
+  #lista-encargos .encargo[data-tipo]:active,#lista-encargos .encargo.aviso:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--tinta)}
+  #lista-encargos .encargo .t::after{content:' ›';font-size:.8em;opacity:.6}
   .encargo .ico{font-size:24px}
   .encargo .info{flex:1;min-width:0}
   .encargo .sub{font-weight:600;font-size:11px;opacity:.75}
