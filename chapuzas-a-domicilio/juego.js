@@ -473,7 +473,7 @@ const rotuloTaller = plano(6.6, 1.15, new THREE.MeshStandardMaterial({
 }), -27.5, 0.78, 5.115);
 plano(5.6, 1.15, new THREE.MeshStandardMaterial({
   roughness: 0.6,
-  map: texCartel([['☎ 555 123 456', 70, 55], ['Fontanería · Pintura · Albañilería · Electricidad', 30, 120]], '#f2a33a', '#2a1e12', 1024, 180),
+  map: texCartel([['CHAPUZAS A DOMICILIO', 66, 60], ['Fontanería · Pintura · Albañilería · Electricidad', 30, 128]], '#f2a33a', '#2a1e12', 1024, 180),
 }), -17, 0.78, 5.115);
 // Estantería de herramientas
 caja(8.9, 2.2, 0.06, 0x8a6a48, -24.6, 1.1, -5.86, scene, true);
