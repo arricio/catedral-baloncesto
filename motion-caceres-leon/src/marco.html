@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Marco RRSS</title>
+<style>
+@font-face{font-family:Anton;src:url(fonts/anton-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:Mont;src:url(fonts/montserrat-latin-800-normal.woff2) format('woff2');font-weight:800}
+@font-face{font-family:Mont;src:url(fonts/montserrat-latin-900-normal.woff2) format('woff2');font-weight:900}
+:root{--green:#35e07a;--red:#ff3d52;--gold:#ffc83a;--white:#ffffff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#000}
+#f{position:relative;overflow:hidden;color:var(--white);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(0,161,62,.55), transparent 55%),
+    radial-gradient(ellipse at 100% 0%, rgba(227,12,37,.55), transparent 55%),
+    radial-gradient(ellipse at 0% 100%, rgba(0,161,62,.35), transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(227,12,37,.35), transparent 50%),
+    #07080c}
+/* banda superior verde / roja */
+#f::before{content:"";position:absolute;left:0;right:0;top:0;height:12px;background:linear-gradient(90deg,#00A13E 50%,#E30C25 50%)}
+#f::after{content:"";position:absolute;left:0;right:0;bottom:0;height:12px;background:linear-gradient(90deg,#00A13E 50%,#E30C25 50%)}
+.box{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.date{font-family:Anton;letter-spacing:.06em;color:var(--gold);text-shadow:0 0 18px rgba(255,200,58,.45),0 3px 0 #000}
+.ded{font-family:Mont;font-weight:900;line-height:1.28;text-shadow:0 2px 0 #000,0 0 10px rgba(0,0,0,.8)}
+.pd{font-family:Anton;letter-spacing:.04em;text-shadow:0 3px 0 #000,0 0 12px rgba(0,0,0,.9)}
+.foot{font-family:Mont;font-weight:900;letter-spacing:.05em;text-shadow:0 2px 0 #000}
+.g{color:var(--green);text-shadow:0 2px 0 #000,0 0 14px rgba(53,224,122,.55)}
+.r{color:var(--red);text-shadow:0 2px 0 #000,0 0 14px rgba(255,61,82,.6)}
+.o{color:var(--gold);text-shadow:0 2px 0 #000,0 0 14px rgba(255,200,58,.55)}
+.sep{height:4px;border-radius:2px;background:linear-gradient(90deg,transparent,#00A13E,#ffc83a,#E30C25,transparent)}
+.hole{position:absolute;border-radius:6px;box-shadow:0 0 0 4px #ffc83a,0 0 0 9px rgba(0,0,0,.85),0 0 50px 10px rgba(255,200,58,.35)}
+.ia{display:inline-block;padding:0 .35em;border:3px solid var(--gold);border-radius:.3em;color:var(--gold);margin-left:.15em}
+</style>
+</head>
+<body>
+<div id="f">
+  <div class="box" id="head">
+    <div class="date" id="date">MIÉRCOLES 04/11/2026</div>
+    <div class="sep" id="sep1"></div>
+    <div class="ded" id="ded">ESTE VÍDEO SE LO DEDICO A MIS GRANDÍSIMOS AMIGOS DE LA <span class="g">“PEÑA KAMICÁCERES”</span> Y A TODA LA AFICIÓN DEL <span class="g">“CÁCERES PATRIMONIO DE LA HUMANIDAD”</span>.</div>
+    <div class="pd" id="pd"><span class="o">PD:</span> LA VICTORIA VA A VENIR PARA <span class="r">“LEÓN”</span></div>
+  </div>
+  <div class="hole" id="hole"></div>
+  <div class="box" id="foot"><div class="foot" id="ft">EL VÍDEO Y TODO EL MONTAJE HA SIDO GENERADO CON <span class="ia">“IA”</span></div></div>
+</div>
+<script>
+// Parámetros: ?w=&h=&hx=&hy=&hw=&hh=&headTop=&headBot=&footTop=&footBot=&pad=&date=&ded=&pd=&ft=
+const q = Object.fromEntries(new URLSearchParams(location.search).entries());
+const n = k => Number(q[k]);
+const f = document.getElementById('f');
+f.style.width = n('w') + 'px'; f.style.height = n('h') + 'px';
+const hole = document.getElementById('hole');
+Object.assign(hole.style, { left: n('hx') + 'px', top: n('hy') + 'px', width: n('hw') + 'px', height: n('hh') + 'px' });
+const head = document.getElementById('head'), foot = document.getElementById('foot');
+Object.assign(head.style, { top: n('headTop') + 'px', height: (n('headBot') - n('headTop')) + 'px', padding: `0 ${n('pad')}px`, gap: n('gap') + 'px' });
+Object.assign(foot.style, { top: n('footTop') + 'px', height: (n('footBot') - n('footTop')) + 'px', padding: `0 ${n('pad')}px` });
+document.getElementById('date').style.fontSize = n('date') + 'px';
+document.getElementById('ded').style.fontSize = n('ded') + 'px';
+document.getElementById('pd').style.fontSize = n('pd') + 'px';
+document.getElementById('ft').style.fontSize = n('ft') + 'px';
+document.getElementById('sep1').style.width = (n('w') * .6) + 'px';
+window.ready = document.fonts.ready.then(() => {
+  // comprobación: el encabezado y el pie caben en su zona
+  return { head: head.scrollHeight <= head.clientHeight + 1, foot: foot.scrollHeight <= foot.clientHeight + 1, hs: head.scrollHeight, hc: head.clientHeight };
+});
+</script>
+</body>
+</html>

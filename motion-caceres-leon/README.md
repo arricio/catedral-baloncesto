@@ -26,3 +26,10 @@ Regenerar:
 python3 src/music.py banda.wav src/assets/locucion.wav 42.1 51.0
 node src/render.js caceres-leon-jornada6.mp4 banda.wav 30
 ```
+
+## Versiones enmarcadas para redes sociales
+`src/marco.html` + `src/marco.js` colocan el vídeo dentro de un marco con encabezado (fecha y dedicatoria a la Peña KamiCáceres y a la afición del Cáceres Patrimonio de la Humanidad) y pie («El vídeo y todo el montaje ha sido generado con IA»), en dos formatos: 4:5 (1080×1350) y 16:9 (1920×1080).
+
+```bash
+node src/marco.js caceres-leon-jornada6.mp4 carpeta_salida
+```
