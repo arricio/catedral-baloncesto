@@ -121,7 +121,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 
 /* ---------- avances y retenciones ---------- */
 .rctl{display:grid;grid-template-columns:repeat(3,var(--cw));gap:6px;justify-content:center;padding:0 8px 8px;background:#14020a}
-.rb{height:32px;border-radius:9px;font-family:var(--fn);font-size:13px;color:#fff;background:#333;box-shadow:0 3px 0 #000}
+.rb{height:28px;border-radius:9px;font-family:var(--fn);font-size:13px;color:#fff;background:#333;box-shadow:0 3px 0 #000}
 .rb.nu{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 3px 0 #063018;animation:glow2 .8s infinite alternate}
 .rb.hf{background:linear-gradient(#59c2ff,#1f6fbf 50%,#0b3d6e);box-shadow:0 3px 0 #06223d}
 .rb.ho{background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);color:#3a1d00;box-shadow:0 3px 0 #6b4500}
@@ -131,9 +131,15 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .reel.held{box-shadow:inset 0 0 0 4px var(--gold)}
 .reel.held::before{content:"PARADO";position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);font-family:var(--fd);font-size:13px;color:#fff;background:rgba(180,120,0,.85);padding:2px 8px;border-radius:6px;pointer-events:none}
 
+/* ---------- comodín y tiradas gratis ---------- */
+.sym.wild img{filter:drop-shadow(0 0 6px rgba(255,150,0,.9))}
+.sym.wild::after{content:"COMODÍN";position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-family:var(--fn);font-size:9px;color:#fff;background:#d4102e;border-radius:4px;padding:0 4px}
+.tc.fs{background:linear-gradient(#5fe39a,#0b4d27);color:#fff}
+.tc.fs .l{text-shadow:0 1px 0 #032}
+
 /* ---------- bote ---------- */
-.bote{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:12px;background:linear-gradient(90deg,#3a0610,#7a0d20 50%,#3a0610);border:2px solid var(--gold);box-shadow:0 0 14px rgba(255,200,60,.35)}
-.bote img{width:30px;height:30px}
+.bote{display:flex;align-items:center;gap:8px;padding:2px 10px;border-radius:12px;background:linear-gradient(90deg,#3a0610,#7a0d20 50%,#3a0610);border:2px solid var(--gold);box-shadow:0 0 14px rgba(255,200,60,.35)}
+.bote img{width:26px;height:26px}
 .bote div{flex:1;line-height:1}
 .bote b{font-family:var(--fd);font-weight:400;font-size:14px;color:var(--gold)}
 .bote small{display:block;font-size:12px;color:#f3c9cf}
@@ -314,6 +320,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <div class="minis" id="miniLines"></div>
   <h3>Jugadores y escudo</h3>
   <div class="pt" id="ptList"></div>
+  <h3>Comodín</h3>
+  <div class="pti sp"><img src="img/balon.webp" alt=""><div class="v" style="font-size:14px"><b>BALÓN = COMODÍN</b> (solo en el rodillo central): sustituye a cualquier jugador o al escudo.<br>3 balones en vertical → 5 € (10 €)</div></div>
   <h3>Bote y riesgo</h3>
   <div class="pti sp"><img src="img/p13.webp" alt=""><div class="v" style="font-size:14px">3 escudos en cualquier sitio → <b style="color:#7dff9b">BOTE CATEDRAL</b><br>El bote empieza en 30 € y sube con cada jugada.</div></div>
   <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR al doble o nada (hasta 320 €, 640 € a DOBLE).</p>
@@ -324,7 +332,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>: la luz recorre el tablero y donde se pare, eso ganas.</p>
   <h3>Pantalla de arriba</h3>
   <div class="pt" id="ptTop"></div>
-  <p>🎮 <b>6 minijuegos</b> con premios de 10 € a 160 € (el doble si el BONUS se consiguió jugando a DOBLE).<br>🎽 Camiseta: +1 BONUS.<br>✋ Tapón: sin premio.</p>
+  <p>🎁 <b>TIRADAS GRATIS</b>: 8 tiradas sin pagar con todos los premios de línea x2.<br>🎮 <b>6 minijuegos</b> con premios de 10 € a 160 € (el doble si el BONUS se consiguió jugando a DOBLE).<br>🎽 Camiseta: +1 BONUS.<br>✋ Tapón: sin premio.</p>
 </div></div>
 
 <!-- menú -->
@@ -351,6 +359,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (3 en línea = 6 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
+    <li><b>BALÓN = COMODÍN</b>: sale solo en el rodillo central y sustituye a cualquier jugador o al escudo para hacer línea.</li>
+    <li><b>TIRADAS GRATIS</b>: si la luz de arriba se para en 🎁, juegas 8 tiradas gratis con los premios de línea x2.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b>. Si arriesgas, las luces se alternan entre DOBLE y NADA: pulsa ¡PARAR! Puedes repetir hasta 320 € (640 € a DOBLE).</li>
     <li><b>BOTE CATEDRAL</b>: crece con cada jugada. Si salen <b>3 escudos en cualquier sitio</b> de los rodillos, ¡te llevas el bote entero!</li>
     <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa <b>▼ AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
@@ -399,10 +409,12 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i 
 const SYM = [];
 for (let i = 1; i <= 13; i++) SYM.push('img/p' + String(i).padStart(2, '0') + '.webp');
 SYM.push('img/camiseta.webp');
-const CAM = 13;
+SYM.push('img/balon.webp');
+const CAM = 13, WILD = 14, WILD3 = 500; // balón = comodín (solo rodillo central); 3 balones = 5 €
 const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000]; // céntimos, apuesta 0,20 €
 const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
-const WEIGHT = [212, 167, 113, 96, 86, 58, 46, 35, 27, 21, 16, 13, 12, 5.5];
+const WEIGHT = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 13, 11, 11, 4.8];
+const WEIGHT_C = WEIGHT.concat([10]);             // rodillo central: con comodín
 const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03, RISK_CAP = 32000; // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
 const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
@@ -416,7 +428,8 @@ const MG = {
   unouno:   { n: '1 CONTRA 1',  e: '🛡️', s: '1 CONTRA\n1' },
   partido:  { n: 'EL PARTIDO',  e: '🏆', s: 'PARTIDO' },
 };
-const TW = { tapon: .2225, cam: .03, mg: .035 / 6 };
+const TW = { tapon: .2867, cam: .03, mg: .035 / 6, fs: .03 };
+const FS_N = 8, FS_X = 2; // tiradas gratis: 8 tiradas con premios x2
 const TOP = [
   { t: 'prize', img: 'cancha', v: 2000, n: 'CANCHA', w: .012 },
   { t: 'tapon', w: TW.tapon },
@@ -427,7 +440,7 @@ const TOP = [
   { t: 'mg', id: 'vest', w: TW.mg },
   { t: 'mg', id: 'ruleta', w: TW.mg },
   { t: 'prize', img: 'canasta', v: 8000, n: 'CANASTA', w: .0016 },
-  { t: 'tapon', w: TW.tapon },
+  { t: 'fs', w: TW.fs },
   { t: 'mg', id: 'mayor', w: TW.mg },
   { t: 'cam', w: TW.cam },
   { t: 'prize', img: 'mate', v: 10000, n: 'MATE', w: .001 },
@@ -439,7 +452,7 @@ const RING = [[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[5,5],[5,4],[5,3],
 
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
-let S = { saldo: 2000, bonus: [], muted: false, lastBet: 20, bote: BOTE_SEED };
+let S = { saldo: 2000, bonus: [], muted: false, lastBet: 20, bote: BOTE_SEED, fs: { n: 0, bet: 20 } };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -483,6 +496,7 @@ TOP.forEach((c, i) => {
   if (c.t === 'prize') d.innerHTML = `<img src="img/${c.img}.webp" alt=""><span class="l" data-v="${c.v}">${fmtS(c.v)}</span><span class="dbl">x2</span>`;
   else if (c.t === 'tapon') d.innerHTML = `<span class="e">✋</span><span class="l">TAPÓN</span>`;
   else if (c.t === 'cam') d.innerHTML = `<img src="img/camiseta.webp" alt=""><span class="l">+1 BONUS</span>`;
+  else if (c.t === 'fs') d.innerHTML = `<span class="e">🎁</span><span class="l">${FS_N} GRATIS<br>x${FS_X}</span>`;
   else d.innerHTML = `<span class="e">${MG[c.id].e}</span><span class="l">${MG[c.id].s.split('\n').join('<br>')}</span><span class="dbl">x2</span>`;
   board.appendChild(d); topCells.push(d);
 });
@@ -497,8 +511,8 @@ topCells[0].classList.add('lit');
 const reels = [...document.querySelectorAll('.reel')];
 const strips = reels.map(r => r.querySelector('.strip'));
 let grid = [];
-const symHTML = s => `<div class="sym${s === CAM ? ' cam' : ''}"><img src="${SYM[s]}" alt=""></div>`;
-function randSym() { return pickW(WEIGHT); }
+const symHTML = s => `<div class="sym${s === CAM ? ' cam' : s === WILD ? ' wild' : ''}"><img src="${SYM[s]}" alt=""></div>`;
+function randSym(col) { return col === 1 ? pickW(WEIGHT_C) : pickW(WEIGHT); }
 function setStrip(col, syms) { strips[col].style.transition = 'none'; strips[col].style.transform = 'translateY(0)'; strips[col].innerHTML = syms.map(symHTML).join(''); }
 for (let c = 0; c < 3; c++) {
   // al empezar, rodillos sin premio a la vista
@@ -521,11 +535,15 @@ function fit() {
   app.style.minHeight = '';
   const avail = Math.max(300, H - used);
   let c = Math.floor(avail * .55 / 3), tr = Math.floor(avail * .45 / 5);
-  c = Math.max(48, Math.min(c, cwMax)); tr = Math.max(30, Math.min(tr, trMax));
+  c = Math.max(44, Math.min(c, cwMax)); tr = Math.max(27, Math.min(tr, trMax));
   // si sobra sitio en una de las dos pantallas, se lo damos a la otra
   const spare = avail - 3 * c - 5 * tr;
   if (spare > 0) { c = Math.min(cwMax, c + Math.floor(spare / 3)); tr = Math.min(trMax, Math.floor((avail - 3 * c) / 5)); }
   set(c, tr);
+  // ajuste fino: si aún sobresale unos píxeles, reducir los rodillos
+  app.style.minHeight = '0';
+  for (let k = 0; k < 12 && app.getBoundingClientRect().height > H && c > 44; k++) { c -= 2; set(c, tr); }
+  app.style.minHeight = '';
 }
 addEventListener('resize', fit); fit();
 
@@ -533,10 +551,10 @@ addEventListener('resize', fit); fit();
 function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
   $('#mBote').textContent = fmt(Math.floor(S.bote));
-  $('#mBet').textContent = fmt(S.lastBet);
+  $('#mBet').textContent = fsRunning ? 'GRATIS' : fmt(S.lastBet);
   $('#bN').textContent = S.bonus.length;
-  $('#launch').disabled = !S.bonus.length || topBusy || busy;
-  $('#b1').disabled = $('#b2').disabled = busy || topBusy;
+  $('#launch').disabled = !S.bonus.length || topBusy || busy || fsRunning;
+  $('#b1').disabled = $('#b2').disabled = busy || topBusy || fsRunning;
   document.querySelectorAll('#rctl .rb').forEach(b => b.disabled = busy || topBusy);
   const x2 = S.bonus.length && S.bonus[0] === 2;
   board.classList.toggle('x2', !!x2);
@@ -545,7 +563,7 @@ function ui() {
 }
 const dmd = (t) => { $('#dmd').innerHTML = t; };
 let idleMsgs = ['¡SUERTE!', '🎽 CAMISETA<br>= BONUS', '3 EN LÍNEA<br>¡PREMIO!', 'ESCUDO<br>160 €', '¡VAMOS<br>CULTURAL!'], idleK = 0;
-setInterval(() => { if (!busy && !topBusy && !S.bonus.length) dmd(idleMsgs[idleK++ % idleMsgs.length]); }, 2600);
+setInterval(() => { if (!busy && !topBusy && !fsRunning && !S.bonus.length && !mode) dmd(idleMsgs[idleK++ % idleMsgs.length]); }, 2600);
 
 /* =========================================================
    EVALUACIÓN DE LA JUGADA
@@ -553,11 +571,11 @@ setInterval(() => { if (!busy && !topBusy && !S.bonus.length) dmd(idleMsgs[idleK
 function evaluate(g, mult) {
   let win = 0, wins = [], camLine = false, camLines = [];
   LINES.forEach((l, i) => {
-    const a = g[l[0]];
-    if (a === g[l[1]] && a === g[l[2]]) {
-      if (a === CAM) { camLine = true; camLines.push(i); }
-      else { win += PAY[a] * mult; wins.push({ line: i, sym: a, amt: PAY[a] * mult }); }
-    }
+    const t = [g[l[0]], g[l[1]], g[l[2]]], nw = t.filter(x => x !== WILD);
+    if (t.every(x => x === CAM)) { camLine = true; camLines.push(i); return; }
+    if (!nw.length) { win += WILD3 * mult; wins.push({ line: i, sym: WILD, amt: WILD3 * mult }); return; }
+    if (nw.includes(CAM)) return;                 // el comodín no sustituye a la camiseta
+    if (nw.every(x => x === nw[0])) { const a = nw[0]; win += PAY[a] * mult; wins.push({ line: i, sym: a, amt: PAY[a] * mult }); }
   });
   const cams = g.filter(s => s === CAM).length;
   const bonus = camLine ? 6 + (cams - 3) : cams;
@@ -572,16 +590,19 @@ const AV_P = .08, AV_N = [1, 2, 3, 4, 5], AV_W = [.35, .27, .18, .12, .08]; // p
 const HOLD_P = .5;                                                          // probabilidad de ofrecer retención
 let mode = null, held = [false, false, false], holdOk = [false, false, false], nudges = 0, nudgeMult = 1;
 
-async function spin(bet) {
+async function spin(bet, free) {
   if (busy || topBusy) return;
-  if (S.saldo < bet) { noMoney(); return; }
-  ac(); busy = true; S.lastBet = bet; S.saldo -= bet; S.bote += bet * BOTE_PCT; save();
-  const H = mode === 'hold' ? held.slice() : [false, false, false];
+  if (!free && fsRunning) return;
+  if (!free && S.saldo < bet) { noMoney(); return; }
+  ac(); busy = true;
+  if (!free) { S.lastBet = bet; S.saldo -= bet; S.bote += bet * BOTE_PCT; }
+  save();
+  const H = (!free && mode === 'hold') ? held.slice() : [false, false, false];
   const wasHeld = H.some(Boolean);
   mode = null; nudges = 0; renderCtl();
   $('#mWin').textContent = fmt(0); clearWin(); ui();
-  const mult = bet / 20;
-  const next = Array.from({ length: 9 }, randSym);
+  const bm = bet / 20, mult = free ? bm * FS_X : bm; // en tiradas gratis los premios de línea van x2
+  const next = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
   for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
   SFX.spin(); vib(15);
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
@@ -591,7 +612,7 @@ async function spin(bet) {
     if (H[c]) continue; // rodillo retenido: no gira
     const old = [grid[c], grid[3 + c], grid[6 + c]];
     const nw = [next[c], next[3 + c], next[6 + c]];
-    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(14));
+    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(c === 1 ? 15 : 14));
     const all = nw.concat(filler, old);
     const st = strips[c];
     st.style.transition = 'none';
@@ -611,24 +632,45 @@ async function spin(bet) {
   grid = next;
   const r = evaluate(grid, mult);
   if (wasHeld && !r.camLines.length) r.bonus = grid.filter((s, i) => s === CAM && !H[i % 3]).length; // las camisetas retenidas no cuentan otra vez
-  if (r.wins.length) await payWins(r, mult);
+  if (r.wins.length) await payWins(r, mult, free);
   if (grid.filter(x => x === ESC).length >= 3) await winBote();
   if (r.bonus) {
     grid.forEach((s, i) => { if (s === CAM && !H[i % 3]) cellAt(i).classList.add('camwin'); });
     r.camLines.forEach(i => drawLine(i, '#20e070'));
     SFX.bonus(); vib([30, 30, 30]);
     flyBonus(r.bonus);
-    for (let k = 0; k < r.bonus; k++) S.bonus.push(mult);
+    for (let k = 0; k < r.bonus; k++) S.bonus.push(bm);
     if (r.bonus >= 6) await celebrate('¡3 CAMISETAS EN LÍNEA!', SYM[CAM], null, '+' + r.bonus + ' BONUS');
     dmd(`+${r.bonus} BONUS<br>¡PULSA LANZAR!`);
     save();
   }
-  if (!r.wins.length) await offerExtras(mult, wasHeld);
+  if (!r.wins.length && !free) await offerExtras(mult, wasHeld);
   busy = false; ui(); renderCtl();
-  if (auto) autoStep();
+  if (auto && !free) autoStep();
+  return r.win;
 }
 
-async function payWins(r, mult) {
+/* ---------- TIRADAS GRATIS ---------- */
+let fsRunning = false;
+async function runFreeSpins() {
+  if (fsRunning || !S.fs || S.fs.n <= 0) return;
+  fsRunning = true; ui();
+  const wasAuto = auto;
+  let total = 0;
+  while (S.fs.n > 0) {
+    while (busy || topBusy) await sleep(200);
+    S.fs.n--; save();
+    dmd(`🎁 TIRADAS GRATIS<br>QUEDAN ${S.fs.n} · x${FS_X}`); $('#mBet').textContent = 'GRATIS';
+    total += (await spin(S.fs.bet, true)) || 0;
+    await sleep(700);
+  }
+  fsRunning = false; S.fs = { n: 0, bet: 20 }; save(); ui();
+  await celebrate('FIN TIRADAS GRATIS', 'img/balon.webp', total);
+  dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : '¡SUERTE!');
+  if (wasAuto && auto) autoStep();
+}
+
+async function payWins(r, mult, noRisk) {
   showWin(r);
   const special = r.wins.some(w => SPECIAL.includes(w.sym));
   const top = r.wins.reduce((a, b) => (b.amt > a.amt ? b : a));
@@ -636,7 +678,7 @@ async function payWins(r, mult) {
   else if (r.win >= 1000 * mult) { SFX.big(); vib([50, 30, 80]); await celebrate('¡GRAN PREMIO!', SYM[top.sym], r.win); }
   else SFX.win();
   $('#mWin').textContent = fmt(r.win);
-  const final = auto ? r.win : await risk(r.win, mult);
+  const final = (auto || noRisk) ? r.win : await risk(r.win, mult);
   if (final > 0) await countWin(final); else $('#mWin').textContent = fmt(0);
 }
 
@@ -710,7 +752,7 @@ async function offerExtras(mult, wasHeld) {
 async function nudge(c) {
   if (busy || topBusy || mode !== 'nudge' || nudges <= 0) return;
   ac(); busy = true; clearWin(); ui();
-  const ns = randSym(), col = [grid[c], grid[3 + c], grid[6 + c]];
+  const ns = randSym(c), col = [grid[c], grid[3 + c], grid[6 + c]];
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
   const st = strips[c];
   st.style.transition = 'none'; st.innerHTML = [ns].concat(col).map(symHTML).join('');
@@ -840,6 +882,11 @@ async function launch() {
   topCells[target].classList.add('hit');
   if (c.t === 'tapon') { SFX.buzz(); vib(80); dmd('✋ ¡TAPÓN!<br>SIN PREMIO'); await sleep(1300); }
   else if (c.t === 'cam') { SFX.bonus(); S.bonus.unshift(mult); save(); dmd('🎽 CAMISETA<br>+1 BONUS'); await sleep(1400); }
+  else if (c.t === 'fs') {
+    SFX.big(); vib([60, 40, 120]); dmd(`🎁 ${FS_N} TIRADAS<br>GRATIS x${FS_X}`);
+    S.fs = { n: ((S.fs && S.fs.n) || 0) + FS_N, bet: mult * 20 }; save();
+    await celebrate('¡TIRADAS GRATIS!', 'img/balon.webp', null, `${FS_N} TIRADAS · PREMIOS x${FS_X}`);
+  }
   else if (c.t === 'prize') {
     const v = c.v * mult; SFX.big(); vib([60, 40, 120]); dmd(c.n + '<br>' + fmt(v));
     await celebrate('¡' + c.n + '!', 'img/' + c.img + '.webp', v);
@@ -853,6 +900,7 @@ async function launch() {
   topCells[target].classList.remove('hit');
   topBusy = false; ui();
   if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
+  if (S.fs && S.fs.n > 0) { runFreeSpins(); return; }
   if (auto) autoStep();
 }
 
@@ -862,7 +910,7 @@ async function launch() {
 function autoStep() {
   if (!auto) return;
   setTimeout(() => {
-    if (!auto || busy || topBusy) return;
+    if (!auto || busy || topBusy || fsRunning) return;
     if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
     else if (S.bonus.length) launch();
     else if (S.saldo >= 20) spin(20);
@@ -1150,6 +1198,7 @@ $('#sndBtn').onclick = () => { S.muted = !S.muted; save(); ui(); ac(); };
 $('#autoBtn').onclick = () => { auto = !auto; $('#autoBtn').classList.toggle('on', auto); if (auto) autoStep(); };
 
 ui(); renderCtl();
+if (S.fs && S.fs.n > 0) setTimeout(runFreeSpins, 1200);
 if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>

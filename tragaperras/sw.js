@@ -1,5 +1,5 @@
 // La Catedral del Triple: funciona sin conexión tras la primera visita.
-const VERSION = 'cdt-v3';
+const VERSION = 'cdt-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.png', './apple-touch-icon.png',
   ...Array.from({ length: 13 }, (_, i) => './img/p' + String(i + 1).padStart(2, '0') + '.webp'),
   './img/camiseta.webp', './img/cancha.webp', './img/balon.webp', './img/canasta.webp', './img/mate.webp'];
