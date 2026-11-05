@@ -119,6 +119,18 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 @keyframes dash{to{stroke-dashoffset:-12}}
 .fly{position:fixed;z-index:60;font-family:var(--fd);color:#7dff9b;font-size:22px;text-shadow:0 2px 0 #063,0 0 10px #0f8;pointer-events:none;transition:transform 1s cubic-bezier(.3,.6,.3,1),opacity 1s}
 
+/* ---------- avances y retenciones ---------- */
+.rctl{display:grid;grid-template-columns:repeat(3,var(--cw));gap:6px;justify-content:center;padding:0 8px 8px;background:#14020a}
+.rb{height:32px;border-radius:9px;font-family:var(--fn);font-size:13px;color:#fff;background:#333;box-shadow:0 3px 0 #000}
+.rb.nu{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 3px 0 #063018;animation:glow2 .8s infinite alternate}
+.rb.hf{background:linear-gradient(#59c2ff,#1f6fbf 50%,#0b3d6e);box-shadow:0 3px 0 #06223d}
+.rb.ho{background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);color:#3a1d00;box-shadow:0 3px 0 #6b4500}
+.rb:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #000}
+.rb:disabled{filter:brightness(.6)}
+@keyframes glow2{to{box-shadow:0 3px 0 #063018,0 0 12px 2px rgba(80,255,140,.8)}}
+.reel.held{box-shadow:inset 0 0 0 4px var(--gold)}
+.reel.held::before{content:"PARADO";position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);font-family:var(--fd);font-size:13px;color:#fff;background:rgba(180,120,0,.85);padding:2px 8px;border-radius:6px;pointer-events:none}
+
 /* ---------- botones ---------- */
 .ctrls{display:grid;grid-template-columns:52px 52px 1fr 1fr;gap:7px;align-items:stretch;height:70px}
 .sbtn{border-radius:14px;background:linear-gradient(#45101b,#1f0409);border:1px solid #74202f;font-family:var(--fn);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 #0a0003}
@@ -257,7 +269,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <div class="reel"><div class="strip"></div></div>
     <div class="reel"><div class="strip"></div></div>
     <svg class="lines" id="lines" viewBox="0 0 3 3" preserveAspectRatio="none"></svg>
-  </div></div><div class="bulbs"></div></div>
+  </div><div class="rctl" id="rctl"><button class="rb" data-c="0">&nbsp;</button><button class="rb" data-c="1">&nbsp;</button><button class="rb" data-c="2">&nbsp;</button></div></div><div class="bulbs"></div></div>
 
   <div class="ctrls">
     <button class="sbtn" id="ptBtn"><i>📋</i>PREMIOS</button>
@@ -276,6 +288,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <div class="minis" id="miniLines"></div>
   <h3>Jugadores y escudo</h3>
   <div class="pt" id="ptList"></div>
+  <h3>Avances y retenciones</h3>
+  <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
   <h3>Camiseta = BONUS</h3>
   <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 en línea (horizontal, vertical o diagonal) → <b style="color:#7dff9b">6 BONUS</b></div></div>
   <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>: la luz recorre el tablero y donde se pare, eso ganas.</p>
@@ -308,6 +322,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (3 en línea = 6 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
+    <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa <b>▼ AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
+    <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
     <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
   </ol>
   <p style="color:#d9a7ad">Es un juego de entretenimiento: el saldo es ficticio y no se puede canjear por dinero.</p>
@@ -346,7 +362,7 @@ SYM.push('img/camiseta.webp');
 const CAM = 13;
 const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000]; // céntimos, apuesta 0,20 €
 const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
-const WEIGHT = [200, 160, 110, 95, 85, 60, 48, 38, 30, 24, 19, 16, 14, 7]; // probabilidad de cada casilla
+const WEIGHT = [210, 165, 112, 95, 85, 58, 46, 36, 28, 22, 17, 14, 12, 6]; // probabilidad de cada casilla
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
 const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
 
@@ -479,6 +495,7 @@ function ui() {
   $('#bN').textContent = S.bonus.length;
   $('#launch').disabled = !S.bonus.length || topBusy || busy;
   $('#b1').disabled = $('#b2').disabled = busy || topBusy;
+  document.querySelectorAll('#rctl .rb').forEach(b => b.disabled = busy || topBusy);
   const x2 = S.bonus.length && S.bonus[0] === 2;
   board.classList.toggle('x2', !!x2);
   board.querySelectorAll('.tc.prize .l').forEach(l => l.textContent = fmtS(+l.dataset.v * (x2 ? 2 : 1)));
@@ -508,28 +525,38 @@ function evaluate(g, mult) {
 /* =========================================================
    TIRADA
    ========================================================= */
+/* ---------- avances y retenciones ---------- */
+const AV_P = .08, AV_N = [1, 2, 3, 4, 5], AV_W = [.35, .27, .18, .12, .08]; // probabilidad de avances y cuántos
+const HOLD_P = .5;                                                          // probabilidad de ofrecer retención
+let mode = null, held = [false, false, false], holdOk = [false, false, false], nudges = 0, nudgeMult = 1;
+
 async function spin(bet) {
   if (busy || topBusy) return;
   if (S.saldo < bet) { noMoney(); return; }
   ac(); busy = true; S.lastBet = bet; S.saldo -= bet; save();
+  const H = mode === 'hold' ? held.slice() : [false, false, false];
+  const wasHeld = H.some(Boolean);
+  mode = null; nudges = 0; renderCtl();
   $('#mWin').textContent = fmt(0); clearWin(); ui();
   const mult = bet / 20;
   const next = Array.from({ length: 9 }, randSym);
+  for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
   SFX.spin(); vib(15);
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
   const done = [];
+  let order = 0;
   for (let c = 0; c < 3; c++) {
+    if (H[c]) continue; // rodillo retenido: no gira
     const old = [grid[c], grid[3 + c], grid[6 + c]];
     const nw = [next[c], next[3 + c], next[6 + c]];
-    const filler = Array.from({ length: 14 + c * 6 }, () => rnd(14));
+    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(14));
     const all = nw.concat(filler, old);
     const st = strips[c];
     st.style.transition = 'none';
     st.innerHTML = all.map(symHTML).join('');
-    const startY = -(all.length - 3) * C;
-    st.style.transform = `translateY(${startY}px)`;
+    st.style.transform = `translateY(${-(all.length - 3) * C}px)`;
     st.offsetHeight; // aplicar
-    const dur = 900 + c * 380;
+    const dur = 900 + order * 380; order++;
     reels[c].classList.add('spin');
     st.style.transition = `transform ${dur}ms cubic-bezier(.32,.0,.25,1.06)`;
     st.style.transform = 'translateY(0)';
@@ -538,19 +565,13 @@ async function spin(bet) {
     }, dur + 30)));
   }
   await Promise.all(done);
+  reels.forEach(r => r.classList.remove('held'));
   grid = next;
   const r = evaluate(grid, mult);
-  if (r.wins.length) {
-    showWin(r);
-    const special = r.wins.some(w => SPECIAL.includes(w.sym));
-    const top = r.wins.reduce((a, b) => (b.amt > a.amt ? b : a));
-    if (special) { SFX.big(); vib([60, 40, 60, 40, 120]); await celebrate('¡PREMIO ESPECIAL!', SYM[top.sym], r.win); }
-    else if (r.win >= 1000 * mult) { SFX.big(); vib([50, 30, 80]); await celebrate('¡GRAN PREMIO!', SYM[top.sym], r.win); }
-    else SFX.win();
-    await countWin(r.win);
-  }
+  if (wasHeld && !r.camLines.length) r.bonus = grid.filter((s, i) => s === CAM && !H[i % 3]).length; // las camisetas retenidas no cuentan otra vez
+  if (r.wins.length) await payWins(r, mult);
   if (r.bonus) {
-    grid.forEach((s, i) => { if (s === CAM) cellAt(i).classList.add('camwin'); });
+    grid.forEach((s, i) => { if (s === CAM && !H[i % 3]) cellAt(i).classList.add('camwin'); });
     r.camLines.forEach(i => drawLine(i, '#20e070'));
     SFX.bonus(); vib([30, 30, 30]);
     flyBonus(r.bonus);
@@ -559,9 +580,90 @@ async function spin(bet) {
     dmd(`+${r.bonus} BONUS<br>¡PULSA LANZAR!`);
     save();
   }
-  busy = false; ui();
+  if (!r.wins.length) await offerExtras(mult, wasHeld);
+  busy = false; ui(); renderCtl();
   if (auto) autoStep();
 }
+
+async function payWins(r, mult) {
+  showWin(r);
+  const special = r.wins.some(w => SPECIAL.includes(w.sym));
+  const top = r.wins.reduce((a, b) => (b.amt > a.amt ? b : a));
+  if (special) { SFX.big(); vib([60, 40, 60, 40, 120]); await celebrate('¡PREMIO ESPECIAL!', SYM[top.sym], r.win); }
+  else if (r.win >= 1000 * mult) { SFX.big(); vib([50, 30, 80]); await celebrate('¡GRAN PREMIO!', SYM[top.sym], r.win); }
+  else SFX.win();
+  await countWin(r.win);
+}
+
+/* tras una jugada sin premio: a veces da AVANCES; si no, a veces deja RETENER la pareja de la línea del medio */
+async function offerExtras(mult, wasHeld) {
+  if (Math.random() < AV_P) {
+    nudges = AV_N[pickW(AV_W)]; nudgeMult = mult; mode = 'nudge';
+    [0, 1, 2].forEach((f, i) => tone(660 + i * 220, .12, 'square', .06, i * .1)); vib([20, 20, 20]);
+    dmd(`¡${nudges} AVANCE${nudges > 1 ? 'S' : ''}!<br>ELIGE RODILLO`);
+    await sleep(300); return;
+  }
+  if (wasHeld || Math.random() >= HOLD_P) return;
+  const m = [grid[3], grid[4], grid[5]];
+  let h = null;
+  if (m[0] === m[1] && m[0] !== CAM) h = [true, true, false];
+  else if (m[1] === m[2] && m[1] !== CAM) h = [false, true, true];
+  else if (m[0] === m[2] && m[0] !== CAM) h = [true, false, true];
+  if (!h) return;
+  mode = 'hold'; holdOk = h; held = h.slice();
+  [0, 1].forEach(i => tone(880 + i * 330, .14, 'square', .06, i * .12)); vib(25);
+  dmd('¡RETENCIÓN!<br>ELIGE QUÉ PARAR');
+}
+
+/* un AVANCE: el rodillo baja una posición */
+async function nudge(c) {
+  if (busy || topBusy || mode !== 'nudge' || nudges <= 0) return;
+  ac(); busy = true; clearWin(); ui();
+  const ns = randSym(), col = [grid[c], grid[3 + c], grid[6 + c]];
+  const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
+  const st = strips[c];
+  st.style.transition = 'none'; st.innerHTML = [ns].concat(col).map(symHTML).join('');
+  st.style.transform = `translateY(${-C}px)`; st.offsetHeight;
+  st.style.transition = 'transform 260ms cubic-bezier(.3,.6,.4,1.15)'; st.style.transform = 'translateY(0)';
+  SFX.tick(); await sleep(280);
+  grid[6 + c] = col[1]; grid[3 + c] = col[0]; grid[c] = ns;
+  setStrip(c, [ns, col[0], col[1]]); SFX.stop(); vib(10);
+  nudges--;
+  if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); save(); }
+  const r = evaluate(grid, nudgeMult);
+  if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
+  if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
+  else { mode = null; if (!r.wins.length) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : 'SIN AVANCES'); }
+  busy = false; ui(); renderCtl();
+  if (auto) autoStep();
+}
+
+function toggleHold(c) {
+  if (busy || mode !== 'hold' || !holdOk[c]) return;
+  held[c] = !held[c]; SFX.tick(); renderCtl();
+}
+
+function renderCtl() {
+  const bs = document.querySelectorAll('#rctl .rb');
+  bs.forEach((b, c) => {
+    b.className = 'rb'; b.disabled = busy || topBusy; b.style.visibility = 'visible';
+    if (mode === 'nudge') { b.classList.add('nu'); b.innerHTML = '▼ AVANCE'; }
+    else if (mode === 'hold' && holdOk[c]) { b.classList.add(held[c] ? 'ho' : 'hf'); b.innerHTML = held[c] ? '🔒 PARADO' : 'PARAR'; }
+    else { b.style.visibility = 'hidden'; b.innerHTML = '&nbsp;'; }
+    reels[c].classList.toggle('held', mode === 'hold' && held[c]);
+  });
+  $('#rctl').classList.toggle('on', mode === 'nudge' || mode === 'hold');
+}
+
+/* el rodillo que daría premio con un avance (lo que está arriba baja al centro) */
+function bestNudge() {
+  for (let c = 0; c < 3; c++) {
+    const t = grid.slice(); t[6 + c] = grid[3 + c]; t[3 + c] = grid[c]; t[c] = -1 - c;
+    if (evaluate(t, 1).wins.length) return c;
+  }
+  return rnd(3);
+}
+
 function cellAt(i) { return strips[i % 3].children[Math.floor(i / 3)]; }
 function clearWin() { document.querySelectorAll('.sym.win,.sym.camwin').forEach(e => e.classList.remove('win', 'camwin')); $('#lines').innerHTML = ''; }
 function drawLine(i, col) {
@@ -669,7 +771,8 @@ function autoStep() {
   if (!auto) return;
   setTimeout(() => {
     if (!auto || busy || topBusy) return;
-    if (S.bonus.length) launch();
+    if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
+    else if (S.bonus.length) launch();
     else if (S.saldo >= 20) spin(20);
     else { auto = false; $('#autoBtn').classList.remove('on'); noMoney(); }
   }, 650);
@@ -937,6 +1040,7 @@ document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => {
 $('#b1').onclick = () => spin(20);
 $('#b2').onclick = () => spin(40);
 $('#launch').onclick = launch;
+document.querySelectorAll('#rctl .rb').forEach(b => b.onclick = () => { const c = +b.dataset.c; if (mode === 'nudge') nudge(c); else if (mode === 'hold') toggleHold(c); });
 $('#ptBtn').onclick = () => open('#ptOv');
 $('#menuBtn').onclick = () => open('#menuOv');
 $('#mPt').onclick = () => { $('#menuOv').classList.add('hidden'); open('#ptOv'); };
@@ -953,7 +1057,7 @@ document.querySelectorAll('[data-mg]').forEach(b => b.onclick = () => { $('#menu
 $('#sndBtn').onclick = () => { S.muted = !S.muted; save(); ui(); ac(); };
 $('#autoBtn').onclick = () => { auto = !auto; $('#autoBtn').classList.toggle('on', auto); if (auto) autoStep(); };
 
-ui();
+ui(); renderCtl();
 if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
