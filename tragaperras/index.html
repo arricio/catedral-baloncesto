@@ -38,12 +38,12 @@ body{color:#fff;font-family:var(--fb);overflow-x:hidden;touch-action:manipulatio
 img{-webkit-user-drag:none;user-select:none}
 button{font-family:inherit;cursor:pointer;border:0;color:inherit}
 .hidden{display:none!important}
-#app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;gap:6px;
+#app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;gap:5px;
   padding:calc(env(safe-area-inset-top) + 4px) 10px calc(env(safe-area-inset-bottom) + 8px)}
 
 /* ---------- cabecera ---------- */
-header{height:40px;display:flex;align-items:center;gap:6px}
-.hbtn{width:38px;height:38px;border-radius:12px;background:linear-gradient(#3b0711,#1d0308);border:1px solid #6b1424;font-size:20px;display:grid;place-items:center;flex:none}
+header{height:36px;display:flex;align-items:center;gap:6px}
+.hbtn{width:34px;height:34px;font-size:17px!important;border-radius:12px;background:linear-gradient(#3b0711,#1d0308);border:1px solid #6b1424;font-size:20px;display:grid;place-items:center;flex:none}
 .title{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
 .title img{width:30px;height:30px;flex:none}
 .title h1{margin:0;font-family:var(--fd);font-weight:400;font-size:clamp(13px,4.3vw,20px);line-height:1;white-space:nowrap;
@@ -99,9 +99,9 @@ header{height:40px;display:flex;align-items:center;gap:6px}
 
 /* ---------- contadores ---------- */
 .meters{display:grid;grid-template-columns:1.25fr .9fr 1.15fr;gap:6px}
-.meter{background:var(--ledbg);border:2px solid #4c0d18;border-radius:10px;padding:3px 6px 4px;text-align:center;box-shadow:inset 0 0 10px #000}
-.meter b{display:block;font-size:11px;letter-spacing:1.5px;color:#d9a7ad;font-weight:700}
-.meter span{font-family:var(--fn);font-size:19px;color:var(--led);text-shadow:0 0 8px rgba(255,60,40,.8);white-space:nowrap}
+.meter{background:var(--ledbg);border:2px solid #4c0d18;border-radius:10px;padding:1px 6px 2px;text-align:center;box-shadow:inset 0 0 10px #000}
+.meter b{display:block;font-size:10px;letter-spacing:1.5px;color:#d9a7ad;font-weight:700}
+.meter span{font-family:var(--fn);font-size:17px;color:var(--led);text-shadow:0 0 8px rgba(255,60,40,.8);white-space:nowrap}
 .meter.win span{color:#7dff9b;text-shadow:0 0 8px rgba(80,255,120,.8)}
 
 /* ---------- rodillos ---------- */
@@ -140,8 +140,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .lampbar .lb.on{color:var(--gold);text-shadow:0 0 8px rgba(255,200,60,.8)}
 .hlamp{font-family:var(--fd);font-size:11px;padding:4px 7px;border-radius:7px;color:#4a6a80;border:2px solid #23455a;background:#0a1d28}
 .hlamp.on{color:#fff;background:linear-gradient(#59c2ff,#1f6fbf);border-color:#bfe6ff;box-shadow:0 0 12px rgba(80,180,255,.9);animation:blinkA .7s infinite}
-.rctl{display:grid;grid-template-columns:repeat(3,var(--cw));gap:8px;justify-content:center;padding:6px 8px 8px;background:linear-gradient(#3a3a3a,#1a1a1a)}
-.rb{height:40px;border-radius:9px;font-family:var(--fd);font-size:14px;line-height:1;color:#ffd36b;position:relative;overflow:hidden;
+.rctl{display:grid;grid-template-columns:repeat(3,var(--cw));gap:8px;justify-content:center;padding:5px 8px 7px;background:linear-gradient(#3a3a3a,#1a1a1a)}
+.rb{height:36px;border-radius:9px;font-family:var(--fd);font-size:14px;line-height:1;color:#ffd36b;position:relative;overflow:hidden;
   background:linear-gradient(#c8162f,#8e0a1f 55%,#5a0614);border:2px solid #e8b94a;box-shadow:0 4px 0 #3a0008,inset 0 1px 0 rgba(255,255,255,.25);text-shadow:0 1px 0 #3a0008}
 .rb small{color:#f3c9cf}
 .rb.nu small,.rb.ho small{color:#5a1d00}.rb.hf small{color:#e6f6ff}
@@ -168,7 +168,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .bote small{text-overflow:ellipsis;overflow:hidden}
 .bote b{font-family:var(--fd);font-weight:400;font-size:14px;color:var(--gold)}
 .bote small{display:block;font-size:12px;color:#f3c9cf}
-.bote span{font-family:var(--fn);font-size:22px;color:#7dff9b;text-shadow:0 0 10px rgba(80,255,120,.8)}
+.bote span{font-family:var(--fn);font-size:20px;color:#7dff9b;text-shadow:0 0 10px rgba(80,255,120,.8)}
 .bote.hot{animation:hot .3s 10 alternate}
 @keyframes hot{to{box-shadow:0 0 30px 8px rgba(255,200,60,.95);transform:scale(1.03)}}
 /* ---------- riesgo ---------- */
@@ -192,7 +192,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 @keyframes blinkA{0%,49%{opacity:1}50%,100%{opacity:.45}}
 
 /* ---------- botones de la máquina ---------- */
-.ctrls{display:grid;grid-template-columns:1fr 1fr .8fr 1.5fr;gap:7px;align-items:stretch;height:58px}
+.ctrls{display:grid;grid-template-columns:1fr 1fr .8fr 1.5fr;gap:7px;align-items:stretch;height:54px}
 .pbtn{position:relative;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;
   font-family:var(--fd);font-size:15px;border:2px solid rgba(255,255,255,.35)}
 .pbtn::after{content:"";position:absolute;left:5px;right:5px;top:3px;height:40%;border-radius:8px;background:linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,0));pointer-events:none}
@@ -209,7 +209,21 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .aut.on{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 5px 0 #063018,0 0 14px rgba(80,255,140,.7)}
 .play{color:#fff;font-size:24px;background:linear-gradient(#7dff9b,#1fae4e 45%,#0b6b2a);box-shadow:0 5px 0 #063018;text-shadow:0 2px 0 #053}
 .note{text-align:center;font-size:11px;color:#a77a80;margin-top:2px}
-@media (max-height:700px){.note{display:none}}
+@media (max-height:860px){.note{display:none}}
+/* ---------- tabla de premios de arriba ---------- */
+.paytop{position:relative;border-radius:12px;padding:12px 4px 4px;margin-top:6px;background:linear-gradient(#24343f,#121c23);border:3px solid #8a9aa6;box-shadow:inset 0 0 0 2px #0b1218,0 4px 10px rgba(0,0,0,.6)}
+.ptag{position:absolute;top:-11px;left:10px;padding:2px 10px;border-radius:7px;font-family:var(--fd);font-size:13px;color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);border:2px solid #6b4500;white-space:nowrap}
+.ptag small{font-family:var(--fn);font-size:10px;color:#5a3a00;margin-left:4px}
+.pgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.pc{display:flex;flex-direction:column;align-items:center;border-radius:7px;padding:2px 0 1px;background:rgba(255,255,255,.05)}
+.pc img{width:calc(var(--pt) * 1px);height:calc(var(--pt) * 1px);object-fit:contain}
+.pc b{font-family:var(--fn);font-weight:400;font-size:11px;color:#ffd36b;line-height:1.1;white-space:nowrap}
+.pc.sp{background:rgba(255,200,60,.16);box-shadow:inset 0 0 0 1px rgba(255,200,60,.6)}
+.pc.sp b{color:#7dff9b}
+.pc.cm{grid-column:span 1;background:rgba(40,200,110,.14);box-shadow:inset 0 0 0 1px rgba(80,255,140,.5)}
+.pc.cm span{font-family:var(--fn);font-size:9px;line-height:1.15;color:#c8f5d8;text-align:center;white-space:nowrap}
+:root{--pt:24}
+
 /* ---------- instalar ---------- */
 .instBar{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom) + 8px);z-index:45;max-width:464px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;
   border-radius:14px;background:linear-gradient(#1f8f4e,#0b4d27);border:2px solid #7dff9b;box-shadow:0 6px 24px rgba(0,0,0,.7)}
@@ -229,7 +243,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .chips{display:grid;grid-template-columns:1fr auto;gap:6px}
 .wallet{border-radius:12px;padding:3px 10px;text-align:right;background:linear-gradient(#0b3d22,#062514);border:2px solid #3fbf6f;line-height:1}
 .wallet small{display:block;font-size:11px;letter-spacing:1px;color:#a8e6bf;font-weight:700}
-.wallet b{font-family:var(--fn);font-weight:400;font-size:19px;color:#fff}
+.wallet b{font-family:var(--fn);font-weight:400;font-size:18px;color:#fff}
 .wallet em{display:block;font-style:normal;font-size:11px;color:#ffd36b;margin-top:1px}
 
 /* ---------- ventanas ---------- */
@@ -349,6 +363,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <div class="wallet" id="walletBox"><small>MI DINERO</small><b id="mCartera">0,00 €</b><em id="mRecarga"></em></div>
   </div>
 
+  <div class="paytop" id="payTop"><div class="ptag">PREMIOS <small id="ptX">3 iguales en línea</small></div><div class="pgrid" id="pGrid"></div></div>
+
   <div class="cab"><div class="inner"><div class="board" id="board"></div></div><div class="bulbs"></div></div>
 
   <div class="meters">
@@ -406,11 +422,11 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <div class="pti sp"><img src="img/balon.webp" alt=""><div class="v" style="font-size:14px"><b>BALÓN = COMODÍN</b> (solo en el rodillo central): sustituye a cualquier jugador o al escudo.<br>3 balones en vertical → 5 € (10 €)</div></div>
   <h3>Bote y riesgo</h3>
   <div class="pti sp"><img src="img/p13.webp" alt=""><div class="v" style="font-size:14px">3 escudos en cualquier sitio → <b style="color:#7dff9b">BOTE CATEDRAL</b><br>El bote empieza en 30 € y sube con cada jugada.</div></div>
-  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes un escalón; si fallas bajas dos.</p>
+  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes un escalón; si fallas bajas, pero a partir de 0,40 € nunca te quedas sin nada.</p>
   <h3>Avances y retenciones</h3>
   <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
   <h3>Camiseta = BONUS</h3>
-  <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 en línea (horizontal, vertical o diagonal) → <b style="color:#7dff9b">6 BONUS</b></div></div>
+  <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 camisetas → <b style="color:#7dff9b">5 BONUS</b></div></div>
   <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>: la luz recorre el tablero y donde se pare, eso ganas.</p>
   <h3>Pantalla de arriba</h3>
   <div class="pt" id="ptTop"></div>
@@ -441,11 +457,11 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <li>Con <b>APUESTA</b> eliges 0,20 € o <b>DOBLE</b> 0,40 €. Jugando a doble, todos los premios se pagan al doble.</li>
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en línea</b> (3 horizontales, 3 verticales y 2 diagonales) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
-    <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (3 en línea = 6 BONUS).</li>
+    <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
     <li><b>BALÓN = COMODÍN</b>: sale solo en el rodillo central y sustituye a cualquier jugador o al escudo para hacer línea.</li>
     <li><b>TIRADAS GRATIS</b>: si la luz de arriba se para en 🎁, juegas 8 tiradas gratis con los premios de línea x2.</li>
-    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio; si fallas bajas dos escalones (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
+    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
     <li><b>BOTE CATEDRAL</b>: crece con cada jugada. Si salen <b>3 escudos en cualquier sitio</b> de los rodillos, ¡te llevas el bote entero!</li>
     <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
@@ -621,23 +637,31 @@ function fit() {
   app.style.minHeight = '';
   const avail = Math.max(300, H - used);
   let c = Math.floor(avail * .6 / 3), tr = Math.floor(avail * .4 / 5);
-  c = Math.max(58, Math.min(c, cwMax)); tr = Math.max(28, Math.min(tr, trMax));
+  c = Math.max(56, Math.min(c, cwMax)); tr = Math.max(28, Math.min(tr, trMax));
   // si sobra sitio en una de las dos pantallas, se lo damos a la otra
   const spare = avail - 3 * c - 5 * tr;
   if (spare > 0) { c = Math.min(cwMax, c + Math.floor(spare / 3)); tr = Math.min(trMax, Math.floor((avail - 3 * c) / 5)); }
   set(c, tr);
   // ajuste fino: si aún sobresale unos píxeles, reducir los rodillos
   app.style.minHeight = '0';
-  for (let k = 0; k < 12 && app.getBoundingClientRect().height > H && c > 58; k++) { c -= 2; set(c, tr); }
+  for (let k = 0; k < 12 && app.getBoundingClientRect().height > H && c > 56; k++) { c -= 2; set(c, tr); }
   app.style.minHeight = '';
 }
 addEventListener('resize', fit); fit();
 
 /* ---------- contadores ---------- */
+function renderPayTop() {
+  const m = S.betSel === 40 ? 2 : 1;
+  const order = PAY.map((p, i) => i).reverse(); // del premio mayor al menor
+  $('#pGrid').innerHTML = order.map(i => `<div class="pc${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><b>${fmtS(PAY[i] * m)}</b></div>`).join('')
+    + `<div class="pc cm"><img src="${SYM[CAM]}" alt=""><span>1→1 · 2→2<br>3→5 BONUS</span></div>`;
+  $('#ptX').textContent = m === 2 ? 'jugando a DOBLE' : '3 iguales en línea';
+  if (typeof fit === 'function') requestAnimationFrame(fit);
+}
 function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
   $('#mCartera').textContent = fmt(S.cartera);
-  $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA';
+  $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA'; if (renderPayTop.m !== S.betSel) { renderPayTop.m = S.betSel; renderPayTop(); }
   $('#cobBtn').disabled = busy || topBusy || fsRunning || S.saldo <= 0; $('#cobBtn').classList.toggle('ready', S.saldo > 0 && !busy);
   $('#betBtn').disabled = busy || topBusy || fsRunning;
   $('#mBote').textContent = fmt(Math.floor(S.bote));
@@ -657,6 +681,7 @@ setInterval(() => { if (!busy && !topBusy && !fsRunning && !S.bonus.length && !m
 /* =========================================================
    EVALUACIÓN DE LA JUGADA
    ========================================================= */
+function camBonus(n) { return n >= 3 ? 5 + (n - 3) : n; } // 1 camiseta = 1, 2 = 2, 3 = 5 bonus
 function evaluate(g, mult) {
   let win = 0, wins = [], camLine = false, camLines = [];
   LINES.forEach((l, i) => {
@@ -667,7 +692,7 @@ function evaluate(g, mult) {
     if (nw.every(x => x === nw[0])) { const a = nw[0]; win += PAY[a] * mult; wins.push({ line: i, sym: a, amt: PAY[a] * mult }); }
   });
   const cams = g.filter(s => s === CAM).length;
-  const bonus = camLine ? 6 + (cams - 3) : cams;
+  const bonus = camBonus(cams);
   return { win, wins, bonus, cams, camLines };
 }
 
@@ -720,7 +745,7 @@ async function spin(bet, free) {
   reels.forEach(r => r.classList.remove('held'));
   grid = next;
   const r = evaluate(grid, mult);
-  if (wasHeld && !r.camLines.length) r.bonus = grid.filter((s, i) => s === CAM && !H[i % 3]).length; // las camisetas retenidas no cuentan otra vez
+  if (wasHeld) r.bonus = camBonus(grid.filter((s, i) => s === CAM && !H[i % 3]).length); // las camisetas retenidas no cuentan otra vez
   if (r.wins.length) await payWins(r, mult, free);
   if (grid.filter(x => x === ESC).length >= 3) await winBote();
   if (r.bonus) {
@@ -729,7 +754,7 @@ async function spin(bet, free) {
     SFX.bonus(); vib([30, 30, 30]);
     flyBonus(r.bonus);
     for (let k = 0; k < r.bonus; k++) S.bonus.push(bm);
-    if (r.bonus >= 6) await celebrate('¡3 CAMISETAS EN LÍNEA!', SYM[CAM], null, '+' + r.bonus + ' BONUS');
+    if (r.bonus >= 5) await celebrate('¡3 CAMISETAS!', SYM[CAM], null, '+' + r.bonus + ' BONUS');
     dmd(`+${r.bonus} BONUS<br>¡PULSA LANZAR!`);
     save();
   }
@@ -776,11 +801,12 @@ async function payWins(r, mult, noRisk) {
    del premio que tenías y te quedas con ese. La probabilidad de subir se calcula en cada escalón
    para que, de media, arriesgar devuelva un 97 % de lo que se tiene. */
 function riskStep(a, mult) {
-  const L = LADDER.map(v => v * mult);
+  const L = LADDER.map(v => v * mult), SAFE = L[1]; // 0,40 € (0,80 € a DOBLE): una vez alcanzado, ya no se pierde
   const next = L.find(v => v > a);
   const below = L.filter(v => v < a).reverse();
-  const low = below[1] || 0;
-  const p = next ? Math.min(.9, Math.max(.05, (.97 * a - low) / (next - low))) : 0;
+  let low = below[1] || 0;
+  if (a >= SAFE) low = Math.max(low, SAFE);
+  const p = !next ? 0 : low >= a ? .3 : Math.min(.9, Math.max(.05, (.97 * a - low) / (next - low)));
   return { next, low, p, L };
 }
 function risk(amount, mult) {
