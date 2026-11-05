@@ -426,7 +426,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <h3>Avances y retenciones</h3>
   <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
   <h3>¿Cada cuánto sale?</h3>
-  <p style="margin-top:0;font-size:15px">La mitad de las jugadas tienen premio. Los pequeños salen mucho y los gordos muy poco (valores aproximados):</p>
+  <p style="margin-top:0;font-size:15px">Los premios salen por <b>rachas</b>: a veces pasan 30 o 40 jugadas sin nada y luego salen varios seguidos. Cualquier premio puede salir en cualquier momento. De media (valores aproximados):</p>
   <div class="ptab" id="freqTab" style="justify-content:flex-start"></div>
   <h3>Camiseta = BONUS</h3>
   <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 camisetas → <b style="color:#7dff9b">5 BONUS</b></div></div>
@@ -521,8 +521,21 @@ const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 16
    En cada jugada la máquina sortea primero el resultado y luego coloca las figuras.
    El 50 % de las jugadas tiene premio de línea; el premio pequeño es el que más sale
    y cada premio mayor sale menos. Probabilidad por jugada de cada premio (índice = figura): */
-const HIT = [0, .10, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 8000];
-HIT[0] = .51 - HIT.reduce((a, b) => a + b, 0);       // el de 0,10 € completa el 50 % de jugadas con premio
+const HIT = [.18, .09, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 8000];
+/* RACHAS: la máquina pasa por rachas frías (casi nada), calientes (premio casi siempre) y normales.
+   Su duración es aleatoria; de media sale premio en 1 de cada 3 jugadas y se respeta la tabla HIT. */
+const RACHA = {
+  fria:     { h: .02, min: 10, max: 45, sig: 'caliente' },
+  caliente: { h: .90, min: 3, max: 8,  sig: 'normal' },
+  normal:   { h: .75, min: 6, max: 20, sig: 'fria' },
+};
+function nuevaRacha(st) { const r = RACHA[st]; return { st, n: r.min + rnd(r.max - r.min + 1) }; }
+function pasoRacha() {
+  if (!S.racha || !RACHA[S.racha.st]) { const sts = ['fria', 'fria', 'normal', 'caliente']; S.racha = nuevaRacha(sts[rnd(4)]); S.racha.n = 1 + rnd(S.racha.n); }
+  const h = RACHA[S.racha.st].h;
+  if (--S.racha.n <= 0) S.racha = nuevaRacha(RACHA[S.racha.st].sig);
+  return h;
+}
 let P_BOTE = 1 / 20000;                               // 3 escudos sueltos = BOTE CATEDRAL
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
 let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 1.5]; // caras de premio pequeño más frecuentes
@@ -628,8 +641,8 @@ const symHTML = s => `<div class="sym${s === CAM ? ' cam' : s === WILD ? ' wild'
 function randSym(col) { return col === 1 ? pickW(FILL_C) : pickW(FILL); }
 /* genera una jugada completa según la tabla de resultados */
 function genGrid() {
-  let r = Math.random(), target = -1;
-  for (let i = 0; i < HIT.length; i++) { if ((r -= HIT[i]) < 0) { target = i; break; } }
+  const h = pasoRacha();
+  const target = Math.random() < h ? pickW(HIT) : -1;   // si toca premio, cuál según la tabla
   const bote = Math.random() < P_BOTE;
   for (let tries = 0; tries < 300; tries++) {
     const g = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
@@ -1402,7 +1415,7 @@ $('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) 
   `<div class="pti${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><div class="v">${fmtS(p)}<small>(${fmtS(p * 2)})${SPECIAL.includes(i) ? ' ★ ESPECIAL' : ''}</small></div></div>`).join('');
 $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i }) => {
   const n = Math.round(1 / h), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
-  return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('') + '<span>BOTE: 1 de cada ~5.500</span>';
+  return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('') + '<span>BOTE: 1 de cada ~6.500</span>';
 $('#miniLines').innerHTML = LINES.map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TOP.filter(c => c.t === 'prize').sort((a, b) => b.v - a.v).map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('');
