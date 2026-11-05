@@ -1,8 +1,8 @@
 // La Catedral del Triple: funciona sin conexión tras la primera visita.
-const VERSION = 'cdt-v12';
+const VERSION = 'cdt-v13';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.png', './apple-touch-icon.png',
   ...Array.from({ length: 13 }, (_, i) => './img/p' + String(i + 1).padStart(2, '0') + '.webp'),
-  './img/camiseta.webp', './img/cancha.webp', './img/balon.webp', './img/canasta.webp', './img/mate.webp'];
+  './img/camiseta.webp', './img/ui_fondo.webp', './img/ui_panel.webp', './img/ui_marco.webp', './img/ui_cartel.webp', './img/ui_cancha.webp', './img/cancha.webp', './img/balon.webp', './img/canasta.webp', './img/mate.webp'];
 const FONTS = /^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys()
