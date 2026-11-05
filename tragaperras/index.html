@@ -32,7 +32,9 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg0)}
 body{color:#fff;font-family:var(--fb);overflow-x:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
-  background:radial-gradient(120% 70% at 50% 0%,#5a0a18 0%,#24030b 55%,#0b0105 100%) fixed}
+  background:
+    repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 2px,transparent 2px 9px),
+    radial-gradient(120% 70% at 50% 0%,#6a0c1c 0%,#2a040d 55%,#0b0105 100%) fixed}
 img{-webkit-user-drag:none;user-select:none}
 button{font-family:inherit;cursor:pointer;border:0;color:inherit}
 .hidden{display:none!important}
@@ -40,11 +42,11 @@ button{font-family:inherit;cursor:pointer;border:0;color:inherit}
   padding:calc(env(safe-area-inset-top) + 4px) 10px calc(env(safe-area-inset-bottom) + 8px)}
 
 /* ---------- cabecera ---------- */
-header{height:44px;display:flex;align-items:center;gap:8px}
-.hbtn{width:40px;height:40px;border-radius:12px;background:linear-gradient(#3b0711,#1d0308);border:1px solid #6b1424;font-size:20px;display:grid;place-items:center;flex:none}
+header{height:40px;display:flex;align-items:center;gap:6px}
+.hbtn{width:38px;height:38px;border-radius:12px;background:linear-gradient(#3b0711,#1d0308);border:1px solid #6b1424;font-size:20px;display:grid;place-items:center;flex:none}
 .title{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
 .title img{width:30px;height:30px;flex:none}
-.title h1{margin:0;font-family:var(--fd);font-weight:400;font-size:clamp(15px,4.6vw,21px);line-height:1;white-space:nowrap;
+.title h1{margin:0;font-family:var(--fd);font-weight:400;font-size:clamp(13px,4.3vw,20px);line-height:1;white-space:nowrap;
   background:linear-gradient(#fff6c8,#ffc83d 45%,#c98a00 55%,#ffe27a);-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 2px 0 #5a0010) drop-shadow(0 0 8px rgba(255,80,60,.45))}
 
@@ -58,8 +60,13 @@ header{height:44px;display:flex;align-items:center;gap:8px}
   animation:chase .6s steps(2) infinite;opacity:.9}
 @keyframes chase{to{background-position:7px 0,7px 100%}}
 .board{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,var(--tr));gap:4px;padding:6px;
-  background:radial-gradient(90% 90% at 50% 50%,#2b0710,#0d0204)}
-.tc{position:relative;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+  background:
+    radial-gradient(40% 60% at 15% 0%,rgba(255,240,200,.22),transparent 70%),
+    radial-gradient(40% 60% at 85% 0%,rgba(255,240,200,.22),transparent 70%),
+    repeating-linear-gradient(90deg,#3b1d10 0 22px,#43220f 22px 44px),
+    #2b140a}
+.tc::after{content:"";position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,0));pointer-events:none}
+.tc{position:relative;border-radius:8px;box-shadow:0 2px 0 rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
   background:linear-gradient(#ffffff,#e6e6e6);color:#222;transition:transform .08s,filter .08s;border:2px solid #4a0c16}
 .tc img{max-width:86%;height:58%;object-fit:contain}
 .tc .l{font-family:var(--fn);font-size:max(8.5px,calc(var(--tr) * .19));line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:-.2px}
@@ -76,7 +83,8 @@ header{height:44px;display:flex;align-items:center;gap:8px}
 @keyframes hit{to{transform:scale(1.14);box-shadow:0 0 0 3px #fff,0 0 30px 8px var(--gold)}}
 .tc .dbl{position:absolute;top:1px;right:2px;font-size:8px;font-family:var(--fn);color:#fff;background:#0a7a3a;border-radius:4px;padding:0 2px;display:none}
 .board.x2 .tc.prize .dbl,.board.x2 .tc.mg .dbl{display:block}
-.center{grid-column:2/5;grid-row:2/5;border-radius:10px;background:linear-gradient(#060102,#1a0408);border:2px solid #5d1220;
+.center{grid-column:2/5;grid-row:2/5;border-radius:10px;background:radial-gradient(circle at 50% 30%,#2a0a12,#060102 70%);border:3px solid #8a6a1a;
+  background-image:radial-gradient(rgba(255,180,0,.08) 1px,transparent 1.5px),radial-gradient(circle at 50% 30%,#2a0a12,#060102 70%);background-size:5px 5px,auto;
   display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;padding:4px;text-align:center;box-shadow:inset 0 0 18px rgba(255,40,40,.18)}
 .dmd{font-family:var(--fn);color:var(--gold);font-size:max(12px,calc(var(--tr) * .3));line-height:1.1;text-shadow:0 0 8px rgba(255,180,0,.6);min-height:2.2em;display:flex;align-items:center;justify-content:center;padding:0 4px}
 .bonusN{display:flex;align-items:center;gap:6px;font-family:var(--fd);font-size:calc(var(--tr) * .42);color:#fff}
@@ -97,10 +105,13 @@ header{height:44px;display:flex;align-items:center;gap:8px}
 .meter.win span{color:#7dff9b;text-shadow:0 0 8px rgba(80,255,120,.8)}
 
 /* ---------- rodillos ---------- */
-.reelsWrap{position:relative;display:grid;grid-template-columns:repeat(3,var(--cw));gap:6px;justify-content:center;padding:8px;
-  background:linear-gradient(#2a0610,#14020a)}
-.reel{position:relative;width:var(--cw);height:calc(var(--c) * 3);overflow:hidden;border-radius:10px;
-  background:linear-gradient(90deg,#d8d8d8,#ffffff 30%,#ffffff 70%,#d0d0d0)}
+.reelsWrap{position:relative;display:grid;grid-template-columns:repeat(3,var(--cw));gap:8px;justify-content:center;padding:8px;
+  background:linear-gradient(90deg,#8a6a1a,#f3d27a 50%,#8a6a1a)}
+.reelsWrap::before,.reelsWrap::after{content:"";position:absolute;top:50%;width:0;height:0;border:9px solid transparent;transform:translateY(-50%);z-index:4;filter:drop-shadow(0 0 3px #000)}
+.reelsWrap::before{left:-1px;border-left:12px solid #d4102e}
+.reelsWrap::after{right:-1px;border-right:12px solid #d4102e}
+.reel{position:relative;width:var(--cw);height:calc(var(--c) * 3);overflow:hidden;border-radius:6px;
+  background:linear-gradient(90deg,#c9c9c9,#ffffff 25%,#ffffff 75%,#c4c4c4);box-shadow:inset 0 0 0 2px rgba(0,0,0,.35)}
 .reel::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(rgba(0,0,0,.38),transparent 18%,transparent 82%,rgba(0,0,0,.38))}
 .strip{position:absolute;left:0;top:0;width:100%;will-change:transform}
@@ -120,14 +131,25 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .fly{position:fixed;z-index:60;font-family:var(--fd);color:#7dff9b;font-size:22px;text-shadow:0 2px 0 #063,0 0 10px #0f8;pointer-events:none;transition:transform 1s cubic-bezier(.3,.6,.3,1),opacity 1s}
 
 /* ---------- avances y retenciones ---------- */
-.rctl{display:grid;grid-template-columns:repeat(3,var(--cw));gap:6px;justify-content:center;padding:0 8px 8px;background:#14020a}
-.rb{height:28px;border-radius:9px;font-family:var(--fn);font-size:13px;color:#fff;background:#333;box-shadow:0 3px 0 #000}
-.rb.nu{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 3px 0 #063018;animation:glow2 .8s infinite alternate}
-.rb.hf{background:linear-gradient(#59c2ff,#1f6fbf 50%,#0b3d6e);box-shadow:0 3px 0 #06223d}
-.rb.ho{background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);color:#3a1d00;box-shadow:0 3px 0 #6b4500}
-.rb:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #000}
-.rb:disabled{filter:brightness(.6)}
-@keyframes glow2{to{box-shadow:0 3px 0 #063018,0 0 12px 2px rgba(80,255,140,.8)}}
+.lampbar{display:flex;align-items:center;justify-content:center;gap:10px;padding:3px 8px;background:linear-gradient(#0b2a3a,#06151e);border-top:2px solid #8a6a1a}
+.coins{display:flex;gap:4px;align-items:center}
+.coins i{width:21px;height:21px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--fn);font-size:13px;color:#6b5320;
+  background:radial-gradient(circle at 35% 30%,#7a6630,#3d3015);border:2px solid #5a4719;transition:all .15s}
+.coins i.on{color:#5a3a00;background:radial-gradient(circle at 35% 30%,#fff6c8,#ffc83d 55%,#b8860b);border-color:#fff0a8;box-shadow:0 0 10px rgba(255,200,60,.9)}
+.lampbar .lb{font-family:var(--fd);font-size:13px;color:#8a7440}
+.lampbar .lb.on{color:var(--gold);text-shadow:0 0 8px rgba(255,200,60,.8)}
+.hlamp{font-family:var(--fd);font-size:11px;padding:4px 7px;border-radius:7px;color:#4a6a80;border:2px solid #23455a;background:#0a1d28}
+.hlamp.on{color:#fff;background:linear-gradient(#59c2ff,#1f6fbf);border-color:#bfe6ff;box-shadow:0 0 12px rgba(80,180,255,.9);animation:blinkA .7s infinite}
+.rctl{display:grid;grid-template-columns:repeat(3,var(--cw));gap:8px;justify-content:center;padding:6px 8px 8px;background:linear-gradient(#3a3a3a,#1a1a1a)}
+.rb{height:40px;border-radius:9px;font-family:var(--fd);font-size:14px;line-height:1;color:#5a1d10;position:relative;overflow:hidden;
+  background:linear-gradient(#8a4a2a,#5a2512);border:2px solid #2a0d05;box-shadow:0 4px 0 #1a0802,inset 0 1px 0 rgba(255,255,255,.15)}
+.rb small{display:block;font-family:var(--fn);font-size:10px;margin-top:3px;opacity:.8}
+.rb::after{content:"";position:absolute;left:4px;right:4px;top:3px;height:38%;border-radius:6px;background:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,0));pointer-events:none}
+.rb.nu{color:#5a1000;background:linear-gradient(#ffd27a,#ff8a1f 45%,#e0420a);border-color:#ffe2a8;box-shadow:0 4px 0 #6b1d00,0 0 14px rgba(255,140,30,.85);animation:glow2 .7s infinite alternate}
+.rb.hf{color:#fff;background:linear-gradient(#8fd6ff,#1f8fe0 50%,#0b4d8a);border-color:#cfeeff;box-shadow:0 4px 0 #06223d,0 0 12px rgba(80,180,255,.8);text-shadow:0 1px 0 #032}
+.rb.ho{color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);border-color:#fff;box-shadow:0 4px 0 #6b4500,0 0 16px rgba(255,200,60,.95)}
+.rb:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #000}
+@keyframes glow2{to{box-shadow:0 4px 0 #6b1d00,0 0 22px 4px rgba(255,160,40,.95)}}
 .reel.held{box-shadow:inset 0 0 0 4px var(--gold)}
 .reel.held::before{content:"PARADO";position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);font-family:var(--fd);font-size:13px;color:#fff;background:rgba(180,120,0,.85);padding:2px 8px;border-radius:6px;pointer-events:none}
 
@@ -140,7 +162,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 /* ---------- bote ---------- */
 .bote{display:flex;align-items:center;gap:8px;padding:2px 10px;border-radius:12px;background:linear-gradient(90deg,#3a0610,#7a0d20 50%,#3a0610);border:2px solid var(--gold);box-shadow:0 0 14px rgba(255,200,60,.35)}
 .bote img{width:26px;height:26px}
-.bote div{flex:1;line-height:1}
+.bote div{flex:1;line-height:1;min-width:0;white-space:nowrap;overflow:hidden}
+.bote small{text-overflow:ellipsis;overflow:hidden}
 .bote b{font-family:var(--fd);font-weight:400;font-size:14px;color:var(--gold)}
 .bote small{display:block;font-size:12px;color:#f3c9cf}
 .bote span{font-family:var(--fn);font-size:22px;color:#7dff9b;text-shadow:0 0 10px rgba(80,255,120,.8)}
@@ -156,24 +179,41 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .lamp b{font-family:var(--fn);font-size:20px}
 #lD span,#lD b{color:#7dff9b}#lN span,#lN b{color:#ff5a6e}
 .lamp.on{opacity:1}
+.rlad{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin:2px 0 8px}
+.rlad span{font-family:var(--fn);font-size:12px;padding:3px 6px;border-radius:6px;background:rgba(255,255,255,.07);color:#d9a7ad}
+.rlad span.cur{background:var(--gold);color:#3a1d00;box-shadow:0 0 10px var(--gold)}
+.rlad span.nx{outline:2px solid #7dff9b;color:#7dff9b}
+.rlad span.lo{outline:2px solid #ff5a6e;color:#ff8a9a}
 #lD.on{background:#0b4d27;border-color:#7dff9b;box-shadow:0 0 22px rgba(80,255,120,.8)}
 #lN.on{background:#5a0010;border-color:#ff5a6e;box-shadow:0 0 22px rgba(255,80,100,.8)}
 .risk.idle #lD{animation:blinkA .9s infinite}.risk.idle #lN{animation:blinkA .9s .45s infinite}
 @keyframes blinkA{0%,49%{opacity:1}50%,100%{opacity:.45}}
 
-/* ---------- botones ---------- */
-.ctrls{display:grid;grid-template-columns:52px 52px 1fr 1fr;gap:7px;align-items:stretch;height:70px}
-.sbtn{border-radius:14px;background:linear-gradient(#45101b,#1f0409);border:1px solid #74202f;font-family:var(--fn);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 #0a0003}
-.sbtn i{font-style:normal;font-size:20px}
-.sbtn.on{background:linear-gradient(#1f8f4e,#0b4d27);border-color:#4fdc8d}
-.sbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0a0003}
-.play{border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;font-family:var(--fd);font-size:20px;letter-spacing:.5px}
-.play small{font-family:var(--fn);font-size:15px;margin-top:4px}
-#b1{background:linear-gradient(#ff5a6e,#d4102e 45%,#8e0a1f);box-shadow:0 5px 0 #4d0410,inset 0 2px 0 rgba(255,255,255,.35);text-shadow:0 2px 0 #5a0010}
-#b2{background:linear-gradient(#fff3b0,#ffc83d 45%,#d08a00);color:#3a1d00;box-shadow:0 5px 0 #6b4500,inset 0 2px 0 rgba(255,255,255,.6)}
-.play:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 #000}
-.play:disabled{filter:saturate(.3) brightness(.65)}
+/* ---------- botones de la máquina ---------- */
+.ctrls{display:grid;grid-template-columns:1fr 1fr .8fr 1.5fr;gap:7px;align-items:stretch;height:58px}
+.pbtn{position:relative;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;
+  font-family:var(--fd);font-size:15px;border:2px solid rgba(255,255,255,.35)}
+.pbtn::after{content:"";position:absolute;left:5px;right:5px;top:3px;height:40%;border-radius:8px;background:linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,0));pointer-events:none}
+.pbtn small{font-family:var(--fn);font-size:14px;margin-top:4px}
+.pbtn:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 #000!important}
+.pbtn:disabled{filter:saturate(.35) brightness(.6)}
+.cob{color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d 45%,#d08a00);box-shadow:0 5px 0 #6b4500}
+.cob.ready{animation:glow3 .9s infinite alternate}
+@keyframes glow3{to{box-shadow:0 5px 0 #6b4500,0 0 18px 4px rgba(255,200,60,.9)}}
+.bet{color:#fff;background:linear-gradient(#8fd6ff,#1f6fbf 50%,#0b3d6e);box-shadow:0 5px 0 #06223d;text-shadow:0 1px 0 #032;font-size:12px}
+.bet small{font-size:17px}
+.bet.x2{background:linear-gradient(#d9a6ff,#8a2be2 50%,#4b0a8a);box-shadow:0 5px 0 #2a0550}
+.aut{color:#fff;background:linear-gradient(#777,#3a3a3a 50%,#222);box-shadow:0 5px 0 #000;font-size:13px}
+.aut.on{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 5px 0 #063018,0 0 14px rgba(80,255,140,.7)}
+.play{color:#fff;font-size:24px;background:linear-gradient(#7dff9b,#1fae4e 45%,#0b6b2a);box-shadow:0 5px 0 #063018;text-shadow:0 2px 0 #053}
 .note{text-align:center;font-size:11px;color:#a77a80;margin-top:2px}
+@media (max-height:700px){.note{display:none}}
+/* ---------- monedero ---------- */
+.chips{display:grid;grid-template-columns:1fr auto;gap:6px}
+.wallet{border-radius:12px;padding:3px 10px;text-align:right;background:linear-gradient(#0b3d22,#062514);border:2px solid #3fbf6f;line-height:1}
+.wallet small{display:block;font-size:11px;letter-spacing:1px;color:#a8e6bf;font-weight:700}
+.wallet b{font-family:var(--fn);font-weight:400;font-size:19px;color:#fff}
+.wallet em{display:block;font-style:normal;font-size:11px;color:#ffd36b;margin-top:1px}
 
 /* ---------- ventanas ---------- */
 .ov{position:fixed;inset:0;z-index:50;background:rgba(5,0,2,.82);display:flex;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}
@@ -282,16 +322,20 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 <div id="app">
   <header>
     <button class="hbtn" id="menuBtn" aria-label="Menú">☰</button>
-    <div class="title"><img src="img/p13.webp" alt=""><h1>LA CATEDRAL DEL TRIPLE</h1></div>
+    <div class="title"><h1>LA CATEDRAL DEL TRIPLE</h1></div>
+    <button class="hbtn" id="ptBtn" aria-label="Tabla de premios">📋</button>
     <button class="hbtn" id="sndBtn" aria-label="Sonido">🔊</button>
   </header>
 
-  <div class="bote" id="boteBar"><img src="img/p13.webp" alt=""><div><b>BOTE CATEDRAL</b><small>3 escudos en cualquier sitio</small></div><span id="mBote">30,00 €</span></div>
+  <div class="chips">
+    <div class="bote" id="boteBar"><img src="img/p13.webp" alt=""><div><b>BOTE CATEDRAL</b><small>3 escudos en cualquier sitio</small></div><span id="mBote">30,00 €</span></div>
+    <div class="wallet" id="walletBox"><small>MI DINERO</small><b id="mCartera">0,00 €</b><em id="mRecarga"></em></div>
+  </div>
 
   <div class="cab"><div class="inner"><div class="board" id="board"></div></div><div class="bulbs"></div></div>
 
   <div class="meters">
-    <div class="meter"><b>SALDO</b><span id="mSaldo">0,00 €</span></div>
+    <div class="meter"><b>CRÉDITO</b><span id="mSaldo">0,00 €</span></div>
     <div class="meter"><b>APUESTA</b><span id="mBet">0,20 €</span></div>
     <div class="meter win"><b>PREMIO</b><span id="mWin">0,00 €</span></div>
   </div>
@@ -301,16 +345,28 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <div class="reel"><div class="strip"></div></div>
     <div class="reel"><div class="strip"></div></div>
     <svg class="lines" id="lines" viewBox="0 0 3 3" preserveAspectRatio="none"></svg>
-  </div><div class="rctl" id="rctl"><button class="rb" data-c="0">&nbsp;</button><button class="rb" data-c="1">&nbsp;</button><button class="rb" data-c="2">&nbsp;</button></div></div><div class="bulbs"></div></div>
+  </div>
+  <div class="lampbar"><div class="coins" id="coins"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div><span class="lb" id="avLbl">AVANCES</span><span class="hlamp" id="holdLamp">RETENCIÓN</span></div>
+  <div class="rctl" id="rctl"><button class="rb" data-c="0"></button><button class="rb" data-c="1"></button><button class="rb" data-c="2"></button></div>
+  </div><div class="bulbs"></div></div>
 
   <div class="ctrls">
-    <button class="sbtn" id="ptBtn"><i>📋</i>PREMIOS</button>
-    <button class="sbtn" id="autoBtn"><i>🔁</i>AUTO</button>
-    <button class="play" id="b1">JUGAR<small>0,20 €</small></button>
-    <button class="play" id="b2">DOBLE<small>0,40 €</small></button>
+    <button class="pbtn cob" id="cobBtn">COBRAR</button>
+    <button class="pbtn bet" id="betBtn">APUESTA<small id="betLbl">0,20 €</small></button>
+    <button class="pbtn aut" id="autoBtn">AUTO</button>
+    <button class="pbtn play" id="b1">JUGAR</button>
   </div>
   <div class="note">Juego de entretenimiento · dinero ficticio, sin apuestas reales</div>
 </div>
+
+<!-- sin dinero -->
+<div class="ov hidden" id="nmOv"><div class="panel" style="text-align:center">
+  <h2>SIN DINERO</h2>
+  <p>Te has quedado sin dinero para jugar.</p>
+  <p style="font-size:20px">⏱️ Recarga automática de <b>5 €</b> en<br><b id="nmT" style="font-family:var(--fn);font-size:34px;color:#7dff9b">60:00</b></p>
+  <p>🎁 Y cada día que abras el juego te regalamos <b>20 €</b>.</p>
+  <button class="big" data-close>ENTENDIDO</button>
+</div></div>
 
 <!-- tabla de premios -->
 <div class="ov hidden" id="ptOv"><div class="panel">
@@ -324,7 +380,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <div class="pti sp"><img src="img/balon.webp" alt=""><div class="v" style="font-size:14px"><b>BALÓN = COMODÍN</b> (solo en el rodillo central): sustituye a cualquier jugador o al escudo.<br>3 balones en vertical → 5 € (10 €)</div></div>
   <h3>Bote y riesgo</h3>
   <div class="pti sp"><img src="img/p13.webp" alt=""><div class="v" style="font-size:14px">3 escudos en cualquier sitio → <b style="color:#7dff9b">BOTE CATEDRAL</b><br>El bote empieza en 30 € y sube con cada jugada.</div></div>
-  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR al doble o nada (hasta 320 €, 640 € a DOBLE).</p>
+  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes un escalón; si fallas bajas dos.</p>
   <h3>Avances y retenciones</h3>
   <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
   <h3>Camiseta = BONUS</h3>
@@ -342,11 +398,10 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <button class="mitem" id="mHow">❓ Cómo se juega</button>
   <button class="mitem" id="mPt">📋 Tabla de premios</button>
   <button class="mitem" id="mShare">💬 Compartir por WhatsApp<small>Envía el enlace a tus amigos</small></button>
-  <button class="mitem" id="mRefill">💶 Recargar saldo<small>+20 € ficticios (si te quedan menos de 5 €)</small></button>
+  <p style="font-size:15px;margin:10px 2px">🎁 <b>Regalo diario:</b> 20 € cada día que abras el juego.<br>⏱️ <b>Sin dinero:</b> recarga automática de 5 € al pasar 1 hora.</p>
   <h3>🏀 Entrenamiento de minijuegos</h3>
   <p style="margin-top:0;font-size:15px">Prueba los minijuegos cuando quieras. En entrenamiento no se cobra premio.</p>
   <div class="mgrid" id="trainList"></div>
-  <button class="mitem" id="mReset" style="margin-top:14px">♻️ Empezar de cero<small>Saldo a 20 € y bonus a 0</small></button>
 </div></div>
 
 <!-- cómo se juega -->
@@ -354,16 +409,18 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <button class="x" data-close>✕</button>
   <h2>CÓMO SE JUEGA</h2>
   <ol>
-    <li>Pulsa <b>JUGAR</b> (0,20 €) o <b>DOBLE</b> (0,40 €). Jugando a doble, todos los premios se pagan al doble.</li>
+    <li>Empiezas con <b>20 €</b> en <b>MI DINERO</b>. Cada día que abras el juego te regalamos <b>20 €</b> más, y si te quedas sin dinero, al pasar <b>1 hora</b> se recargan <b>5 €</b>.</li>
+    <li>Al pulsar <b>JUGAR</b>, la máquina coge dinero para sus <b>CRÉDITOS</b>. Los premios van a los créditos y con <b>COBRAR</b> pasan a tu dinero.</li>
+    <li>Con <b>APUESTA</b> eliges 0,20 € o <b>DOBLE</b> 0,40 €. Jugando a doble, todos los premios se pagan al doble.</li>
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en línea</b> (3 horizontales, 3 verticales y 2 diagonales) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (3 en línea = 6 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
     <li><b>BALÓN = COMODÍN</b>: sale solo en el rodillo central y sustituye a cualquier jugador o al escudo para hacer línea.</li>
     <li><b>TIRADAS GRATIS</b>: si la luz de arriba se para en 🎁, juegas 8 tiradas gratis con los premios de línea x2.</li>
-    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b>. Si arriesgas, las luces se alternan entre DOBLE y NADA: pulsa ¡PARAR! Puedes repetir hasta 320 € (640 € a DOBLE).</li>
+    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio; si fallas bajas dos escalones (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
     <li><b>BOTE CATEDRAL</b>: crece con cada jugada. Si salen <b>3 escudos en cualquier sitio</b> de los rodillos, ¡te llevas el bote entero!</li>
-    <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa <b>▼ AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
+    <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
     <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
   </ol>
@@ -374,8 +431,9 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 <div class="ov hidden" id="riskOv"><div class="panel risk">
   <h2>¿COBRAR O ARRIESGAR?</h2>
   <div class="rnow">PREMIO <b id="rAmt">0,00 €</b></div>
-  <div class="lamps"><div class="lamp" id="lD"><span>DOBLE</span><b id="rDbl">0,00 €</b></div><div class="lamp" id="lN"><span>NADA</span><b>0,00 €</b></div></div>
-  <p class="ins" id="rIns">Si arriesgas, las luces se alternan: pulsa <b>¡PARAR!</b> y… ¡suerte!</p>
+  <div class="lamps"><div class="lamp" id="lD"><span>▲ SUBE</span><b id="rDbl">0,00 €</b></div><div class="lamp" id="lN"><span>▼ BAJA</span><b id="rLow">0,00 €</b></div></div>
+  <div class="rlad" id="rLad"></div>
+  <p class="ins" id="rIns"></p>
   <div class="row"><button class="big grn" id="rCob">COBRAR</button><button class="big red" id="rArr">ARRIESGAR</button></div>
 </div></div>
 
@@ -415,7 +473,8 @@ const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000
 const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
 const WEIGHT = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 13, 11, 11, 4.8];
 const WEIGHT_C = WEIGHT.concat([10]);             // rodillo central: con comodín
-const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03, RISK_CAP = 32000; // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
+const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03;
+const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €) // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
 const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
 
@@ -452,7 +511,7 @@ const RING = [[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[5,5],[5,4],[5,3],
 
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
-let S = { saldo: 2000, bonus: [], muted: false, lastBet: 20, bote: BOTE_SEED, fs: { n: 0, bet: 20 } };
+let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, bote: BOTE_SEED, fs: { n: 0, bet: 20 } };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -527,22 +586,22 @@ for (let c = 0; c < 3; c++) setStrip(c, [grid[c], grid[3 + c], grid[6 + c]]);
 function fit() {
   const H = window.innerHeight, W = Math.min(window.innerWidth, 480), R = document.documentElement.style;
   const cwMax = Math.floor((W - 20 - 28 - 12) / 3), trMax = Math.floor((W - 60) / 5 * .82);
-  const set = (c, tr) => { R.setProperty('--c', c + 'px'); R.setProperty('--cw', Math.min(cwMax, Math.round(c * 1.5)) + 'px'); R.setProperty('--tr', tr + 'px'); };
+  const set = (c, tr) => { R.setProperty('--c', c + 'px'); R.setProperty('--cw', cwMax + 'px'); R.setProperty('--tr', tr + 'px'); };
   // medir lo que ocupa todo lo demás (cabecera, contadores, botones, márcos…)
   set(60, 40);
   const app = $('#app'); app.style.minHeight = '0';
   const used = app.getBoundingClientRect().height - (3 * 60 + 5 * 40);
   app.style.minHeight = '';
   const avail = Math.max(300, H - used);
-  let c = Math.floor(avail * .55 / 3), tr = Math.floor(avail * .45 / 5);
-  c = Math.max(44, Math.min(c, cwMax)); tr = Math.max(27, Math.min(tr, trMax));
+  let c = Math.floor(avail * .6 / 3), tr = Math.floor(avail * .4 / 5);
+  c = Math.max(58, Math.min(c, cwMax)); tr = Math.max(28, Math.min(tr, trMax));
   // si sobra sitio en una de las dos pantallas, se lo damos a la otra
   const spare = avail - 3 * c - 5 * tr;
   if (spare > 0) { c = Math.min(cwMax, c + Math.floor(spare / 3)); tr = Math.min(trMax, Math.floor((avail - 3 * c) / 5)); }
   set(c, tr);
   // ajuste fino: si aún sobresale unos píxeles, reducir los rodillos
   app.style.minHeight = '0';
-  for (let k = 0; k < 12 && app.getBoundingClientRect().height > H && c > 44; k++) { c -= 2; set(c, tr); }
+  for (let k = 0; k < 12 && app.getBoundingClientRect().height > H && c > 58; k++) { c -= 2; set(c, tr); }
   app.style.minHeight = '';
 }
 addEventListener('resize', fit); fit();
@@ -550,12 +609,15 @@ addEventListener('resize', fit); fit();
 /* ---------- contadores ---------- */
 function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
+  $('#mCartera').textContent = fmt(S.cartera);
+  $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA';
+  $('#cobBtn').disabled = busy || topBusy || fsRunning || S.saldo <= 0; $('#cobBtn').classList.toggle('ready', S.saldo > 0 && !busy);
+  $('#betBtn').disabled = busy || topBusy || fsRunning;
   $('#mBote').textContent = fmt(Math.floor(S.bote));
   $('#mBet').textContent = fsRunning ? 'GRATIS' : fmt(S.lastBet);
   $('#bN').textContent = S.bonus.length;
   $('#launch').disabled = !S.bonus.length || topBusy || busy || fsRunning;
-  $('#b1').disabled = $('#b2').disabled = busy || topBusy || fsRunning;
-  document.querySelectorAll('#rctl .rb').forEach(b => b.disabled = busy || topBusy);
+  $('#b1').disabled = busy || topBusy || fsRunning;
   const x2 = S.bonus.length && S.bonus[0] === 2;
   board.classList.toggle('x2', !!x2);
   board.querySelectorAll('.tc.prize .l').forEach(l => l.textContent = fmtS(+l.dataset.v * (x2 ? 2 : 1)));
@@ -593,7 +655,7 @@ let mode = null, held = [false, false, false], holdOk = [false, false, false], n
 async function spin(bet, free) {
   if (busy || topBusy) return;
   if (!free && fsRunning) return;
-  if (!free && S.saldo < bet) { noMoney(); return; }
+  if (!free && !ensureCredits(bet)) { noMoney(); return; }
   ac(); busy = true;
   if (!free) { S.lastBet = bet; S.saldo -= bet; S.bote += bet * BOTE_PCT; }
   save();
@@ -682,18 +744,30 @@ async function payWins(r, mult, noRisk) {
   if (final > 0) await countWin(final); else $('#mWin').textContent = fmt(0);
 }
 
-/* ---------- RIESGO: doble o nada ---------- */
+/* ---------- RIESGO: escalera de premios ----------
+   Si aciertas subes al siguiente premio de la escalera; si fallas bajas dos escalones por debajo
+   del premio que tenías y te quedas con ese. La probabilidad de subir se calcula en cada escalón
+   para que, de media, arriesgar devuelva un 97 % de lo que se tiene. */
+function riskStep(a, mult) {
+  const L = LADDER.map(v => v * mult);
+  const next = L.find(v => v > a);
+  const below = L.filter(v => v < a).reverse();
+  const low = below[1] || 0;
+  const p = next ? Math.min(.9, Math.max(.05, (.97 * a - low) / (next - low))) : 0;
+  return { next, low, p, L };
+}
 function risk(amount, mult) {
   return new Promise(res => {
     const ov = $('#riskOv'), pn = ov.querySelector('.risk'), lD = $('#lD'), lN = $('#lN'), bA = $('#rArr'), bC = $('#rCob');
-    let a = amount, running = false, timer = null, lamp = 0;
-    const cap = RISK_CAP * mult;
+    let a = amount, running = false, timer = null, lamp = 0, st = riskStep(a, mult);
     const setLamp = i => { lamp = i; lD.classList.toggle('on', i === 0); lN.classList.toggle('on', i === 1); };
     const upd = () => {
-      $('#rAmt').textContent = fmt(a); $('#rDbl').textContent = fmt(a * 2); $('#mWin').textContent = fmt(a);
-      const max = a * 2 > cap;
-      bA.disabled = max; bA.textContent = max ? 'MÁXIMO' : 'ARRIESGAR'; bC.disabled = false;
-      $('#rIns').innerHTML = max ? '¡Has llegado al máximo! Cobra tu premio.' : 'Si arriesgas, las luces se alternan: pulsa <b>¡PARAR!</b> y… ¡suerte!';
+      st = riskStep(a, mult);
+      $('#rAmt').textContent = fmt(a); $('#mWin').textContent = fmt(a);
+      $('#rDbl').textContent = st.next ? fmt(st.next) : '—'; $('#rLow').textContent = fmt(st.low);
+      $('#rLad').innerHTML = st.L.map(v => `<span class="${v === a ? 'cur' : v === st.next ? 'nx' : v === st.low ? 'lo' : ''}">${fmtS(v)}</span>`).join('');
+      bA.disabled = !st.next; bA.textContent = st.next ? 'ARRIESGAR' : 'MÁXIMO'; bC.disabled = false;
+      $('#rIns').innerHTML = st.next ? `Si aciertas subes a <b style="color:#7dff9b">${fmt(st.next)}</b>; si fallas bajas a <b style="color:#ff8a9a">${fmt(st.low)}</b>.` : '¡Has llegado a lo más alto! Cobra tu premio.';
       pn.classList.add('idle'); lD.classList.remove('on'); lN.classList.remove('on');
     };
     const close = v => { clearInterval(timer); ov.classList.add('hidden'); bC.onclick = bA.onclick = null; res(v); };
@@ -701,18 +775,24 @@ function risk(amount, mult) {
     bC.onclick = () => { if (!running) close(a); };
     bA.onclick = async () => {
       if (!running) {
+        if (!st.next) return;
         running = true; pn.classList.remove('idle'); bC.disabled = true; bA.textContent = '¡PARAR!';
         timer = setInterval(() => { setLamp(1 - lamp); SFX.tick(); }, 85);
         return;
       }
       clearInterval(timer); bA.disabled = true;
-      const ok = Math.random() < .5;
+      const ok = Math.random() < st.p;
       let steps = 3 + rnd(3);
       if (((lamp + steps) % 2 === 0) !== ok) steps++; // terminar en el resultado
       for (let i = 0; i < steps; i++) { await sleep(130 + i * 70); setLamp(1 - lamp); SFX.tick(); }
       running = false;
-      if (ok) { a *= 2; SFX.win(); vib([30, 30, 60]); await sleep(700); upd(); }
-      else { SFX.buzz(); vib(150); $('#rAmt').textContent = fmt(0); $('#mWin').textContent = fmt(0); $('#rIns').innerHTML = '<b>¡NADA!</b> Has perdido el premio.'; await sleep(1500); close(0); }
+      if (ok) { a = st.next; SFX.win(); vib([30, 30, 60]); await sleep(700); upd(); }
+      else {
+        SFX.buzz(); vib(150); a = st.low;
+        $('#rAmt').textContent = fmt(a); $('#mWin').textContent = fmt(a);
+        $('#rIns').innerHTML = a ? `<b>¡BAJA!</b> Te quedas con ${fmt(a)}.` : '<b>¡FALLASTE!</b> Te quedas sin premio.';
+        await sleep(1600); close(a);
+      }
     };
   });
 }
@@ -780,13 +860,16 @@ function toggleHold(c) {
 function renderCtl() {
   const bs = document.querySelectorAll('#rctl .rb');
   bs.forEach((b, c) => {
-    b.className = 'rb'; b.disabled = busy || topBusy; b.style.visibility = 'visible';
-    if (mode === 'nudge') { b.classList.add('nu'); b.innerHTML = '▼ AVANCE'; }
-    else if (mode === 'hold' && holdOk[c]) { b.classList.add(held[c] ? 'ho' : 'hf'); b.innerHTML = held[c] ? '🔒 PARADO' : 'PARAR'; }
-    else { b.style.visibility = 'hidden'; b.innerHTML = '&nbsp;'; }
+    b.className = 'rb'; b.disabled = false;
+    if (mode === 'nudge') { b.classList.add('nu'); b.innerHTML = 'AVANCE<small>▼ bajar</small>'; }
+    else if (mode === 'hold' && holdOk[c]) { b.classList.add(held[c] ? 'ho' : 'hf'); b.innerHTML = held[c] ? 'PARADO<small>🔒</small>' : 'PARAR<small>tocar</small>'; }
+    else { b.innerHTML = 'AVANCE<small>PARAR</small>'; }
+    if (busy || topBusy) b.disabled = true;
     reels[c].classList.toggle('held', mode === 'hold' && held[c]);
   });
-  $('#rctl').classList.toggle('on', mode === 'nudge' || mode === 'hold');
+  document.querySelectorAll('#coins i').forEach((x, i) => x.classList.toggle('on', mode === 'nudge' && i < nudges));
+  $('#avLbl').classList.toggle('on', mode === 'nudge');
+  $('#holdLamp').classList.toggle('on', mode === 'hold');
 }
 
 /* el rodillo que daría premio con un avance (lo que está arriba baja al centro) */
@@ -827,10 +910,70 @@ function flyBonus(n) {
 }
 function noMoney() {
   SFX.buzz(); auto = false; $('#autoBtn').classList.remove('on');
-  dmd('SALDO<br>INSUFICIENTE');
-  if (S.saldo < 500) setTimeout(() => { if (confirm('Te has quedado sin saldo. ¿Recargar 20 € ficticios?')) refill(); }, 250);
+  if (S.saldo + S.cartera < 20) {
+    if (!S.emptyAt) { S.emptyAt = Date.now(); save(); }
+    dmd('SIN DINERO'); tickMoney(); $('#nmOv').classList.remove('hidden');
+  } else dmd('PULSA JUGAR');
 }
-function refill() { if (S.saldo >= 500) { alert('Solo puedes recargar cuando te quedan menos de 5 €.'); return; } S.saldo += 2000; save(); ui(); SFX.win(); dmd('+20 €<br>¡A JUGAR!'); }
+
+/* la máquina coge dinero para sus créditos (de 5 € en 5 €) */
+function ensureCredits(bet) {
+  if (S.saldo >= bet) return true;
+  if (S.saldo + S.cartera < bet) return false;
+  const take = Math.min(S.cartera, Math.max(bet - S.saldo, 500));
+  S.cartera -= take; S.saldo += take; save();
+  SFX.coin(); setTimeout(SFX.coin, 90); setTimeout(SFX.coin, 180);
+  const r = $('#walletBox').getBoundingClientRect(), t = $('#mSaldo').getBoundingClientRect();
+  const f = document.createElement('div'); f.className = 'fly'; f.textContent = '+' + fmt(take);
+  f.style.left = r.left + 'px'; f.style.top = r.top + 'px'; document.body.appendChild(f); f.offsetHeight;
+  f.style.transform = `translate(${t.left - r.left}px,${t.top - r.top}px) scale(.8)`; f.style.opacity = '.2';
+  setTimeout(() => f.remove(), 1100);
+  return true;
+}
+
+/* COBRAR: los créditos de la máquina pasan a MI DINERO */
+async function cobrar() {
+  if (busy || topBusy || fsRunning || S.saldo <= 0) return;
+  busy = true; ui();
+  const total = S.saldo, steps = Math.min(30, Math.max(6, Math.round(total / 50)));
+  for (let i = 1; i <= steps; i++) {
+    const v = Math.round(total * i / steps), prev = Math.round(total * (i - 1) / steps);
+    S.saldo -= v - prev; S.cartera += v - prev;
+    $('#mSaldo').textContent = fmt(S.saldo); $('#mCartera').textContent = fmt(S.cartera);
+    SFX.coin(); await sleep(45);
+  }
+  S.saldo = 0; save(); vib([20, 20, 40]);
+  dmd('COBRADO<br>' + fmt(total));
+  busy = false; ui(); renderCtl();
+}
+
+/* regalo diario de 20 € y recarga de 5 € al pasar 1 hora sin dinero */
+const HOUR = 3600 * 1000;
+function today() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+async function checkDaily() {
+  if (S.lastDay === today()) return;
+  S.lastDay = today(); S.cartera += 2000; S.emptyAt = 0; save(); ui();
+  SFX.big();
+  await celebrate('¡REGALO DIARIO!', 'img/p13.webp', 2000);
+}
+function tickMoney() {
+  const out = S.saldo + S.cartera < 20 && !S.bonus.length && !(S.fs && S.fs.n > 0);
+  if (out && !S.emptyAt && !busy && !topBusy && !fsRunning) { S.emptyAt = Date.now(); save(); }
+  if (!out && S.emptyAt) { S.emptyAt = 0; save(); }
+  if (S.emptyAt) {
+    const left = S.emptyAt + HOUR - Date.now();
+    if (left <= 0) {
+      S.emptyAt = 0; S.cartera += 500; save(); ui();
+      $('#nmOv').classList.add('hidden'); $('#mRecarga').textContent = '';
+      SFX.win(); celebrate('¡RECARGA!', 'img/p13.webp', 500);
+      return;
+    }
+    const m = Math.floor(left / 60000), sc = Math.floor(left / 1000) % 60, txt = String(m).padStart(2, '0') + ':' + String(sc).padStart(2, '0');
+    $('#mRecarga').textContent = '+5 € en ' + txt; $('#nmT').textContent = txt;
+  } else $('#mRecarga').textContent = '';
+  if (S.lastDay && S.lastDay !== today() && !busy && !topBusy && !fsRunning) checkDaily();
+}
+setInterval(tickMoney, 1000);
 
 /* =========================================================
    CELEBRACIÓN + CONFETI
@@ -913,7 +1056,7 @@ function autoStep() {
     if (!auto || busy || topBusy || fsRunning) return;
     if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
     else if (S.bonus.length) launch();
-    else if (S.saldo >= 20) spin(20);
+    else if (S.saldo + S.cartera >= S.betSel) spin(S.betSel);
     else { auto = false; $('#autoBtn').classList.remove('on'); noMoney(); }
   }, 650);
 }
@@ -1177,16 +1320,15 @@ $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data
 const open = id => $(id).classList.remove('hidden');
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.ov').classList.add('hidden'));
 document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'mg' && o.id !== 'win' && o.id !== 'riskOv') o.classList.add('hidden'); }));
-$('#b1').onclick = () => spin(20);
-$('#b2').onclick = () => spin(40);
+$('#b1').onclick = () => spin(S.betSel);
+$('#betBtn').onclick = () => { if (busy || topBusy || fsRunning) return; S.betSel = S.betSel === 20 ? 40 : 20; S.lastBet = S.betSel; save(); ui(); SFX.tick(); };
+$('#cobBtn').onclick = cobrar;
 $('#launch').onclick = launch;
 document.querySelectorAll('#rctl .rb').forEach(b => b.onclick = () => { const c = +b.dataset.c; if (mode === 'nudge') nudge(c); else if (mode === 'hold') toggleHold(c); });
 $('#ptBtn').onclick = () => open('#ptOv');
 $('#menuBtn').onclick = () => open('#menuOv');
 $('#mPt').onclick = () => { $('#menuOv').classList.add('hidden'); open('#ptOv'); };
 $('#mHow').onclick = () => { $('#menuOv').classList.add('hidden'); open('#howOv'); };
-$('#mRefill').onclick = () => { $('#menuOv').classList.add('hidden'); refill(); };
-$('#mReset').onclick = () => { if (confirm('¿Empezar de cero con 20 € y sin bonus?')) { S.saldo = 2000; S.bonus = []; save(); ui(); $('#menuOv').classList.add('hidden'); } };
 const URL_GAME = 'https://arricio.github.io/catedral-baloncesto/tragaperras/';
 $('#mShare').onclick = async () => {
   const text = '🏀 ¡Juega a La Catedral del Triple, la tragaperras de la Cultural Leonesa de Baloncesto! ';
@@ -1197,7 +1339,8 @@ document.querySelectorAll('[data-mg]').forEach(b => b.onclick = () => { $('#menu
 $('#sndBtn').onclick = () => { S.muted = !S.muted; save(); ui(); ac(); };
 $('#autoBtn').onclick = () => { auto = !auto; $('#autoBtn').classList.toggle('on', auto); if (auto) autoStep(); };
 
-ui(); renderCtl();
+ui(); renderCtl(); tickMoney();
+setTimeout(checkDaily, 700);
 if (S.fs && S.fs.n > 0) setTimeout(runFreeSpins, 1200);
 if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
