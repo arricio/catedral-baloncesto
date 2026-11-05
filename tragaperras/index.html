@@ -210,6 +210,21 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .play{color:#fff;font-size:24px;background:linear-gradient(#7dff9b,#1fae4e 45%,#0b6b2a);box-shadow:0 5px 0 #063018;text-shadow:0 2px 0 #053}
 .note{text-align:center;font-size:11px;color:#a77a80;margin-top:2px}
 @media (max-height:700px){.note{display:none}}
+/* ---------- instalar ---------- */
+.instBar{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom) + 8px);z-index:45;max-width:464px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;
+  border-radius:14px;background:linear-gradient(#1f8f4e,#0b4d27);border:2px solid #7dff9b;box-shadow:0 6px 24px rgba(0,0,0,.7)}
+.instBar img{width:38px;height:38px;border-radius:9px}
+.instBar div{flex:1;line-height:1.1}
+.instBar b{font-family:var(--fn);font-weight:400;font-size:15px}
+.instBar small{display:block;font-size:13px;color:#c8f5d8}
+#instGo{font-family:var(--fd);font-size:14px;padding:10px 12px;border-radius:10px;color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);box-shadow:0 3px 0 #6b4500}
+#instX{width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.3);font-size:14px}
+.steps{list-style:none;padding:0;margin:8px 0}
+.steps li{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:17px}
+.steps li i{flex:none;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-style:normal;font-size:22px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+.steps li b{color:var(--gold)}
+.warn{background:rgba(255,200,60,.12);border:1px solid var(--gold2);border-radius:10px;padding:8px 10px;font-size:15px!important}
+
 /* ---------- monedero ---------- */
 .chips{display:grid;grid-template-columns:1fr auto;gap:6px}
 .wallet{border-radius:12px;padding:3px 10px;text-align:right;background:linear-gradient(#0b3d22,#062514);border:2px solid #3fbf6f;line-height:1}
@@ -361,6 +376,15 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <div class="note">Juego de entretenimiento · dinero ficticio, sin apuestas reales</div>
 </div>
 
+<!-- instalar -->
+<div class="instBar hidden" id="instBar"><img src="pwa-192.png" alt=""><div><b>Instala el juego</b><small>Juega a pantalla completa, como una app</small></div><button id="instGo">INSTALAR</button><button id="instX" aria-label="Cerrar">✕</button></div>
+<div class="ov hidden" id="instOv"><div class="panel">
+  <button class="x" data-close>✕</button>
+  <h2>📲 INSTALAR EL JUEGO</h2>
+  <div id="instBody"></div>
+  <button class="big" data-close>ENTENDIDO</button>
+</div></div>
+
 <!-- sin dinero -->
 <div class="ov hidden" id="nmOv"><div class="panel" style="text-align:center">
   <h2>SIN DINERO</h2>
@@ -399,6 +423,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <h2>MENÚ</h2>
   <button class="mitem" id="mHow">❓ Cómo se juega</button>
   <button class="mitem" id="mPt">📋 Tabla de premios</button>
+  <button class="mitem" id="mInst">📲 Instalar en el móvil<small>Tenlo en la pantalla de inicio, como una app</small></button>
   <button class="mitem" id="mShare">💬 Compartir por WhatsApp<small>Envía el enlace a tus amigos</small></button>
   <p style="font-size:15px;margin:10px 2px">🎁 <b>Regalo diario:</b> 20 € cada día que abras el juego.<br>⏱️ <b>Sin dinero:</b> recarga automática de 5 € al pasar 1 hora.</p>
   <h3>🏀 Entrenamiento de minijuegos</h3>
@@ -1345,7 +1370,43 @@ ui(); renderCtl(); tickMoney();
 setTimeout(checkDaily, 700);
 if (S.fs && S.fs.n > 0) setTimeout(runFreeSpins, 1200);
 if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+/* ---------- INSTALAR COMO APP ---------- */
+let installEvt = null;
+const UA = navigator.userAgent;
+const isIOS = /iphone|ipad|ipod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const inApp = /FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)/i.test(UA);
+const installed = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; showInstBar(); });
+addEventListener('appinstalled', () => { installEvt = null; $('#instBar').classList.add('hidden'); try { localStorage.setItem('cdt-inst', 'ok'); } catch (e) {} celebrate('¡JUEGO INSTALADO!', 'pwa-192.png', null, 'Ya lo tienes en tu pantalla de inicio'); });
+function showInstBar() {
+  if (installed()) return;
+  let hide = null; try { hide = localStorage.getItem('cdt-inst'); } catch (e) {}
+  if (hide && Date.now() - +hide < 3 * 86400000) return; // si lo cerró, no molestar en 3 días
+  $('#instBar').classList.remove('hidden');
+}
+async function install() {
+  $('#instBar').classList.add('hidden');
+  if (installed()) { $('#instBody').innerHTML = '<p>✅ Ya estás jugando desde la app instalada.</p>'; $('#instOv').classList.remove('hidden'); return; }
+  if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; return; }
+  let h = '';
+  if (inApp) h += `<p class="warn">⚠️ Estás dentro de otra app (por ejemplo WhatsApp). Desde ahí no se puede instalar: primero ábrelo en el navegador.<br>Pulsa <b>⋮</b> o <b>···</b> arriba a la derecha → <b>Abrir en ${isIOS ? 'Safari' : 'Chrome'}</b> (o «Abrir en el navegador»).</p>`;
+  if (isIOS) h += `<p>En iPhone se instala desde <b>Safari</b>:</p><ol class="steps">
+      <li><i>⬆️</i><span>Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba, abajo en la pantalla).</span></li>
+      <li><i>➕</i><span>Baja y pulsa <b>«Añadir a pantalla de inicio»</b>.</span></li>
+      <li><i>✅</i><span>Pulsa <b>«Añadir»</b> arriba a la derecha. ¡Ya tienes el escudo en tu pantalla!</span></li></ol>`;
+  else h += `<p>En Android se instala desde <b>Chrome</b>:</p><ol class="steps">
+      <li><i>⋮</i><span>Pulsa los <b>tres puntos</b> arriba a la derecha.</span></li>
+      <li><i>📲</i><span>Pulsa <b>«Instalar aplicación»</b> o <b>«Añadir a pantalla de inicio»</b>.</span></li>
+      <li><i>✅</i><span>Confirma con <b>«Instalar»</b>. ¡Ya tienes el escudo en tu pantalla!</span></li></ol>`;
+  $('#instBody').innerHTML = h; $('#instOv').classList.remove('hidden');
+}
+$('#instGo').onclick = install;
+$('#mInst').onclick = () => { $('#menuOv').classList.add('hidden'); install(); };
+$('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { localStorage.setItem('cdt-inst', String(Date.now())); } catch (e) {} };
+// iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
+setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>
