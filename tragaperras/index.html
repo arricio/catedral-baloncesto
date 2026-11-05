@@ -521,10 +521,11 @@ const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 16
    En cada jugada la máquina sortea primero el resultado y luego coloca las figuras.
    El 50 % de las jugadas tiene premio de línea; el premio pequeño es el que más sale
    y cada premio mayor sale menos. Probabilidad por jugada de cada premio (índice = figura): */
-const HIT = [.3872, .10, .016, .009, .0055, .0014, .0007, .00035, .00025, .00018, 1 / 7000, 1 / 8750, 1 / 11200];
-let P_BOTE = 1 / 12000;                               // 3 escudos sueltos = BOTE CATEDRAL
+const HIT = [0, .10, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 8000];
+HIT[0] = .51 - HIT.reduce((a, b) => a + b, 0);       // el de 0,10 € completa el 50 % de jugadas con premio
+let P_BOTE = 1 / 20000;                               // 3 escudos sueltos = BOTE CATEDRAL
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
-let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 2.2]; // caras de premio pequeño más frecuentes
+let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 1.5]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL.concat([6]);                       // rodillo central: con comodín
 const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03;
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €) // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
@@ -1401,7 +1402,7 @@ $('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) 
   `<div class="pti${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><div class="v">${fmtS(p)}<small>(${fmtS(p * 2)})${SPECIAL.includes(i) ? ' ★ ESPECIAL' : ''}</small></div></div>`).join('');
 $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i }) => {
   const n = Math.round(1 / h), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
-  return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('') + '<span>BOTE: 1 de cada ~6.500</span>';
+  return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('') + '<span>BOTE: 1 de cada ~5.500</span>';
 $('#miniLines').innerHTML = LINES.map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TOP.filter(c => c.t === 'prize').sort((a, b) => b.v - a.v).map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('');
