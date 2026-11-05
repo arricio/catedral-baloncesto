@@ -131,6 +131,30 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .reel.held{box-shadow:inset 0 0 0 4px var(--gold)}
 .reel.held::before{content:"PARADO";position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);font-family:var(--fd);font-size:13px;color:#fff;background:rgba(180,120,0,.85);padding:2px 8px;border-radius:6px;pointer-events:none}
 
+/* ---------- bote ---------- */
+.bote{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:12px;background:linear-gradient(90deg,#3a0610,#7a0d20 50%,#3a0610);border:2px solid var(--gold);box-shadow:0 0 14px rgba(255,200,60,.35)}
+.bote img{width:30px;height:30px}
+.bote div{flex:1;line-height:1}
+.bote b{font-family:var(--fd);font-weight:400;font-size:14px;color:var(--gold)}
+.bote small{display:block;font-size:12px;color:#f3c9cf}
+.bote span{font-family:var(--fn);font-size:22px;color:#7dff9b;text-shadow:0 0 10px rgba(80,255,120,.8)}
+.bote.hot{animation:hot .3s 10 alternate}
+@keyframes hot{to{box-shadow:0 0 30px 8px rgba(255,200,60,.95);transform:scale(1.03)}}
+/* ---------- riesgo ---------- */
+.risk{text-align:center;border-color:var(--gold)}
+.rnow{font-family:var(--fn);font-size:16px;color:#ffd9de}
+.rnow b{display:block;font-size:40px;color:#7dff9b;text-shadow:0 0 12px rgba(80,255,120,.8)}
+.lamps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.lamp{border-radius:14px;padding:12px 6px;background:#1a0408;border:3px solid #4a0c16;opacity:.45;transition:opacity .05s}
+.lamp span{display:block;font-family:var(--fd);font-size:22px}
+.lamp b{font-family:var(--fn);font-size:20px}
+#lD span,#lD b{color:#7dff9b}#lN span,#lN b{color:#ff5a6e}
+.lamp.on{opacity:1}
+#lD.on{background:#0b4d27;border-color:#7dff9b;box-shadow:0 0 22px rgba(80,255,120,.8)}
+#lN.on{background:#5a0010;border-color:#ff5a6e;box-shadow:0 0 22px rgba(255,80,100,.8)}
+.risk.idle #lD{animation:blinkA .9s infinite}.risk.idle #lN{animation:blinkA .9s .45s infinite}
+@keyframes blinkA{0%,49%{opacity:1}50%,100%{opacity:.45}}
+
 /* ---------- botones ---------- */
 .ctrls{display:grid;grid-template-columns:52px 52px 1fr 1fr;gap:7px;align-items:stretch;height:70px}
 .sbtn{border-radius:14px;background:linear-gradient(#45101b,#1f0409);border:1px solid #74202f;font-family:var(--fn);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 #0a0003}
@@ -256,6 +280,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <button class="hbtn" id="sndBtn" aria-label="Sonido">🔊</button>
   </header>
 
+  <div class="bote" id="boteBar"><img src="img/p13.webp" alt=""><div><b>BOTE CATEDRAL</b><small>3 escudos en cualquier sitio</small></div><span id="mBote">30,00 €</span></div>
+
   <div class="cab"><div class="inner"><div class="board" id="board"></div></div><div class="bulbs"></div></div>
 
   <div class="meters">
@@ -288,6 +314,9 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <div class="minis" id="miniLines"></div>
   <h3>Jugadores y escudo</h3>
   <div class="pt" id="ptList"></div>
+  <h3>Bote y riesgo</h3>
+  <div class="pti sp"><img src="img/p13.webp" alt=""><div class="v" style="font-size:14px">3 escudos en cualquier sitio → <b style="color:#7dff9b">BOTE CATEDRAL</b><br>El bote empieza en 30 € y sube con cada jugada.</div></div>
+  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR al doble o nada (hasta 320 €, 640 € a DOBLE).</p>
   <h3>Avances y retenciones</h3>
   <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
   <h3>Camiseta = BONUS</h3>
@@ -322,11 +351,22 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (3 en línea = 6 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
+    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b>. Si arriesgas, las luces se alternan entre DOBLE y NADA: pulsa ¡PARAR! Puedes repetir hasta 320 € (640 € a DOBLE).</li>
+    <li><b>BOTE CATEDRAL</b>: crece con cada jugada. Si salen <b>3 escudos en cualquier sitio</b> de los rodillos, ¡te llevas el bote entero!</li>
     <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa <b>▼ AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
     <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
   </ol>
   <p style="color:#d9a7ad">Es un juego de entretenimiento: el saldo es ficticio y no se puede canjear por dinero.</p>
+</div></div>
+
+<!-- riesgo: doble o nada -->
+<div class="ov hidden" id="riskOv"><div class="panel risk">
+  <h2>¿COBRAR O ARRIESGAR?</h2>
+  <div class="rnow">PREMIO <b id="rAmt">0,00 €</b></div>
+  <div class="lamps"><div class="lamp" id="lD"><span>DOBLE</span><b id="rDbl">0,00 €</b></div><div class="lamp" id="lN"><span>NADA</span><b>0,00 €</b></div></div>
+  <p class="ins" id="rIns">Si arriesgas, las luces se alternan: pulsa <b>¡PARAR!</b> y… ¡suerte!</p>
+  <div class="row"><button class="big grn" id="rCob">COBRAR</button><button class="big red" id="rArr">ARRIESGAR</button></div>
 </div></div>
 
 <!-- celebración -->
@@ -362,7 +402,8 @@ SYM.push('img/camiseta.webp');
 const CAM = 13;
 const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000]; // céntimos, apuesta 0,20 €
 const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
-const WEIGHT = [210, 165, 112, 95, 85, 58, 46, 36, 28, 22, 17, 14, 12, 6]; // probabilidad de cada casilla
+const WEIGHT = [212, 167, 113, 96, 86, 58, 46, 35, 27, 21, 16, 13, 12, 5.5];
+const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03, RISK_CAP = 32000; // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
 const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
 
@@ -398,7 +439,7 @@ const RING = [[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[5,5],[5,4],[5,3],
 
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
-let S = { saldo: 2000, bonus: [], muted: false, lastBet: 20 };
+let S = { saldo: 2000, bonus: [], muted: false, lastBet: 20, bote: BOTE_SEED };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -491,6 +532,7 @@ addEventListener('resize', fit); fit();
 /* ---------- contadores ---------- */
 function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
+  $('#mBote').textContent = fmt(Math.floor(S.bote));
   $('#mBet').textContent = fmt(S.lastBet);
   $('#bN').textContent = S.bonus.length;
   $('#launch').disabled = !S.bonus.length || topBusy || busy;
@@ -533,7 +575,7 @@ let mode = null, held = [false, false, false], holdOk = [false, false, false], n
 async function spin(bet) {
   if (busy || topBusy) return;
   if (S.saldo < bet) { noMoney(); return; }
-  ac(); busy = true; S.lastBet = bet; S.saldo -= bet; save();
+  ac(); busy = true; S.lastBet = bet; S.saldo -= bet; S.bote += bet * BOTE_PCT; save();
   const H = mode === 'hold' ? held.slice() : [false, false, false];
   const wasHeld = H.some(Boolean);
   mode = null; nudges = 0; renderCtl();
@@ -570,6 +612,7 @@ async function spin(bet) {
   const r = evaluate(grid, mult);
   if (wasHeld && !r.camLines.length) r.bonus = grid.filter((s, i) => s === CAM && !H[i % 3]).length; // las camisetas retenidas no cuentan otra vez
   if (r.wins.length) await payWins(r, mult);
+  if (grid.filter(x => x === ESC).length >= 3) await winBote();
   if (r.bonus) {
     grid.forEach((s, i) => { if (s === CAM && !H[i % 3]) cellAt(i).classList.add('camwin'); });
     r.camLines.forEach(i => drawLine(i, '#20e070'));
@@ -592,7 +635,55 @@ async function payWins(r, mult) {
   if (special) { SFX.big(); vib([60, 40, 60, 40, 120]); await celebrate('¡PREMIO ESPECIAL!', SYM[top.sym], r.win); }
   else if (r.win >= 1000 * mult) { SFX.big(); vib([50, 30, 80]); await celebrate('¡GRAN PREMIO!', SYM[top.sym], r.win); }
   else SFX.win();
-  await countWin(r.win);
+  $('#mWin').textContent = fmt(r.win);
+  const final = auto ? r.win : await risk(r.win, mult);
+  if (final > 0) await countWin(final); else $('#mWin').textContent = fmt(0);
+}
+
+/* ---------- RIESGO: doble o nada ---------- */
+function risk(amount, mult) {
+  return new Promise(res => {
+    const ov = $('#riskOv'), pn = ov.querySelector('.risk'), lD = $('#lD'), lN = $('#lN'), bA = $('#rArr'), bC = $('#rCob');
+    let a = amount, running = false, timer = null, lamp = 0;
+    const cap = RISK_CAP * mult;
+    const setLamp = i => { lamp = i; lD.classList.toggle('on', i === 0); lN.classList.toggle('on', i === 1); };
+    const upd = () => {
+      $('#rAmt').textContent = fmt(a); $('#rDbl').textContent = fmt(a * 2); $('#mWin').textContent = fmt(a);
+      const max = a * 2 > cap;
+      bA.disabled = max; bA.textContent = max ? 'MÁXIMO' : 'ARRIESGAR'; bC.disabled = false;
+      $('#rIns').innerHTML = max ? '¡Has llegado al máximo! Cobra tu premio.' : 'Si arriesgas, las luces se alternan: pulsa <b>¡PARAR!</b> y… ¡suerte!';
+      pn.classList.add('idle'); lD.classList.remove('on'); lN.classList.remove('on');
+    };
+    const close = v => { clearInterval(timer); ov.classList.add('hidden'); bC.onclick = bA.onclick = null; res(v); };
+    upd(); ov.classList.remove('hidden');
+    bC.onclick = () => { if (!running) close(a); };
+    bA.onclick = async () => {
+      if (!running) {
+        running = true; pn.classList.remove('idle'); bC.disabled = true; bA.textContent = '¡PARAR!';
+        timer = setInterval(() => { setLamp(1 - lamp); SFX.tick(); }, 85);
+        return;
+      }
+      clearInterval(timer); bA.disabled = true;
+      const ok = Math.random() < .5;
+      let steps = 3 + rnd(3);
+      if (((lamp + steps) % 2 === 0) !== ok) steps++; // terminar en el resultado
+      for (let i = 0; i < steps; i++) { await sleep(130 + i * 70); setLamp(1 - lamp); SFX.tick(); }
+      running = false;
+      if (ok) { a *= 2; SFX.win(); vib([30, 30, 60]); await sleep(700); upd(); }
+      else { SFX.buzz(); vib(150); $('#rAmt').textContent = fmt(0); $('#mWin').textContent = fmt(0); $('#rIns').innerHTML = '<b>¡NADA!</b> Has perdido el premio.'; await sleep(1500); close(0); }
+    };
+  });
+}
+
+/* ---------- BOTE CATEDRAL ---------- */
+async function winBote() {
+  grid.forEach((s, i) => { if (s === ESC) cellAt(i).classList.add('win'); });
+  const v = Math.floor(S.bote);
+  $('#boteBar').classList.add('hot'); SFX.big(); setTimeout(SFX.big, 1300); vib([100, 50, 100, 50, 200]);
+  await celebrate('¡¡BOTE CATEDRAL!!', SYM[ESC], v);
+  S.bote = BOTE_SEED; save();
+  await countWin(v);
+  $('#boteBar').classList.remove('hot');
 }
 
 /* tras una jugada sin premio: a veces da AVANCES; si no, a veces deja RETENER la pareja de la línea del medio */
@@ -632,6 +723,7 @@ async function nudge(c) {
   if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); save(); }
   const r = evaluate(grid, nudgeMult);
   if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
+  if (ns === ESC && grid.filter(x => x === ESC).length >= 3) { nudges = 0; await winBote(); }
   if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
   else { mode = null; if (!r.wins.length) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : 'SIN AVANCES'); }
   busy = false; ui(); renderCtl();
@@ -1036,7 +1128,7 @@ $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data
 
 const open = id => $(id).classList.remove('hidden');
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.ov').classList.add('hidden'));
-document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'mg' && o.id !== 'win') o.classList.add('hidden'); }));
+document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'mg' && o.id !== 'win' && o.id !== 'riskOv') o.classList.add('hidden'); }));
 $('#b1').onclick = () => spin(20);
 $('#b2').onclick = () => spin(40);
 $('#launch').onclick = launch;
