@@ -155,22 +155,10 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .reel.held{box-shadow:inset 0 0 0 4px var(--gold)}
 .reel.held::before{content:"PARADO";position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);font-family:var(--fd);font-size:13px;color:#fff;background:rgba(180,120,0,.85);padding:2px 8px;border-radius:6px;pointer-events:none}
 
-/* ---------- comodín y tiradas gratis ---------- */
-.sym.wild img{filter:drop-shadow(0 0 6px rgba(255,150,0,.9))}
-.sym.wild::after{content:"COMODÍN";position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-family:var(--fn);font-size:9px;color:#fff;background:#d4102e;border-radius:4px;padding:0 4px}
+/* ---------- tiradas gratis ---------- */
 .tc.fs{background:linear-gradient(#5fe39a,#0b4d27);color:#fff}
 .tc.fs .l{text-shadow:0 1px 0 #032}
 
-/* ---------- bote ---------- */
-.bote{display:flex;align-items:center;gap:8px;padding:2px 10px;border-radius:12px;background:linear-gradient(90deg,#3a0610,#7a0d20 50%,#3a0610);border:2px solid var(--gold);box-shadow:0 0 14px rgba(255,200,60,.35)}
-.bote img{width:26px;height:26px}
-.bote div{flex:1;line-height:1;min-width:0;white-space:nowrap;overflow:hidden}
-.bote small{text-overflow:ellipsis;overflow:hidden}
-.bote b{font-family:var(--fd);font-weight:400;font-size:14px;color:var(--gold)}
-.bote small{display:block;font-size:12px;color:#f3c9cf}
-.bote span{font-family:var(--fn);font-size:20px;color:#7dff9b;text-shadow:0 0 10px rgba(80,255,120,.8)}
-.bote.hot{animation:hot .3s 10 alternate}
-@keyframes hot{to{box-shadow:0 0 30px 8px rgba(255,200,60,.95);transform:scale(1.03)}}
 /* ---------- riesgo ---------- */
 .risk{text-align:center;border-color:var(--gold)}
 .rnow{font-family:var(--fn);font-size:16px;color:#ffd9de}
@@ -240,10 +228,12 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .warn{background:rgba(255,200,60,.12);border:1px solid var(--gold2);border-radius:10px;padding:8px 10px;font-size:15px!important}
 
 /* ---------- monedero ---------- */
-.chips{display:grid;grid-template-columns:1fr auto;gap:6px}
-.wallet{border-radius:12px;padding:3px 10px;text-align:right;background:linear-gradient(#0b3d22,#062514);border:2px solid #3fbf6f;line-height:1}
-.wallet small{display:block;font-size:11px;letter-spacing:1px;color:#a8e6bf;font-weight:700}
-.wallet b{font-family:var(--fn);font-weight:400;font-size:18px;color:#fff}
+.chips{display:block}
+.wallet{display:flex;align-items:center;gap:10px;border-radius:12px;padding:3px 12px;background:linear-gradient(#0b3d22,#062514);border:2px solid #3fbf6f;line-height:1}
+.wallet small{display:block;font-size:14px;letter-spacing:1.5px;color:#a8e6bf;font-weight:700}
+.wallet img{width:30px;height:30px}
+.wallet div{flex:1;line-height:1}
+.wallet b{font-family:var(--fn);font-weight:400;font-size:22px;color:#fff}
 .wallet em{display:block;font-style:normal;font-size:11px;color:#ffd36b;margin-top:1px}
 
 /* ---------- ventanas ---------- */
@@ -359,8 +349,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   </header>
 
   <div class="chips">
-    <div class="bote" id="boteBar"><img src="img/p13.webp" alt=""><div><b>BOTE CATEDRAL</b><small>3 escudos en cualquier sitio</small></div><span id="mBote">30,00 €</span></div>
-    <div class="wallet" id="walletBox"><small>MI DINERO</small><b id="mCartera">0,00 €</b><em id="mRecarga"></em></div>
+    <div class="wallet" id="walletBox"><img src="img/p13.webp" alt=""><div><small>MI DINERO</small><em id="mRecarga"></em></div><b id="mCartera">0,00 €</b></div>
   </div>
 
   <div class="paytop" id="payTop"><div class="ptag">PREMIOS <small id="ptX">3 iguales en línea</small></div><div class="pgrid" id="pGrid"></div></div>
@@ -418,10 +407,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <div class="minis" id="miniLines"></div>
   <h3>Jugadores y escudo</h3>
   <div class="pt" id="ptList"></div>
-  <h3>Comodín</h3>
-  <div class="pti sp"><img src="img/balon.webp" alt=""><div class="v" style="font-size:14px"><b>BALÓN = COMODÍN</b> (solo en el rodillo central): sustituye a cualquier jugador o al escudo.<br>3 balones en vertical → 5 € (10 €)</div></div>
-  <h3>Bote y riesgo</h3>
-  <div class="pti sp"><img src="img/p13.webp" alt=""><div class="v" style="font-size:14px">3 escudos en cualquier sitio → <b style="color:#7dff9b">BOTE CATEDRAL</b><br>El bote empieza en 30 € y sube con cada jugada.</div></div>
+  <h3>Riesgo</h3>
   <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes un escalón; si fallas bajas, pero a partir de 0,40 € nunca te quedas sin nada.</p>
   <h3>Avances y retenciones</h3>
   <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
@@ -462,10 +448,8 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
-    <li><b>BALÓN = COMODÍN</b>: sale solo en el rodillo central y sustituye a cualquier jugador o al escudo para hacer línea.</li>
     <li><b>TIRADAS GRATIS</b>: si la luz de arriba se para en 🎁, juegas 8 tiradas gratis con los premios de línea x2.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
-    <li><b>BOTE CATEDRAL</b>: crece con cada jugada. Si salen <b>3 escudos en cualquier sitio</b> de los rodillos, ¡te llevas el bote entero!</li>
     <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
     <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
@@ -513,8 +497,7 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i 
 const SYM = [];
 for (let i = 1; i <= 13; i++) SYM.push('img/p' + String(i).padStart(2, '0') + '.webp');
 SYM.push('img/camiseta.webp');
-SYM.push('img/balon.webp');
-const CAM = 13, WILD = 14, WILD3 = 500; // balón = comodín (solo rodillo central); 3 balones = 5 €
+const CAM = 13, WILD = -99, WILD3 = 0; // (sin comodín en los rodillos: el balón es de la pantalla de arriba)
 const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000]; // céntimos, apuesta 0,20 €
 const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
 /* ---------- TABLA DE RESULTADOS (como en las máquinas de bar) ----------
@@ -536,12 +519,11 @@ function pasoRacha() {
   if (--S.racha.n <= 0) S.racha = nuevaRacha(RACHA[S.racha.st].sig);
   return h;
 }
-let P_BOTE = 1 / 20000;                               // 3 escudos sueltos = BOTE CATEDRAL
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
 let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 1.5]; // caras de premio pequeño más frecuentes
-let FILL_C = FILL.concat([6]);                       // rodillo central: con comodín
-const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03;
-const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €) // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
+let FILL_C = FILL;                                   // el rodillo central igual que los demás
+const ESC = 12; // el escudo: premio gordo especial (160 €)
+const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
 const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
 
@@ -578,7 +560,7 @@ const RING = [[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[5,5],[5,4],[5,3],
 
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
-let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, bote: BOTE_SEED, fs: { n: 0, bet: 20 } };
+let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -643,21 +625,15 @@ function randSym(col) { return col === 1 ? pickW(FILL_C) : pickW(FILL); }
 function genGrid() {
   const h = pasoRacha();
   const target = Math.random() < h ? pickW(HIT) : -1;   // si toca premio, cuál según la tabla
-  const bote = Math.random() < P_BOTE;
   for (let tries = 0; tries < 300; tries++) {
     const g = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
     let line = null;
     if (target >= 0) {
       line = LINES[rnd(8)]; line.forEach(k => g[k] = target);
-      const mid = line.find(k => k % 3 === 1);
-      if (mid !== undefined && target !== ESC && Math.random() < .15) g[mid] = WILD; // a veces con el comodín
     }
-    if (bote) { const free = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8].filter(k => !line || !line.includes(k))); free.slice(0, 3).forEach(k => g[k] = ESC); }
-    const ev = evaluate(g, 1), escs = g.filter(x => x === ESC).length;
+    const ev = evaluate(g, 1);
     if (target < 0 && ev.wins.length) continue;
     if (target >= 0 && (ev.wins.length !== 1 || ev.wins[0].sym !== target)) continue;
-    if (!bote && target !== ESC && escs >= 3) continue;
-    if (bote && escs < 3) continue;
     return g;
   }
   return [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -712,7 +688,6 @@ function ui() {
   $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA'; if (renderPayTop.m !== S.betSel) { renderPayTop.m = S.betSel; renderPayTop(); }
   $('#cobBtn').disabled = busy || topBusy || fsRunning || S.saldo <= 0; $('#cobBtn').classList.toggle('ready', S.saldo > 0 && !busy);
   $('#betBtn').disabled = busy || topBusy || fsRunning;
-  $('#mBote').textContent = fmt(Math.floor(S.bote));
   $('#mBet').textContent = fsRunning ? 'GRATIS' : fmt(S.lastBet);
   $('#bN').textContent = S.bonus.length;
   $('#launch').disabled = !S.bonus.length || topBusy || busy || fsRunning;
@@ -757,7 +732,7 @@ async function spin(bet, free) {
   if (!free && fsRunning) return;
   if (!free && !ensureCredits(bet)) { noMoney(); return; }
   ac(); busy = true;
-  if (!free) { S.lastBet = bet; S.saldo -= bet; S.bote += bet * BOTE_PCT; }
+  if (!free) { S.lastBet = bet; S.saldo -= bet; }
   save();
   const H = (!free && mode === 'hold') ? held.slice() : [false, false, false];
   const wasHeld = H.some(Boolean);
@@ -774,7 +749,7 @@ async function spin(bet, free) {
     if (H[c]) continue; // rodillo retenido: no gira
     const old = [grid[c], grid[3 + c], grid[6 + c]];
     const nw = [next[c], next[3 + c], next[6 + c]];
-    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(c === 1 ? 15 : 14));
+    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(14));
     const all = nw.concat(filler, old);
     const st = strips[c];
     st.style.transition = 'none';
@@ -795,7 +770,6 @@ async function spin(bet, free) {
   const r = evaluate(grid, mult);
   if (wasHeld) r.bonus = camBonus(grid.filter((s, i) => s === CAM && !H[i % 3]).length); // las camisetas retenidas no cuentan otra vez
   if (r.wins.length) await payWins(r, mult, free);
-  if (grid.filter(x => x === ESC).length >= 3) await winBote();
   if (r.bonus) {
     grid.forEach((s, i) => { if (s === CAM && !H[i % 3]) cellAt(i).classList.add('camwin'); });
     r.camLines.forEach(i => drawLine(i, '#20e070'));
@@ -898,16 +872,6 @@ function risk(amount, mult) {
   });
 }
 
-/* ---------- BOTE CATEDRAL ---------- */
-async function winBote() {
-  grid.forEach((s, i) => { if (s === ESC) cellAt(i).classList.add('win'); });
-  const v = Math.floor(S.bote);
-  $('#boteBar').classList.add('hot'); SFX.big(); setTimeout(SFX.big, 1300); vib([100, 50, 100, 50, 200]);
-  await celebrate('¡¡BOTE CATEDRAL!!', SYM[ESC], v);
-  S.bote = BOTE_SEED; save();
-  await countWin(v);
-  $('#boteBar').classList.remove('hot');
-}
 
 /* tras una jugada sin premio: a veces da AVANCES; si no, a veces deja RETENER la pareja de la línea del medio */
 async function offerExtras(mult, wasHeld) {
@@ -946,7 +910,6 @@ async function nudge(c) {
   if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); save(); }
   const r = evaluate(grid, nudgeMult);
   if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
-  if (ns === ESC && grid.filter(x => x === ESC).length >= 3) { nudges = 0; await winBote(); }
   if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
   else { mode = null; if (!r.wins.length) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : 'SIN AVANCES'); }
   busy = false; ui(); renderCtl();
@@ -1415,7 +1378,7 @@ $('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) 
   `<div class="pti${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><div class="v">${fmtS(p)}<small>(${fmtS(p * 2)})${SPECIAL.includes(i) ? ' ★ ESPECIAL' : ''}</small></div></div>`).join('');
 $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i }) => {
   const n = Math.round(1 / h), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
-  return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('') + '<span>BOTE: 1 de cada ~6.500</span>';
+  return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('');
 $('#miniLines').innerHTML = LINES.map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TOP.filter(c => c.t === 'prize').sort((a, b) => b.v - a.v).map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('');
