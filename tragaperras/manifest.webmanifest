@@ -10,10 +10,43 @@
   "background_color": "#14020a",
   "theme_color": "#14020a",
   "lang": "es",
-  "categories": ["games", "entertainment"],
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "icons": [
-    { "src": "pwa-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "pwa-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "display_override": [
+    "standalone",
+    "fullscreen"
+  ],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Jugar",
+      "url": "/catedral-baloncesto/tragaperras/",
+      "icons": [
+        {
+          "src": "pwa-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
