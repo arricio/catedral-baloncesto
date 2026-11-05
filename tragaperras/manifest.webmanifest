@@ -1,0 +1,19 @@
+{
+  "name": "La Catedral del Triple",
+  "short_name": "Catedral Triple",
+  "description": "Tragaperras de baloncesto de la Cultural Leonesa con bonus y 6 minijuegos. Dinero ficticio.",
+  "id": "/catedral-baloncesto/tragaperras/",
+  "start_url": "/catedral-baloncesto/tragaperras/",
+  "scope": "/catedral-baloncesto/tragaperras/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14020a",
+  "theme_color": "#14020a",
+  "lang": "es",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "pwa-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "pwa-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
