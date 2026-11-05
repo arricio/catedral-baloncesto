@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>La Catedral del Triple</title>
+<meta name="description" content="Tragaperras de baloncesto de la Cultural Leonesa: 3×3 rodillos, bonus de camiseta, pantalla superior y 6 minijuegos. Dinero ficticio.">
+<meta name="theme-color" content="#14020a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Catedral Triple">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="🏀 La Catedral del Triple · Tragaperras">
+<meta property="og:description" content="La tragaperras de la Cultural Leonesa de Baloncesto. ¡Saca 3 en línea, consigue camisetas BONUS y juega 6 minijuegos!">
+<meta property="og:image" content="https://arricio.github.io/catedral-baloncesto/tragaperras/og-image.jpg">
+<meta property="og:url" content="https://arricio.github.io/catedral-baloncesto/tragaperras/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Russo+One&family=Barlow+Condensed:wght@600;700;800&display=swap">
+<style>
+:root{
+  --bg0:#14020a; --bg1:#3a0610; --red:#d4102e; --red2:#8e0a1f; --gold:#ffc83d; --gold2:#b8860b;
+  --led:#ff3b2f; --ledbg:#120304; --white:#fff; --ink:#1a1a1a; --green:#1f8f4e;
+  --c:96px; --cw:96px; --tr:52px;
+  --fd:"Bungee","Russo One",system-ui,sans-serif; --fn:"Russo One",system-ui,sans-serif; --fb:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg0)}
+body{color:#fff;font-family:var(--fb);overflow-x:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(120% 70% at 50% 0%,#5a0a18 0%,#24030b 55%,#0b0105 100%) fixed}
+img{-webkit-user-drag:none;user-select:none}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit}
+.hidden{display:none!important}
+#app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;gap:6px;
+  padding:calc(env(safe-area-inset-top) + 4px) 10px calc(env(safe-area-inset-bottom) + 8px)}
+
+/* ---------- cabecera ---------- */
+header{height:44px;display:flex;align-items:center;gap:8px}
+.hbtn{width:40px;height:40px;border-radius:12px;background:linear-gradient(#3b0711,#1d0308);border:1px solid #6b1424;font-size:20px;display:grid;place-items:center;flex:none}
+.title{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+.title img{width:30px;height:30px;flex:none}
+.title h1{margin:0;font-family:var(--fd);font-weight:400;font-size:clamp(15px,4.6vw,21px);line-height:1;white-space:nowrap;
+  background:linear-gradient(#fff6c8,#ffc83d 45%,#c98a00 55%,#ffe27a);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 #5a0010) drop-shadow(0 0 8px rgba(255,80,60,.45))}
+
+/* ---------- pantalla superior ---------- */
+.cab{position:relative;border-radius:18px;padding:7px;background:linear-gradient(145deg,#ffe08a,#b8860b 30%,#fff1b8 50%,#9a6b00 75%,#ffd65c);box-shadow:0 6px 18px rgba(0,0,0,.6)}
+.cab>.inner{border-radius:12px;background:#0d0204;position:relative;overflow:hidden}
+.bulbs{position:absolute;inset:2px;border-radius:16px;pointer-events:none;
+  background:
+   radial-gradient(circle,#fff7c0 0 2px,transparent 3px) 0 0/14px 7px repeat-x,
+   radial-gradient(circle,#fff7c0 0 2px,transparent 3px) 0 100%/14px 7px repeat-x;
+  animation:chase .6s steps(2) infinite;opacity:.9}
+@keyframes chase{to{background-position:7px 0,7px 100%}}
+.board{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,var(--tr));gap:4px;padding:6px;
+  background:radial-gradient(90% 90% at 50% 50%,#2b0710,#0d0204)}
+.tc{position:relative;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+  background:linear-gradient(#ffffff,#e6e6e6);color:#222;transition:transform .08s,filter .08s;border:2px solid #4a0c16}
+.tc img{max-width:86%;height:58%;object-fit:contain}
+.tc .l{font-family:var(--fn);font-size:max(8.5px,calc(var(--tr) * .19));line-height:1.05;text-align:center;white-space:nowrap;letter-spacing:-.2px}
+.tc .e{font-size:calc(var(--tr) * .42);line-height:1}
+.tc.prize .l{color:#b0001c}
+.tc.tapon{background:linear-gradient(#3a3a3a,#1c1c1c);color:#ff5a4a}
+.tc.mg{background:linear-gradient(#ff9b2f,#d4102e);color:#fff}
+.tc.mg .l{text-shadow:0 1px 0 #600}
+.tc.cam{background:linear-gradient(#fff,#d9f2e2)}
+.tc.cam .l{color:#0f6b36}
+.tc.lit{transform:scale(1.07);z-index:2;border-color:#fff3a0;box-shadow:0 0 0 2px var(--gold),0 0 18px 4px rgba(255,210,60,.9);filter:brightness(1.18)}
+.tc.dim{filter:brightness(.45)}
+.tc.hit{animation:hit .35s 6 alternate}
+@keyframes hit{to{transform:scale(1.14);box-shadow:0 0 0 3px #fff,0 0 30px 8px var(--gold)}}
+.tc .dbl{position:absolute;top:1px;right:2px;font-size:8px;font-family:var(--fn);color:#fff;background:#0a7a3a;border-radius:4px;padding:0 2px;display:none}
+.board.x2 .tc.prize .dbl,.board.x2 .tc.mg .dbl{display:block}
+.center{grid-column:2/5;grid-row:2/5;border-radius:10px;background:linear-gradient(#060102,#1a0408);border:2px solid #5d1220;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;padding:4px;text-align:center;box-shadow:inset 0 0 18px rgba(255,40,40,.18)}
+.dmd{font-family:var(--fn);color:var(--gold);font-size:max(12px,calc(var(--tr) * .3));line-height:1.1;text-shadow:0 0 8px rgba(255,180,0,.6);min-height:2.2em;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bonusN{display:flex;align-items:center;gap:6px;font-family:var(--fd);font-size:calc(var(--tr) * .42);color:#fff}
+.bonusN img{height:calc(var(--tr) * .75)}
+.bonusN small{font-family:var(--fn);font-size:max(9px,calc(var(--tr) * .2));color:#7bd99c;display:block}
+#launch{font-family:var(--fd);font-size:max(11px,calc(var(--tr) * .26));padding:.45em .9em;border-radius:10px;color:#3a1d00;
+  background:linear-gradient(#fff3b0,#ffc83d 50%,#e09b00);box-shadow:0 4px 0 #8a5a00,0 0 0 2px #fff4c4 inset}
+#launch:disabled{filter:grayscale(1) brightness(.5);box-shadow:0 4px 0 #333}
+#launch:not(:disabled){animation:glow 1s infinite alternate}
+@keyframes glow{to{box-shadow:0 4px 0 #8a5a00,0 0 18px 4px rgba(255,200,60,.9),0 0 0 2px #fff4c4 inset}}
+#launch:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #8a5a00}
+
+/* ---------- contadores ---------- */
+.meters{display:grid;grid-template-columns:1.25fr .9fr 1.15fr;gap:6px}
+.meter{background:var(--ledbg);border:2px solid #4c0d18;border-radius:10px;padding:3px 6px 4px;text-align:center;box-shadow:inset 0 0 10px #000}
+.meter b{display:block;font-size:11px;letter-spacing:1.5px;color:#d9a7ad;font-weight:700}
+.meter span{font-family:var(--fn);font-size:19px;color:var(--led);text-shadow:0 0 8px rgba(255,60,40,.8);white-space:nowrap}
+.meter.win span{color:#7dff9b;text-shadow:0 0 8px rgba(80,255,120,.8)}
+
+/* ---------- rodillos ---------- */
+.reelsWrap{position:relative;display:grid;grid-template-columns:repeat(3,var(--cw));gap:6px;justify-content:center;padding:8px;
+  background:linear-gradient(#2a0610,#14020a)}
+.reel{position:relative;width:var(--cw);height:calc(var(--c) * 3);overflow:hidden;border-radius:10px;
+  background:linear-gradient(90deg,#d8d8d8,#ffffff 30%,#ffffff 70%,#d0d0d0)}
+.reel::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(rgba(0,0,0,.38),transparent 18%,transparent 82%,rgba(0,0,0,.38))}
+.strip{position:absolute;left:0;top:0;width:100%;will-change:transform}
+.sym{width:var(--cw);height:var(--c);display:grid;place-items:center;position:relative}
+.sym img{width:calc(var(--c) * .86);height:calc(var(--c) * .86);object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+
+.reel.spin .strip{filter:blur(1.2px)}
+.cellfx{position:absolute;pointer-events:none;border-radius:50%;}
+.sym.win::before{content:"";position:absolute;width:calc(var(--c) * .9);height:calc(var(--c) * .9);border-radius:50%;box-shadow:0 0 0 4px var(--gold),0 0 22px 6px rgba(255,200,40,.9);animation:pulse .45s infinite alternate}
+.sym.camwin::before{content:"";position:absolute;width:calc(var(--c) * .9);height:calc(var(--c) * .9);border-radius:14px;box-shadow:0 0 0 4px #20c060,0 0 22px 6px rgba(40,255,120,.85);animation:pulse .45s infinite alternate}
+.sym.win img,.sym.camwin img{animation:bob .45s infinite alternate}
+@keyframes pulse{to{opacity:.55}}
+@keyframes bob{to{transform:scale(1.08)}}
+svg.lines{position:absolute;left:8px;top:8px;width:calc(100% - 16px);height:calc(100% - 16px);pointer-events:none;overflow:visible}
+svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 4px #fff);opacity:.92;stroke-dasharray:6 6;animation:dash .5s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-12}}
+.fly{position:fixed;z-index:60;font-family:var(--fd);color:#7dff9b;font-size:22px;text-shadow:0 2px 0 #063,0 0 10px #0f8;pointer-events:none;transition:transform 1s cubic-bezier(.3,.6,.3,1),opacity 1s}
+
+/* ---------- avances y retenciones ---------- */
+.rctl{display:grid;grid-template-columns:repeat(3,var(--cw));gap:6px;justify-content:center;padding:0 8px 8px;background:#14020a}
+.rb{height:28px;border-radius:9px;font-family:var(--fn);font-size:13px;color:#fff;background:#333;box-shadow:0 3px 0 #000}
+.rb.nu{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 3px 0 #063018;animation:glow2 .8s infinite alternate}
+.rb.hf{background:linear-gradient(#59c2ff,#1f6fbf 50%,#0b3d6e);box-shadow:0 3px 0 #06223d}
+.rb.ho{background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);color:#3a1d00;box-shadow:0 3px 0 #6b4500}
+.rb:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #000}
+.rb:disabled{filter:brightness(.6)}
+@keyframes glow2{to{box-shadow:0 3px 0 #063018,0 0 12px 2px rgba(80,255,140,.8)}}
+.reel.held{box-shadow:inset 0 0 0 4px var(--gold)}
+.reel.held::before{content:"PARADO";position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);font-family:var(--fd);font-size:13px;color:#fff;background:rgba(180,120,0,.85);padding:2px 8px;border-radius:6px;pointer-events:none}
+
+/* ---------- comodín y tiradas gratis ---------- */
+.sym.wild img{filter:drop-shadow(0 0 6px rgba(255,150,0,.9))}
+.sym.wild::after{content:"COMODÍN";position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-family:var(--fn);font-size:9px;color:#fff;background:#d4102e;border-radius:4px;padding:0 4px}
+.tc.fs{background:linear-gradient(#5fe39a,#0b4d27);color:#fff}
+.tc.fs .l{text-shadow:0 1px 0 #032}
+
+/* ---------- bote ---------- */
+.bote{display:flex;align-items:center;gap:8px;padding:2px 10px;border-radius:12px;background:linear-gradient(90deg,#3a0610,#7a0d20 50%,#3a0610);border:2px solid var(--gold);box-shadow:0 0 14px rgba(255,200,60,.35)}
+.bote img{width:26px;height:26px}
+.bote div{flex:1;line-height:1}
+.bote b{font-family:var(--fd);font-weight:400;font-size:14px;color:var(--gold)}
+.bote small{display:block;font-size:12px;color:#f3c9cf}
+.bote span{font-family:var(--fn);font-size:22px;color:#7dff9b;text-shadow:0 0 10px rgba(80,255,120,.8)}
+.bote.hot{animation:hot .3s 10 alternate}
+@keyframes hot{to{box-shadow:0 0 30px 8px rgba(255,200,60,.95);transform:scale(1.03)}}
+/* ---------- riesgo ---------- */
+.risk{text-align:center;border-color:var(--gold)}
+.rnow{font-family:var(--fn);font-size:16px;color:#ffd9de}
+.rnow b{display:block;font-size:40px;color:#7dff9b;text-shadow:0 0 12px rgba(80,255,120,.8)}
+.lamps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.lamp{border-radius:14px;padding:12px 6px;background:#1a0408;border:3px solid #4a0c16;opacity:.45;transition:opacity .05s}
+.lamp span{display:block;font-family:var(--fd);font-size:22px}
+.lamp b{font-family:var(--fn);font-size:20px}
+#lD span,#lD b{color:#7dff9b}#lN span,#lN b{color:#ff5a6e}
+.lamp.on{opacity:1}
+#lD.on{background:#0b4d27;border-color:#7dff9b;box-shadow:0 0 22px rgba(80,255,120,.8)}
+#lN.on{background:#5a0010;border-color:#ff5a6e;box-shadow:0 0 22px rgba(255,80,100,.8)}
+.risk.idle #lD{animation:blinkA .9s infinite}.risk.idle #lN{animation:blinkA .9s .45s infinite}
+@keyframes blinkA{0%,49%{opacity:1}50%,100%{opacity:.45}}
+
+/* ---------- botones ---------- */
+.ctrls{display:grid;grid-template-columns:52px 52px 1fr 1fr;gap:7px;align-items:stretch;height:70px}
+.sbtn{border-radius:14px;background:linear-gradient(#45101b,#1f0409);border:1px solid #74202f;font-family:var(--fn);font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 #0a0003}
+.sbtn i{font-style:normal;font-size:20px}
+.sbtn.on{background:linear-gradient(#1f8f4e,#0b4d27);border-color:#4fdc8d}
+.sbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #0a0003}
+.play{border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;font-family:var(--fd);font-size:20px;letter-spacing:.5px}
+.play small{font-family:var(--fn);font-size:15px;margin-top:4px}
+#b1{background:linear-gradient(#ff5a6e,#d4102e 45%,#8e0a1f);box-shadow:0 5px 0 #4d0410,inset 0 2px 0 rgba(255,255,255,.35);text-shadow:0 2px 0 #5a0010}
+#b2{background:linear-gradient(#fff3b0,#ffc83d 45%,#d08a00);color:#3a1d00;box-shadow:0 5px 0 #6b4500,inset 0 2px 0 rgba(255,255,255,.6)}
+.play:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 #000}
+.play:disabled{filter:saturate(.3) brightness(.65)}
+.note{text-align:center;font-size:11px;color:#a77a80;margin-top:2px}
+
+/* ---------- ventanas ---------- */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(5,0,2,.82);display:flex;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(3px)}
+.panel{width:100%;max-width:440px;max-height:calc(100dvh - 28px);overflow:auto;border-radius:18px;background:linear-gradient(#2a0610,#12020a);border:2px solid var(--gold2);padding:16px;box-shadow:0 10px 40px #000}
+.panel h2{font-family:var(--fd);font-weight:400;color:var(--gold);margin:0 0 10px;font-size:22px;text-align:center}
+.panel h3{font-family:var(--fn);font-weight:400;color:#ffb4bd;margin:16px 0 8px;font-size:16px}
+.panel p,.panel li{font-size:17px;line-height:1.3;color:#f3e3e5}
+.x{position:sticky;top:0;float:right;width:36px;height:36px;border-radius:50%;background:#5a0a18;font-size:18px}
+.pt{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.pti{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:10px;padding:5px 8px}
+.pti img{width:46px;height:46px;object-fit:contain;flex:none}
+.pti .v{font-family:var(--fn);font-size:15px;color:#fff;line-height:1.15}
+.pti .v small{display:block;color:#ffd36b;font-size:12px}
+.pti.sp{background:linear-gradient(90deg,rgba(255,200,60,.25),rgba(255,255,255,.06));border:1px solid var(--gold2)}
+.minis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mini{display:grid;grid-template-columns:repeat(3,10px);gap:2px;justify-content:center;padding:5px;background:rgba(255,255,255,.06);border-radius:8px}
+.mini i{width:10px;height:10px;background:#444;border-radius:2px}
+.mini i.on{background:var(--gold)}
+.mitem{display:block;width:100%;text-align:left;padding:12px 14px;margin:6px 0;border-radius:12px;background:linear-gradient(#45101b,#25050c);border:1px solid #74202f;font-size:18px;font-weight:700}
+.mitem:active{filter:brightness(1.3)}
+.mitem small{display:block;font-weight:600;color:#d9a7ad;font-size:14px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mgrid .mitem{margin:0;font-size:16px}
+
+/* ---------- celebración ---------- */
+#win{z-index:70;flex-direction:column;background:radial-gradient(circle,rgba(90,10,24,.9),rgba(0,0,0,.92))}
+.wt{font-family:var(--fd);font-size:clamp(28px,9vw,44px);text-align:center;line-height:1;
+  background:linear-gradient(#fff6c8,#ffc83d 50%,#c98a00);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #5a0010);animation:zoom .5s cubic-bezier(.2,1.6,.4,1)}
+.wimg{width:min(46vw,200px);height:min(46vw,200px);object-fit:contain;margin:14px 0;animation:spinIn .7s cubic-bezier(.2,1.4,.4,1);filter:drop-shadow(0 0 20px rgba(255,200,60,.8))}
+.wa{font-family:var(--fn);font-size:clamp(34px,11vw,54px);color:#7dff9b;text-shadow:0 0 16px rgba(80,255,120,.8),0 3px 0 #063}
+.ws{margin-top:10px;color:#f3d3d7;font-size:16px}
+@keyframes zoom{from{transform:scale(.2);opacity:0}}
+@keyframes spinIn{from{transform:scale(.1) rotate(-200deg);opacity:0}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:80}
+
+/* ---------- minijuegos ---------- */
+#mg{z-index:55;padding:10px}
+.mgp{width:100%;max-width:440px;max-height:calc(100dvh - 20px);overflow:auto;border-radius:18px;padding:12px;
+  background:linear-gradient(#3a0610,#140208);border:3px solid var(--gold);box-shadow:0 0 30px rgba(255,200,60,.35)}
+.mgh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.mgh h2{margin:0;font-family:var(--fd);font-weight:400;font-size:21px;color:var(--gold)}
+.tag{font-family:var(--fn);font-size:12px;border-radius:6px;padding:2px 6px;background:#0a7a3a}
+.tag.pr{background:#555}
+.ins{font-size:16px;color:#f0dfe2;margin:2px 0 8px;text-align:center;line-height:1.25}
+.ptab{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:8px 0}
+.ptab span{font-family:var(--fn);font-size:12px;padding:3px 7px;border-radius:7px;background:rgba(255,255,255,.08);color:#ffd9de}
+.ptab span.on{background:var(--gold);color:#3a1d00}
+.big{display:block;width:100%;margin-top:8px;padding:14px;border-radius:14px;font-family:var(--fd);font-size:20px;color:#3a1d00;
+  background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);box-shadow:0 5px 0 #6b4500}
+.big:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 #6b4500}
+.big:disabled{filter:grayscale(1) brightness(.6)}
+.row{display:flex;gap:8px}
+.row .big{flex:1}
+.big.red{background:linear-gradient(#ff5a6e,#d4102e 50%,#8e0a1f);color:#fff;box-shadow:0 5px 0 #4d0410}
+.big.grn{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);color:#fff;box-shadow:0 5px 0 #063018}
+.court{position:relative;height:230px;border-radius:12px;overflow:hidden;
+  background:linear-gradient(#1b0b22 0%,#3b1631 45%,#c9772f 46%,#e39a4c 100%)}
+.court .hoop{position:absolute;left:50%;top:8px;width:46%;transform:translateX(-50%)}
+.court .ball{position:absolute;left:50%;bottom:8px;width:54px;height:54px;margin-left:-27px;z-index:3}
+.court .def{position:absolute;bottom:62px;width:80px;margin-left:-40px;left:50%;z-index:2;transition:left .35s,transform .35s;filter:brightness(.2) drop-shadow(0 0 2px #fff)}
+.court .say{position:absolute;inset:auto 0 40% 0;text-align:center;font-family:var(--fd);font-size:30px;z-index:5;opacity:0;text-shadow:0 3px 0 #000}
+.court .say.show{animation:say 1s forwards}
+@keyframes say{0%{opacity:0;transform:scale(.4)}25%{opacity:1;transform:scale(1.1)}80%{opacity:1}100%{opacity:0}}
+.pm{position:relative;height:30px;margin:10px 4px 4px;border-radius:15px;background:linear-gradient(90deg,#d4102e,#ff9b2f 30%,#ff9b2f 70%,#d4102e);border:2px solid #000;overflow:hidden}
+.pm .z{position:absolute;top:0;bottom:0;background:#22d36b;border-left:2px solid #fff;border-right:2px solid #fff}
+.pm .n{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:#fff;box-shadow:0 0 6px #fff}
+.shots{display:flex;justify-content:center;gap:8px;margin:6px 0}
+.shots b{width:22px;height:22px;border-radius:50%;background:#333;border:2px solid #666}
+.shots b.ok{background:#22d36b;border-color:#bfffd7}
+.shots b.ko{background:#d4102e;border-color:#ffb3bd}
+.lockers{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:6px 0}
+.lk{aspect-ratio:3/4;border-radius:8px;background:linear-gradient(90deg,#2e5a8c,#4a7fb8 50%,#2e5a8c);border:2px solid #16314f;position:relative;font-family:var(--fn);font-size:15px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.lk::before{content:"";width:50%;height:22%;background:repeating-linear-gradient(#16314f 0 2px,transparent 2px 5px)}
+.lk.op{background:linear-gradient(#fff,#ececec);color:#b0001c;border-color:var(--gold);animation:flip .35s}
+.lk.op::before{display:none}
+.lk.op.w{background:linear-gradient(#fff3b0,#ffc83d);color:#3a1d00;box-shadow:0 0 14px var(--gold)}
+.lk.op.f{opacity:.45;animation:none}
+@keyframes flip{from{transform:rotateY(90deg)}}
+.tally{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.tally span{font-family:var(--fn);font-size:12px;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.08)}
+.wheelBox{position:relative;width:min(80vw,290px);aspect-ratio:1;margin:6px auto}
+.wheelBox canvas{width:100%;height:100%;border-radius:50%;transition:transform 5s cubic-bezier(.12,.6,.12,1);box-shadow:0 0 0 6px var(--gold),0 0 0 9px #6b4500,0 8px 22px #000}
+.wheelBox .ptr{position:absolute;left:50%;top:-12px;margin-left:-14px;width:28px;height:34px;z-index:3;background:linear-gradient(#fff,#ffc83d);clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 2px 2px #000)}
+.wheelBox .hub{position:absolute;left:50%;top:50%;width:26%;height:26%;transform:translate(-50%,-50%);border-radius:50%;background:#fff;box-shadow:0 0 0 4px var(--gold);z-index:2}
+.card{width:150px;margin:6px auto;border-radius:14px;background:linear-gradient(#fff,#e9e9e9);color:#b0001c;text-align:center;padding:8px;border:3px solid var(--gold);box-shadow:0 6px 16px #000}
+.card img{width:100%;aspect-ratio:1;object-fit:contain}
+.card b{display:block;font-family:var(--fd);font-weight:400;font-size:40px;line-height:1}
+.card.fl{animation:flip .4s}
+.ladder{display:flex;flex-direction:column-reverse;gap:3px;margin:6px 0}
+.ladder span{font-family:var(--fn);text-align:center;padding:4px;border-radius:8px;background:rgba(255,255,255,.07);font-size:15px}
+.ladder span.on{background:var(--gold);color:#3a1d00;box-shadow:0 0 12px var(--gold)}
+.mm{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center}
+.sb{border-radius:12px;background:#050101;border:3px solid #333;padding:10px;text-align:center}
+.sb .tm{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px}
+.sb .tn{font-family:var(--fn);font-size:14px;color:#ffd9de}
+.sb .sc{font-family:var(--fn);font-size:46px;color:var(--led);text-shadow:0 0 10px rgba(255,60,40,.9);line-height:1.1}
+.sb .q{font-family:var(--fn);color:var(--gold);margin-top:4px}
+.sb img{width:44px;height:44px}
+.qs{display:grid;grid-template-columns:auto repeat(4,1fr);gap:3px;margin-top:8px;font-family:var(--fn);font-size:13px;color:#ccc}
+.qs div{background:rgba(255,255,255,.06);border-radius:4px;padding:2px}
+.res{text-align:center;padding:10px 0}
+.res .wa{font-size:46px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="hbtn" id="menuBtn" aria-label="Menú">☰</button>
+    <div class="title"><img src="img/p13.webp" alt=""><h1>LA CATEDRAL DEL TRIPLE</h1></div>
+    <button class="hbtn" id="sndBtn" aria-label="Sonido">🔊</button>
+  </header>
+
+  <div class="bote" id="boteBar"><img src="img/p13.webp" alt=""><div><b>BOTE CATEDRAL</b><small>3 escudos en cualquier sitio</small></div><span id="mBote">30,00 €</span></div>
+
+  <div class="cab"><div class="inner"><div class="board" id="board"></div></div><div class="bulbs"></div></div>
+
+  <div class="meters">
+    <div class="meter"><b>SALDO</b><span id="mSaldo">0,00 €</span></div>
+    <div class="meter"><b>APUESTA</b><span id="mBet">0,20 €</span></div>
+    <div class="meter win"><b>PREMIO</b><span id="mWin">0,00 €</span></div>
+  </div>
+
+  <div class="cab"><div class="inner"><div class="reelsWrap" id="reels">
+    <div class="reel"><div class="strip"></div></div>
+    <div class="reel"><div class="strip"></div></div>
+    <div class="reel"><div class="strip"></div></div>
+    <svg class="lines" id="lines" viewBox="0 0 3 3" preserveAspectRatio="none"></svg>
+  </div><div class="rctl" id="rctl"><button class="rb" data-c="0">&nbsp;</button><button class="rb" data-c="1">&nbsp;</button><button class="rb" data-c="2">&nbsp;</button></div></div><div class="bulbs"></div></div>
+
+  <div class="ctrls">
+    <button class="sbtn" id="ptBtn"><i>📋</i>PREMIOS</button>
+    <button class="sbtn" id="autoBtn"><i>🔁</i>AUTO</button>
+    <button class="play" id="b1">JUGAR<small>0,20 €</small></button>
+    <button class="play" id="b2">DOBLE<small>0,40 €</small></button>
+  </div>
+  <div class="note">Juego de entretenimiento · dinero ficticio, sin apuestas reales</div>
+</div>
+
+<!-- tabla de premios -->
+<div class="ov hidden" id="ptOv"><div class="panel">
+  <button class="x" data-close>✕</button>
+  <h2>TABLA DE PREMIOS</h2>
+  <p style="text-align:center;margin:0 0 8px">3 iguales en cualquiera de las <b>8 líneas</b>. Entre paréntesis, el premio jugando a <b>DOBLE</b> (0,40 €).</p>
+  <div class="minis" id="miniLines"></div>
+  <h3>Jugadores y escudo</h3>
+  <div class="pt" id="ptList"></div>
+  <h3>Comodín</h3>
+  <div class="pti sp"><img src="img/balon.webp" alt=""><div class="v" style="font-size:14px"><b>BALÓN = COMODÍN</b> (solo en el rodillo central): sustituye a cualquier jugador o al escudo.<br>3 balones en vertical → 5 € (10 €)</div></div>
+  <h3>Bote y riesgo</h3>
+  <div class="pti sp"><img src="img/p13.webp" alt=""><div class="v" style="font-size:14px">3 escudos en cualquier sitio → <b style="color:#7dff9b">BOTE CATEDRAL</b><br>El bote empieza en 30 € y sube con cada jugada.</div></div>
+  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR al doble o nada (hasta 320 €, 640 € a DOBLE).</p>
+  <h3>Avances y retenciones</h3>
+  <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
+  <h3>Camiseta = BONUS</h3>
+  <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 en línea (horizontal, vertical o diagonal) → <b style="color:#7dff9b">6 BONUS</b></div></div>
+  <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>: la luz recorre el tablero y donde se pare, eso ganas.</p>
+  <h3>Pantalla de arriba</h3>
+  <div class="pt" id="ptTop"></div>
+  <p>🎁 <b>TIRADAS GRATIS</b>: 8 tiradas sin pagar con todos los premios de línea x2.<br>🎮 <b>6 minijuegos</b> con premios de 10 € a 160 € (el doble si el BONUS se consiguió jugando a DOBLE).<br>🎽 Camiseta: +1 BONUS.<br>✋ Tapón: sin premio.</p>
+</div></div>
+
+<!-- menú -->
+<div class="ov hidden" id="menuOv"><div class="panel">
+  <button class="x" data-close>✕</button>
+  <h2>MENÚ</h2>
+  <button class="mitem" id="mHow">❓ Cómo se juega</button>
+  <button class="mitem" id="mPt">📋 Tabla de premios</button>
+  <button class="mitem" id="mShare">💬 Compartir por WhatsApp<small>Envía el enlace a tus amigos</small></button>
+  <button class="mitem" id="mRefill">💶 Recargar saldo<small>+20 € ficticios (si te quedan menos de 5 €)</small></button>
+  <h3>🏀 Entrenamiento de minijuegos</h3>
+  <p style="margin-top:0;font-size:15px">Prueba los minijuegos cuando quieras. En entrenamiento no se cobra premio.</p>
+  <div class="mgrid" id="trainList"></div>
+  <button class="mitem" id="mReset" style="margin-top:14px">♻️ Empezar de cero<small>Saldo a 20 € y bonus a 0</small></button>
+</div></div>
+
+<!-- cómo se juega -->
+<div class="ov hidden" id="howOv"><div class="panel">
+  <button class="x" data-close>✕</button>
+  <h2>CÓMO SE JUEGA</h2>
+  <ol>
+    <li>Pulsa <b>JUGAR</b> (0,20 €) o <b>DOBLE</b> (0,40 €). Jugando a doble, todos los premios se pagan al doble.</li>
+    <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en línea</b> (3 horizontales, 3 verticales y 2 diagonales) ganas el premio de esa cara.</li>
+    <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
+    <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (3 en línea = 6 BONUS).</li>
+    <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
+    <li><b>BALÓN = COMODÍN</b>: sale solo en el rodillo central y sustituye a cualquier jugador o al escudo para hacer línea.</li>
+    <li><b>TIRADAS GRATIS</b>: si la luz de arriba se para en 🎁, juegas 8 tiradas gratis con los premios de línea x2.</li>
+    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b>. Si arriesgas, las luces se alternan entre DOBLE y NADA: pulsa ¡PARAR! Puedes repetir hasta 320 € (640 € a DOBLE).</li>
+    <li><b>BOTE CATEDRAL</b>: crece con cada jugada. Si salen <b>3 escudos en cualquier sitio</b> de los rodillos, ¡te llevas el bote entero!</li>
+    <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa <b>▼ AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
+    <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
+    <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
+  </ol>
+  <p style="color:#d9a7ad">Es un juego de entretenimiento: el saldo es ficticio y no se puede canjear por dinero.</p>
+</div></div>
+
+<!-- riesgo: doble o nada -->
+<div class="ov hidden" id="riskOv"><div class="panel risk">
+  <h2>¿COBRAR O ARRIESGAR?</h2>
+  <div class="rnow">PREMIO <b id="rAmt">0,00 €</b></div>
+  <div class="lamps"><div class="lamp" id="lD"><span>DOBLE</span><b id="rDbl">0,00 €</b></div><div class="lamp" id="lN"><span>NADA</span><b>0,00 €</b></div></div>
+  <p class="ins" id="rIns">Si arriesgas, las luces se alternan: pulsa <b>¡PARAR!</b> y… ¡suerte!</p>
+  <div class="row"><button class="big grn" id="rCob">COBRAR</button><button class="big red" id="rArr">ARRIESGAR</button></div>
+</div></div>
+
+<!-- celebración -->
+<div class="ov hidden" id="win"><div class="wt" id="wT"></div><img class="wimg" id="wI" alt=""><div class="wa" id="wA"></div><div class="ws">Toca para continuar</div></div>
+
+<!-- minijuego -->
+<div class="ov hidden" id="mg"><div class="mgp">
+  <div class="mgh"><h2 id="mgT"></h2><span class="tag" id="mgTag"></span></div>
+  <div id="mgB"></div>
+</div></div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+'use strict';
+/* =========================================================
+   LA CATEDRAL DEL TRIPLE — tragaperras de baloncesto
+   Todos los importes se manejan en céntimos (enteros).
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const rnd = n => Math.floor(Math.random() * n);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fmt = c => (c / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const fmtS = c => (c % 100 ? fmt(c) : (c / 100) + ' €');
+const pickW = ws => { let t = ws.reduce((a, b) => a + b, 0), r = Math.random() * t; for (let i = 0; i < ws.length; i++) { if ((r -= ws[i]) < 0) return i; } return ws.length - 1; };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------- símbolos de la pantalla de abajo ---------- */
+// 0..11 jugadores, 12 escudo, 13 camiseta (BONUS)
+const SYM = [];
+for (let i = 1; i <= 13; i++) SYM.push('img/p' + String(i).padStart(2, '0') + '.webp');
+SYM.push('img/camiseta.webp');
+SYM.push('img/balon.webp');
+const CAM = 13, WILD = 14, WILD3 = 500; // balón = comodín (solo rodillo central); 3 balones = 5 €
+const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000]; // céntimos, apuesta 0,20 €
+const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
+const WEIGHT = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 13, 11, 11, 4.8];
+const WEIGHT_C = WEIGHT.concat([10]);             // rodillo central: con comodín
+const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03, RISK_CAP = 32000; // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
+const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
+const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
+
+/* ---------- pantalla de arriba (16 casillas en anillo) ---------- */
+const MG = {
+  tiro:     { n: 'TIRO LIBRE',  e: '🎯', s: 'TIRO\nLIBRE' },
+  vest:     { n: 'VESTUARIO',   e: '🚪', s: 'VESTUA-\nRIO' },
+  ruleta:   { n: 'RULETA DEL TRIPLE', e: '🎡', s: 'RULETA' },
+  mayor:    { n: 'MAYOR O MENOR', e: '↕️', s: 'MAYOR\nMENOR' },
+  unouno:   { n: '1 CONTRA 1',  e: '🛡️', s: '1 CONTRA\n1' },
+  partido:  { n: 'EL PARTIDO',  e: '🏆', s: 'PARTIDO' },
+};
+const TW = { tapon: .2867, cam: .03, mg: .035 / 6, fs: .03 };
+const FS_N = 8, FS_X = 2; // tiradas gratis: 8 tiradas con premios x2
+const TOP = [
+  { t: 'prize', img: 'cancha', v: 2000, n: 'CANCHA', w: .012 },
+  { t: 'tapon', w: TW.tapon },
+  { t: 'mg', id: 'tiro', w: TW.mg },
+  { t: 'cam', w: TW.cam },
+  { t: 'prize', img: 'balon', v: 4000, n: 'BALÓN', w: .005 },
+  { t: 'tapon', w: TW.tapon },
+  { t: 'mg', id: 'vest', w: TW.mg },
+  { t: 'mg', id: 'ruleta', w: TW.mg },
+  { t: 'prize', img: 'canasta', v: 8000, n: 'CANASTA', w: .0016 },
+  { t: 'fs', w: TW.fs },
+  { t: 'mg', id: 'mayor', w: TW.mg },
+  { t: 'cam', w: TW.cam },
+  { t: 'prize', img: 'mate', v: 10000, n: 'MATE', w: .001 },
+  { t: 'tapon', w: TW.tapon },
+  { t: 'mg', id: 'unouno', w: TW.mg },
+  { t: 'mg', id: 'partido', w: TW.mg },
+];
+const RING = [[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[5,5],[5,4],[5,3],[5,2],[5,1],[4,1],[3,1],[2,1]];
+
+/* ---------- estado guardado ---------- */
+const KEY = 'catedral-triple-v1';
+let S = { saldo: 2000, bonus: [], muted: false, lastBet: 20, bote: BOTE_SEED, fs: { n: 0, bet: 20 } };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+let busy = false, topBusy = false, auto = false, lightPos = 0;
+
+/* =========================================================
+   SONIDO (sintetizado, sin archivos)
+   ========================================================= */
+let AC = null;
+function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, d = .1, type = 'square', v = .08, when = 0, slide = 0) {
+  if (S.muted) return; const a = ac(); if (!a) return;
+  const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .02);
+}
+const SFX = {
+  tick: () => tone(1400, .03, 'square', .03),
+  stop: () => { tone(140, .14, 'sine', .25, 0, 60); tone(900, .03, 'square', .03); },
+  spin: () => { for (let i = 0; i < 6; i++) tone(500 + i * 90, .05, 'square', .03, i * .03); },
+  coin: () => tone(1900 + rnd(400), .05, 'square', .035),
+  win: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, .16, 'square', .06, i * .09)),
+  big: () => { [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, .22, 'square', .07, i * .12)); tone(130, 1.2, 'triangle', .15, 0); },
+  bonus: () => { tone(400, .5, 'sawtooth', .05, 0, 1600); [1046, 1318, 1568].forEach((f, i) => tone(f, .12, 'square', .05, .4 + i * .08)); },
+  buzz: () => tone(110, .5, 'sawtooth', .09, 0, 70),
+  swish: () => { tone(1800, .25, 'triangle', .05, 0, 600); },
+  bounce: () => tone(200, .12, 'sine', .2, 0, 90),
+};
+const vib = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+/* =========================================================
+   CONSTRUCCIÓN DE LA INTERFAZ
+   ========================================================= */
+const board = $('#board');
+const topCells = [];
+TOP.forEach((c, i) => {
+  const d = document.createElement('div');
+  d.className = 'tc ' + c.t;
+  d.style.gridRow = RING[i][0]; d.style.gridColumn = RING[i][1];
+  if (c.t === 'prize') d.innerHTML = `<img src="img/${c.img}.webp" alt=""><span class="l" data-v="${c.v}">${fmtS(c.v)}</span><span class="dbl">x2</span>`;
+  else if (c.t === 'tapon') d.innerHTML = `<span class="e">✋</span><span class="l">TAPÓN</span>`;
+  else if (c.t === 'cam') d.innerHTML = `<img src="img/camiseta.webp" alt=""><span class="l">+1 BONUS</span>`;
+  else if (c.t === 'fs') d.innerHTML = `<span class="e">🎁</span><span class="l">${FS_N} GRATIS<br>x${FS_X}</span>`;
+  else d.innerHTML = `<span class="e">${MG[c.id].e}</span><span class="l">${MG[c.id].s.split('\n').join('<br>')}</span><span class="dbl">x2</span>`;
+  board.appendChild(d); topCells.push(d);
+});
+const center = document.createElement('div');
+center.className = 'center';
+center.innerHTML = `<div class="dmd" id="dmd">¡SUERTE!</div>
+  <div class="bonusN"><img src="img/camiseta.webp" alt=""><div><span id="bN">0</span><small>BONUS</small></div></div>
+  <button id="launch" disabled>¡LANZAR!</button>`;
+board.appendChild(center);
+topCells[0].classList.add('lit');
+
+const reels = [...document.querySelectorAll('.reel')];
+const strips = reels.map(r => r.querySelector('.strip'));
+let grid = [];
+const symHTML = s => `<div class="sym${s === CAM ? ' cam' : s === WILD ? ' wild' : ''}"><img src="${SYM[s]}" alt=""></div>`;
+function randSym(col) { return col === 1 ? pickW(WEIGHT_C) : pickW(WEIGHT); }
+function setStrip(col, syms) { strips[col].style.transition = 'none'; strips[col].style.transform = 'translateY(0)'; strips[col].innerHTML = syms.map(symHTML).join(''); }
+for (let c = 0; c < 3; c++) {
+  // al empezar, rodillos sin premio a la vista
+  const col = [rnd(12), rnd(12), rnd(12)];
+  col.forEach((s, r) => grid[r * 3 + c] = s);
+}
+// evitar línea ganadora en la pantalla inicial
+for (let k = 0; k < 20 && evaluate(grid, 1).win; k++) grid = grid.map(() => rnd(12));
+for (let c = 0; c < 3; c++) setStrip(c, [grid[c], grid[3 + c], grid[6 + c]]);
+
+/* ---------- tamaños según la pantalla ---------- */
+function fit() {
+  const H = window.innerHeight, W = Math.min(window.innerWidth, 480), R = document.documentElement.style;
+  const cwMax = Math.floor((W - 20 - 28 - 12) / 3), trMax = Math.floor((W - 60) / 5 * .82);
+  const set = (c, tr) => { R.setProperty('--c', c + 'px'); R.setProperty('--cw', Math.min(cwMax, Math.round(c * 1.5)) + 'px'); R.setProperty('--tr', tr + 'px'); };
+  // medir lo que ocupa todo lo demás (cabecera, contadores, botones, márcos…)
+  set(60, 40);
+  const app = $('#app'); app.style.minHeight = '0';
+  const used = app.getBoundingClientRect().height - (3 * 60 + 5 * 40);
+  app.style.minHeight = '';
+  const avail = Math.max(300, H - used);
+  let c = Math.floor(avail * .55 / 3), tr = Math.floor(avail * .45 / 5);
+  c = Math.max(44, Math.min(c, cwMax)); tr = Math.max(27, Math.min(tr, trMax));
+  // si sobra sitio en una de las dos pantallas, se lo damos a la otra
+  const spare = avail - 3 * c - 5 * tr;
+  if (spare > 0) { c = Math.min(cwMax, c + Math.floor(spare / 3)); tr = Math.min(trMax, Math.floor((avail - 3 * c) / 5)); }
+  set(c, tr);
+  // ajuste fino: si aún sobresale unos píxeles, reducir los rodillos
+  app.style.minHeight = '0';
+  for (let k = 0; k < 12 && app.getBoundingClientRect().height > H && c > 44; k++) { c -= 2; set(c, tr); }
+  app.style.minHeight = '';
+}
+addEventListener('resize', fit); fit();
+
+/* ---------- contadores ---------- */
+function ui() {
+  $('#mSaldo').textContent = fmt(S.saldo);
+  $('#mBote').textContent = fmt(Math.floor(S.bote));
+  $('#mBet').textContent = fsRunning ? 'GRATIS' : fmt(S.lastBet);
+  $('#bN').textContent = S.bonus.length;
+  $('#launch').disabled = !S.bonus.length || topBusy || busy || fsRunning;
+  $('#b1').disabled = $('#b2').disabled = busy || topBusy || fsRunning;
+  document.querySelectorAll('#rctl .rb').forEach(b => b.disabled = busy || topBusy);
+  const x2 = S.bonus.length && S.bonus[0] === 2;
+  board.classList.toggle('x2', !!x2);
+  board.querySelectorAll('.tc.prize .l').forEach(l => l.textContent = fmtS(+l.dataset.v * (x2 ? 2 : 1)));
+  $('#sndBtn').textContent = S.muted ? '🔇' : '🔊';
+}
+const dmd = (t) => { $('#dmd').innerHTML = t; };
+let idleMsgs = ['¡SUERTE!', '🎽 CAMISETA<br>= BONUS', '3 EN LÍNEA<br>¡PREMIO!', 'ESCUDO<br>160 €', '¡VAMOS<br>CULTURAL!'], idleK = 0;
+setInterval(() => { if (!busy && !topBusy && !fsRunning && !S.bonus.length && !mode) dmd(idleMsgs[idleK++ % idleMsgs.length]); }, 2600);
+
+/* =========================================================
+   EVALUACIÓN DE LA JUGADA
+   ========================================================= */
+function evaluate(g, mult) {
+  let win = 0, wins = [], camLine = false, camLines = [];
+  LINES.forEach((l, i) => {
+    const t = [g[l[0]], g[l[1]], g[l[2]]], nw = t.filter(x => x !== WILD);
+    if (t.every(x => x === CAM)) { camLine = true; camLines.push(i); return; }
+    if (!nw.length) { win += WILD3 * mult; wins.push({ line: i, sym: WILD, amt: WILD3 * mult }); return; }
+    if (nw.includes(CAM)) return;                 // el comodín no sustituye a la camiseta
+    if (nw.every(x => x === nw[0])) { const a = nw[0]; win += PAY[a] * mult; wins.push({ line: i, sym: a, amt: PAY[a] * mult }); }
+  });
+  const cams = g.filter(s => s === CAM).length;
+  const bonus = camLine ? 6 + (cams - 3) : cams;
+  return { win, wins, bonus, cams, camLines };
+}
+
+/* =========================================================
+   TIRADA
+   ========================================================= */
+/* ---------- avances y retenciones ---------- */
+const AV_P = .08, AV_N = [1, 2, 3, 4, 5], AV_W = [.35, .27, .18, .12, .08]; // probabilidad de avances y cuántos
+const HOLD_P = .5;                                                          // probabilidad de ofrecer retención
+let mode = null, held = [false, false, false], holdOk = [false, false, false], nudges = 0, nudgeMult = 1;
+
+async function spin(bet, free) {
+  if (busy || topBusy) return;
+  if (!free && fsRunning) return;
+  if (!free && S.saldo < bet) { noMoney(); return; }
+  ac(); busy = true;
+  if (!free) { S.lastBet = bet; S.saldo -= bet; S.bote += bet * BOTE_PCT; }
+  save();
+  const H = (!free && mode === 'hold') ? held.slice() : [false, false, false];
+  const wasHeld = H.some(Boolean);
+  mode = null; nudges = 0; renderCtl();
+  $('#mWin').textContent = fmt(0); clearWin(); ui();
+  const bm = bet / 20, mult = free ? bm * FS_X : bm; // en tiradas gratis los premios de línea van x2
+  const next = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
+  for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
+  SFX.spin(); vib(15);
+  const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
+  const done = [];
+  let order = 0;
+  for (let c = 0; c < 3; c++) {
+    if (H[c]) continue; // rodillo retenido: no gira
+    const old = [grid[c], grid[3 + c], grid[6 + c]];
+    const nw = [next[c], next[3 + c], next[6 + c]];
+    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(c === 1 ? 15 : 14));
+    const all = nw.concat(filler, old);
+    const st = strips[c];
+    st.style.transition = 'none';
+    st.innerHTML = all.map(symHTML).join('');
+    st.style.transform = `translateY(${-(all.length - 3) * C}px)`;
+    st.offsetHeight; // aplicar
+    const dur = 900 + order * 380; order++;
+    reels[c].classList.add('spin');
+    st.style.transition = `transform ${dur}ms cubic-bezier(.32,.0,.25,1.06)`;
+    st.style.transform = 'translateY(0)';
+    done.push(new Promise(res => setTimeout(() => {
+      reels[c].classList.remove('spin'); setStrip(c, nw); SFX.stop(); vib(8); res();
+    }, dur + 30)));
+  }
+  await Promise.all(done);
+  reels.forEach(r => r.classList.remove('held'));
+  grid = next;
+  const r = evaluate(grid, mult);
+  if (wasHeld && !r.camLines.length) r.bonus = grid.filter((s, i) => s === CAM && !H[i % 3]).length; // las camisetas retenidas no cuentan otra vez
+  if (r.wins.length) await payWins(r, mult, free);
+  if (grid.filter(x => x === ESC).length >= 3) await winBote();
+  if (r.bonus) {
+    grid.forEach((s, i) => { if (s === CAM && !H[i % 3]) cellAt(i).classList.add('camwin'); });
+    r.camLines.forEach(i => drawLine(i, '#20e070'));
+    SFX.bonus(); vib([30, 30, 30]);
+    flyBonus(r.bonus);
+    for (let k = 0; k < r.bonus; k++) S.bonus.push(bm);
+    if (r.bonus >= 6) await celebrate('¡3 CAMISETAS EN LÍNEA!', SYM[CAM], null, '+' + r.bonus + ' BONUS');
+    dmd(`+${r.bonus} BONUS<br>¡PULSA LANZAR!`);
+    save();
+  }
+  if (!r.wins.length && !free) await offerExtras(mult, wasHeld);
+  busy = false; ui(); renderCtl();
+  if (auto && !free) autoStep();
+  return r.win;
+}
+
+/* ---------- TIRADAS GRATIS ---------- */
+let fsRunning = false;
+async function runFreeSpins() {
+  if (fsRunning || !S.fs || S.fs.n <= 0) return;
+  fsRunning = true; ui();
+  const wasAuto = auto;
+  let total = 0;
+  while (S.fs.n > 0) {
+    while (busy || topBusy) await sleep(200);
+    S.fs.n--; save();
+    dmd(`🎁 TIRADAS GRATIS<br>QUEDAN ${S.fs.n} · x${FS_X}`); $('#mBet').textContent = 'GRATIS';
+    total += (await spin(S.fs.bet, true)) || 0;
+    await sleep(700);
+  }
+  fsRunning = false; S.fs = { n: 0, bet: 20 }; save(); ui();
+  await celebrate('FIN TIRADAS GRATIS', 'img/balon.webp', total);
+  dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : '¡SUERTE!');
+  if (wasAuto && auto) autoStep();
+}
+
+async function payWins(r, mult, noRisk) {
+  showWin(r);
+  const special = r.wins.some(w => SPECIAL.includes(w.sym));
+  const top = r.wins.reduce((a, b) => (b.amt > a.amt ? b : a));
+  if (special) { SFX.big(); vib([60, 40, 60, 40, 120]); await celebrate('¡PREMIO ESPECIAL!', SYM[top.sym], r.win); }
+  else if (r.win >= 1000 * mult) { SFX.big(); vib([50, 30, 80]); await celebrate('¡GRAN PREMIO!', SYM[top.sym], r.win); }
+  else SFX.win();
+  $('#mWin').textContent = fmt(r.win);
+  const final = (auto || noRisk) ? r.win : await risk(r.win, mult);
+  if (final > 0) await countWin(final); else $('#mWin').textContent = fmt(0);
+}
+
+/* ---------- RIESGO: doble o nada ---------- */
+function risk(amount, mult) {
+  return new Promise(res => {
+    const ov = $('#riskOv'), pn = ov.querySelector('.risk'), lD = $('#lD'), lN = $('#lN'), bA = $('#rArr'), bC = $('#rCob');
+    let a = amount, running = false, timer = null, lamp = 0;
+    const cap = RISK_CAP * mult;
+    const setLamp = i => { lamp = i; lD.classList.toggle('on', i === 0); lN.classList.toggle('on', i === 1); };
+    const upd = () => {
+      $('#rAmt').textContent = fmt(a); $('#rDbl').textContent = fmt(a * 2); $('#mWin').textContent = fmt(a);
+      const max = a * 2 > cap;
+      bA.disabled = max; bA.textContent = max ? 'MÁXIMO' : 'ARRIESGAR'; bC.disabled = false;
+      $('#rIns').innerHTML = max ? '¡Has llegado al máximo! Cobra tu premio.' : 'Si arriesgas, las luces se alternan: pulsa <b>¡PARAR!</b> y… ¡suerte!';
+      pn.classList.add('idle'); lD.classList.remove('on'); lN.classList.remove('on');
+    };
+    const close = v => { clearInterval(timer); ov.classList.add('hidden'); bC.onclick = bA.onclick = null; res(v); };
+    upd(); ov.classList.remove('hidden');
+    bC.onclick = () => { if (!running) close(a); };
+    bA.onclick = async () => {
+      if (!running) {
+        running = true; pn.classList.remove('idle'); bC.disabled = true; bA.textContent = '¡PARAR!';
+        timer = setInterval(() => { setLamp(1 - lamp); SFX.tick(); }, 85);
+        return;
+      }
+      clearInterval(timer); bA.disabled = true;
+      const ok = Math.random() < .5;
+      let steps = 3 + rnd(3);
+      if (((lamp + steps) % 2 === 0) !== ok) steps++; // terminar en el resultado
+      for (let i = 0; i < steps; i++) { await sleep(130 + i * 70); setLamp(1 - lamp); SFX.tick(); }
+      running = false;
+      if (ok) { a *= 2; SFX.win(); vib([30, 30, 60]); await sleep(700); upd(); }
+      else { SFX.buzz(); vib(150); $('#rAmt').textContent = fmt(0); $('#mWin').textContent = fmt(0); $('#rIns').innerHTML = '<b>¡NADA!</b> Has perdido el premio.'; await sleep(1500); close(0); }
+    };
+  });
+}
+
+/* ---------- BOTE CATEDRAL ---------- */
+async function winBote() {
+  grid.forEach((s, i) => { if (s === ESC) cellAt(i).classList.add('win'); });
+  const v = Math.floor(S.bote);
+  $('#boteBar').classList.add('hot'); SFX.big(); setTimeout(SFX.big, 1300); vib([100, 50, 100, 50, 200]);
+  await celebrate('¡¡BOTE CATEDRAL!!', SYM[ESC], v);
+  S.bote = BOTE_SEED; save();
+  await countWin(v);
+  $('#boteBar').classList.remove('hot');
+}
+
+/* tras una jugada sin premio: a veces da AVANCES; si no, a veces deja RETENER la pareja de la línea del medio */
+async function offerExtras(mult, wasHeld) {
+  if (Math.random() < AV_P) {
+    nudges = AV_N[pickW(AV_W)]; nudgeMult = mult; mode = 'nudge';
+    [0, 1, 2].forEach((f, i) => tone(660 + i * 220, .12, 'square', .06, i * .1)); vib([20, 20, 20]);
+    dmd(`¡${nudges} AVANCE${nudges > 1 ? 'S' : ''}!<br>ELIGE RODILLO`);
+    await sleep(300); return;
+  }
+  if (wasHeld || Math.random() >= HOLD_P) return;
+  const m = [grid[3], grid[4], grid[5]];
+  let h = null;
+  if (m[0] === m[1] && m[0] !== CAM) h = [true, true, false];
+  else if (m[1] === m[2] && m[1] !== CAM) h = [false, true, true];
+  else if (m[0] === m[2] && m[0] !== CAM) h = [true, false, true];
+  if (!h) return;
+  mode = 'hold'; holdOk = h; held = h.slice();
+  [0, 1].forEach(i => tone(880 + i * 330, .14, 'square', .06, i * .12)); vib(25);
+  dmd('¡RETENCIÓN!<br>ELIGE QUÉ PARAR');
+}
+
+/* un AVANCE: el rodillo baja una posición */
+async function nudge(c) {
+  if (busy || topBusy || mode !== 'nudge' || nudges <= 0) return;
+  ac(); busy = true; clearWin(); ui();
+  const ns = randSym(c), col = [grid[c], grid[3 + c], grid[6 + c]];
+  const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
+  const st = strips[c];
+  st.style.transition = 'none'; st.innerHTML = [ns].concat(col).map(symHTML).join('');
+  st.style.transform = `translateY(${-C}px)`; st.offsetHeight;
+  st.style.transition = 'transform 260ms cubic-bezier(.3,.6,.4,1.15)'; st.style.transform = 'translateY(0)';
+  SFX.tick(); await sleep(280);
+  grid[6 + c] = col[1]; grid[3 + c] = col[0]; grid[c] = ns;
+  setStrip(c, [ns, col[0], col[1]]); SFX.stop(); vib(10);
+  nudges--;
+  if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); save(); }
+  const r = evaluate(grid, nudgeMult);
+  if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
+  if (ns === ESC && grid.filter(x => x === ESC).length >= 3) { nudges = 0; await winBote(); }
+  if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
+  else { mode = null; if (!r.wins.length) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : 'SIN AVANCES'); }
+  busy = false; ui(); renderCtl();
+  if (auto) autoStep();
+}
+
+function toggleHold(c) {
+  if (busy || mode !== 'hold' || !holdOk[c]) return;
+  held[c] = !held[c]; SFX.tick(); renderCtl();
+}
+
+function renderCtl() {
+  const bs = document.querySelectorAll('#rctl .rb');
+  bs.forEach((b, c) => {
+    b.className = 'rb'; b.disabled = busy || topBusy; b.style.visibility = 'visible';
+    if (mode === 'nudge') { b.classList.add('nu'); b.innerHTML = '▼ AVANCE'; }
+    else if (mode === 'hold' && holdOk[c]) { b.classList.add(held[c] ? 'ho' : 'hf'); b.innerHTML = held[c] ? '🔒 PARADO' : 'PARAR'; }
+    else { b.style.visibility = 'hidden'; b.innerHTML = '&nbsp;'; }
+    reels[c].classList.toggle('held', mode === 'hold' && held[c]);
+  });
+  $('#rctl').classList.toggle('on', mode === 'nudge' || mode === 'hold');
+}
+
+/* el rodillo que daría premio con un avance (lo que está arriba baja al centro) */
+function bestNudge() {
+  for (let c = 0; c < 3; c++) {
+    const t = grid.slice(); t[6 + c] = grid[3 + c]; t[3 + c] = grid[c]; t[c] = -1 - c;
+    if (evaluate(t, 1).wins.length) return c;
+  }
+  return rnd(3);
+}
+
+function cellAt(i) { return strips[i % 3].children[Math.floor(i / 3)]; }
+function clearWin() { document.querySelectorAll('.sym.win,.sym.camwin').forEach(e => e.classList.remove('win', 'camwin')); $('#lines').innerHTML = ''; }
+function drawLine(i, col) {
+  const pts = LINES[i].map(k => `${(k % 3) + .5},${Math.floor(k / 3) + .5}`).join(' ');
+  const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  pl.setAttribute('points', pts); pl.style.stroke = col || LINE_COL[i];
+  $('#lines').appendChild(pl);
+}
+function showWin(r) { r.wins.forEach(w => { drawLine(w.line); LINES[w.line].forEach(k => cellAt(k).classList.add('win')); }); }
+async function countWin(c) {
+  const dur = Math.min(2600, 500 + c / 4), t0 = performance.now(); let last = 0;
+  while (true) {
+    const k = Math.min(1, (performance.now() - t0) / dur), v = Math.round(c * k);
+    $('#mWin').textContent = fmt(v);
+    if (performance.now() - last > 70) { SFX.coin(); last = performance.now(); }
+    if (k >= 1) break; await sleep(30);
+  }
+  S.saldo += c; save(); ui();
+}
+function flyBonus(n) {
+  const r = $('#reels').getBoundingClientRect(), t = $('#bN').getBoundingClientRect();
+  const f = document.createElement('div'); f.className = 'fly'; f.textContent = '+' + n + ' BONUS';
+  f.style.left = (r.left + r.width / 2 - 50) + 'px'; f.style.top = (r.top + r.height / 2) + 'px';
+  document.body.appendChild(f); f.offsetHeight;
+  f.style.transform = `translate(${t.left - r.left - r.width / 2 + 40}px,${t.top - r.top - r.height / 2}px) scale(.7)`; f.style.opacity = '.2';
+  setTimeout(() => f.remove(), 1100);
+}
+function noMoney() {
+  SFX.buzz(); auto = false; $('#autoBtn').classList.remove('on');
+  dmd('SALDO<br>INSUFICIENTE');
+  if (S.saldo < 500) setTimeout(() => { if (confirm('Te has quedado sin saldo. ¿Recargar 20 € ficticios?')) refill(); }, 250);
+}
+function refill() { if (S.saldo >= 500) { alert('Solo puedes recargar cuando te quedan menos de 5 €.'); return; } S.saldo += 2000; save(); ui(); SFX.win(); dmd('+20 €<br>¡A JUGAR!'); }
+
+/* =========================================================
+   CELEBRACIÓN + CONFETI
+   ========================================================= */
+function celebrate(title, img, amt, sub) {
+  return new Promise(res => {
+    $('#wT').textContent = title; $('#wI').src = img;
+    $('#wA').textContent = amt != null ? '+' + fmt(amt) : (sub || '');
+    const ov = $('#win'); ov.classList.remove('hidden');
+    confetti(2600);
+    let closed = false; const close = () => { if (closed) return; closed = true; ov.classList.add('hidden'); res(); };
+    setTimeout(() => ov.addEventListener('click', close, { once: true }), 400);
+    setTimeout(close, auto ? 2600 : 6000);
+  });
+}
+function confetti(ms) {
+  const cv = $('#confetti'), x = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cols = ['#d4102e', '#ffffff', '#ffc83d', '#1f8f4e', '#ff9b2f'];
+  const P = Array.from({ length: 140 }, () => ({ x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .6, vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 4, r: Math.random() * 6, s: 5 + Math.random() * 6, c: cols[rnd(5)] }));
+  const t0 = performance.now();
+  (function f(t) {
+    x.clearRect(0, 0, cv.width, cv.height);
+    P.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += .1; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); });
+    if (t - t0 < ms) requestAnimationFrame(f); else x.clearRect(0, 0, cv.width, cv.height);
+  })(t0);
+}
+
+/* =========================================================
+   PANTALLA DE ARRIBA: TIRADA DE BONUS
+   ========================================================= */
+async function launch() {
+  if (topBusy || busy || !S.bonus.length) return;
+  ac(); topBusy = true; ui();
+  const mult = S.bonus.shift(); save(); ui(); topBusy = true; $('#launch').disabled = true;
+  dmd(mult === 2 ? 'BONUS DOBLE<br>¡GIRANDO!' : 'BONUS<br>¡GIRANDO!');
+  const target = pickW(TOP.map(c => c.w));
+  const steps = 32 + ((target - lightPos + 16) % 16) + 16 * rnd(2);
+  topCells.forEach(c => c.classList.remove('hit'));
+  for (let i = 1; i <= steps; i++) {
+    topCells[lightPos].classList.remove('lit');
+    lightPos = (lightPos + 1) % 16;
+    topCells[lightPos].classList.add('lit');
+    SFX.tick();
+    const k = i / steps;
+    await sleep(28 + 300 * k * k * k);
+  }
+  const c = TOP[target];
+  topCells[target].classList.add('hit');
+  if (c.t === 'tapon') { SFX.buzz(); vib(80); dmd('✋ ¡TAPÓN!<br>SIN PREMIO'); await sleep(1300); }
+  else if (c.t === 'cam') { SFX.bonus(); S.bonus.unshift(mult); save(); dmd('🎽 CAMISETA<br>+1 BONUS'); await sleep(1400); }
+  else if (c.t === 'fs') {
+    SFX.big(); vib([60, 40, 120]); dmd(`🎁 ${FS_N} TIRADAS<br>GRATIS x${FS_X}`);
+    S.fs = { n: ((S.fs && S.fs.n) || 0) + FS_N, bet: mult * 20 }; save();
+    await celebrate('¡TIRADAS GRATIS!', 'img/balon.webp', null, `${FS_N} TIRADAS · PREMIOS x${FS_X}`);
+  }
+  else if (c.t === 'prize') {
+    const v = c.v * mult; SFX.big(); vib([60, 40, 120]); dmd(c.n + '<br>' + fmt(v));
+    await celebrate('¡' + c.n + '!', 'img/' + c.img + '.webp', v);
+    await countWin(v);
+  } else {
+    SFX.bonus(); dmd('🎮 MINIJUEGO<br>' + MG[c.id].n); await sleep(1100);
+    if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
+    const v = await playMG(c.id, mult, false);
+    if (v) { await countWin(v); }
+  }
+  topCells[target].classList.remove('hit');
+  topBusy = false; ui();
+  if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
+  if (S.fs && S.fs.n > 0) { runFreeSpins(); return; }
+  if (auto) autoStep();
+}
+
+/* =========================================================
+   AUTO
+   ========================================================= */
+function autoStep() {
+  if (!auto) return;
+  setTimeout(() => {
+    if (!auto || busy || topBusy || fsRunning) return;
+    if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
+    else if (S.bonus.length) launch();
+    else if (S.saldo >= 20) spin(20);
+    else { auto = false; $('#autoBtn').classList.remove('on'); noMoney(); }
+  }, 650);
+}
+
+/* =========================================================
+   MINIJUEGOS
+   ========================================================= */
+let mgDone = null;
+function playMG(id, mult, practice) {
+  return new Promise(res => {
+    $('#mgT').textContent = MG[id].e + ' ' + MG[id].n;
+    const tag = $('#mgTag'); tag.className = 'tag' + (practice ? ' pr' : '');
+    tag.textContent = practice ? 'ENTRENAMIENTO' : (mult === 2 ? 'PREMIOS x2' : 'PREMIOS');
+    $('#mg').classList.remove('hidden');
+    const B = $('#mgB');
+    const finish = (cents, note) => {
+      const v = cents * mult;
+      if (v >= 4000) { SFX.big(); confetti(2200); } else SFX.win();
+      B.innerHTML = `<div class="res"><div class="wt" style="font-size:30px">${v >= 4000 ? '¡ENORME!' : '¡PREMIO!'}</div>
+        <div class="wa">${fmt(v)}</div>
+        <p class="ins">${note || ''}${practice ? '<br><b>Entrenamiento:</b> este premio no se cobra.' : ''}</p>
+        <button class="big" id="mgOk">${practice ? 'CERRAR' : 'COBRAR'}</button></div>`;
+      $('#mgOk').onclick = () => { $('#mg').classList.add('hidden'); B.innerHTML = ''; res(practice ? 0 : v); };
+    };
+    MINI[id](B, mult, finish);
+  });
+}
+const ptab = (rows, m, on) => `<div class="ptab">${rows.map((r, i) => `<span class="${i === on ? 'on' : ''}">${r[0]} → ${fmtS(r[1] * m)}</span>`).join('')}</div>`;
+
+const MINI = {
+  /* ---- 1. TIRO LIBRE: pulsar cuando la aguja esté en verde ---- */
+  tiro(B, m, finish) {
+    const TAB = [['0', 1000], ['1', 1000], ['2', 2000], ['3', 4000]];
+    let shot = 0, made = 0, run = true, pos = 0, t0 = performance.now(), locked = false;
+    const zones = [.24, .18, .13], speeds = [2.2, 2.9, 3.6];
+    B.innerHTML = `<p class="ins">Pulsa <b>¡TIRAR!</b> cuando la aguja esté en la <b style="color:#22d36b">zona verde</b>. Tienes 3 tiros libres.</p>
+      <div class="court"><img class="hoop" src="img/canasta.webp" alt=""><img class="ball" src="img/balon.webp" alt=""><div class="say"></div></div>
+      <div class="pm"><div class="z"></div><div class="n"></div></div>
+      <div class="shots"><b></b><b></b><b></b></div>
+      <div id="tt">${ptab(TAB.map(r => [r[0] + ' canastas', r[1]]), m, -1)}</div>
+      <button class="big" id="go">¡TIRAR!</button>`;
+    const z = B.querySelector('.z'), n = B.querySelector('.n'), ball = B.querySelector('.ball'), say = B.querySelector('.say');
+    const setZone = () => { z.style.left = (50 - zones[shot] * 50) + '%'; z.style.width = zones[shot] * 100 + '%'; };
+    setZone();
+    (function loop(t) { if (!run) return; if (!locked) { pos = (Math.sin((t - t0) / 1000 * speeds[shot]) + 1) / 2; n.style.left = pos * 100 + '%'; } requestAnimationFrame(loop); })(t0);
+    B.querySelector('#go').onclick = async () => {
+      if (locked) return; locked = true; B.querySelector('#go').disabled = true;
+      const ok = Math.abs(pos - .5) <= zones[shot] / 2;
+      await shoot(B, ball, ok, ok ? 0 : (pos < .5 ? -1 : 1));
+      say.textContent = ok ? '¡CANASTA!' : '¡FALLO!'; say.style.color = ok ? '#7dff9b' : '#ff5a6e';
+      say.classList.remove('show'); say.offsetHeight; say.classList.add('show');
+      B.querySelectorAll('.shots b')[shot].className = ok ? 'ok' : 'ko';
+      if (ok) made++;
+      shot++;
+      await sleep(900);
+      if (shot >= 3) { run = false; finish(TAB[made][1], `Has metido ${made} de 3.`); return; }
+      setZone(); t0 = performance.now(); locked = false; B.querySelector('#go').disabled = false;
+    };
+  },
+
+  /* ---- 2. VESTUARIO: abre taquillas hasta juntar 3 premios iguales ---- */
+  vest(B, m, finish) {
+    const VAL = [1000, 2000, 3000, 4000, 8000, 16000], WV = [.50, .24, .11, .08, .05, .02];
+    const W = VAL[pickW(WV)];
+    const others = []; VAL.forEach(v => { if (v !== W) others.push(v, v); });
+    shuffle(others);
+    const seq = shuffle([W, W].concat(others.slice(0, 2 + rnd(5)))); seq.push(W);
+    const cnt = {}; VAL.forEach(v => cnt[v] = 0);
+    let k = 0, over = false;
+    B.innerHTML = `<p class="ins">Abre las taquillas del vestuario. Cuando encuentres <b>3 premios iguales</b>, ¡te lo llevas!</p>
+      <div class="lockers">${Array.from({ length: 12 }, (_, i) => `<button class="lk" data-i="${i}">${i + 1}</button>`).join('')}</div>
+      <div class="tally" id="tal"></div>`;
+    const tal = () => B.querySelector('#tal').innerHTML = VAL.map(v => `<span>${fmtS(v * m)} ${'●'.repeat(cnt[v])}${'○'.repeat(3 - cnt[v])}</span>`).join('');
+    tal();
+    B.querySelectorAll('.lk').forEach(b => b.onclick = async () => {
+      if (over || b.classList.contains('op')) return;
+      const v = seq[k++]; cnt[v]++; b.classList.add('op'); b.textContent = fmtS(v * m); b.dataset.v = v;
+      SFX.tick(); tal();
+      if (k === seq.length) {
+        over = true; SFX.win();
+        B.querySelectorAll('.lk.op').forEach(x => { if (+x.dataset.v === W) x.classList.add('w'); });
+        await sleep(700);
+        // descubrir el resto
+        const left = [...B.querySelectorAll('.lk:not(.op)')];
+        const pool = []; VAL.forEach(v => { if (v !== W) for (let q = cnt[v]; q < 2; q++) pool.push(v); });
+        shuffle(pool);
+        left.forEach((x, i) => { x.classList.add('op', 'f'); x.textContent = fmtS((pool[i] || 1000) * m); });
+        await sleep(1200);
+        finish(W, '¡Tres taquillas iguales!');
+      }
+    });
+  },
+
+  /* ---- 3. RULETA DEL TRIPLE ---- */
+  ruleta(B, m, finish) {
+    const SEG = [1000, 2000, 1000, 4000, 1000, 3000, 1000, 2000, 1000, 8000, 1000, 2000, 1000, 3000, 1000, 6000, 2000, 1000, 16000, 2000];
+    const N = SEG.length, A = 360 / N;
+    B.innerHTML = `<p class="ins">Gira la ruleta y llévate el premio donde se pare la flecha.</p>
+      <div class="wheelBox"><div class="ptr"></div><canvas width="600" height="600"></canvas><img class="hub" src="img/p13.webp" alt=""></div>
+      <button class="big" id="go">¡GIRAR!</button>`;
+    const cv = B.querySelector('canvas'), x = cv.getContext('2d'), R = 300;
+    x.translate(R, R);
+    SEG.forEach((v, i) => {
+      const a0 = (-90 + i * A) * Math.PI / 180, a1 = a0 + A * Math.PI / 180;
+      x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R - 2, a0, a1); x.closePath();
+      x.fillStyle = v === 16000 ? '#ffc83d' : v >= 4000 ? '#1f8f4e' : i % 2 ? '#d4102e' : '#ffffff'; x.fill();
+      x.strokeStyle = '#3a0610'; x.lineWidth = 3; x.stroke();
+      x.save(); x.rotate((a0 + a1) / 2); x.textAlign = 'right'; x.textBaseline = 'middle';
+      x.fillStyle = (v === 16000 || (v < 4000 && !(i % 2))) ? '#8e0a1f' : '#fff';
+      x.font = 'bold 34px "Russo One",sans-serif'; x.fillText(fmtS(v * m), R - 18, 2); x.restore();
+    });
+    let rot = 0;
+    B.querySelector('#go').onclick = function () {
+      this.disabled = true; SFX.spin();
+      const k = rnd(N);
+      rot = 360 * 7 - (k * A + A / 2) + (Math.random() - .5) * A * .7;
+      cv.style.transform = `rotate(${rot}deg)`;
+      let ticks = setInterval(SFX.tick, 90); setTimeout(() => { clearInterval(ticks); ticks = setInterval(SFX.tick, 220); }, 3000);
+      setTimeout(() => { clearInterval(ticks); SFX.win(); setTimeout(() => finish(SEG[k], 'La ruleta ha hablado.'), 700); }, 5100);
+    };
+  },
+
+  /* ---- 4. MAYOR O MENOR: ¿la siguiente carta es mayor o menor? ---- */
+  mayor(B, m, finish) {
+    const LAD = [1000, 2000, 4000, 8000, 16000];
+    let step = 0, cur = 3 + rnd(8), over = false;
+    B.innerHTML = `<p class="ins">¿La siguiente carta tendrá un número <b>mayor o menor</b>? Si aciertas subes de premio. Si fallas, te quedas con el mínimo (${fmtS(1000 * m)}). Puedes <b>cobrar</b> cuando quieras.</p>
+      <div class="mm"><div class="ladder">${LAD.map(v => `<span>${fmtS(v * m)}</span>`).join('')}</div>
+      <div class="card" id="cd"><img alt=""><b></b></div></div>
+      <div class="row"><button class="big grn" id="up">▲ MAYOR</button><button class="big red" id="dn">▼ MENOR</button></div>
+      <button class="big" id="col">COBRAR</button>`;
+    const cd = B.querySelector('#cd');
+    const show = () => { cd.querySelector('img').src = SYM[cur - 1]; cd.querySelector('b').textContent = cur; cd.classList.remove('fl'); cd.offsetHeight; cd.classList.add('fl');
+      B.querySelectorAll('.ladder span').forEach((s, i) => s.classList.toggle('on', i === step)); B.querySelector('#col').textContent = 'COBRAR ' + fmtS(LAD[step] * m); };
+    show();
+    const guess = async up => {
+      if (over) return; over = true;
+      const prev = cur, nx = 1 + rnd(13);
+      SFX.tick(); cur = nx; show();
+      if (nx === prev) { dmdMg('¡Empate! Sigues igual'); over = false; return; }
+      if ((nx > prev) === up) {
+        SFX.win(); step++; show();
+        if (step === LAD.length - 1) { await sleep(800); finish(LAD[step], '¡Has llegado a lo más alto!'); return; }
+        over = false;
+      } else { SFX.buzz(); await sleep(900); finish(LAD[0], 'Has fallado: te llevas el premio mínimo.'); }
+    };
+    const dmdMg = t => { const p = B.querySelector('.ins'); p.innerHTML = '<b>' + t + '</b>'; };
+    B.querySelector('#up').onclick = () => guess(true);
+    B.querySelector('#dn').onclick = () => guess(false);
+    B.querySelector('#col').onclick = () => { if (!over) { over = true; finish(LAD[step], '¡Bien cobrado!'); } };
+  },
+
+  /* ---- 5. 1 CONTRA 1: tira por un lado y supera al defensor ---- */
+  unouno(B, m, finish) {
+    const TAB = [['0-2', 1000], ['3', 2000], ['4', 4000], ['5', 8000]];
+    let shot = 0, made = 0, lock = false;
+    B.innerHTML = `<p class="ins">Elige por dónde tirar. Si el defensor salta a tu lado… <b>¡tapón!</b> Tienes 5 tiros.</p>
+      <div class="court"><img class="hoop" src="img/canasta.webp" alt=""><img class="def" src="img/mate.webp" alt=""><img class="ball" src="img/balon.webp" alt=""><div class="say"></div></div>
+      <div class="shots">${'<b></b>'.repeat(5)}</div>
+      ${ptab(TAB.map(r => [r[0] + ' canastas', r[1]]), m, -1)}
+      <div class="row"><button class="big red" data-s="-1">◀ IZQ.</button><button class="big red" data-s="0">CENTRO</button><button class="big red" data-s="1">DCHA. ▶</button></div>`;
+    const def = B.querySelector('.def'), ball = B.querySelector('.ball'), say = B.querySelector('.say');
+    B.querySelectorAll('[data-s]').forEach(b => b.onclick = async () => {
+      if (lock) return; lock = true;
+      const s = +b.dataset.s, ok = Math.random() < .6;
+      const others = [-1, 0, 1].filter(v => v !== s);
+      const d = ok ? others[rnd(2)] : s;
+      def.style.left = (50 + d * 30) + '%'; def.style.transform = 'translateY(-38px)';
+      setTimeout(() => def.style.transform = 'translateY(0)', 500);
+      await shoot(B, ball, ok, s, !ok);
+      say.textContent = ok ? '¡CANASTA!' : '¡TAPÓN!'; say.style.color = ok ? '#7dff9b' : '#ff5a6e';
+      say.classList.remove('show'); say.offsetHeight; say.classList.add('show');
+      B.querySelectorAll('.shots b')[shot].className = ok ? 'ok' : 'ko';
+      if (ok) made++; shot++;
+      await sleep(900); def.style.left = '50%';
+      if (shot >= 5) { finish(made <= 2 ? 1000 : TAB[made - 2][1], `Has metido ${made} de 5.`); return; }
+      lock = false;
+    });
+  },
+
+  /* ---- 6. EL PARTIDO: 4 cuartos contra el visitante ---- */
+  partido(B, m, finish) {
+    const OUT = [{ p: .5, v: 1000, a: -15, b: -1 }, { p: .3, v: 2000, a: 1, b: 5 }, { p: .12, v: 4000, a: 6, b: 12 }, { p: .06, v: 8000, a: 13, b: 20 }, { p: .02, v: 16000, a: 21, b: 30 }];
+    const o = OUT[pickW(OUT.map(x => x.p))];
+    const margin = o.a + rnd(o.b - o.a + 1);
+    const rv = 62 + rnd(19), lv = rv + margin;
+    const split = tot => { const w = [0, 0, 0, 0].map(() => .75 + Math.random() * .5), s = w.reduce((a, b) => a + b); const q = w.map(x => Math.round(x / s * tot)); q[3] += tot - q.reduce((a, b) => a + b); return q; };
+    const QL = split(lv), QV = split(rv);
+    let q = 0, L = 0, V = 0;
+    B.innerHTML = `<p class="ins">Juega los 4 cuartos. ¡Cuanto más gane la Cultural, mayor es el premio!</p>
+      <div class="sb"><div class="tm"><div><img src="img/p13.webp" alt=""><div class="tn">CULTURAL</div></div><div class="q" id="ql">1er CUARTO</div><div><span style="font-size:36px">🏀</span><div class="tn">VISITANTE</div></div></div>
+      <div class="tm"><div class="sc" id="sl">0</div><div class="sc" style="color:#666">-</div><div class="sc" id="sv">0</div></div>
+      <div class="qs"><div></div><div>1º</div><div>2º</div><div>3º</div><div>4º</div><div>CUL</div><div id="l0">·</div><div id="l1">·</div><div id="l2">·</div><div id="l3">·</div><div>VIS</div><div id="v0">·</div><div id="v1">·</div><div id="v2">·</div><div id="v3">·</div></div></div>
+      ${ptab([['Perder', 1000], ['Ganar 1-5', 2000], ['Ganar 6-12', 4000], ['Ganar 13-20', 8000], ['Ganar 21+', 16000]], m, -1)}
+      <button class="big" id="go">▶ JUGAR 1er CUARTO</button>`;
+    const go = B.querySelector('#go'), names = ['1er', '2º', '3er', '4º'];
+    go.onclick = async () => {
+      go.disabled = true;
+      const tl = L + QL[q], tv = V + QV[q];
+      while (L < tl || V < tv) {
+        const pickL = (L < tl) && (V >= tv || Math.random() < .5);
+        const pts = Math.min(pickL ? tl - L : tv - V, [1, 2, 2, 2, 3][rnd(5)]);
+        if (pickL) L += pts; else V += pts;
+        B.querySelector('#sl').textContent = L; B.querySelector('#sv').textContent = V;
+        pts === 3 ? SFX.swish() : SFX.tick();
+        await sleep(70);
+      }
+      B.querySelector('#l' + q).textContent = QL[q]; B.querySelector('#v' + q).textContent = QV[q];
+      q++;
+      if (q >= 4) {
+        B.querySelector('#ql').textContent = 'FINAL';
+        await sleep(900);
+        finish(o.v, margin > 0 ? `¡Victoria de la Cultural por ${margin}!` : `Derrota por ${-margin}… premio de consolación.`);
+        return;
+      }
+      B.querySelector('#ql').textContent = names[q] + ' CUARTO';
+      go.textContent = '▶ JUGAR ' + names[q] + ' CUARTO'; go.disabled = false;
+    };
+  },
+};
+
+/* animación del balón hacia la canasta. side: -1 izq, 0 centro, 1 dcha */
+function shoot(B, ball, ok, side, blocked) {
+  const court = B.querySelector('.court'), hoop = B.querySelector('.hoop');
+  const H = court.clientHeight, W = court.clientWidth;
+  const rimY = hoop.offsetTop + hoop.offsetHeight * .66 - (H - 8 - 54);
+  const sx = side * W * .26;
+  let kf;
+  if (blocked) kf = [
+    { transform: 'translate(0,0) scale(1)' },
+    { transform: `translate(${sx * .7}px,${rimY * .55}px) scale(.85)`, offset: .45 },
+    { transform: `translate(${sx * 1.3}px,${rimY * .25}px) scale(.9)`, offset: .7 },
+    { transform: `translate(${sx * 1.6}px,0px) scale(1)` }];
+  else if (ok) kf = [
+    { transform: 'translate(0,0) scale(1)' },
+    { transform: `translate(${sx * .5}px,${rimY - 70}px) scale(.72)`, offset: .55 },
+    { transform: `translate(0px,${rimY - 6}px) scale(.6)`, offset: .8 },
+    { transform: `translate(0px,${rimY + 40}px) scale(.58)`, opacity: .4 }];
+  else { const dx = (side || (Math.random() < .5 ? -1 : 1)) * 34; kf = [
+    { transform: 'translate(0,0) scale(1)' },
+    { transform: `translate(${dx * .5}px,${rimY - 70}px) scale(.72)`, offset: .55 },
+    { transform: `translate(${dx}px,${rimY - 4}px) scale(.62)`, offset: .78 },
+    { transform: `translate(${dx * 2.6}px,${rimY + 90}px) scale(.62)`, opacity: .2 }]; }
+  return new Promise(res => {
+    const a = ball.animate(kf, { duration: 1000, easing: 'ease-in-out' });
+    setTimeout(() => ok ? SFX.swish() : SFX.bounce(), blocked ? 450 : 780);
+    a.onfinish = () => res();
+  });
+}
+
+/* =========================================================
+   TABLA DE PREMIOS, MENÚ, EVENTOS
+   ========================================================= */
+$('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) =>
+  `<div class="pti${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><div class="v">${fmtS(p)}<small>(${fmtS(p * 2)})${SPECIAL.includes(i) ? ' ★ ESPECIAL' : ''}</small></div></div>`).join('');
+$('#miniLines').innerHTML = LINES.map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
+$('#ptTop').innerHTML = TOP.filter(c => c.t === 'prize').sort((a, b) => b.v - a.v).map(c =>
+  `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('');
+$('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data-mg="${k}">${MG[k].e} ${MG[k].n}</button>`).join('');
+
+const open = id => $(id).classList.remove('hidden');
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.ov').classList.add('hidden'));
+document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'mg' && o.id !== 'win' && o.id !== 'riskOv') o.classList.add('hidden'); }));
+$('#b1').onclick = () => spin(20);
+$('#b2').onclick = () => spin(40);
+$('#launch').onclick = launch;
+document.querySelectorAll('#rctl .rb').forEach(b => b.onclick = () => { const c = +b.dataset.c; if (mode === 'nudge') nudge(c); else if (mode === 'hold') toggleHold(c); });
+$('#ptBtn').onclick = () => open('#ptOv');
+$('#menuBtn').onclick = () => open('#menuOv');
+$('#mPt').onclick = () => { $('#menuOv').classList.add('hidden'); open('#ptOv'); };
+$('#mHow').onclick = () => { $('#menuOv').classList.add('hidden'); open('#howOv'); };
+$('#mRefill').onclick = () => { $('#menuOv').classList.add('hidden'); refill(); };
+$('#mReset').onclick = () => { if (confirm('¿Empezar de cero con 20 € y sin bonus?')) { S.saldo = 2000; S.bonus = []; save(); ui(); $('#menuOv').classList.add('hidden'); } };
+const URL_GAME = 'https://arricio.github.io/catedral-baloncesto/tragaperras/';
+$('#mShare').onclick = async () => {
+  const text = '🏀 ¡Juega a La Catedral del Triple, la tragaperras de la Cultural Leonesa de Baloncesto! ';
+  if (navigator.share) { try { await navigator.share({ title: 'La Catedral del Triple', text, url: URL_GAME }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  location.href = 'https://wa.me/?text=' + encodeURIComponent(text + URL_GAME);
+};
+document.querySelectorAll('[data-mg]').forEach(b => b.onclick = () => { $('#menuOv').classList.add('hidden'); if (!busy && !topBusy) playMG(b.dataset.mg, 1, true); });
+$('#sndBtn').onclick = () => { S.muted = !S.muted; save(); ui(); ac(); };
+$('#autoBtn').onclick = () => { auto = !auto; $('#autoBtn').classList.toggle('on', auto); if (auto) autoStep(); };
+
+ui(); renderCtl();
+if (S.fs && S.fs.n > 0) setTimeout(runFreeSpins, 1200);
+if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
