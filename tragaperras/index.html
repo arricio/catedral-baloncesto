@@ -425,6 +425,9 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
   <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes un escalón; si fallas bajas, pero a partir de 0,40 € nunca te quedas sin nada.</p>
   <h3>Avances y retenciones</h3>
   <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
+  <h3>¿Cada cuánto sale?</h3>
+  <p style="margin-top:0;font-size:15px">La mitad de las jugadas tienen premio. Los pequeños salen mucho y los gordos muy poco (valores aproximados):</p>
+  <div class="ptab" id="freqTab" style="justify-content:flex-start"></div>
   <h3>Camiseta = BONUS</h3>
   <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 camisetas → <b style="color:#7dff9b">5 BONUS</b></div></div>
   <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>: la luz recorre el tablero y donde se pare, eso ganas.</p>
@@ -514,8 +517,15 @@ SYM.push('img/balon.webp');
 const CAM = 13, WILD = 14, WILD3 = 500; // balón = comodín (solo rodillo central); 3 balones = 5 €
 const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000]; // céntimos, apuesta 0,20 €
 const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
-const WEIGHT = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 13, 11, 11, 4.8];
-const WEIGHT_C = WEIGHT.concat([10]);             // rodillo central: con comodín
+/* ---------- TABLA DE RESULTADOS (como en las máquinas de bar) ----------
+   En cada jugada la máquina sortea primero el resultado y luego coloca las figuras.
+   El 50 % de las jugadas tiene premio de línea; el premio pequeño es el que más sale
+   y cada premio mayor sale menos. Probabilidad por jugada de cada premio (índice = figura): */
+const HIT = [.3872, .10, .016, .009, .0055, .0014, .0007, .00035, .00025, .00018, 1 / 7000, 1 / 8750, 1 / 11200];
+let P_BOTE = 1 / 12000;                               // 3 escudos sueltos = BOTE CATEDRAL
+/* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
+let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 2.2]; // caras de premio pequeño más frecuentes
+let FILL_C = FILL.concat([6]);                       // rodillo central: con comodín
 const ESC = 12, BOTE_SEED = 3000, BOTE_PCT = .03;
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €) // bote: 3 escudos en cualquier sitio // probabilidad de cada casilla
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
@@ -614,7 +624,30 @@ const reels = [...document.querySelectorAll('.reel')];
 const strips = reels.map(r => r.querySelector('.strip'));
 let grid = [];
 const symHTML = s => `<div class="sym${s === CAM ? ' cam' : s === WILD ? ' wild' : ''}"><img src="${SYM[s]}" alt=""></div>`;
-function randSym(col) { return col === 1 ? pickW(WEIGHT_C) : pickW(WEIGHT); }
+function randSym(col) { return col === 1 ? pickW(FILL_C) : pickW(FILL); }
+/* genera una jugada completa según la tabla de resultados */
+function genGrid() {
+  let r = Math.random(), target = -1;
+  for (let i = 0; i < HIT.length; i++) { if ((r -= HIT[i]) < 0) { target = i; break; } }
+  const bote = Math.random() < P_BOTE;
+  for (let tries = 0; tries < 300; tries++) {
+    const g = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
+    let line = null;
+    if (target >= 0) {
+      line = LINES[rnd(8)]; line.forEach(k => g[k] = target);
+      const mid = line.find(k => k % 3 === 1);
+      if (mid !== undefined && target !== ESC && Math.random() < .15) g[mid] = WILD; // a veces con el comodín
+    }
+    if (bote) { const free = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8].filter(k => !line || !line.includes(k))); free.slice(0, 3).forEach(k => g[k] = ESC); }
+    const ev = evaluate(g, 1), escs = g.filter(x => x === ESC).length;
+    if (target < 0 && ev.wins.length) continue;
+    if (target >= 0 && (ev.wins.length !== 1 || ev.wins[0].sym !== target)) continue;
+    if (!bote && target !== ESC && escs >= 3) continue;
+    if (bote && escs < 3) continue;
+    return g;
+  }
+  return [0, 1, 2, 3, 4, 5, 6, 7, 8];
+}
 function setStrip(col, syms) { strips[col].style.transition = 'none'; strips[col].style.transform = 'translateY(0)'; strips[col].innerHTML = syms.map(symHTML).join(''); }
 for (let c = 0; c < 3; c++) {
   // al empezar, rodillos sin premio a la vista
@@ -623,6 +656,7 @@ for (let c = 0; c < 3; c++) {
 }
 // evitar línea ganadora en la pantalla inicial
 for (let k = 0; k < 20 && evaluate(grid, 1).win; k++) grid = grid.map(() => rnd(12));
+// (la primera pantalla ya no tiene premio)
 for (let c = 0; c < 3; c++) setStrip(c, [grid[c], grid[3 + c], grid[6 + c]]);
 
 /* ---------- tamaños según la pantalla ---------- */
@@ -716,7 +750,7 @@ async function spin(bet, free) {
   mode = null; nudges = 0; renderCtl();
   $('#mWin').textContent = fmt(0); clearWin(); ui();
   const bm = bet / 20, mult = free ? bm * FS_X : bm; // en tiradas gratis los premios de línea van x2
-  const next = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
+  const next = wasHeld ? Array.from({ length: 9 }, (_, i) => randSym(i % 3)) : genGrid();
   for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
   SFX.spin(); vib(15);
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
@@ -1365,6 +1399,9 @@ function shoot(B, ball, ok, side, blocked) {
    ========================================================= */
 $('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) =>
   `<div class="pti${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><div class="v">${fmtS(p)}<small>(${fmtS(p * 2)})${SPECIAL.includes(i) ? ' ★ ESPECIAL' : ''}</small></div></div>`).join('');
+$('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i }) => {
+  const n = Math.round(1 / h), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
+  return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('') + '<span>BOTE: 1 de cada ~6.500</span>';
 $('#miniLines').innerHTML = LINES.map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TOP.filter(c => c.t === 'prize').sort((a, b) => b.v - a.v).map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('');
