@@ -602,7 +602,7 @@ function tone(f, d = .1, type = 'square', v = .08, when = 0, slide = 0) {
 }
 const SFX = {
   tick: () => tone(1400, .03, 'square', .03),
-  stop: () => { tone(140, .14, 'sine', .25, 0, 60); tone(900, .03, 'square', .03); },
+  stop: () => clunk(),
   spin: () => { for (let i = 0; i < 6; i++) tone(500 + i * 90, .05, 'square', .03, i * .03); },
   coin: () => tone(1900 + rnd(400), .05, 'square', .035),
   win: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, .16, 'square', .06, i * .09)),
@@ -613,6 +613,96 @@ const SFX = {
   bounce: () => tone(200, .12, 'sine', .2, 0, 90),
 };
 const vib = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+/* ---------- sonidos de máquina real (sintetizados) ---------- */
+let NOISE = null;
+function noiseBuf() { const a = ac(); if (!NOISE && a) { NOISE = a.createBuffer(1, a.sampleRate, a.sampleRate); const d = NOISE.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } return NOISE; }
+function noise(when, dur, vol, type, freq, q) {
+  if (S.muted) return; const a = ac(); if (!a) return;
+  const t = a.currentTime + when, src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  src.buffer = noiseBuf(); f.type = type || 'highpass'; f.frequency.value = freq || 2000; f.Q.value = q || .7;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(a.destination); src.start(t, Math.random() * .5); src.stop(t + dur + .02);
+}
+/* golpe metálico de un rodillo al pararse */
+function clunk() {
+  tone(130, .16, 'sine', .35, 0, 45);
+  noise(0, .05, .35, 'lowpass', 900);
+  noise(0, .03, .12, 'bandpass', 3200, 6);
+  tone(2300, .04, 'triangle', .04);
+}
+/* motor y traqueteo de los rodillos girando */
+function reelSound(n) {
+  const a = ac(); const dummy = { stopReel: clunk, end() {} };
+  if (S.muted || !a || n <= 0) return dummy;
+  const t = a.currentTime, master = a.createGain();
+  master.gain.setValueAtTime(.0001, t); master.gain.exponentialRampToValueAtTime(.5, t + .12);
+  master.connect(a.destination);
+  const src = a.createBufferSource(); src.buffer = noiseBuf(); src.loop = true;
+  const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 380; bp.Q.value = 1.4;
+  const mg = a.createGain(); mg.gain.value = .22; src.connect(bp); bp.connect(mg); mg.connect(master);
+  const hum = a.createOscillator(); hum.type = 'sawtooth'; hum.frequency.value = 58;
+  const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 220;
+  const hg = a.createGain(); hg.gain.value = .07; hum.connect(lp); lp.connect(hg); hg.connect(master);
+  const lfo = a.createOscillator(), lg = a.createGain(); lfo.frequency.value = 11; lg.gain.value = .08; lfo.connect(lg); lg.connect(mg.gain);
+  src.start(); hum.start(); lfo.start();
+  let active = n, period = 38, alive = true;
+  const tick = () => {
+    if (!alive) return;
+    noise(0, .012, .10 + .05 * active / n, 'highpass', 2600);
+    tone(1150, .012, 'square', .012);
+    period = Math.min(110, period * 1.012);
+    setTimeout(tick, period);
+  };
+  tick();
+  const end = () => {
+    if (!alive) return; alive = false;
+    const t2 = a.currentTime; master.gain.cancelScheduledValues(t2); master.gain.setValueAtTime(master.gain.value, t2);
+    master.gain.exponentialRampToValueAtTime(.0001, t2 + .15);
+    [src, hum, lfo].forEach(o => { try { o.stop(t2 + .2); } catch (e) {} });
+  };
+  return {
+    stopReel() { clunk(); active--; if (active <= 0) end(); else { const t2 = a.currentTime; master.gain.setTargetAtTime(.5 * active / n, t2, .05); } },
+    end,
+  };
+}
+/* timbre de campana de premio */
+function bell(dur = .9) {
+  for (let i = 0; i < dur / .055; i++) { const w = i * .055; tone(1568, .05, 'triangle', .05, w); tone(2093, .05, 'sine', .035, w + .027); }
+  tone(784, dur, 'sine', .05);
+}
+/* ---------- melodías (originales) de los 3 premios especiales ---------- */
+const NOTE = n => { const m = /^([A-G])(#?)(\d)$/.exec(n); const k = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] ? 1 : 0); return 440 * Math.pow(2, (k + 12 * (+m[3] + 1) - 69) / 12); };
+function song({ bpm, lead, bass, drums, wave = 'square', vol = .07, bellLead = false }) {
+  const b = 60 / bpm; let t = 0;
+  lead.forEach(([n, d]) => { if (n) { const f = NOTE(n);
+    if (bellLead) { tone(f, d * b * 1.6, 'sine', vol * 1.3, t); tone(f * 2.76, d * b * .6, 'sine', vol * .35, t); tone(f * 5.4, d * b * .25, 'sine', vol * .15, t); }
+    else { tone(f, d * b * .92, wave, vol, t); tone(f / 2, d * b * .92, 'triangle', vol * .7, t); } } t += d * b; });
+  if (bass) { let tb = 0; bass.forEach(([n, d]) => { if (n) tone(NOTE(n), d * b * .95, 'triangle', .16, tb); tb += d * b; }); }
+  if (drums) { const step = b / 2; [...drums].forEach((c, i) => { const w = i * step;
+    if (c === 'k') tone(150, .18, 'sine', .45, w, 40);
+    if (c === 's') noise(w, .14, .28, 'highpass', 1400);
+    if (c === 'r') for (let j = 0; j < 4; j++) noise(w + j * step / 4, .05, .16, 'highpass', 1800);
+    if (c === 'c') noise(w, .6, .14, 'highpass', 5000); }); }
+  return t;
+}
+const SONGS = {
+  // 80 €: fanfarria corta y alegre
+  10: () => song({ bpm: 168, wave: 'square', vol: .065,
+    lead: [['G4', .5], ['C5', .5], ['E5', .5], ['G5', 1], ['E5', .5], ['G5', 1.5], [0, .5], ['A5', .5], ['G5', .5], ['F5', .5], ['E5', .5], ['D5', .5], ['E5', .5], ['C6', 2]],
+    bass: [['C3', 2], ['C3', 2], ['F2', 2], ['G2', 1], ['C3', 2]],
+    drums: 'k.s.k.s.k.s.k.k.s.c' }),
+  // 120 €: campanas
+  11: () => song({ bpm: 132, bellLead: true, vol: .08,
+    lead: [['E5', .5], ['G#5', .5], ['B5', .5], ['E6', 1], ['D#6', .5], ['B5', .5], ['G#5', .5], ['B5', .5], ['E6', .5], ['F#6', .5], ['G#6', 1], ['E6', .5], ['B5', .5], ['E6', 2.5]],
+    bass: [['E2', 2], ['B1', 2], ['A2', 2], ['B2', 1], ['E2', 2]],
+    drums: 'k...s...k...s...k.k.s...c' }),
+  // 160 €: himno triunfal del escudo
+  12: () => song({ bpm: 112, wave: 'sawtooth', vol: .05,
+    lead: [[0, 1], ['C4', 1], ['E4', .5], ['G4', .5], ['C5', 1.5], ['G4', .5], ['C5', .5], ['E5', .5], ['G5', 2], ['F5', .5], ['E5', .5], ['D5', .5], ['E5', .5], ['F5', 1], ['A5', 1], ['G5', 1], ['E5', .5], ['D5', .5], ['C5', 1], ['G5', 1], ['C6', 3]],
+    bass: [[0, 1], ['C2', 2], ['C2', 2], ['E2', 2], ['F2', 2], ['F2', 2], ['G2', 2], ['C2', 3]],
+    drums: 'rrrrk.s.k.s.k.s.kks.k.s.k.s.k.s.kks.rrrrc' }),
+};
 
 /* =========================================================
    CONSTRUCCIÓN DE LA INTERFAZ
@@ -758,7 +848,7 @@ async function spin(bet, free) {
   const bm = bet / 20, mult = free ? bm * FS_X : bm; // en tiradas gratis los premios de línea van x2
   const next = wasHeld ? Array.from({ length: 9 }, (_, i) => randSym(i % 3)) : genGrid();
   for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
-  SFX.spin(); vib(15);
+  const rsnd = reelSound(H.filter(x => !x).length); vib(15);
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
   const done = [];
   let order = 0;
@@ -778,10 +868,10 @@ async function spin(bet, free) {
     st.style.transition = `transform ${dur}ms cubic-bezier(.32,.0,.25,1.06)`;
     st.style.transform = 'translateY(0)';
     done.push(new Promise(res => setTimeout(() => {
-      reels[c].classList.remove('spin'); setStrip(c, nw); SFX.stop(); vib(8); res();
+      reels[c].classList.remove('spin'); setStrip(c, nw); rsnd.stopReel(); vib(8); res();
     }, dur + 30)));
   }
-  await Promise.all(done);
+  await Promise.all(done); rsnd.end();
   reels.forEach(r => r.classList.remove('held'));
   grid = next;
   const r = evaluate(grid, mult);
@@ -827,9 +917,9 @@ async function payWins(r, mult, noRisk) {
   showWin(r);
   const special = r.wins.some(w => SPECIAL.includes(w.sym));
   const top = r.wins.reduce((a, b) => (b.amt > a.amt ? b : a));
-  if (special) { SFX.big(); vib([60, 40, 60, 40, 120]); await celebrate('¡PREMIO ESPECIAL!', SYM[top.sym], r.win); }
-  else if (r.win >= 1000 * mult) { SFX.big(); vib([50, 30, 80]); await celebrate('¡GRAN PREMIO!', SYM[top.sym], r.win); }
-  else SFX.win();
+  if (special) { SONGS[r.wins.reduce((a, b) => Math.max(a, SPECIAL.includes(b.sym) ? b.sym : 0), 0)](); vib([60, 40, 60, 40, 120]); await celebrate('¡PREMIO ESPECIAL!', SYM[top.sym], r.win); }
+  else if (r.win >= 1000 * mult) { bell(1.6); SFX.big(); vib([50, 30, 80]); await celebrate('¡GRAN PREMIO!', SYM[top.sym], r.win); }
+  else bell(r.win >= 100 * mult ? 1.2 : .7);
   $('#mWin').textContent = fmt(r.win);
   const final = (auto || noRisk) ? r.win : await risk(r.win, mult);
   if (final > 0) await countWin(final); else $('#mWin').textContent = fmt(0);
