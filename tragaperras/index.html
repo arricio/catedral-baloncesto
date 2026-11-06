@@ -523,7 +523,7 @@ header{height:42px}
   <div class="ptab" id="freqTab" style="justify-content:flex-start"></div>
   <h3>Camiseta = BONUS</h3>
   <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 camisetas → <b style="color:#7dff9b">5 BONUS</b></div></div>
-  <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>, que tiene sus propios rodillos 3×3. Arriba pagan 3 iguales en <b>horizontal, vertical o diagonal</b> (8 líneas).</p>
+  <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>, que tiene sus propios rodillos 3×3. Arriba pagan 3 iguales en <b>horizontal, vertical o diagonal</b> (8 líneas). <b>Si salen varias líneas, se suman todos los premios</b> (las 9 iguales = 8 premios).</p>
   <h3>Pantalla de arriba</h3>
   <div class="pt" id="ptTop"></div>
   <p>🚩 <b>3 banderas de León en línea arriba</b>: eliges uno de los <b>6 minijuegos</b>. En cada minijuego salen <b>3 premios</b> al azar entre 10, 20, 40, 60, 80, 100 y 120 €, y te llevas uno.<br>🎽 Camisetas arriba: más BONUS.<br>Todo al doble si el BONUS se consiguió jugando a DOBLE.</p>
@@ -556,7 +556,7 @@ header{height:42px}
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
-    <li>Con BONUS pulsa el botón <b>JUGAR | COMODINES</b> para pasar a la pantalla de arriba y luego <b>JUGAR</b>: giran los rodillos de arriba (gastas 1 bonus). Vuelve a pulsar <b>JUGAR | COMODINES</b> para volver abajo; si se acaban los bonus vuelve sola. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
+    <li>Con BONUS pulsa el botón <b>JUGAR | COMODINES</b> para pasar a la pantalla de arriba y luego <b>JUGAR</b>: giran los rodillos de arriba (gastas 1 bonus). Vuelve a pulsar <b>JUGAR | COMODINES</b> para volver abajo; si se acaban los bonus vuelve sola. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €. <b>Cada línea es un premio y se suman</b>: 6 iguales (2 líneas) = 2 premios; las 9 iguales = 8 líneas = 8 premios.</li>
     <li><b>3 banderas de León en línea</b> arriba (horizontal, vertical o diagonal): eliges a qué <b>minijuego</b> jugar. Cada uno tiene <b>3 premios</b> al azar (de 10 € a 120 €) y te llevas uno.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 0,80 · 1 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y FALLO: pulsa ¡PARAR! Si aciertas subes y puedes seguir subiendo. Si fallas pierdes el premio, pero a partir de 0,40 € te llevas comodines: 0,40-1 € → 1, 3-5 € → 2, 10-20 € → 3, 40 € → 4 y 80 € → 5. También se puede subir premio en la pantalla de arriba y en los minijuegos.</li>
     <li><b>AVANCES</b> (de 1 a 4): a veces, tras una jugada sin premio, la máquina te da avances. Toca el <b>rodillo</b> que quieras bajar (o su botón <b>AVANCE</b>): la figura de encima baja a la línea del medio. Si vuelves a jugar sin usarlos, se pierden.</li>
@@ -661,7 +661,7 @@ const TS = [
   { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
 ];
 const T_FLAG = 4, T_CAM = 5;
-const T_OUT = [.99354, .0018, .0007, .00024, .00012, .0036];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
+const T_OUT = [.99396, .0016, .0006, .0002, .0001, .0036];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
 const T_FILL = [30, 26, 20, 16, 14, .6];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
@@ -822,20 +822,28 @@ const tstrips = [...document.querySelectorAll('.tstrip')], treels = [...document
 const tsymHTML = s => `<div class="tsym${s === T_CAM ? ' cam' : ''}"><img src="img/${TS[s].img}.webp" alt=""></div>`;
 const tFill = () => pickW(T_FILL);
 function topEval(g) {
-  let res = null, camLine = -1;
-  LINES.forEach((l, i) => { const a = g[l[0]]; if (a === g[l[1]] && a === g[l[2]]) { if (a === T_CAM) { if (camLine < 0) camLine = i; } else if (!res) res = { line: i, sym: a }; } });
-  const nl = LINES.filter(l => { const a = g[l[0]]; return a !== T_CAM && a === g[l[1]] && a === g[l[2]]; }).length;
-  return { hit: res, lines: nl, camLine, cams: g.filter(x => x === T_CAM).length };
+  // todas las líneas con 3 figuras iguales (la camiseta no hace línea: da bonus)
+  const hits = [];
+  LINES.forEach((l, i) => { const a = g[l[0]]; if (a !== T_CAM && a === g[l[1]] && a === g[l[2]]) hits.push({ line: i, sym: a }); });
+  return { hits, prize: hits.filter(h => h.sym !== T_FLAG), flags: hits.filter(h => h.sym === T_FLAG), hit: hits[0] || null, lines: hits.length, cams: g.filter(x => x === T_CAM).length };
 }
+/* dibujos de premio arriba: una línea (3 iguales), dos líneas paralelas (6 iguales) o pantalla llena (9 iguales = 8 líneas) */
+const T_PAT = [.9, .09, .01];
+const PAIRS = [[0, 1], [0, 2], [1, 2], [3, 4], [3, 5], [4, 5]];   // dos filas o dos columnas
 function genTop() {
   const o = pickW(T_OUT), target = o - 1;            // -1 = sin premio; T_FLAG = 3 banderas en línea (minijuego)
-  for (let k = 0; k < 300; k++) {
+  const pat = target < 0 || target === T_FLAG ? 0 : pickW(T_PAT);
+  const want = [1, 2, 8][pat];
+  for (let k = 0; k < 400; k++) {
     const g = Array.from({ length: 9 }, tFill);
-    if (target >= 0) LINES[rnd(8)].forEach(i => g[i] = target);
+    if (target >= 0) {
+      if (pat === 2) g.fill(target);
+      else if (pat === 1) PAIRS[rnd(PAIRS.length)].forEach(li => LINES[li].forEach(i => g[i] = target));
+      else LINES[rnd(8)].forEach(i => g[i] = target);
+    }
     const e = topEval(g);
-    if (e.camLine >= 0) continue;
     if (target < 0 && e.lines) continue;
-    if (target >= 0 && (e.lines !== 1 || e.hit.sym !== target)) continue;
+    if (target >= 0 && (e.lines !== want || e.hits.some(h => h.sym !== target))) continue;
     return g;
   }
   return [0, 1, 2, 3, 0, 1, 2, 3, 0];
@@ -1395,8 +1403,8 @@ async function launch() {
   const drawT = i => { const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
     pl.setAttribute('points', LINES[i].map(k => `${(k % 3) + .5},${Math.floor(k / 3) + .5}`).join(' ')); pl.style.stroke = '#ffd23d';
     $('#tlines').appendChild(pl); LINES[i].forEach(k => tcell(k).classList.add('win')); };
-  if (e.hit && e.hit.sym === T_FLAG) {
-    drawT(e.hit.line); SFX.bonus(); vib([40, 30, 40]); dmd('🚩 ¡3 BANDERAS!<br>ELIGE MINIJUEGO');
+  if (e.flags.length) {
+    e.flags.forEach(h => drawT(h.line)); SFX.bonus(); vib([40, 30, 40]); dmd('🚩 ¡3 BANDERAS!<br>ELIGE MINIJUEGO');
     await celebrate('¡3 BANDERAS DE LEÓN!', 'img/bandera.webp', null, 'Elige minijuego');
     if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
     const id = await chooseMG(mult);
@@ -1404,10 +1412,12 @@ async function launch() {
     const v = await playMG(id, mult, false);
     const fin = (v && !auto) ? await risk(v, mult) : v;   // también se puede subir el premio del minijuego
     if (fin) await countWin(fin);
-  } else if (e.hit) {
-    drawT(e.hit.line);
-    const t = TS[e.hit.sym], v = t.v * mult; sayPremio(); bell(1.4); SFX.big(); vib([60, 40, 120]); dmd(t.n + '<br>' + fmt(v));
-    await celebrate('¡' + t.n + '!', 'img/' + t.img + '.webp', v);
+  } else if (e.prize.length) {
+    e.prize.forEach(h => drawT(h.line));                // todas las líneas premiadas se suman
+    const n = e.prize.length, t = TS[e.prize[0].sym], v = e.prize.reduce((sum, h) => sum + TS[h.sym].v, 0) * mult;
+    sayPremio(); bell(1.4 + n * .3); SFX.big(); vib([60, 40, 120]);
+    dmd(t.n + (n > 1 ? ` x${n} LÍNEAS` : '') + '<br>' + fmt(v));
+    await celebrate(n > 1 ? `¡${n} LÍNEAS DE ${t.n}!` : '¡' + t.n + '!', 'img/' + t.img + '.webp', v);
     const fin = auto ? v : await risk(v, mult);       // también se puede subir el premio arriba
     if (fin) await countWin(fin);
   } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
@@ -1734,7 +1744,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 42;
+const APP_VERSION = 43;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
