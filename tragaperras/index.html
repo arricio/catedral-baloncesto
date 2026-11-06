@@ -1020,7 +1020,7 @@ async function spin(bet, free) {
   if (r.bonus) {
     grid.forEach((s, i) => { if (s === CAM && !H[i % 3]) cellAt(i).classList.add('camwin'); });
     r.camLines.forEach(i => drawLine(i, '#20e070'));
-    SFX.bonus(); vib([30, 30, 30]);
+    SFX.bonus(); sayBonus(); vib([30, 30, 30]);
     flyBonus(r.bonus);
     for (let k = 0; k < r.bonus; k++) S.bonus.push(bm);
     if (r.bonus >= 5) await celebrate('¡3 CAMISETAS!', SYM[CAM], null, '+' + r.bonus + ' BONUS');
@@ -1093,6 +1093,7 @@ function risk(amount, mult) {
       bA.disabled = !st.next; bA.textContent = st.next ? 'ARRIESGAR' : 'MÁXIMO'; bC.disabled = false;
       $('#rIns').innerHTML = st.next ? `Si aciertas subes a <b style="color:#7dff9b">${fmt(st.next)}</b> y puedes seguir subiendo; si fallas pierdes el premio${st.comod ? ` pero te llevas <b style="color:#d9a6ff">${cTxt}</b>` : ''}.` : '¡Has llegado a lo más alto! Cobra tu premio.';
       pn.classList.add('idle'); lD.classList.remove('on'); lN.classList.remove('on');
+      if (st.next) setTimeout(saySube, 250);
     };
     const close = v => { clearInterval(timer); ov.classList.add('hidden'); bC.onclick = bA.onclick = null; res(v); };
     upd(); ov.classList.remove('hidden');
@@ -1114,7 +1115,7 @@ function risk(amount, mult) {
       else {
         SFX.buzz(); vib(150); const c = st.comod;
         $('#rAmt').textContent = fmt(0); $('#mWin').textContent = fmt(0);
-        if (c) { for (let k = 0; k < c; k++) S.bonus.push(mult); save(); ui(); setTimeout(() => { SFX.bonus(); flyBonus(c); }, 300); }
+        if (c) { for (let k = 0; k < c; k++) S.bonus.push(mult); save(); ui(); setTimeout(() => { SFX.bonus(); sayBonus(); flyBonus(c); }, 300); }
         $('#rIns').innerHTML = c ? `<b>¡FALLASTE!</b> Pierdes el premio pero ganas <b style="color:#d9a6ff">${c} ${c > 1 ? 'COMODINES' : 'COMODÍN'}</b> para la pantalla de arriba.` : '<b>¡FALLASTE!</b> Te quedas sin premio.';
         await sleep(c ? 2000 : 1600); close(0);
       }
@@ -1147,7 +1148,8 @@ if ('speechSynthesis' in window) { try { speechSynthesis.getVoices(); speechSynt
 const VOZ = {};
 function loadVoz() {
   const a = ac(); if (!a || loadVoz.done) return; loadVoz.done = true;
-  setTimeout(() => { if (Object.keys(VOZ).length < 5) loadVoz.done = false; }, 8000);   // reintentar si algo falló
+  setTimeout(() => { if (Object.keys(VOZ).length < 7) loadVoz.done = false; }, 8000);   // reintentar si algo falló
+  ['sube', 'bonus'].forEach(k => fetch('audio/' + k + '.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ[k] = buf; }).catch(() => {}));
   fetch('audio/premio.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ.premio = buf; }).catch(() => {});
   for (let i = 1; i <= 4; i++) fetch('audio/av' + i + '.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ[i] = buf; }).catch(() => {});
 }
@@ -1163,6 +1165,8 @@ function playVoz(key, fallback, tries = 0) {
   speak(fallback);
 }
 function sayPremio() { playVoz('premio', '¡Premio!'); }
+function saySube() { playVoz('sube', '¡Sube!'); }
+function sayBonus() { playVoz('bonus', '¡Bonus!'); }
 async function offerExtras(mult, wasHeld) {
   if (Math.random() < AV_P) {
     nudges = AV_N[pickW(AV_W)]; nudgeMult = mult; mode = 'nudge';
@@ -1203,7 +1207,7 @@ async function nudge(c) {
   grid[6 + c] = col[1]; grid[3 + c] = col[0]; grid[c] = ns;
   setStrip(c, [ns, col[0], col[1]]); SFX.stop(); vib(10);
   nudges--;
-  if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); save(); }
+  if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); sayBonus(); save(); }
   const r = evaluate(grid, nudgeMult);
   if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
   if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
@@ -1408,7 +1412,7 @@ async function launch() {
     if (fin) await countWin(fin);
   } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
   if (e.cams) {
-    const nb = camBonus(e.cams); tgrid.forEach((x, i) => { if (x === T_CAM) tcell(i).classList.add('win'); });
+    const nb = camBonus(e.cams); sayBonus(); tgrid.forEach((x, i) => { if (x === T_CAM) tcell(i).classList.add('win'); });
     for (let k = 0; k < nb; k++) S.bonus.unshift(mult); save(); SFX.bonus(); dmd(`🎽 CAMISETA<br>+${nb} BONUS`); await sleep(1300);
   }
   topBusy = false;
@@ -1730,7 +1734,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 41;
+const APP_VERSION = 42;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
