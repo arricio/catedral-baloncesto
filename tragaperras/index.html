@@ -571,7 +571,7 @@ function pasoRacha() {
   return h;
 }
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
-let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 1.0]; // caras de premio pequeño más frecuentes
+let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 4.0]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
 const ESC = 14; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
@@ -598,7 +598,7 @@ const TS = [
   { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5); 3 en línea = minijuego
 ];
 const T_CAM = 4;
-const T_OUT = [.877, .06, .025, .008, .004, .026];  // nada, cancha, balón, canasta, mate, 3 camisetas en línea (por tirada de bonus)
+const T_OUT = [.955, .022, .01, .003, .0015, .0085];  // nada, cancha, balón, canasta, mate, 3 camisetas en línea (por tirada de bonus)
 const T_FILL = [30, 26, 20, 16, 1.1];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
