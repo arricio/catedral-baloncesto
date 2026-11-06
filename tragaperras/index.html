@@ -517,6 +517,7 @@ header{height:42px}
   <h3>🏀 Entrenamiento de minijuegos</h3>
   <p style="margin-top:0;font-size:15px">Prueba los minijuegos cuando quieras. En entrenamiento no se cobra premio.</p>
   <div class="mgrid" id="trainList"></div>
+  <p id="verTxt" style="text-align:center;font-size:13px;color:#a77a80;margin:14px 0 0"></p>
 </div></div>
 
 <!-- cómo se juega -->
@@ -1630,7 +1631,17 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+const APP_VERSION = 29;
+$('#verTxt').textContent = 'Versión ' + APP_VERSION;
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  // buscar siempre la última versión y recargar sola cuando haya una nueva
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded || busy || topBusy) return; reloaded = true; location.reload(); });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    reg.update().catch(() => {});
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>
