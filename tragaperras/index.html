@@ -359,6 +359,29 @@ header{height:42px}
 .meter{background:rgba(8,1,3,.86);border:2px solid #d6a734;box-shadow:inset 0 0 12px #000,0 3px 8px rgba(0,0,0,.6)}
 .wallet{background:linear-gradient(rgba(6,40,20,.88),rgba(3,22,12,.92));border:2px solid #d6a734;box-shadow:0 3px 8px rgba(0,0,0,.6)}
 .ctrls .pbtn{box-shadow:0 5px 0 rgba(0,0,0,.6),0 8px 16px rgba(0,0,0,.6)}
+
+/* ---------- pantalla de arriba: rodillos 3x3 ---------- */
+:root{--tw:66px;--th:50px}
+.board{display:grid;grid-template-columns:auto 1fr;grid-template-rows:none;gap:8px;padding:8px;align-items:stretch}
+.treels{position:relative;display:grid;grid-template-columns:repeat(3,var(--tw));gap:5px}
+.treel{position:relative;width:var(--tw);height:calc(var(--th) * 3);overflow:hidden;border-radius:4px;background:linear-gradient(90deg,#c9c9c9,#fff 25%,#fff 75%,#c4c4c4);box-shadow:inset 0 0 0 2px #b8860b,0 3px 8px rgba(0,0,0,.6)}
+.treel::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(0,0,0,.3),transparent 18%,transparent 82%,rgba(0,0,0,.3))}
+.tstrip{position:absolute;left:0;top:0;width:100%;will-change:transform}
+.tsym{height:var(--th);display:grid;place-items:center;position:relative}
+.tsym img{max-width:86%;max-height:84%;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.tsym.win::before{content:"";position:absolute;inset:3px;border-radius:8px;box-shadow:0 0 0 3px var(--gold),0 0 14px 4px rgba(255,200,40,.9);animation:pulse .45s infinite alternate}
+.tsym.win img{animation:bob .45s infinite alternate}
+.treel.spin .tstrip{filter:blur(1px)}
+#tlines{left:0;top:0;width:100%;height:100%}
+.board .center{grid-column:auto;grid-row:auto;justify-content:space-between;padding:5px 4px;gap:4px}
+.board .dmd{font-size:13px;min-height:2.3em}
+.tleg{display:grid;grid-template-columns:1fr 1fr;gap:2px 4px;width:100%}
+.tleg span{display:flex;align-items:center;gap:3px;font-family:var(--fn);font-size:11px;color:#ffd36b;white-space:nowrap}
+.tleg img{width:20px;height:16px;object-fit:contain}
+.tbot{display:flex;align-items:center;gap:6px;justify-content:center;width:100%}
+.tbot .bonusN{font-size:22px;flex-direction:column;gap:0;line-height:1}
+.tbot .bonusN small{font-size:9px}
+#launch{font-size:13px;padding:.5em .7em}
 </style>
 </head>
 <body>
@@ -438,10 +461,10 @@ header{height:42px}
   <div class="ptab" id="freqTab" style="justify-content:flex-start"></div>
   <h3>Camiseta = BONUS</h3>
   <div class="pti"><img src="img/camiseta.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 camisetas → <b style="color:#7dff9b">5 BONUS</b></div></div>
-  <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>: la luz recorre el tablero y donde se pare, eso ganas.</p>
+  <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>, que tiene sus propios rodillos 3×3. Arriba pagan 3 iguales en <b>horizontal, vertical o diagonal</b> (8 líneas).</p>
   <h3>Pantalla de arriba</h3>
   <div class="pt" id="ptTop"></div>
-  <p>🎁 <b>TIRADAS GRATIS</b>: 8 tiradas sin pagar con todos los premios de línea x2.<br>🎮 <b>6 minijuegos</b> con premios de 10 € a 160 € (el doble si el BONUS se consiguió jugando a DOBLE).<br>🎽 Camiseta: +1 BONUS.<br>✋ Tapón: sin premio.</p>
+  <p>🏆 <b>3 trofeos en línea</b>: uno de los <b>6 minijuegos</b> (premios de 10 € a 160 €) o <b>8 tiradas gratis</b> con premios x2.<br>🎽 Camisetas arriba: más BONUS.<br>Todo al doble si el BONUS se consiguió jugando a DOBLE.</p>
 </div></div>
 
 <!-- menú -->
@@ -469,8 +492,8 @@ header{height:42px}
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
-    <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
-    <li><b>TIRADAS GRATIS</b>: si la luz de arriba se para en 🎁, juegas 8 tiradas gratis con los premios de línea x2.</li>
+    <li>Con BONUS pulsa <b>¡LANZAR!</b>: giran los rodillos de arriba. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
+    <li><b>3 trofeos en línea</b> arriba: te toca uno de los <b>6 minijuegos</b> o <b>8 tiradas gratis</b> con premios x2.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
     <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
@@ -542,7 +565,7 @@ function pasoRacha() {
   return h;
 }
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
-let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 1.5]; // caras de premio pequeño más frecuentes
+let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 1.0]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
 const ESC = 12; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
@@ -559,35 +582,26 @@ const MG = {
   unouno:   { n: '1 CONTRA 1',  e: '🛡️', s: '1 CONTRA\n1' },
   partido:  { n: 'EL PARTIDO',  e: '🏆', s: 'PARTIDO' },
 };
-const TW = { tapon: .2867, cam: .03, mg: .035 / 6, fs: .03 };
 const FS_N = 8, FS_X = 2; // tiradas gratis: 8 tiradas con premios x2
-const TOP = [
-  { t: 'prize', img: 'cancha', v: 2000, n: 'CANCHA', w: .012 },
-  { t: 'tapon', w: TW.tapon },
-  { t: 'mg', id: 'tiro', w: TW.mg },
-  { t: 'cam', w: TW.cam },
-  { t: 'prize', img: 'balon', v: 4000, n: 'BALÓN', w: .005 },
-  { t: 'tapon', w: TW.tapon },
-  { t: 'mg', id: 'vest', w: TW.mg },
-  { t: 'mg', id: 'ruleta', w: TW.mg },
-  { t: 'prize', img: 'canasta', v: 8000, n: 'CANASTA', w: .0016 },
-  { t: 'fs', w: TW.fs },
-  { t: 'mg', id: 'mayor', w: TW.mg },
-  { t: 'cam', w: TW.cam },
-  { t: 'prize', img: 'mate', v: 10000, n: 'MATE', w: .001 },
-  { t: 'tapon', w: TW.tapon },
-  { t: 'mg', id: 'unouno', w: TW.mg },
-  { t: 'mg', id: 'partido', w: TW.mg },
+/* PANTALLA DE ARRIBA: rodillos 3x3, pagan 3 iguales en horizontal, vertical o diagonal (8 líneas) */
+const TS = [
+  { img: 'cancha',   v: 2000,  n: 'CANCHA' },
+  { img: 'balon',    v: 4000,  n: 'BALÓN' },
+  { img: 'canasta',  v: 8000,  n: 'CANASTA' },
+  { img: 'mate',     v: 10000, n: 'MATE' },
+  { img: 'trofeo',   v: 0,     n: 'MINIJUEGO' },   // 3 trofeos en línea = minijuego (o tiradas gratis)
+  { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
 ];
-const RING = [[1,1],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[5,5],[5,4],[5,3],[5,2],[5,1],[4,1],[3,1],[2,1]];
-
+const T_CAM = 5, T_TRO = 4;
+const T_OUT = [.877, .06, .025, .008, .004, .026];  // nada, cancha, balón, canasta, mate, trofeo (por tirada de bonus)
+const T_FILL = [30, 26, 20, 16, 14, 1.1];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
 let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
-let busy = false, topBusy = false, auto = false, lightPos = 0;
+let busy = false, topBusy = false, auto = false;
 
 /* =========================================================
    SONIDO (sintetizado, sin archivos)
@@ -709,25 +723,39 @@ const SONGS = {
    CONSTRUCCIÓN DE LA INTERFAZ
    ========================================================= */
 const board = $('#board');
-const topCells = [];
-TOP.forEach((c, i) => {
-  const d = document.createElement('div');
-  d.className = 'tc ' + c.t;
-  d.style.gridRow = RING[i][0]; d.style.gridColumn = RING[i][1];
-  if (c.t === 'prize') d.innerHTML = `<img src="img/${c.img}.webp" alt=""><span class="l" data-v="${c.v}">${fmtS(c.v)}</span><span class="dbl">x2</span>`;
-  else if (c.t === 'tapon') d.innerHTML = `<span class="e">✋</span><span class="l">TAPÓN</span>`;
-  else if (c.t === 'cam') d.innerHTML = `<img src="img/camiseta.webp" alt=""><span class="l">+1 BONUS</span>`;
-  else if (c.t === 'fs') d.innerHTML = `<span class="e">🎁</span><span class="l">${FS_N} GRATIS<br>x${FS_X}</span>`;
-  else d.innerHTML = `<span class="e">${MG[c.id].e}</span><span class="l">${MG[c.id].s.split('\n').join('<br>')}</span><span class="dbl">x2</span>`;
-  board.appendChild(d); topCells.push(d);
-});
-const center = document.createElement('div');
-center.className = 'center';
-center.innerHTML = `<div class="dmd" id="dmd">¡SUERTE!</div>
-  <div class="bonusN"><img src="img/camiseta.webp" alt=""><div><span id="bN">0</span><small>BONUS</small></div></div>
-  <button id="launch" disabled>¡LANZAR!</button>`;
-board.appendChild(center);
-topCells[0].classList.add('lit');
+board.innerHTML = `<div class="treels" id="treels">
+    <div class="treel"><div class="tstrip"></div></div><div class="treel"><div class="tstrip"></div></div><div class="treel"><div class="tstrip"></div></div>
+    <svg class="lines" id="tlines" viewBox="0 0 3 3" preserveAspectRatio="none"></svg></div>
+  <div class="center">
+    <div class="dmd" id="dmd">¡SUERTE!</div>
+    <div class="tleg">${TS.slice(0, 4).map(t => `<span><img src="img/${t.img}.webp" alt=""><b data-v="${t.v}">${fmtS(t.v)}</b></span>`).join('')}
+      <span><img src="img/trofeo.webp" alt=""><b>JUEGO</b></span><span><img src="img/camiseta.webp" alt=""><b>BONUS</b></span></div>
+    <div class="tbot"><div class="bonusN"><span id="bN">0</span><small>BONUS</small></div><button id="launch" disabled>¡LANZAR!</button></div>
+  </div>`;
+const tstrips = [...document.querySelectorAll('.tstrip')], treels = [...document.querySelectorAll('.treel')];
+const tsymHTML = s => `<div class="tsym${s === T_CAM ? ' cam' : ''}"><img src="img/${TS[s].img}.webp" alt=""></div>`;
+const tFill = () => pickW(T_FILL);
+function topEval(g) {
+  let res = null;
+  LINES.forEach((l, i) => { const a = g[l[0]]; if (a !== T_CAM && a === g[l[1]] && a === g[l[2]] && !res) res = { line: i, sym: a }; });
+  const nl = LINES.filter(l => { const a = g[l[0]]; return a !== T_CAM && a === g[l[1]] && a === g[l[2]]; }).length;
+  return { hit: res, lines: nl, cams: g.filter(x => x === T_CAM).length };
+}
+function genTop() {
+  const o = pickW(T_OUT), target = o - 1;            // -1 = sin premio
+  for (let k = 0; k < 300; k++) {
+    const g = Array.from({ length: 9 }, tFill);
+    if (target >= 0) LINES[rnd(8)].forEach(i => g[i] = target);
+    const e = topEval(g);
+    if (target < 0 && e.lines) continue;
+    if (target >= 0 && (e.lines !== 1 || e.hit.sym !== target)) continue;
+    return g;
+  }
+  return [0, 1, 2, 3, 0, 1, 2, 3, 4];
+}
+let tgrid = genTop(); for (let k = 0; k < 30 && topEval(tgrid).lines; k++) tgrid = genTop();
+const setTStrip = (c, syms) => { tstrips[c].style.transition = 'none'; tstrips[c].style.transform = 'translateY(0)'; tstrips[c].innerHTML = syms.map(tsymHTML).join(''); };
+for (let c = 0; c < 3; c++) setTStrip(c, [tgrid[c], tgrid[3 + c], tgrid[6 + c]]);
 
 const reels = [...document.querySelectorAll('.reel')];
 const strips = reels.map(r => r.querySelector('.strip'));
@@ -803,8 +831,7 @@ function ui() {
   $('#launch').disabled = !S.bonus.length || topBusy || busy || fsRunning;
   $('#b1').disabled = busy || topBusy || fsRunning;
   const x2 = S.bonus.length && S.bonus[0] === 2;
-  board.classList.toggle('x2', !!x2);
-  board.querySelectorAll('.tc.prize .l').forEach(l => l.textContent = fmtS(+l.dataset.v * (x2 ? 2 : 1)));
+  board.querySelectorAll('.tleg b[data-v]').forEach(l => l.textContent = fmtS(+l.dataset.v * (x2 ? 2 : 1)));
   $('#sndBtn').textContent = S.muted ? '🔇' : '🔊';
 }
 const dmd = (t) => { $('#dmd').innerHTML = t; };
@@ -1185,37 +1212,48 @@ async function launch() {
   ac(); topBusy = true; ui();
   const mult = S.bonus.shift(); save(); ui(); topBusy = true; $('#launch').disabled = true;
   dmd(mult === 2 ? 'BONUS DOBLE<br>¡GIRANDO!' : 'BONUS<br>¡GIRANDO!');
-  const target = pickW(TOP.map(c => c.w));
-  const steps = 32 + ((target - lightPos + 16) % 16) + 16 * rnd(2);
-  topCells.forEach(c => c.classList.remove('hit'));
-  for (let i = 1; i <= steps; i++) {
-    topCells[lightPos].classList.remove('lit');
-    lightPos = (lightPos + 1) % 16;
-    topCells[lightPos].classList.add('lit');
-    SFX.tick();
-    const k = i / steps;
-    await sleep(28 + 300 * k * k * k);
+  $('#tlines').innerHTML = ''; document.querySelectorAll('.tsym.win').forEach(e => e.classList.remove('win'));
+  const next = genTop();
+  const rsnd = reelSound(3), TH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--th')) || 50;
+  await Promise.all([0, 1, 2].map(c => new Promise(res => {
+    const old = [tgrid[c], tgrid[3 + c], tgrid[6 + c]], nw = [next[c], next[3 + c], next[6 + c]];
+    const all = nw.concat(Array.from({ length: 12 + c * 5 }, tFill), old), st = tstrips[c];
+    st.style.transition = 'none'; st.innerHTML = all.map(tsymHTML).join(''); st.style.transform = `translateY(${-(all.length - 3) * TH}px)`; st.offsetHeight;
+    const dur = 850 + c * 350; treels[c].classList.add('spin');
+    st.style.transition = `transform ${dur}ms cubic-bezier(.32,.0,.25,1.06)`; st.style.transform = 'translateY(0)';
+    setTimeout(() => { treels[c].classList.remove('spin'); setTStrip(c, nw); rsnd.stopReel(); vib(8); res(); }, dur + 30);
+  })));
+  rsnd.end(); tgrid = next;
+  const e = topEval(tgrid);
+  const tcell = i => tstrips[i % 3].children[Math.floor(i / 3)];
+  if (e.hit) {
+    const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    pl.setAttribute('points', LINES[e.hit.line].map(k => `${(k % 3) + .5},${Math.floor(k / 3) + .5}`).join(' ')); pl.style.stroke = '#ffd23d';
+    $('#tlines').appendChild(pl); LINES[e.hit.line].forEach(k => tcell(k).classList.add('win'));
+    const t = TS[e.hit.sym];
+    if (e.hit.sym === T_TRO) {
+      SFX.bonus(); vib([40, 30, 40]);
+      const opts = Object.keys(MG).concat(['fs']), pick = opts[rnd(opts.length)];
+      if (pick === 'fs') {
+        SFX.big(); dmd(`🎁 ${FS_N} TIRADAS<br>GRATIS x${FS_X}`);
+        S.fs = { n: ((S.fs && S.fs.n) || 0) + FS_N, bet: mult * 20 }; save();
+        await celebrate('¡TIRADAS GRATIS!', 'img/trofeo.webp', null, `${FS_N} TIRADAS · PREMIOS x${FS_X}`);
+      } else {
+        dmd('🎮 MINIJUEGO<br>' + MG[pick].n); await sleep(1200);
+        if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
+        const v = await playMG(pick, mult, false);
+        if (v) await countWin(v);
+      }
+    } else {
+      const v = t.v * mult; bell(1.4); SFX.big(); vib([60, 40, 120]); dmd(t.n + '<br>' + fmt(v));
+      await celebrate('¡' + t.n + '!', 'img/' + t.img + '.webp', v);
+      await countWin(v);
+    }
+  } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
+  if (e.cams) {
+    const nb = camBonus(e.cams); tgrid.forEach((x, i) => { if (x === T_CAM) tcell(i).classList.add('win'); });
+    for (let k = 0; k < nb; k++) S.bonus.unshift(mult); save(); SFX.bonus(); dmd(`🎽 CAMISETA<br>+${nb} BONUS`); await sleep(1300);
   }
-  const c = TOP[target];
-  topCells[target].classList.add('hit');
-  if (c.t === 'tapon') { SFX.buzz(); vib(80); dmd('✋ ¡TAPÓN!<br>SIN PREMIO'); await sleep(1300); }
-  else if (c.t === 'cam') { SFX.bonus(); S.bonus.unshift(mult); save(); dmd('🎽 CAMISETA<br>+1 BONUS'); await sleep(1400); }
-  else if (c.t === 'fs') {
-    SFX.big(); vib([60, 40, 120]); dmd(`🎁 ${FS_N} TIRADAS<br>GRATIS x${FS_X}`);
-    S.fs = { n: ((S.fs && S.fs.n) || 0) + FS_N, bet: mult * 20 }; save();
-    await celebrate('¡TIRADAS GRATIS!', 'img/balon.webp', null, `${FS_N} TIRADAS · PREMIOS x${FS_X}`);
-  }
-  else if (c.t === 'prize') {
-    const v = c.v * mult; SFX.big(); vib([60, 40, 120]); dmd(c.n + '<br>' + fmt(v));
-    await celebrate('¡' + c.n + '!', 'img/' + c.img + '.webp', v);
-    await countWin(v);
-  } else {
-    SFX.bonus(); dmd('🎮 MINIJUEGO<br>' + MG[c.id].n); await sleep(1100);
-    if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
-    const v = await playMG(c.id, mult, false);
-    if (v) { await countWin(v); }
-  }
-  topCells[target].classList.remove('hit');
   topBusy = false; ui();
   if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
   if (S.fs && S.fs.n > 0) { runFreeSpins(); return; }
@@ -1491,8 +1529,10 @@ $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i })
   const n = Math.round(1 / h), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
   return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('');
 $('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
-$('#ptTop').innerHTML = TOP.filter(c => c.t === 'prize').sort((a, b) => b.v - a.v).map(c =>
-  `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('');
+$('#ptTop').innerHTML = TS.slice(0, 4).slice().reverse().map(c =>
+  `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('')
+  + `<div class="pti"><img src="img/trofeo.webp" alt=""><div class="v">TROFEO<br><small>minijuego o tiradas gratis</small></div></div>`
+  + `<div class="pti"><img src="img/camiseta.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus</small></div></div>`;
 $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data-mg="${k}">${MG[k].e} ${MG[k].n}</button>`).join('');
 
 const open = id => $(id).classList.remove('hidden');
