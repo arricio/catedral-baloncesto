@@ -515,7 +515,7 @@ header{height:42px}
   <h3>Jugadores y escudo</h3>
   <div class="pt" id="ptList"></div>
   <h3>Riesgo</h3>
-  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes un escalón; si fallas bajas, pero a partir de 0,40 € nunca te quedas sin nada.</p>
+  <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 0,80 · 1 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes; si fallas pierdes el premio pero te llevas comodines (de 1 a 5 según el premio).</p>
   <h3>Avances y retenciones</h3>
   <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 4): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
   <h3>¿Cada cuánto sale?</h3>
@@ -558,7 +558,7 @@ header{height:42px}
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
     <li>Con BONUS pulsa el botón <b>JUGAR | COMODINES</b> para pasar a la pantalla de arriba y luego <b>JUGAR</b>: giran los rodillos de arriba (gastas 1 bonus). Vuelve a pulsar <b>JUGAR | COMODINES</b> para volver abajo; si se acaban los bonus vuelve sola. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
     <li><b>3 banderas de León en línea</b> arriba (horizontal, vertical o diagonal): eliges a qué <b>minijuego</b> jugar. Cada uno tiene <b>3 premios</b> al azar (de 10 € a 120 €) y te llevas uno.</li>
-    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
+    <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 0,80 · 1 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y FALLO: pulsa ¡PARAR! Si aciertas subes y puedes seguir subiendo. Si fallas pierdes el premio, pero a partir de 0,40 € te llevas comodines: 0,40-1 € → 1, 3-5 € → 2, 10-20 € → 3, 40 € → 4 y 80 € → 5. También se puede subir premio en la pantalla de arriba y en los minijuegos.</li>
     <li><b>AVANCES</b> (de 1 a 4): a veces, tras una jugada sin premio, la máquina te da avances. Toca el <b>rodillo</b> que quieras bajar (o su botón <b>AVANCE</b>): la figura de encima baja a la línea del medio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
     <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
@@ -570,7 +570,7 @@ header{height:42px}
 <div class="ov hidden" id="riskOv"><div class="panel risk">
   <h2>¿COBRAR O ARRIESGAR?</h2>
   <div class="rnow">PREMIO <b id="rAmt">0,00 €</b></div>
-  <div class="lamps"><div class="lamp" id="lD"><span>▲ SUBE</span><b id="rDbl">0,00 €</b></div><div class="lamp" id="lN"><span>▼ BAJA</span><b id="rLow">0,00 €</b></div></div>
+  <div class="lamps"><div class="lamp" id="lD"><span>▲ SUBE</span><b id="rDbl">0,00 €</b></div><div class="lamp" id="lN"><span>✖ FALLO</span><b id="rLow">NADA</b></div></div>
   <div class="rlad" id="rLad"></div>
   <p class="ins" id="rIns"></p>
   <div class="row"><button class="big grn" id="rCob">COBRAR</button><button class="big red" id="rArr">ARRIESGAR</button></div>
@@ -635,7 +635,8 @@ let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 0.6];
 const CAM_P = [1 / 20, 1 / 16, 1 / 45]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
 const ESC = 14; // el escudo: premio gordo especial (160 €)
-const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
+const LADDER = [20, 40, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
+const COMOD_V = 36; // valor medio aproximado de un comodín (céntimos), para equilibrar el riesgo
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
 const PAYLINE = 1; // en la pantalla de abajo solo paga la línea horizontal del medio
 const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
@@ -1059,14 +1060,15 @@ async function payWins(r, mult, noRisk) {
    Si aciertas subes al siguiente premio de la escalera; si fallas bajas dos escalones por debajo
    del premio que tenías y te quedas con ese. La probabilidad de subir se calcula en cada escalón
    para que, de media, arriesgar devuelva un 97 % de lo que se tiene. */
+function riskComod(a, mult) {   // comodines que da fallar al subir, según el premio que se tenía
+  const b = a / mult;
+  return b >= 8000 ? 5 : b >= 4000 ? 4 : b >= 1000 ? 3 : b >= 300 ? 2 : b >= 40 ? 1 : 0;
+}
 function riskStep(a, mult) {
-  const L = LADDER.map(v => v * mult), SAFE = L[1]; // 0,40 € (0,80 € a DOBLE): una vez alcanzado, ya no se pierde
-  const next = L.find(v => v > a);
-  const below = L.filter(v => v < a).reverse();
-  let low = below[1] || 0;
-  if (a >= SAFE) low = Math.max(low, SAFE);
-  const p = !next ? 0 : low >= a ? .3 : Math.min(.9, Math.max(.05, (.97 * a - low) / (next - low)));
-  return { next, low, p, L };
+  const L = LADDER.map(v => v * mult);
+  const next = L.find(v => v > a), comod = riskComod(a, mult), cv = comod * COMOD_V * mult;
+  const p = !next ? 0 : Math.min(.9, Math.max(.25, (.97 * a - cv) / (next - cv)));
+  return { next, comod, p, L };
 }
 function risk(amount, mult) {
   return new Promise(res => {
@@ -1076,10 +1078,11 @@ function risk(amount, mult) {
     const upd = () => {
       st = riskStep(a, mult);
       $('#rAmt').textContent = fmt(a); $('#mWin').textContent = fmt(a);
-      $('#rDbl').textContent = st.next ? fmt(st.next) : '—'; $('#rLow').textContent = fmt(st.low);
-      $('#rLad').innerHTML = st.L.map(v => `<span class="${v === a ? 'cur' : v === st.next ? 'nx' : v === st.low ? 'lo' : ''}">${fmtS(v)}</span>`).join('');
+      const cTxt = st.comod ? `+${st.comod} ${st.comod > 1 ? 'COMODINES' : 'COMODÍN'}` : 'NADA';
+      $('#rDbl').textContent = st.next ? fmt(st.next) : '—'; $('#rLow').textContent = cTxt;
+      $('#rLad').innerHTML = st.L.map(v => `<span class="${v === a ? 'cur' : v === st.next ? 'nx' : ''}">${fmtS(v)}</span>`).join('');
       bA.disabled = !st.next; bA.textContent = st.next ? 'ARRIESGAR' : 'MÁXIMO'; bC.disabled = false;
-      $('#rIns').innerHTML = st.next ? `Si aciertas subes a <b style="color:#7dff9b">${fmt(st.next)}</b>; si fallas bajas a <b style="color:#ff8a9a">${fmt(st.low)}</b>.` : '¡Has llegado a lo más alto! Cobra tu premio.';
+      $('#rIns').innerHTML = st.next ? `Si aciertas subes a <b style="color:#7dff9b">${fmt(st.next)}</b> y puedes seguir subiendo; si fallas pierdes el premio${st.comod ? ` pero te llevas <b style="color:#d9a6ff">${cTxt}</b>` : ''}.` : '¡Has llegado a lo más alto! Cobra tu premio.';
       pn.classList.add('idle'); lD.classList.remove('on'); lN.classList.remove('on');
     };
     const close = v => { clearInterval(timer); ov.classList.add('hidden'); bC.onclick = bA.onclick = null; res(v); };
@@ -1100,10 +1103,11 @@ function risk(amount, mult) {
       running = false;
       if (ok) { a = st.next; SFX.win(); vib([30, 30, 60]); await sleep(700); upd(); }
       else {
-        SFX.buzz(); vib(150); a = st.low;
-        $('#rAmt').textContent = fmt(a); $('#mWin').textContent = fmt(a);
-        $('#rIns').innerHTML = a ? `<b>¡BAJA!</b> Te quedas con ${fmt(a)}.` : '<b>¡FALLASTE!</b> Te quedas sin premio.';
-        await sleep(1600); close(a);
+        SFX.buzz(); vib(150); const c = st.comod;
+        $('#rAmt').textContent = fmt(0); $('#mWin').textContent = fmt(0);
+        if (c) { for (let k = 0; k < c; k++) S.bonus.push(mult); save(); ui(); setTimeout(() => { SFX.bonus(); flyBonus(c); }, 300); }
+        $('#rIns').innerHTML = c ? `<b>¡FALLASTE!</b> Pierdes el premio pero ganas <b style="color:#d9a6ff">${c} ${c > 1 ? 'COMODINES' : 'COMODÍN'}</b> para la pantalla de arriba.` : '<b>¡FALLASTE!</b> Te quedas sin premio.';
+        await sleep(c ? 2000 : 1600); close(0);
       }
     };
   });
@@ -1385,12 +1389,14 @@ async function launch() {
     const id = await chooseMG(mult);
     dmd('🎮 MINIJUEGO<br>' + MG[id].n);
     const v = await playMG(id, mult, false);
-    if (v) await countWin(v);
+    const fin = (v && !auto) ? await risk(v, mult) : v;   // también se puede subir el premio del minijuego
+    if (fin) await countWin(fin);
   } else if (e.hit) {
     drawT(e.hit.line);
     const t = TS[e.hit.sym], v = t.v * mult; sayPremio(); bell(1.4); SFX.big(); vib([60, 40, 120]); dmd(t.n + '<br>' + fmt(v));
     await celebrate('¡' + t.n + '!', 'img/' + t.img + '.webp', v);
-    await countWin(v);
+    const fin = auto ? v : await risk(v, mult);       // también se puede subir el premio arriba
+    if (fin) await countWin(fin);
   } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
   if (e.cams) {
     const nb = camBonus(e.cams); tgrid.forEach((x, i) => { if (x === T_CAM) tcell(i).classList.add('win'); });
@@ -1715,7 +1721,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 39;
+const APP_VERSION = 40;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
