@@ -38,8 +38,9 @@ body{color:#fff;font-family:var(--fb);overflow-x:hidden;touch-action:manipulatio
 img{-webkit-user-drag:none;user-select:none}
 button{font-family:inherit;cursor:pointer;border:0;color:inherit}
 .hidden{display:none!important}
-#app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;gap:5px;
-  padding:calc(env(safe-area-inset-top) + 4px) 10px calc(env(safe-area-inset-bottom) + 8px)}
+html,body{height:100%;overflow:hidden}
+#app{position:absolute;left:50%;top:0;width:400px;margin-left:-200px;transform-origin:top center;display:flex;flex-direction:column;gap:5px;
+  padding:calc(env(safe-area-inset-top) + 4px) 10px calc(env(safe-area-inset-bottom) + 6px)}
 
 /* ---------- cabecera ---------- */
 header{height:36px;display:flex;align-items:center;gap:6px}
@@ -197,7 +198,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .aut.on{background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 5px 0 #063018,0 0 14px rgba(80,255,140,.7)}
 .play{color:#fff;font-size:24px;background:linear-gradient(#7dff9b,#1fae4e 45%,#0b6b2a);box-shadow:0 5px 0 #063018;text-shadow:0 2px 0 #053}
 .note{text-align:center;font-size:11px;color:#a77a80;margin-top:2px}
-@media (max-height:860px){.note{display:none}}
+.note{display:none}
 /* ---------- tabla de premios de arriba ---------- */
 .paytop{position:relative;border-radius:12px;padding:12px 4px 4px;margin-top:6px;background:linear-gradient(#24343f,#121c23);border:3px solid #8a9aa6;box-shadow:inset 0 0 0 2px #0b1218,0 4px 10px rgba(0,0,0,.6)}
 .ptag{position:absolute;top:-11px;left:10px;padding:2px 10px;border-radius:7px;font-family:var(--fd);font-size:13px;color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);border:2px solid #6b4500;white-space:nowrap}
@@ -671,28 +672,23 @@ for (let k = 0; k < 20 && evaluate(grid, 1).win; k++) grid = grid.map(() => rnd(
 for (let c = 0; c < 3; c++) setStrip(c, [grid[c], grid[3 + c], grid[6 + c]]);
 
 /* ---------- tamaños según la pantalla ---------- */
+/* La máquina se diseña con un tamaño fijo (DW de ancho) y se escala entera para que
+   quepa siempre en la pantalla del móvil, sin tener que desplazarse. */
+const DW = 400, DC = 74, DTR = 32;
 function fit() {
-  const H = window.innerHeight, W = Math.min(window.innerWidth, 480), R = document.documentElement.style;
-  const cwMax = Math.floor((W - 20 - 28 - 12) / 3), trMax = Math.floor((W - 60) / 5 * .82);
-  const set = (c, tr) => { R.setProperty('--c', c + 'px'); R.setProperty('--cw', cwMax + 'px'); R.setProperty('--tr', tr + 'px'); };
-  // medir lo que ocupa todo lo demás (cabecera, contadores, botones, márcos…)
-  set(60, 40);
-  const app = $('#app'); app.style.minHeight = '0';
-  const used = app.getBoundingClientRect().height - (3 * 60 + 5 * 40);
-  app.style.minHeight = '';
-  const avail = Math.max(300, H - used);
-  let c = Math.floor(avail * .6 / 3), tr = Math.floor(avail * .4 / 5);
-  c = Math.max(56, Math.min(c, cwMax)); tr = Math.max(28, Math.min(tr, trMax));
-  // si sobra sitio en una de las dos pantallas, se lo damos a la otra
-  const spare = avail - 3 * c - 5 * tr;
-  if (spare > 0) { c = Math.min(cwMax, c + Math.floor(spare / 3)); tr = Math.min(trMax, Math.floor((avail - 3 * c) / 5)); }
-  set(c, tr);
-  // ajuste fino: si aún sobresale unos píxeles, reducir los rodillos
-  app.style.minHeight = '0';
-  for (let k = 0; k < 12 && app.getBoundingClientRect().height > H && c > 56; k++) { c -= 2; set(c, tr); }
-  app.style.minHeight = '';
+  const R = document.documentElement.style, app = $('#app');
+  R.setProperty('--c', DC + 'px'); R.setProperty('--cw', Math.floor((DW - 20 - 24 - 16) / 3) + 'px'); R.setProperty('--tr', DTR + 'px');
+  app.style.transform = 'none';
+  const vw = (window.visualViewport && visualViewport.width) || innerWidth;
+  const vh = (window.visualViewport && visualViewport.height) || innerHeight;
+  const h = app.scrollHeight;
+  const sc = Math.min(vw / DW, vh / h);
+  app.style.transform = `scale(${sc})`;
+  app.style.top = Math.max(0, (vh - h * sc) / 2) + 'px';
 }
-addEventListener('resize', fit); fit();
+addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 300));
+if (window.visualViewport) visualViewport.addEventListener('resize', fit);
+fit(); setTimeout(fit, 500);
 
 /* ---------- contadores ---------- */
 function renderPayTop() {
