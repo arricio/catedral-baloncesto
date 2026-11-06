@@ -647,7 +647,7 @@ header{height:42px}
   <h2>CÓMO SE JUEGA</h2>
   <ol>
     <li>Empiezas con <b>20 €</b> en <b>MI DINERO</b>. Cada día que abras el juego te regalamos <b>20 €</b> más, y si te quedas sin dinero, al pasar <b>1 hora</b> se recargan <b>5 €</b>.</li>
-    <li>Toca la ranura de <b>MONEDAS</b> (a la derecha de PREMIO) o la de <b>BILLETES</b> (debajo) y mete dinero en la máquina: pasan al <b>CRÉDITO</b>. Cada jugada gasta crédito, los premios se suman al crédito y con <b>COBRAR</b> vuelve todo a tu dinero.</li>
+    <li>Toca la ranura de <b>MONEDAS</b> (a la derecha de PREMIO) o la de <b>BILLETES</b> (debajo) y mete dinero en la máquina: pasan al <b>CRÉDITO</b> y se quedan en la máquina para jugar. Los premios se van sumando en <b>PREMIO</b>, y con <b>COBRAR</b> te pagas los premios a tu dinero (el crédito metido se queda en la máquina). Si se acaba el crédito, se sigue jugando con los premios.</li>
     <li>Con <b>APUESTA</b> eliges 0,20 € o <b>DOBLE</b> 0,40 €. Jugando a doble, todos los premios se pagan al doble.</li>
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
@@ -693,6 +693,8 @@ const $ = s => document.querySelector(s);
 const rnd = n => Math.floor(Math.random() * n);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const fmt = c => (c / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+/* CRÉDITO (S.saldo) = dinero metido en la máquina; PREMIO (S.ganado) = premios ganados, que es lo que se cobra */
+const jugable = () => S.saldo + (S.ganado || 0);            // se juega primero con el crédito y, si se acaba, con los premios
 const fmtS = c => (c % 100 ? fmt(c) : (c / 100) + ' €');
 const pickW = ws => { let t = ws.reduce((a, b) => a + b, 0), r = Math.random() * t; for (let i = 0; i < ws.length; i++) { if ((r -= ws[i]) < 0) return i; } return ws.length - 1; };
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -768,7 +770,7 @@ const T_FILL = [20, 18, 15, 13, 12, .6, 22, 20, 14];      // figuras de relleno 
 const T_SMALL = 2000;                                 // los premios pequeños (zapatilla, marcador) salen siempre en una sola línea
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
-let S = { zona: 'abajo', saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
+let S = { zona: 'abajo', saldo: 0, ganado: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -1027,9 +1029,10 @@ function renderPayTop() {
 function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
   $('#mCartera').textContent = fmt(S.cartera);
-  { const need = S.saldo < S.betSel && S.cartera > 0; $('#coinSlotBtn').classList.toggle('call', need); $('#billSlotBtn').classList.toggle('call', need && S.cartera >= 500); }
+  if (!busy && !topBusy && !fsRunning) $('#mWin').textContent = fmt(S.ganado || 0);
+  { const need = jugable() < S.betSel && S.cartera > 0; $('#coinSlotBtn').classList.toggle('call', need); $('#billSlotBtn').classList.toggle('call', need && S.cartera >= 500); }
   $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA'; if (renderPayTop.m !== S.betSel) { renderPayTop.m = S.betSel; renderPayTop(); }
-  $('#cobBtn').disabled = busy || topBusy || fsRunning || S.saldo <= 0; $('#cobBtn').classList.toggle('ready', S.saldo > 0 && !busy);
+  $('#cobBtn').disabled = busy || topBusy || fsRunning || !(S.ganado > 0); $('#cobBtn').classList.toggle('ready', S.ganado > 0 && !busy);
   $('#betBtn').disabled = busy || topBusy || fsRunning;
   $('#mBet').textContent = fsRunning ? 'GRATIS' : fmt(S.lastBet);
   { const bn = $('#bN'), nv = String(S.bonus.length); if (bn.textContent !== nv) { bn.textContent = nv; const w = bn.parentElement; w.classList.remove('pop'); w.offsetHeight; w.classList.add('pop'); } }
@@ -1080,14 +1083,14 @@ let mode = null, held = [false, false, false], holdOk = [false, false, false], n
 async function spin(bet, free) {
   if (busy || topBusy) return;
   if (!free && fsRunning) return;
-  if (!free && S.saldo < bet) { if (S.saldo + S.cartera >= bet) { SFX.buzz(); openMeter(true); } else noMoney(); return; }
+  if (!free && jugable() < bet) { if (jugable() + S.cartera >= bet) { SFX.buzz(); openMeter(true); } else noMoney(); return; }
   ac(); loadVoz(); busy = true;
-  if (!free) { S.lastBet = bet; S.saldo -= bet; }
+  if (!free) { S.lastBet = bet; const dc = Math.min(S.saldo, bet); S.saldo -= dc; S.ganado = (S.ganado || 0) - (bet - dc); }
   save();
   const H = (!free && mode === 'hold') ? held.slice() : [false, false, false];
   const wasHeld = H.some(Boolean);
   mode = null; nudges = 0; renderCtl();
-  $('#mWin').textContent = fmt(0); clearWin(); ui();
+  $('#mWin').textContent = fmt(S.ganado || 0); clearWin(); ui();
   const bm = bet / 20, mult = free ? bm * FS_X : bm; // en tiradas gratis los premios de línea van x2
   const next = wasHeld ? Array.from({ length: 9 }, (_, i) => randSym(i % 3)) : genGrid();
   for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
@@ -1174,7 +1177,7 @@ async function payWins(r, mult, noRisk) {
   else bell(r.win >= 100 * mult ? 1.2 : .7);
   $('#mWin').textContent = fmt(r.win);
   const final = (auto || noRisk) ? r.win : (await vozWait(), await risk(r.win, mult));
-  if (final > 0) await countWin(final); else $('#mWin').textContent = fmt(0);
+  if (final > 0) await countWin(final); else $('#mWin').textContent = fmt(S.ganado || 0);
 }
 
 /* ---------- RIESGO: escalera de premios ----------
@@ -1388,15 +1391,15 @@ function drawLine(i, col) {
   $('#lines').appendChild(pl);
 }
 function showWin(r) { r.wins.forEach(w => { drawLine(w.line); LINES[w.line].forEach(k => cellAt(k).classList.add('win')); }); }
-async function countWin(c) {
-  const dur = Math.min(2600, 500 + c / 4), t0 = performance.now(); let last = 0;
+async function countWin(c) {   // el premio se suma al contador PREMIO (lo que se cobra), no al crédito
+  const dur = Math.min(2600, 500 + c / 4), t0 = performance.now(), base = S.ganado || 0; let last = 0;
   while (true) {
     const k = Math.min(1, (performance.now() - t0) / dur), v = Math.round(c * k);
-    $('#mWin').textContent = fmt(v);
+    $('#mWin').textContent = fmt(base + v);
     if (performance.now() - last > 70) { SFX.coin(); last = performance.now(); }
     if (k >= 1) break; await sleep(30);
   }
-  S.saldo += c; save(); ui();
+  S.ganado = base + c; save(); ui();
 }
 function flyBonus(n) {
   const r = $('#reels').getBoundingClientRect(), t = $('#bN').getBoundingClientRect();
@@ -1408,7 +1411,7 @@ function flyBonus(n) {
 }
 function noMoney() {
   SFX.buzz(); auto = false; $('#autoBtn').classList.remove('on');
-  if (S.saldo + S.cartera < 20) {
+  if (jugable() + S.cartera < 20) {
     if (!S.emptyAt) { S.emptyAt = Date.now(); save(); }
     dmd('SIN DINERO'); tickMoney(); $('#nmOv').classList.remove('hidden');
   } else dmd('PULSA JUGAR');
@@ -1530,18 +1533,18 @@ function ensureCredits(bet) {
   return true;
 }
 
-/* COBRAR: los créditos de la máquina pasan a MI DINERO */
+/* COBRAR: los premios ganados pasan a MI DINERO; el crédito metido se queda en la máquina */
 async function cobrar() {
-  if (busy || topBusy || fsRunning || S.saldo <= 0) return;
+  if (busy || topBusy || fsRunning || !(S.ganado > 0)) return;
   busy = true; ui();
-  const total = S.saldo, steps = Math.min(30, Math.max(6, Math.round(total / 50)));
+  const total = S.ganado, steps = Math.min(30, Math.max(6, Math.round(total / 50)));
   for (let i = 1; i <= steps; i++) {
     const v = Math.round(total * i / steps), prev = Math.round(total * (i - 1) / steps);
-    S.saldo -= v - prev; S.cartera += v - prev;
-    $('#mSaldo').textContent = fmt(S.saldo); $('#mCartera').textContent = fmt(S.cartera);
+    S.ganado -= v - prev; S.cartera += v - prev;
+    $('#mWin').textContent = fmt(S.ganado); $('#mCartera').textContent = fmt(S.cartera);
     SFX.coin(); await sleep(45);
   }
-  S.saldo = 0; save(); vib([20, 20, 40]);
+  S.ganado = 0; save(); vib([20, 20, 40]);
   dmd('COBRADO<br>' + fmt(total));
   busy = false; ui(); renderCtl();
 }
@@ -1556,7 +1559,7 @@ async function checkDaily() {
   await celebrate('¡REGALO DIARIO!', 'img/p13.webp', 2000);
 }
 function tickMoney() {
-  const out = S.saldo + S.cartera < 20 && !S.bonus.length && !(S.fs && S.fs.n > 0);
+  const out = jugable() + S.cartera < 20 && !S.bonus.length && !(S.fs && S.fs.n > 0);
   if (out && !S.emptyAt && !busy && !topBusy && !fsRunning) { S.emptyAt = Date.now(); save(); }
   if (!out && S.emptyAt) { S.emptyAt = 0; save(); }
   if (S.emptyAt) {
@@ -1666,8 +1669,8 @@ function autoStep() {
     if (!auto || busy || topBusy || fsRunning) return;
     if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
     else if (S.bonus.length) { S.zona = 'arriba'; ui(); launch(); }
-    else if (S.saldo >= S.betSel) spin(S.betSel);
-    else if (S.saldo + S.cartera >= S.betSel) { auto = false; $('#autoBtn').classList.remove('on'); openMeter(true); }
+    else if (jugable() >= S.betSel) spin(S.betSel);
+    else if (jugable() + S.cartera >= S.betSel) { auto = false; $('#autoBtn').classList.remove('on'); openMeter(true); }
     else { auto = false; $('#autoBtn').classList.remove('on'); noMoney(); }
   }, 650);
 }
@@ -1969,7 +1972,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 53;
+const APP_VERSION = 54;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
