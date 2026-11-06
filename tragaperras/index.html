@@ -375,7 +375,7 @@ header{height:42px}
 #tlines{left:0;top:0;width:100%;height:100%}
 .board .center{grid-column:auto;grid-row:auto;justify-content:space-between;padding:5px 4px;gap:4px}
 .board .dmd{font-size:13px;min-height:2.3em}
-.tleg{display:grid;grid-template-columns:1fr 1fr;gap:2px 4px;width:100%}
+.tleg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px 3px;width:100%}
 .tleg span{display:flex;align-items:center;gap:3px;font-family:var(--fn);font-size:11px;color:#ffd36b;white-space:nowrap}
 .tleg img{width:20px;height:16px;object-fit:contain}
 .tbot{display:flex;align-items:center;gap:6px;justify-content:center;width:100%}
@@ -507,6 +507,12 @@ header{height:42px}
 .billSlotBtn.check .bs{box-shadow:0 0 0 3px #d6a734,0 0 10px 2px #ffb020}
 .billSlotBtn.ok .led{background:#4dff8a;box-shadow:0 0 10px 4px #4dff8a}
 .billSlotBtn.ok .bs{box-shadow:0 0 0 3px #d6a734,0 0 14px 4px #4dff8a}
+.board .center .tleg{grid-template-columns:repeat(6,minmax(0,1fr));gap:2px 1px}
+.board .center .tleg span{grid-column:span 2}
+.board .center .tleg span:nth-child(7){grid-column:2 / 6;justify-content:center}
+.board .center .tleg span.tx{grid-column:span 3;justify-content:center}
+.board .center .tleg span{font-size:9px;gap:1px;letter-spacing:-.3px;justify-content:flex-start;overflow:hidden}
+.board .center .tleg img{width:13px;height:12px;flex:none}
 @keyframes scanBar{from{left:-30%}to{left:100%}}
 @keyframes ledBlink{50%{opacity:.25}}
 </style>
@@ -749,10 +755,16 @@ const TS = [
   { img: 'mate',     v: 10000, n: 'MATE' },
   { img: 'bandera',  v: 0,     n: 'BANDERA' },     // 3 banderas de León en línea = elegir minijuego
   { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
+  { img: 'zapatilla', v: 500,  n: 'ZAPATILLA' },   // premios pequeños de arriba: 5 € y 10 €
+  { img: 'marcador',  v: 1000, n: 'MARCADOR' },
+  { img: 'silbato',   v: 6000, n: 'SILBATO' },     // 60 €, entre el balón y la canasta
 ];
+const T_PRIZES = TS.map((t, i) => i).filter(i => TS[i].v > 0).sort((a, b) => TS[a].v - TS[b].v);   // de menor a mayor
 const T_FLAG = 4, T_CAM = 5;
-const T_OUT = [.99396, .0016, .0006, .0002, .0001, .0036];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
-const T_FILL = [30, 26, 20, 16, 14, .6];           // figuras de relleno de arriba
+// por tirada de bonus: nada, cancha 20, balón 40, canasta 80, mate 100, 3 banderas en línea, (camiseta: no), zapatilla 5, marcador 10, silbato 60 (≈ 1 premio de cada 11)
+const T_OUT = [.90856, .0016, .0006, .0002, .0001, .0036, 0, .065, .02, .0004];
+const T_FILL = [20, 18, 15, 13, 12, .6, 22, 20, 14];      // figuras de relleno de arriba
+const T_SMALL = 2000;                                 // los premios pequeños (zapatilla, marcador) salen siempre en una sola línea
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
 let S = { zona: 'abajo', saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
@@ -904,8 +916,8 @@ board.innerHTML = `<div class="treels" id="treels">
     <svg class="lines" id="tlines" viewBox="0 0 3 3" preserveAspectRatio="none"></svg></div>
   <div class="center">
     <div class="dmd" id="dmd">¡SUERTE!</div>
-    <div class="tleg">${TS.slice(0, 4).map(t => `<span><img src="img/${t.img}.webp" alt=""><b data-v="${t.v}">${fmtS(t.v)}</b></span>`).join('')}
-      <span><img src="img/bandera.webp" alt=""><b>JUEGO</b></span><span><img src="img/camiseta.webp" alt=""><b>BONUS</b></span></div>
+    <div class="tleg">${T_PRIZES.map(i => TS[i]).map(t => `<span><img src="img/${t.img}.webp" alt=""><b data-v="${t.v}">${fmtS(t.v)}</b></span>`).join('')}
+      <span class="tx"><img src="img/bandera.webp" alt=""><b>JUEGO</b></span><span class="tx"><img src="img/camiseta.webp" alt=""><b>BONUS</b></span></div>
     <div class="tbot"><div class="bonusN"><span id="bN">0</span><small>BONUS</small></div><button id="launch" disabled>¡LANZAR!</button></div>
   </div>`;
 const tstrips = [...document.querySelectorAll('.tstrip')], treels = [...document.querySelectorAll('.treel')];
@@ -922,7 +934,7 @@ const T_PAT = [.9, .09, .01];
 const PAIRS = [[0, 1], [0, 2], [1, 2], [3, 4], [3, 5], [4, 5]];   // dos filas o dos columnas
 function genTop() {
   const o = pickW(T_OUT), target = o - 1;            // -1 = sin premio; T_FLAG = 3 banderas en línea (minijuego)
-  const pat = target < 0 || target === T_FLAG ? 0 : pickW(T_PAT);
+  const pat = target < 0 || target === T_FLAG || TS[target].v < T_SMALL ? 0 : pickW(T_PAT);
   const want = [1, 2, 8][pat];
   for (let k = 0; k < 400; k++) {
     const g = Array.from({ length: 9 }, tFill);
@@ -936,7 +948,7 @@ function genTop() {
     if (target >= 0 && (e.lines !== want || e.hits.some(h => h.sym !== target))) continue;
     return g;
   }
-  return [0, 1, 2, 3, 0, 1, 2, 3, 0];
+  return [0, 1, 2, 3, 6, 7, 1, 2, 0];                    // sin ninguna línea
 }
 let tgrid = genTop(); for (let k = 0; k < 30 && topEval(tgrid).lines; k++) tgrid = genTop();
 const setTStrip = (c, syms) => { tstrips[c].style.transition = 'none'; tstrips[c].style.transform = 'translateY(0)'; tstrips[c].innerHTML = syms.map(tsymHTML).join(''); };
@@ -1625,9 +1637,9 @@ async function launch() {
   } else if (e.prize.length) {
     e.prize.forEach(h => drawT(h.line));                // todas las líneas premiadas se suman
     const n = e.prize.length, t = TS[e.prize[0].sym], v = e.prize.reduce((sum, h) => sum + TS[h.sym].v, 0) * mult;
-    sayPremio(); bell(1.4 + n * .3); SFX.big(); vib([60, 40, 120]);
-    dmd(t.n + (n > 1 ? ` x${n} LÍNEAS` : '') + '<br>' + fmt(v));
-    await celebrate(n > 1 ? `¡${n} LÍNEAS DE ${t.n}!` : '¡' + t.n + '!', 'img/' + t.img + '.webp', v);
+    sayPremio(); dmd(t.n + (n > 1 ? ` x${n} LÍNEAS` : '') + '<br>' + fmt(v));
+    if (t.v < T_SMALL && n === 1) { SFX.win(); bell(.9); vib([40, 30, 60]); await sleep(1200); }   // premio pequeño: sin cartel grande
+    else { bell(1.4 + n * .3); SFX.big(); vib([60, 40, 120]); await celebrate(n > 1 ? `¡${n} LÍNEAS DE ${t.n}!` : '¡' + t.n + '!', 'img/' + t.img + '.webp', v); }
     const fin = auto ? v : (await vozWait(), await risk(v, mult));       // también se puede subir el premio arriba
     if (fin) await countWin(fin);
   } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
@@ -1875,7 +1887,7 @@ $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i })
   const n = Math.round(HIT.reduce((x, y) => x + y, 0) / (h * .225)), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
   return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('');
 $('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
-$('#ptTop').innerHTML = TS.slice(0, 4).slice().reverse().map(c =>
+$('#ptTop').innerHTML = T_PRIZES.map(i => TS[i]).reverse().map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('')
   + `<div class="pti sp"><img src="img/bandera.webp" alt=""><div class="v">3 BANDERAS<br><small>en línea: eliges minijuego</small></div></div>`
   + `<div class="pti"><img src="img/camiseta.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus</small></div></div>`;
@@ -1955,7 +1967,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 49;
+const APP_VERSION = 50;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
