@@ -495,6 +495,20 @@ header{height:42px}
 .csItems small{font-family:var(--fn);font-size:11px;color:#fff3c4;margin-top:3px}
 .flyHand{position:fixed;left:0;top:0;z-index:47;pointer-events:none;display:flex;flex-direction:column;align-items:center;transform-origin:top left}
 .flyHand .hand{font-size:64px;line-height:1;margin-top:-16px;filter:drop-shadow(0 4px 4px #000)}
+#flyMoney .bl,.flyBill .bl{--w:96px}
+.flyBill{position:fixed;left:0;top:0;z-index:46;pointer-events:none;transform-origin:top left}
+.flyBill .bl{box-shadow:0 2px 5px rgba(0,0,0,.7)}
+.bs{position:relative;overflow:hidden}
+.billSlotBtn .led{display:block;width:8px;height:8px;border-radius:50%;background:#3a0a0a;box-shadow:inset 0 0 2px #000}
+.billSlotBtn.scan .bs{background:#031}
+.billSlotBtn.scan .bs::after{content:'';position:absolute;top:0;bottom:0;width:30%;background:linear-gradient(90deg,transparent,#7dffb0,transparent);animation:scanBar .45s linear infinite alternate}
+.billSlotBtn.scan .led{background:#4dff8a;box-shadow:0 0 6px 2px #4dff8a;animation:ledBlink .18s steps(2) infinite}
+.billSlotBtn.check .led{background:#ffb020;box-shadow:0 0 6px 2px #ffb020;animation:ledBlink .3s steps(2) infinite}
+.billSlotBtn.check .bs{box-shadow:0 0 0 3px #d6a734,0 0 10px 2px #ffb020}
+.billSlotBtn.ok .led{background:#4dff8a;box-shadow:0 0 10px 4px #4dff8a}
+.billSlotBtn.ok .bs{box-shadow:0 0 0 3px #d6a734,0 0 14px 4px #4dff8a}
+@keyframes scanBar{from{left:-30%}to{left:100%}}
+@keyframes ledBlink{50%{opacity:.25}}
 </style>
 </head>
 <body>
@@ -519,7 +533,7 @@ header{height:42px}
     <div class="meter"><b>APUESTA</b><span id="mBet">0,20 €</span></div>
     <div class="meter win"><b>PREMIO</b><span id="mWin">0,00 €</span></div>
     <button class="coinSlotBtn" id="coinSlotBtn" aria-label="Meter monedas"><b>MONEDAS</b><i class="cs"></i></button>
-    <button class="billSlotBtn" id="billSlotBtn" aria-label="Meter billetes"><b>BILLETES</b><i class="bs"></i></button>
+    <button class="billSlotBtn" id="billSlotBtn" aria-label="Meter billetes"><b>BILLETES</b><i class="bs"></i><i class="led"></i></button>
   </div>
 
   <div class="cab"><div class="inner"><div class="reelsWrap" id="reels">
@@ -556,6 +570,7 @@ header{height:42px}
   <div class="csHead"><b id="csTitle">MONEDAS</b><span>Bolsillo <i id="csCart">0,00 €</i></span><button id="csOk">LISTO</button></div>
   <div class="csItems" id="csItems"></div>
 </div>
+<div class="flyBill hidden" id="flyBill"></div>
 <div class="flyHand hidden" id="flyHand"><div class="money" id="flyMoney"></div><div class="hand">✋</div></div>
 
 <!-- meter dinero (antigua ventana, sin uso) -->
@@ -1408,7 +1423,57 @@ function meterInsert(v) {
   meterQ = meterQ.then(() => meterAnim(v)).then(() => { S.saldo += v; save(); ui(); meterUI(); });
 }
 /* la mano lleva la moneda o el billete hasta la ranura de la máquina y lo mete */
+/* sonidos del lector de billetes: motor de arrastre, escáner y pitido de «billete bueno» */
+function billMotor(when, dur, vol = .05) {
+  if (S.muted) return; const a = ac(); if (!a) return;
+  const t = a.currentTime + when, o = a.createOscillator(), lfo = a.createOscillator(), lg = a.createGain(), f = a.createBiquadFilter(), g = a.createGain();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(95, t); lfo.frequency.value = 23; lg.gain.value = 9; lfo.connect(lg); lg.connect(o.frequency);
+  f.type = 'lowpass'; f.frequency.value = 700; f.Q.value = 4;
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .05); g.gain.setValueAtTime(vol, t + dur - .06); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(a.destination); o.start(t); lfo.start(t); o.stop(t + dur + .05); lfo.stop(t + dur + .05);
+  noise(when, dur, vol * .5, 'bandpass', 1800, 1.5);                  // roce del papel
+}
+function billScanSnd(when, dur) {                                   // el escáner «leyendo» el billete
+  for (let k = 0, t = 0; t < dur; k++, t += .055) tone(2200 + (k % 5) * 260 + rnd(180), .03, 'square', .012, when + t);
+}
+function billOkSnd(when) { tone(1568, .09, 'square', .05, when); tone(2093, .16, 'square', .05, when + .11); }
+/* el billete: la mano lo acerca, el lector lo agarra, lo arrastra despacio escaneándolo, lo comprueba y lo acepta */
+function billAnim(v) {
+  const fh = $('#flyHand'), m = $('#flyMoney'), fb = $('#flyBill'), btn = $('#billSlotBtn');
+  m.innerHTML = billHTML(v); fb.innerHTML = billHTML(v);
+  const rs = $('#billSlotBtn .bs').getBoundingClientRect();
+  const app = $('#app'), sc = app.getBoundingClientRect().width / app.offsetWidth;
+  fh.classList.remove('hidden');
+  const w = fh.offsetWidth * sc, bw = m.offsetWidth * sc, bh = m.offsetHeight * sc;
+  const x = rs.left + rs.width / 2 - w / 2, yEnd = rs.top + rs.height / 2, yStart = innerHeight + 10;
+  const bx = rs.left + rs.width / 2 - bw / 2, by = yEnd;
+  const H = m.offsetHeight;                                          // alto del billete sin escalar
+  const at = (d, e = 'linear') => ({ transform: `translate(${bx}px,${by}px) scale(${sc}) translateY(${-d}px)`, clipPath: `inset(${d}px 0 0 0)`, easing: e });
+  return new Promise(res => {
+    // 1) la mano sube con el billete hasta la ranura
+    const up = fh.animate([{ transform: `translate(${x}px,${yStart}px) scale(${sc})` }, { transform: `translate(${x}px,${yEnd}px) scale(${sc})` }], { duration: 750, easing: 'ease-out', fill: 'forwards' });
+    up.onfinish = () => {
+      // 2) el lector lo agarra: el billete pasa a la ranura y la mano se retira
+      fb.classList.remove('hidden'); m.innerHTML = '';
+      fh.animate([{ transform: `translate(${x}px,${yEnd}px) scale(${sc})` }, { transform: `translate(${x}px,${yEnd + 30}px) scale(${sc})`, offset: .3 }, { transform: `translate(${x}px,${yStart}px) scale(${sc})` }],
+        { duration: 900, delay: 250, easing: 'ease-in' }).onfinish = () => { up.cancel(); fh.classList.add('hidden'); };
+      // tiempos (s): agarre .0–.3 · escaneo lento .45–2.6 · comprobación 2.6–3.3 · entra del todo 3.3–3.6
+      const D = 3900;
+      const k = (d, o, e = 'linear') => ({ ...at(d, e), offset: o });
+      const ba = fb.animate([k(0, 0, 'ease-in-out'), k(H * .12, .08), k(H * .12, .12), k(H * .78, .66), k(H * .78, .84, 'ease-in'), k(H + 2, .93), k(H + 2, 1)],
+        { duration: D, fill: 'forwards' });
+      billMotor(0, .3, .06); clunk(); vib(20);
+      setTimeout(() => btn.classList.add('scan'), 450);
+      billMotor(.47, 2.1, .045); billScanSnd(.5, 2.0);
+      setTimeout(() => { btn.classList.remove('scan'); btn.classList.add('check'); tone(880, .05, 'square', .02); }, 2600);
+      setTimeout(() => { btn.classList.remove('check'); billMotor(0, .35, .06); vib(15); }, 3270);
+      setTimeout(() => { btn.classList.add('ok'); billOkSnd(0); }, 3650);
+      setTimeout(() => { btn.classList.remove('ok'); fb.classList.add('hidden'); ba.cancel(); res(); }, D + 150);
+    };
+  });
+}
 function meterAnim(v) {
+  if (v >= 500) return billAnim(v);
   const coin = v < 500, fh = $('#flyHand'), m = $('#flyMoney');
   m.innerHTML = coin ? coinHTML(v) : billHTML(v);
   const slot = coin ? $('#coinSlotBtn .cs') : $('#billSlotBtn .bs'), rs = slot.getBoundingClientRect();
@@ -1883,7 +1948,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 47;
+const APP_VERSION = 48;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
