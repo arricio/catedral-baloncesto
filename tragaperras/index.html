@@ -387,6 +387,30 @@ header{height:42px}
 .tsym img{width:calc(var(--tw) * .8);height:calc(var(--th) * .8);max-width:none;max-height:none;object-fit:contain}
 .tleg span.w{grid-column:span 2;font-size:10px;white-space:normal;line-height:1.1}
 .board .center{min-width:0;overflow:hidden}
+
+/* ---------- minijuegos de 3 premios ---------- */
+.court.three{height:240px}
+.h3s{position:absolute;left:0;right:0;top:6px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 6px;z-index:1}
+.h3{display:flex;flex-direction:column;align-items:center}
+.h3 img{width:82%}
+.h3 .pz{font-family:var(--fn);font-weight:400;font-size:15px;color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d);border-radius:8px;padding:1px 7px;margin-bottom:2px;box-shadow:0 2px 0 #6b4500}
+.h3.won .pz{background:#7dff9b;color:#053;box-shadow:0 0 14px #7dff9b}
+.court.three .def{bottom:56px;width:70px;margin-left:-35px}
+.pm3{position:relative;display:grid;grid-template-columns:repeat(3,1fr);height:34px;margin:10px 4px 4px;border-radius:17px;overflow:hidden;border:2px solid #000}
+.pm3 span{display:grid;place-items:center;font-family:var(--fn);font-size:14px;color:#fff;background:#8e0a1f;border-right:2px solid #000}
+.pm3 span:nth-child(2){background:#b8860b}.pm3 span:nth-child(3){background:#1f6fbf;border-right:0}
+.pm3 span.on{background:#22d36b;color:#053}
+.pm3 .n{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:#fff;box-shadow:0 0 8px #fff}
+.lockers.three{grid-template-columns:repeat(3,1fr)}
+.lockers.three .lk{font-size:22px}
+.row .big{font-size:16px;padding:12px 4px}
+
+.tleg{gap:2px 2px}
+.tleg span{font-size:10px;gap:2px}
+.tleg img{width:17px;height:14px}
+.tbot{gap:3px}
+.tbot .bonusN{font-size:19px}
+#launch{font-size:11.5px;padding:.5em .5em}
 </style>
 </head>
 <body>
@@ -469,7 +493,7 @@ header{height:42px}
   <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>, que tiene sus propios rodillos 3×3. Arriba pagan 3 iguales en <b>horizontal, vertical o diagonal</b> (8 líneas).</p>
   <h3>Pantalla de arriba</h3>
   <div class="pt" id="ptTop"></div>
-  <p>🎽 <b>3 camisetas en línea arriba</b>: uno de los <b>6 minijuegos</b> (premios de 10 € a 160 €) o <b>8 tiradas gratis</b> con premios x2.<br>🎽 Camisetas arriba: más BONUS.<br>Todo al doble si el BONUS se consiguió jugando a DOBLE.</p>
+  <p>🚩 <b>3 banderas de León en línea arriba</b>: eliges uno de los <b>6 minijuegos</b>. En cada minijuego salen <b>3 premios</b> al azar entre 10, 20, 40, 60, 80, 100 y 120 €, y te llevas uno.<br>🎽 Camisetas arriba: más BONUS.<br>Todo al doble si el BONUS se consiguió jugando a DOBLE.</p>
 </div></div>
 
 <!-- menú -->
@@ -498,7 +522,7 @@ header{height:42px}
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b>: giran los rodillos de arriba. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
-    <li><b>3 camisetas en línea</b> arriba: te toca uno de los <b>6 minijuegos</b> o <b>8 tiradas gratis</b> con premios x2.</li>
+    <li><b>3 banderas de León en línea</b> arriba (horizontal, vertical o diagonal): eliges a qué <b>minijuego</b> jugar. Cada uno tiene <b>3 premios</b> al azar (de 10 € a 120 €) y te llevas uno.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
     <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
@@ -595,11 +619,12 @@ const TS = [
   { img: 'balon',    v: 4000,  n: 'BALÓN' },
   { img: 'canasta',  v: 8000,  n: 'CANASTA' },
   { img: 'mate',     v: 10000, n: 'MATE' },
-  { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5); 3 en línea = minijuego
+  { img: 'bandera',  v: 0,     n: 'BANDERA' },     // 3 banderas de León en línea = elegir minijuego
+  { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
 ];
-const T_CAM = 4;
-const T_OUT = [.955, .022, .01, .003, .0015, .0085];  // nada, cancha, balón, canasta, mate, 3 camisetas en línea (por tirada de bonus)
-const T_FILL = [30, 26, 20, 16, 1.1];           // figuras de relleno de arriba
+const T_FLAG = 4, T_CAM = 5;
+const T_OUT = [.955, .022, .01, .003, .0015, .0085];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
+const T_FILL = [30, 26, 20, 16, 14, 1.1];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
 let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
@@ -752,7 +777,7 @@ board.innerHTML = `<div class="treels" id="treels">
   <div class="center">
     <div class="dmd" id="dmd">¡SUERTE!</div>
     <div class="tleg">${TS.slice(0, 4).map(t => `<span><img src="img/${t.img}.webp" alt=""><b data-v="${t.v}">${fmtS(t.v)}</b></span>`).join('')}
-      <span class="w"><img src="img/camiseta.webp" alt=""><b>BONUS<br>3 en línea: JUEGO</b></span></div>
+      <span><img src="img/bandera.webp" alt=""><b>JUEGO</b></span><span><img src="img/camiseta.webp" alt=""><b>BONUS</b></span></div>
     <div class="tbot"><div class="bonusN"><span id="bN">0</span><small>BONUS</small></div><button id="launch" disabled>¡LANZAR!</button></div>
   </div>`;
 const tstrips = [...document.querySelectorAll('.tstrip')], treels = [...document.querySelectorAll('.treel')];
@@ -765,12 +790,11 @@ function topEval(g) {
   return { hit: res, lines: nl, camLine, cams: g.filter(x => x === T_CAM).length };
 }
 function genTop() {
-  const o = pickW(T_OUT), target = o - 1;            // -1 = sin premio; T_CAM = 3 camisetas en línea (minijuego)
+  const o = pickW(T_OUT), target = o - 1;            // -1 = sin premio; T_FLAG = 3 banderas en línea (minijuego)
   for (let k = 0; k < 300; k++) {
     const g = Array.from({ length: 9 }, tFill);
     if (target >= 0) LINES[rnd(8)].forEach(i => g[i] = target);
     const e = topEval(g);
-    if (target === T_CAM) { if (e.lines || e.camLine < 0) continue; return g; }
     if (e.camLine >= 0) continue;
     if (target < 0 && e.lines) continue;
     if (target >= 0 && (e.lines !== 1 || e.hit.sym !== target)) continue;
@@ -1254,24 +1278,19 @@ async function launch() {
   const drawT = i => { const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
     pl.setAttribute('points', LINES[i].map(k => `${(k % 3) + .5},${Math.floor(k / 3) + .5}`).join(' ')); pl.style.stroke = '#ffd23d';
     $('#tlines').appendChild(pl); LINES[i].forEach(k => tcell(k).classList.add('win')); };
-  if (e.hit) {
+  if (e.hit && e.hit.sym === T_FLAG) {
+    drawT(e.hit.line); SFX.bonus(); vib([40, 30, 40]); dmd('🚩 ¡3 BANDERAS!<br>ELIGE MINIJUEGO');
+    await celebrate('¡3 BANDERAS DE LEÓN!', 'img/bandera.webp', null, 'Elige minijuego');
+    if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
+    const id = await chooseMG(mult);
+    dmd('🎮 MINIJUEGO<br>' + MG[id].n);
+    const v = await playMG(id, mult, false);
+    if (v) await countWin(v);
+  } else if (e.hit) {
     drawT(e.hit.line);
     const t = TS[e.hit.sym], v = t.v * mult; bell(1.4); SFX.big(); vib([60, 40, 120]); dmd(t.n + '<br>' + fmt(v));
     await celebrate('¡' + t.n + '!', 'img/' + t.img + '.webp', v);
     await countWin(v);
-  } else if (e.camLine >= 0) {
-    drawT(e.camLine); SFX.bonus(); vib([40, 30, 40]);
-    const opts = Object.keys(MG).concat(['fs']), pick = opts[rnd(opts.length)];
-    if (pick === 'fs') {
-      SFX.big(); dmd(`🎁 ${FS_N} TIRADAS<br>GRATIS x${FS_X}`);
-      S.fs = { n: ((S.fs && S.fs.n) || 0) + FS_N, bet: mult * 20 }; save();
-      await celebrate('¡TIRADAS GRATIS!', 'img/camiseta.webp', null, `${FS_N} TIRADAS · PREMIOS x${FS_X}`);
-    } else {
-      dmd('🎮 MINIJUEGO<br>' + MG[pick].n); await sleep(1200);
-      if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
-      const v = await playMG(pick, mult, false);
-      if (v) await countWin(v);
-    }
   } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
   if (e.cams) {
     const nb = camBonus(e.cams); tgrid.forEach((x, i) => { if (x === T_CAM) tcell(i).classList.add('win'); });
@@ -1320,196 +1339,158 @@ function playMG(id, mult, practice) {
     MINI[id](B, mult, finish);
   });
 }
+/* elegir minijuego (al sacar 3 banderas) */
+function chooseMG(mult) {
+  return new Promise(res => {
+    $('#mgT').textContent = '🚩 ELIGE MINIJUEGO'; const tag = $('#mgTag'); tag.className = 'tag'; tag.textContent = mult === 2 ? 'PREMIOS x2' : 'PREMIOS';
+    $('#mg').classList.remove('hidden');
+    const B = $('#mgB');
+    B.innerHTML = `<p class="ins">Has sacado <b>3 banderas de León</b>. ¿A qué minijuego quieres jugar? En todos hay 3 premios entre ${fmtS(1000 * mult)} y ${fmtS(12000 * mult)}.</p>
+      <div class="mgrid">${Object.keys(MG).map(k => `<button class="mitem" data-pick="${k}">${MG[k].e} ${MG[k].n}</button>`).join('')}</div>`;
+    B.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { SFX.tick(); res(b.dataset.pick); });
+  });
+}
+/* premios de los minijuegos: siempre 3 de estos, al azar y en posiciones distintas */
+const MGP = [1000, 2000, 4000, 6000, 8000, 10000, 12000], MGW = [30, 26, 18, 12, 7, 4, 3];
+function pick3() { const idx = [], w = MGW.slice(); while (idx.length < 3) { const i = pickW(w); idx.push(i); w[i] = 0; } return shuffle(idx.map(i => MGP[i])); }
 const ptab = (rows, m, on) => `<div class="ptab">${rows.map((r, i) => `<span class="${i === on ? 'on' : ''}">${r[0]} → ${fmtS(r[1] * m)}</span>`).join('')}</div>`;
 
+const hoops3 = (P, m) => `<div class="h3s">${P.map((v, i) => `<div class="h3" data-i="${i}"><b class="pz">${fmtS(v * m)}</b><img src="img/canasta.webp" alt=""></div>`).join('')}</div>`;
+/* el balón vuela hasta la canasta elegida (índice i); ok = entra */
+function throwTo(B, i, ok) {
+  const ball = B.querySelector('.ball'), h = B.querySelectorAll('.h3 img')[i];
+  const rb = ball.getBoundingClientRect(), rh = h.getBoundingClientRect();
+  const sc = rb.width ? (ball.offsetWidth / rb.width) : 1;           // compensar el escalado de la pantalla
+  const dx = (rh.left + rh.width / 2 - (rb.left + rb.width / 2)) * sc, dy = (rh.top + rh.height * .62 - (rb.top + rb.height / 2)) * sc;
+  const kf = ok ? [
+    { transform: 'translate(0,0) scale(1)' },
+    { transform: `translate(${dx * .6}px,${dy - 60}px) scale(.7)`, offset: .55 },
+    { transform: `translate(${dx}px,${dy}px) scale(.5)`, offset: .82 },
+    { transform: `translate(${dx}px,${dy + 40}px) scale(.48)`, opacity: .3 }] : [
+    { transform: 'translate(0,0) scale(1)' },
+    { transform: `translate(${dx * .6}px,${dy - 40}px) scale(.75)`, offset: .5 },
+    { transform: `translate(${dx * .8}px,${dy + 30}px) scale(.8)`, offset: .75 },
+    { transform: `translate(${dx * .4}px,0px) scale(1)` }];
+  return new Promise(res => { const a = ball.animate(kf, { duration: 1000, easing: 'ease-in-out' }); setTimeout(() => ok ? SFX.swish() : SFX.bounce(), 700); a.onfinish = () => res(); });
+}
+const say = (B, txt, good) => { const s = B.querySelector('.say'); s.textContent = txt; s.style.color = good ? '#7dff9b' : '#ff5a6e'; s.classList.remove('show'); s.offsetHeight; s.classList.add('show'); };
+
 const MINI = {
-  /* ---- 1. TIRO LIBRE: pulsar cuando la aguja esté en verde ---- */
+  /* ---- 1. TIRO LIBRE: la aguja elige a qué canasta tiras ---- */
   tiro(B, m, finish) {
-    const TAB = [['0', 1000], ['1', 1000], ['2', 2000], ['3', 4000]];
-    let shot = 0, made = 0, run = true, pos = 0, t0 = performance.now(), locked = false;
-    const zones = [.24, .18, .13], speeds = [2.2, 2.9, 3.6];
-    B.innerHTML = `<p class="ins">Pulsa <b>¡TIRAR!</b> cuando la aguja esté en la <b style="color:#22d36b">zona verde</b>. Tienes 3 tiros libres.</p>
-      <div class="court"><img class="hoop" src="img/canasta.webp" alt=""><img class="ball" src="img/balon.webp" alt=""><div class="say"></div></div>
-      <div class="pm"><div class="z"></div><div class="n"></div></div>
-      <div class="shots"><b></b><b></b><b></b></div>
-      <div id="tt">${ptab(TAB.map(r => [r[0] + ' canastas', r[1]]), m, -1)}</div>
+    const P = pick3(); let run = true, pos = 0, t0 = performance.now(), lock = false;
+    B.innerHTML = `<p class="ins">Hay <b>3 canastas con premio</b>. La aguja va de lado a lado: pulsa <b>¡TIRAR!</b> cuando esté en la zona de la canasta que quieras.</p>
+      <div class="court three">${hoops3(P, m)}<img class="ball" src="img/balon.webp" alt=""><div class="say"></div></div>
+      <div class="pm3">${P.map(v => `<span>${fmtS(v * m)}</span>`).join('')}<div class="n"></div></div>
       <button class="big" id="go">¡TIRAR!</button>`;
-    const z = B.querySelector('.z'), n = B.querySelector('.n'), ball = B.querySelector('.ball'), say = B.querySelector('.say');
-    const setZone = () => { z.style.left = (50 - zones[shot] * 50) + '%'; z.style.width = zones[shot] * 100 + '%'; };
-    setZone();
-    (function loop(t) { if (!run) return; if (!locked) { pos = (Math.sin((t - t0) / 1000 * speeds[shot]) + 1) / 2; n.style.left = pos * 100 + '%'; } requestAnimationFrame(loop); })(t0);
+    const n = B.querySelector('.n');
+    (function loop(t) { if (!run) return; if (!lock) { pos = (Math.sin((t - t0) / 1000 * 2.6) + 1) / 2; n.style.left = pos * 100 + '%'; } requestAnimationFrame(loop); })(t0);
     B.querySelector('#go').onclick = async () => {
-      if (locked) return; locked = true; B.querySelector('#go').disabled = true;
-      const ok = Math.abs(pos - .5) <= zones[shot] / 2;
-      await shoot(B, ball, ok, ok ? 0 : (pos < .5 ? -1 : 1));
-      say.textContent = ok ? '¡CANASTA!' : '¡FALLO!'; say.style.color = ok ? '#7dff9b' : '#ff5a6e';
-      say.classList.remove('show'); say.offsetHeight; say.classList.add('show');
-      B.querySelectorAll('.shots b')[shot].className = ok ? 'ok' : 'ko';
-      if (ok) made++;
-      shot++;
-      await sleep(900);
-      if (shot >= 3) { run = false; finish(TAB[made][1], `Has metido ${made} de 3.`); return; }
-      setZone(); t0 = performance.now(); locked = false; B.querySelector('#go').disabled = false;
+      if (lock) return; lock = true; B.querySelector('#go').disabled = true;
+      const i = Math.min(2, Math.floor(pos * 3));
+      B.querySelectorAll('.pm3 span')[i].classList.add('on');
+      await throwTo(B, i, true); say(B, '¡CANASTA!', true); B.querySelectorAll('.h3')[i].classList.add('won');
+      await sleep(1000); run = false; finish(P[i], '¡Canasta de ' + fmtS(P[i] * m) + '!');
     };
   },
 
-  /* ---- 2. VESTUARIO: abre taquillas hasta juntar 3 premios iguales ---- */
+  /* ---- 2. VESTUARIO: 3 taquillas, elige una ---- */
   vest(B, m, finish) {
-    const VAL = [1000, 2000, 3000, 4000, 8000, 16000], WV = [.50, .24, .11, .08, .05, .02];
-    const W = VAL[pickW(WV)];
-    const others = []; VAL.forEach(v => { if (v !== W) others.push(v, v); });
-    shuffle(others);
-    const seq = shuffle([W, W].concat(others.slice(0, 2 + rnd(5)))); seq.push(W);
-    const cnt = {}; VAL.forEach(v => cnt[v] = 0);
-    let k = 0, over = false;
-    B.innerHTML = `<p class="ins">Abre las taquillas del vestuario. Cuando encuentres <b>3 premios iguales</b>, ¡te lo llevas!</p>
-      <div class="lockers">${Array.from({ length: 12 }, (_, i) => `<button class="lk" data-i="${i}">${i + 1}</button>`).join('')}</div>
-      <div class="tally" id="tal"></div>`;
-    const tal = () => B.querySelector('#tal').innerHTML = VAL.map(v => `<span>${fmtS(v * m)} ${'●'.repeat(cnt[v])}${'○'.repeat(3 - cnt[v])}</span>`).join('');
-    tal();
+    const P = pick3(); let over = false;
+    B.innerHTML = `<p class="ins">Cada taquilla esconde un premio. <b>Elige una</b> y te llevas lo que haya dentro.</p>
+      <div class="lockers three">${P.map((_, i) => `<button class="lk" data-i="${i}">${i + 1}</button>`).join('')}</div>
+      <div class="ptab">${P.slice().sort((a, b) => a - b).map(v => `<span>${fmtS(v * m)}</span>`).join('')}</div>`;
     B.querySelectorAll('.lk').forEach(b => b.onclick = async () => {
-      if (over || b.classList.contains('op')) return;
-      const v = seq[k++]; cnt[v]++; b.classList.add('op'); b.textContent = fmtS(v * m); b.dataset.v = v;
-      SFX.tick(); tal();
-      if (k === seq.length) {
-        over = true; SFX.win();
-        B.querySelectorAll('.lk.op').forEach(x => { if (+x.dataset.v === W) x.classList.add('w'); });
-        await sleep(700);
-        // descubrir el resto
-        const left = [...B.querySelectorAll('.lk:not(.op)')];
-        const pool = []; VAL.forEach(v => { if (v !== W) for (let q = cnt[v]; q < 2; q++) pool.push(v); });
-        shuffle(pool);
-        left.forEach((x, i) => { x.classList.add('op', 'f'); x.textContent = fmtS((pool[i] || 1000) * m); });
-        await sleep(1200);
-        finish(W, '¡Tres taquillas iguales!');
-      }
+      if (over) return; over = true; const i = +b.dataset.i;
+      b.classList.add('op', 'w'); b.textContent = fmtS(P[i] * m); SFX.win();
+      await sleep(800);
+      B.querySelectorAll('.lk').forEach((x, j) => { if (j !== i) { x.classList.add('op', 'f'); x.textContent = fmtS(P[j] * m); } });
+      await sleep(1200); finish(P[i], 'Taquilla con ' + fmtS(P[i] * m) + '.');
     });
   },
 
-  /* ---- 3. RULETA DEL TRIPLE ---- */
+  /* ---- 3. RULETA: los 3 premios repartidos por la ruleta ---- */
   ruleta(B, m, finish) {
-    const SEG = [1000, 2000, 1000, 4000, 1000, 3000, 1000, 2000, 1000, 8000, 1000, 2000, 1000, 3000, 1000, 6000, 2000, 1000, 16000, 2000];
-    const N = SEG.length, A = 360 / N;
-    B.innerHTML = `<p class="ins">Gira la ruleta y llévate el premio donde se pare la flecha.</p>
+    const P = pick3(), SEG = shuffle([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]).map(i => P[i]);
+    const N = SEG.length, A = 360 / N, COL = {}; P.slice().sort((a, b) => a - b).forEach((v, k) => COL[v] = ['#ffffff', '#d4102e', '#ffc83d'][k]);
+    B.innerHTML = `<p class="ins">La ruleta tiene <b>3 premios</b> repartidos. ¡Gira y llévate el que marque la flecha!</p>
       <div class="wheelBox"><div class="ptr"></div><canvas width="600" height="600"></canvas><img class="hub" src="img/p13.webp" alt=""></div>
       <button class="big" id="go">¡GIRAR!</button>`;
-    const cv = B.querySelector('canvas'), x = cv.getContext('2d'), R = 300;
-    x.translate(R, R);
+    const cv = B.querySelector('canvas'), x = cv.getContext('2d'), R = 300; x.translate(R, R);
     SEG.forEach((v, i) => {
       const a0 = (-90 + i * A) * Math.PI / 180, a1 = a0 + A * Math.PI / 180;
-      x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R - 2, a0, a1); x.closePath();
-      x.fillStyle = v === 16000 ? '#ffc83d' : v >= 4000 ? '#1f8f4e' : i % 2 ? '#d4102e' : '#ffffff'; x.fill();
-      x.strokeStyle = '#3a0610'; x.lineWidth = 3; x.stroke();
-      x.save(); x.rotate((a0 + a1) / 2); x.textAlign = 'right'; x.textBaseline = 'middle';
-      x.fillStyle = (v === 16000 || (v < 4000 && !(i % 2))) ? '#8e0a1f' : '#fff';
-      x.font = 'bold 34px "Russo One",sans-serif'; x.fillText(fmtS(v * m), R - 18, 2); x.restore();
+      x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, R - 2, a0, a1); x.closePath(); x.fillStyle = COL[v]; x.fill(); x.strokeStyle = '#3a0610'; x.lineWidth = 3; x.stroke();
+      x.save(); x.rotate((a0 + a1) / 2); x.textAlign = 'right'; x.textBaseline = 'middle'; x.fillStyle = COL[v] === '#d4102e' ? '#fff' : '#8e0a1f';
+      x.font = 'bold 40px "Russo One",sans-serif'; x.fillText(fmtS(v * m), R - 18, 2); x.restore();
     });
-    let rot = 0;
     B.querySelector('#go').onclick = function () {
-      this.disabled = true; SFX.spin();
-      const k = rnd(N);
-      rot = 360 * 7 - (k * A + A / 2) + (Math.random() - .5) * A * .7;
-      cv.style.transform = `rotate(${rot}deg)`;
+      this.disabled = true; SFX.spin(); const k = rnd(N);
+      cv.style.transform = `rotate(${360 * 7 - (k * A + A / 2) + (Math.random() - .5) * A * .6}deg)`;
       let ticks = setInterval(SFX.tick, 90); setTimeout(() => { clearInterval(ticks); ticks = setInterval(SFX.tick, 220); }, 3000);
-      setTimeout(() => { clearInterval(ticks); SFX.win(); setTimeout(() => finish(SEG[k], 'La ruleta ha hablado.'), 700); }, 5100);
+      setTimeout(() => { clearInterval(ticks); SFX.win(); setTimeout(() => finish(SEG[k], 'La ruleta marca ' + fmtS(SEG[k] * m) + '.'), 700); }, 5100);
     };
   },
 
-  /* ---- 4. MAYOR O MENOR: ¿la siguiente carta es mayor o menor? ---- */
+  /* ---- 4. MAYOR O MENOR: acierta para subir por los 3 premios ---- */
   mayor(B, m, finish) {
-    const LAD = [1000, 2000, 4000, 8000, 16000];
-    let step = 0, cur = 3 + rnd(8), over = false;
-    B.innerHTML = `<p class="ins">¿La siguiente carta tendrá un número <b>mayor o menor</b>? Si aciertas subes de premio. Si fallas, te quedas con el mínimo (${fmtS(1000 * m)}). Puedes <b>cobrar</b> cuando quieras.</p>
-      <div class="mm"><div class="ladder">${LAD.map(v => `<span>${fmtS(v * m)}</span>`).join('')}</div>
-      <div class="card" id="cd"><img alt=""><b></b></div></div>
+    const L = pick3().sort((a, b) => a - b); let step = 0, cur = 3 + rnd(8), over = false;
+    B.innerHTML = `<p class="ins">¿La siguiente carta será <b>mayor o menor</b>? Empiezas en ${fmtS(L[0] * m)}; cada acierto te sube al siguiente premio. Si fallas, te quedas con el que tengas.</p>
+      <div class="mm"><div class="ladder">${L.map(v => `<span>${fmtS(v * m)}</span>`).join('')}</div><div class="card" id="cd"><img alt=""><b></b></div></div>
       <div class="row"><button class="big grn" id="up">▲ MAYOR</button><button class="big red" id="dn">▼ MENOR</button></div>
       <button class="big" id="col">COBRAR</button>`;
     const cd = B.querySelector('#cd');
     const show = () => { cd.querySelector('img').src = SYM[cur - 1]; cd.querySelector('b').textContent = cur; cd.classList.remove('fl'); cd.offsetHeight; cd.classList.add('fl');
-      B.querySelectorAll('.ladder span').forEach((s, i) => s.classList.toggle('on', i === step)); B.querySelector('#col').textContent = 'COBRAR ' + fmtS(LAD[step] * m); };
+      B.querySelectorAll('.ladder span').forEach((s, i) => s.classList.toggle('on', i === step)); B.querySelector('#col').textContent = 'COBRAR ' + fmtS(L[step] * m); };
     show();
     const guess = async up => {
-      if (over) return; over = true;
-      const prev = cur, nx = 1 + rnd(13);
-      SFX.tick(); cur = nx; show();
-      if (nx === prev) { dmdMg('¡Empate! Sigues igual'); over = false; return; }
-      if ((nx > prev) === up) {
-        SFX.win(); step++; show();
-        if (step === LAD.length - 1) { await sleep(800); finish(LAD[step], '¡Has llegado a lo más alto!'); return; }
-        over = false;
-      } else { SFX.buzz(); await sleep(900); finish(LAD[0], 'Has fallado: te llevas el premio mínimo.'); }
+      if (over) return; over = true; const prev = cur, nx = 1 + rnd(13); SFX.tick(); cur = nx; show();
+      if (nx === prev) { B.querySelector('.ins').innerHTML = '<b>¡Empate! Vuelve a probar.</b>'; over = false; return; }
+      if ((nx > prev) === up) { SFX.win(); step++; show(); if (step === 2) { await sleep(800); finish(L[2], '¡Has llegado al premio más alto!'); return; } over = false; }
+      else { SFX.buzz(); await sleep(900); finish(L[step], 'Has fallado: te quedas con ' + fmtS(L[step] * m) + '.'); }
     };
-    const dmdMg = t => { const p = B.querySelector('.ins'); p.innerHTML = '<b>' + t + '</b>'; };
-    B.querySelector('#up').onclick = () => guess(true);
-    B.querySelector('#dn').onclick = () => guess(false);
-    B.querySelector('#col').onclick = () => { if (!over) { over = true; finish(LAD[step], '¡Bien cobrado!'); } };
+    B.querySelector('#up').onclick = () => guess(true); B.querySelector('#dn').onclick = () => guess(false);
+    B.querySelector('#col').onclick = () => { if (!over) { over = true; finish(L[step], '¡Bien cobrado!'); } };
   },
 
-  /* ---- 5. 1 CONTRA 1: tira por un lado y supera al defensor ---- */
+  /* ---- 5. 1 CONTRA 1: elige canasta; si el defensor te tapona, te llevas el premio menor ---- */
   unouno(B, m, finish) {
-    const TAB = [['0-2', 1000], ['3', 2000], ['4', 4000], ['5', 8000]];
-    let shot = 0, made = 0, lock = false;
-    B.innerHTML = `<p class="ins">Elige por dónde tirar. Si el defensor salta a tu lado… <b>¡tapón!</b> Tienes 5 tiros.</p>
-      <div class="court"><img class="hoop" src="img/canasta.webp" alt=""><img class="def" src="img/mate.webp" alt=""><img class="ball" src="img/balon.webp" alt=""><div class="say"></div></div>
-      <div class="shots">${'<b></b>'.repeat(5)}</div>
-      ${ptab(TAB.map(r => [r[0] + ' canastas', r[1]]), m, -1)}
-      <div class="row"><button class="big red" data-s="-1">◀ IZQ.</button><button class="big red" data-s="0">CENTRO</button><button class="big red" data-s="1">DCHA. ▶</button></div>`;
-    const def = B.querySelector('.def'), ball = B.querySelector('.ball'), say = B.querySelector('.say');
+    const P = pick3(), low = Math.min(...P); let lock = false;
+    B.innerHTML = `<p class="ins">Elige a qué <b>canasta</b> tirar. Si metes, te llevas su premio. Si el defensor te hace <b>tapón</b>, te llevas el premio más bajo (${fmtS(low * m)}).</p>
+      <div class="court three">${hoops3(P, m)}<img class="def" src="img/mate.webp" alt=""><img class="ball" src="img/balon.webp" alt=""><div class="say"></div></div>
+      <div class="row">${P.map((v, i) => `<button class="big red" data-s="${i}">${['◀', '▲', '▶'][i]} ${fmtS(v * m)}</button>`).join('')}</div>`;
+    const def = B.querySelector('.def');
     B.querySelectorAll('[data-s]').forEach(b => b.onclick = async () => {
-      if (lock) return; lock = true;
-      const s = +b.dataset.s, ok = Math.random() < .6;
-      const others = [-1, 0, 1].filter(v => v !== s);
-      const d = ok ? others[rnd(2)] : s;
-      def.style.left = (50 + d * 30) + '%'; def.style.transform = 'translateY(-38px)';
-      setTimeout(() => def.style.transform = 'translateY(0)', 500);
-      await shoot(B, ball, ok, s, !ok);
-      say.textContent = ok ? '¡CANASTA!' : '¡TAPÓN!'; say.style.color = ok ? '#7dff9b' : '#ff5a6e';
-      say.classList.remove('show'); say.offsetHeight; say.classList.add('show');
-      B.querySelectorAll('.shots b')[shot].className = ok ? 'ok' : 'ko';
-      if (ok) made++; shot++;
-      await sleep(900); def.style.left = '50%';
-      if (shot >= 5) { finish(made <= 2 ? 1000 : TAB[made - 2][1], `Has metido ${made} de 5.`); return; }
-      lock = false;
+      if (lock) return; lock = true; const i = +b.dataset.s, ok = Math.random() < .65;
+      const d = ok ? [0, 1, 2].filter(v => v !== i)[rnd(2)] : i;
+      def.style.left = (18 + d * 32) + '%'; def.style.transform = 'translateY(-38px)'; setTimeout(() => def.style.transform = 'translateY(0)', 500);
+      await throwTo(B, i, ok);
+      if (ok) { say(B, '¡CANASTA!', true); B.querySelectorAll('.h3')[i].classList.add('won'); await sleep(1000); finish(P[i], '¡Canasta de ' + fmtS(P[i] * m) + '!'); }
+      else { say(B, '¡TAPÓN!', false); await sleep(1000); finish(low, '¡Tapón! Te llevas el premio más bajo.'); }
     });
   },
 
-  /* ---- 6. EL PARTIDO: 4 cuartos contra el visitante ---- */
+  /* ---- 6. EL PARTIDO: derrota, victoria o paliza ---- */
   partido(B, m, finish) {
-    const OUT = [{ p: .5, v: 1000, a: -15, b: -1 }, { p: .3, v: 2000, a: 1, b: 5 }, { p: .12, v: 4000, a: 6, b: 12 }, { p: .06, v: 8000, a: 13, b: 20 }, { p: .02, v: 16000, a: 21, b: 30 }];
-    const o = OUT[pickW(OUT.map(x => x.p))];
-    const margin = o.a + rnd(o.b - o.a + 1);
+    const L = pick3().sort((a, b) => a - b);
+    const OUT = [{ p: .45, v: L[0], a: -15, b: -1 }, { p: .40, v: L[1], a: 1, b: 14 }, { p: .15, v: L[2], a: 15, b: 30 }];
+    const o = OUT[pickW(OUT.map(x => x.p))], margin = o.a + rnd(o.b - o.a + 1);
     const rv = 62 + rnd(19), lv = rv + margin;
     const split = tot => { const w = [0, 0, 0, 0].map(() => .75 + Math.random() * .5), s = w.reduce((a, b) => a + b); const q = w.map(x => Math.round(x / s * tot)); q[3] += tot - q.reduce((a, b) => a + b); return q; };
-    const QL = split(lv), QV = split(rv);
-    let q = 0, L = 0, V = 0;
+    const QL = split(lv), QV = split(rv); let q = 0, Lp = 0, V = 0;
     B.innerHTML = `<p class="ins">Juega los 4 cuartos. ¡Cuanto más gane la Cultural, mayor es el premio!</p>
       <div class="sb"><div class="tm"><div><img src="img/p13.webp" alt=""><div class="tn">CULTURAL</div></div><div class="q" id="ql">1er CUARTO</div><div><span style="font-size:36px">🏀</span><div class="tn">VISITANTE</div></div></div>
-      <div class="tm"><div class="sc" id="sl">0</div><div class="sc" style="color:#666">-</div><div class="sc" id="sv">0</div></div>
-      <div class="qs"><div></div><div>1º</div><div>2º</div><div>3º</div><div>4º</div><div>CUL</div><div id="l0">·</div><div id="l1">·</div><div id="l2">·</div><div id="l3">·</div><div>VIS</div><div id="v0">·</div><div id="v1">·</div><div id="v2">·</div><div id="v3">·</div></div></div>
-      ${ptab([['Perder', 1000], ['Ganar 1-5', 2000], ['Ganar 6-12', 4000], ['Ganar 13-20', 8000], ['Ganar 21+', 16000]], m, -1)}
+      <div class="tm"><div class="sc" id="sl">0</div><div class="sc" style="color:#666">-</div><div class="sc" id="sv">0</div></div></div>
+      ${ptab([['Derrota', L[0]], ['Victoria', L[1]], ['Paliza (+15)', L[2]]], m, -1)}
       <button class="big" id="go">▶ JUGAR 1er CUARTO</button>`;
     const go = B.querySelector('#go'), names = ['1er', '2º', '3er', '4º'];
     go.onclick = async () => {
-      go.disabled = true;
-      const tl = L + QL[q], tv = V + QV[q];
-      while (L < tl || V < tv) {
-        const pickL = (L < tl) && (V >= tv || Math.random() < .5);
-        const pts = Math.min(pickL ? tl - L : tv - V, [1, 2, 2, 2, 3][rnd(5)]);
-        if (pickL) L += pts; else V += pts;
-        B.querySelector('#sl').textContent = L; B.querySelector('#sv').textContent = V;
-        pts === 3 ? SFX.swish() : SFX.tick();
-        await sleep(70);
-      }
-      B.querySelector('#l' + q).textContent = QL[q]; B.querySelector('#v' + q).textContent = QV[q];
+      go.disabled = true; const tl = Lp + QL[q], tv = V + QV[q];
+      while (Lp < tl || V < tv) { const pl = (Lp < tl) && (V >= tv || Math.random() < .5), pts = Math.min(pl ? tl - Lp : tv - V, [1, 2, 2, 2, 3][rnd(5)]);
+        if (pl) Lp += pts; else V += pts; B.querySelector('#sl').textContent = Lp; B.querySelector('#sv').textContent = V; pts === 3 ? SFX.swish() : SFX.tick(); await sleep(70); }
       q++;
-      if (q >= 4) {
-        B.querySelector('#ql').textContent = 'FINAL';
-        await sleep(900);
-        finish(o.v, margin > 0 ? `¡Victoria de la Cultural por ${margin}!` : `Derrota por ${-margin}… premio de consolación.`);
-        return;
-      }
-      B.querySelector('#ql').textContent = names[q] + ' CUARTO';
-      go.textContent = '▶ JUGAR ' + names[q] + ' CUARTO'; go.disabled = false;
+      if (q >= 4) { B.querySelector('#ql').textContent = 'FINAL'; await sleep(900);
+        finish(o.v, margin >= 15 ? `¡Paliza de la Cultural por ${margin}!` : margin > 0 ? `¡Victoria de la Cultural por ${margin}!` : `Derrota por ${-margin}… premio de consolación.`); return; }
+      B.querySelector('#ql').textContent = names[q] + ' CUARTO'; go.textContent = '▶ JUGAR ' + names[q] + ' CUARTO'; go.disabled = false;
     };
   },
 };
@@ -1554,7 +1535,8 @@ $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i })
 $('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TS.slice(0, 4).slice().reverse().map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('')
-  + `<div class="pti"><img src="img/camiseta.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus · 3 en línea: minijuego</small></div></div>`;
+  + `<div class="pti sp"><img src="img/bandera.webp" alt=""><div class="v">3 BANDERAS<br><small>en línea: eliges minijuego</small></div></div>`
+  + `<div class="pti"><img src="img/camiseta.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus</small></div></div>`;
 $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data-mg="${k}">${MG[k].e} ${MG[k].n}</button>`).join('');
 
 const open = id => $(id).classList.remove('hidden');
