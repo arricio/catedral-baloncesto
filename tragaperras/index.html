@@ -1180,23 +1180,24 @@ async function payWins(r, mult, noRisk) {
    Si aciertas subes al siguiente premio de la escalera; si fallas bajas dos escalones por debajo
    del premio que tenías y te quedas con ese. La probabilidad de subir se calcula en cada escalón
    para que, de media, arriesgar devuelva un 97 % de lo que se tiene. */
-function riskComod(a, mult) {   // comodines que da fallar al subir, según el premio que se tenía
+function riskComod(a, mult, top) {   // comodines que da fallar al subir, según el premio que se tenía
   const b = a / mult;
+  if (top && b >= 300 && b < 2000) return 2;   // arriba: 5 € y 10 € dan 2 comodines
   return b >= 8000 ? 5 : b >= 4000 ? 4 : b >= 1000 ? 3 : b >= 300 ? 2 : b >= 40 ? 1 : 0;
 }
-function riskStep(a, mult) {
+function riskStep(a, mult, top) {
   const L = LADDER.map(v => v * mult);
-  const next = L.find(v => v > a), comod = riskComod(a, mult), cv = comod * COMOD_V * mult;
+  const next = L.find(v => v > a), comod = riskComod(a, mult, top), cv = comod * COMOD_V * mult;
   const p = !next ? 0 : Math.min(.9, Math.max(.25, (.97 * a - cv) / (next - cv)));
   return { next, comod, p, L };
 }
-function risk(amount, mult) {
+function risk(amount, mult, top = false) {
   return new Promise(res => {
     const ov = $('#riskOv'), pn = ov.querySelector('.risk'), lD = $('#lD'), lN = $('#lN'), bA = $('#rArr'), bC = $('#rCob');
-    let a = amount, running = false, timer = null, lamp = 0, st = riskStep(a, mult);
+    let a = amount, running = false, timer = null, lamp = 0, st = riskStep(a, mult, top);
     const setLamp = i => { lamp = i; lD.classList.toggle('on', i === 0); lN.classList.toggle('on', i === 1); };
     const upd = () => {
-      st = riskStep(a, mult);
+      st = riskStep(a, mult, top);
       $('#rAmt').textContent = fmt(a); $('#mWin').textContent = fmt(a);
       const cTxt = st.comod ? `+${st.comod} ${st.comod > 1 ? 'COMODINES' : 'COMODÍN'}` : 'NADA';
       $('#rDbl').textContent = st.next ? fmt(st.next) : '—'; $('#rLow').textContent = cTxt;
@@ -1632,7 +1633,7 @@ async function launch() {
     const id = await chooseMG(mult);
     dmd('🎮 MINIJUEGO<br>' + MG[id].n);
     const v = await playMG(id, mult, false);
-    const fin = (v && !auto) ? (await vozWait(), await risk(v, mult)) : v;   // también se puede subir el premio del minijuego
+    const fin = (v && !auto) ? (await vozWait(), await risk(v, mult, true)) : v;   // también se puede subir el premio del minijuego
     if (fin) await countWin(fin);
   } else if (e.prize.length) {
     e.prize.forEach(h => drawT(h.line));                // todas las líneas premiadas se suman
@@ -1640,7 +1641,7 @@ async function launch() {
     sayPremio(); dmd(t.n + (n > 1 ? ` x${n} LÍNEAS` : '') + '<br>' + fmt(v));
     if (t.v < T_SMALL && n === 1) { SFX.win(); bell(.9); vib([40, 30, 60]); await sleep(1200); }   // premio pequeño: sin cartel grande
     else { bell(1.4 + n * .3); SFX.big(); vib([60, 40, 120]); await celebrate(n > 1 ? `¡${n} LÍNEAS DE ${t.n}!` : '¡' + t.n + '!', 'img/' + t.img + '.webp', v); }
-    const fin = auto ? v : (await vozWait(), await risk(v, mult));       // también se puede subir el premio arriba
+    const fin = auto ? v : (await vozWait(), await risk(v, mult, true));       // también se puede subir el premio arriba
     if (fin) await countWin(fin);
   } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
   if (e.cams) {
@@ -1967,7 +1968,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 50;
+const APP_VERSION = 51;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
