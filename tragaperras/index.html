@@ -443,6 +443,36 @@ header{height:42px}
 .reel.tapnu .strip .sym:nth-child(1)::after{content:"▼";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);font-size:22px;color:#ff8a1f;text-shadow:0 0 6px #fff;z-index:4;animation:bajar .7s infinite}
 @keyframes tapGlow{to{box-shadow:inset 0 0 0 4px #ffd27a,0 0 24px rgba(255,170,40,1)}}
 @keyframes bajar{50%{transform:translate(-50%,6px)}}
+
+/* ---------- meter dinero ---------- */
+.wallet{position:relative}
+.meterBtn{margin-left:8px;padding:4px 9px;border-radius:9px;font-family:var(--fd);font-size:12px;line-height:1;color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);box-shadow:0 3px 0 #6b4500;display:flex;flex-direction:column;align-items:center}
+.meterBtn small{font-size:13px;margin-top:1px}
+.meterBtn.call{animation:glow3 .7s infinite alternate}
+.meterP{text-align:center}
+.slotScene{position:relative;height:190px;margin:4px 0 8px;border-radius:12px;overflow:hidden;background:linear-gradient(#2b0710,#0d0204);border:2px solid #8a6a1a}
+.slotFront{position:absolute;left:0;right:0;top:0;height:78px;display:grid;grid-template-columns:auto 60px auto 120px;align-items:center;justify-content:center;gap:8px;
+  background:linear-gradient(#c9c9c9,#8a8a8a 45%,#5a5a5a);border-bottom:3px solid #222;z-index:2}
+.slotLbl{font-family:var(--fn);font-size:10px;color:#222}
+.coinSlot{height:44px;width:14px;margin:0 auto;border-radius:7px;background:#000;box-shadow:inset 0 0 6px #444,0 0 0 4px #b8860b}
+.billSlot{height:12px;width:116px;border-radius:6px;background:#000;box-shadow:inset 0 0 6px #444,0 0 0 4px #b8860b}
+.handWrap{position:absolute;left:50%;top:100%;width:120px;margin-left:-60px;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+.hand{font-size:64px;line-height:1;margin-top:-18px;filter:drop-shadow(0 4px 4px #000)}
+.money{position:relative;z-index:1}
+.cn{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-family:var(--fn);font-size:13px;color:#3a2a00;border:3px solid rgba(0,0,0,.25);box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 3px 6px #000}
+.bl{width:110px;height:54px;border-radius:5px;display:grid;place-items:center;font-family:var(--fd);font-size:20px;color:#fff;box-shadow:0 3px 8px #000;border:2px solid rgba(255,255,255,.5);text-shadow:0 1px 0 #000}
+.meterInfo{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.meterInfo span{font-size:13px;color:#d9a7ad;background:rgba(0,0,0,.35);border-radius:8px;padding:4px}
+.meterInfo b{display:block;font-family:var(--fn);font-weight:400;font-size:18px;color:#fff}
+.coinsRow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px}
+.billsRow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.coinsRow button,.billsRow button{display:grid;place-items:center;padding:4px 0;border-radius:10px;background:rgba(255,255,255,.06)}
+.coinsRow button:disabled,.billsRow button:disabled{opacity:.3}
+.coinsRow .cn{width:44px;height:44px;font-size:12px}
+.billsRow .bl{width:72px;height:38px;font-size:15px}
+.c10,.c20,.c50{background:radial-gradient(circle at 35% 30%,#ffe9a0,#c8901a)}
+.c100,.c200{background:radial-gradient(circle at 35% 30%,#fff,#bfbfbf 45%,#c8a030 46%,#ffe08a)}
+.b5{background:linear-gradient(135deg,#9aa6ad,#5f6f78)}.b10{background:linear-gradient(135deg,#e2766b,#b33a2e)}.b20{background:linear-gradient(135deg,#6b9be2,#2e5ab3)}.b50{background:linear-gradient(135deg,#f0a052,#c06a12)}
 </style>
 </head>
 <body>
@@ -455,7 +485,7 @@ header{height:42px}
   </header>
 
   <div class="chips">
-    <div class="wallet" id="walletBox"><img src="img/p13.webp" alt=""><div><small>MI DINERO</small><em id="mRecarga"></em></div><b id="mCartera">0,00 €</b></div>
+    <div class="wallet" id="walletBox"><img src="img/p13.webp" alt=""><div><small>MI DINERO</small><em id="mRecarga"></em></div><b id="mCartera">0,00 €</b><button class="meterBtn" id="meterBtn">METER<small>💰</small></button></div>
   </div>
 
   <div class="paytop" id="payTop"><div class="ptag">PREMIOS <small id="ptX">3 iguales en la línea del medio</small></div><div class="pgrid" id="pGrid"></div></div>
@@ -495,6 +525,20 @@ header{height:42px}
   <h2>📲 INSTALAR EL JUEGO</h2>
   <div id="instBody"></div>
   <button class="big" data-close>ENTENDIDO</button>
+</div></div>
+
+<!-- meter dinero -->
+<div class="ov hidden" id="meterOv"><div class="panel meterP">
+  <button class="x" data-close>✕</button>
+  <h2>💰 METER DINERO</h2>
+  <div class="slotScene" id="slotScene">
+    <div class="slotFront"><div class="slotLbl">MONEDAS</div><div class="coinSlot"></div><div class="slotLbl">BILLETES</div><div class="billSlot"></div></div>
+    <div class="handWrap" id="handWrap"><div class="money" id="moneyEl"></div><div class="hand">✋</div></div>
+  </div>
+  <div class="meterInfo"><span>En el bolsillo<b id="mtCart">0,00 €</b></span><span>En la máquina<b id="mtCred">0,00 €</b></span></div>
+  <div class="coinsRow" id="coinsRow"></div>
+  <div class="billsRow" id="billsRow"></div>
+  <button class="big grn" data-close>¡A JUGAR!</button>
 </div></div>
 
 <!-- sin dinero -->
@@ -551,7 +595,7 @@ header{height:42px}
   <h2>CÓMO SE JUEGA</h2>
   <ol>
     <li>Empiezas con <b>20 €</b> en <b>MI DINERO</b>. Cada día que abras el juego te regalamos <b>20 €</b> más, y si te quedas sin dinero, al pasar <b>1 hora</b> se recargan <b>5 €</b>.</li>
-    <li>Al pulsar <b>JUGAR</b>, la máquina coge dinero para sus <b>CRÉDITOS</b>. Los premios van a los créditos y con <b>COBRAR</b> pasan a tu dinero.</li>
+    <li>Pulsa <b>METER</b> (junto a MI DINERO) y mete monedas o billetes en la máquina: pasan al <b>CRÉDITO</b>. Cada jugada gasta crédito, los premios se suman al crédito y con <b>COBRAR</b> vuelve todo a tu dinero.</li>
     <li>Con <b>APUESTA</b> eliges 0,20 € o <b>DOBLE</b> 0,40 €. Jugando a doble, todos los premios se pagan al doble.</li>
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
@@ -924,6 +968,7 @@ function renderPayTop() {
 function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
   $('#mCartera').textContent = fmt(S.cartera);
+  $('#meterBtn').classList.toggle('call', S.saldo < S.betSel && S.cartera > 0);
   $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA'; if (renderPayTop.m !== S.betSel) { renderPayTop.m = S.betSel; renderPayTop(); }
   $('#cobBtn').disabled = busy || topBusy || fsRunning || S.saldo <= 0; $('#cobBtn').classList.toggle('ready', S.saldo > 0 && !busy);
   $('#betBtn').disabled = busy || topBusy || fsRunning;
@@ -976,7 +1021,7 @@ let mode = null, held = [false, false, false], holdOk = [false, false, false], n
 async function spin(bet, free) {
   if (busy || topBusy) return;
   if (!free && fsRunning) return;
-  if (!free && !ensureCredits(bet)) { noMoney(); return; }
+  if (!free && S.saldo < bet) { if (S.saldo + S.cartera >= bet) { SFX.buzz(); openMeter(true); } else noMoney(); return; }
   ac(); loadVoz(); busy = true;
   if (!free) { S.lastBet = bet; S.saldo -= bet; }
   save();
@@ -1293,6 +1338,49 @@ function noMoney() {
 }
 
 /* la máquina coge dinero para sus créditos (de 5 € en 5 €) */
+/* ---------- METER DINERO: una mano mete monedas y billetes en la ranura ---------- */
+const MONEDAS = [10, 20, 50, 100, 200], BILLETES = [500, 1000, 2000, 5000];
+const coinHTML = v => `<div class="cn c${v}">${v < 100 ? '0,' + v : v / 100 + ' €'}</div>`;
+const billHTML = v => `<div class="bl b${v / 100}">${v / 100} €</div>`;
+let meterQ = Promise.resolve();
+function meterUI() {
+  $('#mtCart').textContent = fmt(S.cartera); $('#mtCred').textContent = fmt(S.saldo);
+  document.querySelectorAll('#meterOv [data-v]').forEach(b => b.disabled = +b.dataset.v > S.cartera);
+}
+function openMeter(msg) {
+  ac();
+  $('#coinsRow').innerHTML = MONEDAS.map(v => `<button data-v="${v}">${coinHTML(v)}</button>`).join('');
+  $('#billsRow').innerHTML = BILLETES.map(v => `<button data-v="${v}">${billHTML(v)}</button>`).join('');
+  document.querySelectorAll('#meterOv [data-v]').forEach(b => b.onclick = () => meterInsert(+b.dataset.v));
+  meterUI(); $('#meterOv').classList.remove('hidden');
+  if (msg) dmd('METE DINERO<br>PARA JUGAR');
+}
+function meterInsert(v) {
+  if (v > S.cartera) { SFX.buzz(); return; }
+  S.cartera -= v; save(); meterUI();                       // se reserva ya, para no meter más de lo que hay
+  meterQ = meterQ.then(() => meterAnim(v)).then(() => { S.saldo += v; save(); ui(); meterUI(); });
+}
+function meterAnim(v) {
+  const coin = v < 500, hw = $('#handWrap'), m = $('#moneyEl'), sc = $('#slotScene');
+  m.innerHTML = coin ? coinHTML(v) : billHTML(v);
+  const slot = sc.querySelector(coin ? '.coinSlot' : '.billSlot'), rs = slot.getBoundingClientRect(), rsc = sc.getBoundingClientRect();
+  const k = sc.offsetWidth / rsc.width;                      // compensar el escalado de la pantalla
+  const dx = ((rs.left + rs.width / 2) - (rsc.left + rsc.width / 2)) * k;
+  const mh = m.offsetHeight, slotY = (rs.top - rsc.top + rs.height / 2) * k;
+  const y = slotY - sc.offsetHeight - mh / 2;                // el centro del dinero llega al centro de la ranura
+  return new Promise(res => {
+    hw.animate([{ transform: `translate(${dx}px,0)` }, { transform: `translate(${dx}px,${y}px)`, offset: .45 }, { transform: `translate(${dx}px,${y}px)`, offset: .78 }, { transform: `translate(${dx}px,0)` }],
+      { duration: 1250, easing: 'ease-in-out' });
+    m.animate(coin
+      ? [{ transform: 'scaleX(1)', opacity: 1 }, { transform: 'scaleX(1)', offset: .45 }, { transform: 'scaleX(.18)', offset: .6, opacity: 1 }, { transform: 'scaleX(.15) translateY(-10px) scaleY(.4)', offset: .7, opacity: 0 }, { opacity: 0 }]
+      : [{ transform: 'scaleY(1)', opacity: 1 }, { transform: 'scaleY(1)', offset: .45 }, { transform: 'scaleY(.12) translateY(-6px)', offset: .66, opacity: 1 }, { transform: 'scaleY(0)', offset: .72, opacity: 0 }, { opacity: 0 }],
+      { duration: 1250, easing: 'ease-in-out' });
+    setTimeout(() => { if (coin) { tone(2400, .05, 'triangle', .07); tone(3100, .08, 'sine', .05, .05); noise(.03, .06, .15, 'bandpass', 4000, 3); tone(900, .2, 'triangle', .04, .12, 1800); }
+      else { noise(0, .45, .12, 'bandpass', 700, 2); tone(140, .45, 'sawtooth', .03); } vib(15); }, 760);
+    setTimeout(res, 1300);
+  });
+}
+$('#meterBtn').onclick = () => openMeter(false);
 function ensureCredits(bet) {
   if (S.saldo >= bet) return true;
   if (S.saldo + S.cartera < bet) return false;
@@ -1442,7 +1530,8 @@ function autoStep() {
     if (!auto || busy || topBusy || fsRunning) return;
     if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
     else if (S.bonus.length) { S.zona = 'arriba'; ui(); launch(); }
-    else if (S.saldo + S.cartera >= S.betSel) spin(S.betSel);
+    else if (S.saldo >= S.betSel) spin(S.betSel);
+    else if (S.saldo + S.cartera >= S.betSel) { auto = false; $('#autoBtn').classList.remove('on'); openMeter(true); }
     else { auto = false; $('#autoBtn').classList.remove('on'); noMoney(); }
   }, 650);
 }
@@ -1744,7 +1833,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 43;
+const APP_VERSION = 45;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
