@@ -99,7 +99,7 @@ header{height:36px;display:flex;align-items:center;gap:6px}
 #launch:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #8a5a00}
 
 /* ---------- contadores ---------- */
-.meters{display:grid;grid-template-columns:1.25fr .9fr 1.15fr;gap:6px}
+.meters{display:grid;grid-template-columns:1.1fr .85fr 1.05fr .62fr;gap:5px}
 .meter{background:var(--ledbg);border:2px solid #4c0d18;border-radius:10px;padding:1px 6px 2px;text-align:center;box-shadow:inset 0 0 10px #000}
 .meter b{display:block;font-size:10px;letter-spacing:1.5px;color:#d9a7ad;font-weight:700}
 .meter span{font-family:var(--fn);font-size:17px;color:var(--led);text-shadow:0 0 8px rgba(255,60,40,.8);white-space:nowrap}
@@ -459,8 +459,8 @@ header{height:42px}
 .handWrap{position:absolute;left:50%;top:100%;width:120px;margin-left:-60px;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center}
 .hand{font-size:64px;line-height:1;margin-top:-18px;filter:drop-shadow(0 4px 4px #000)}
 .money{position:relative;z-index:1}
-.cn{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-family:var(--fn);font-size:13px;color:#3a2a00;border:3px solid rgba(0,0,0,.25);box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 3px 6px #000}
-.bl{width:110px;height:54px;border-radius:5px;display:grid;place-items:center;font-family:var(--fd);font-size:20px;color:#fff;box-shadow:0 3px 8px #000;border:2px solid rgba(255,255,255,.5);text-shadow:0 1px 0 #000}
+.cn{--w:46px;display:block;width:calc(var(--w) * var(--s,1));height:auto;aspect-ratio:1;border-radius:50%;box-shadow:0 3px 6px rgba(0,0,0,.8)}
+.bl{--w:110px;display:block;width:calc(var(--w) * var(--s,1));height:auto;border-radius:3px;box-shadow:0 3px 8px rgba(0,0,0,.8)}
 .meterInfo{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
 .meterInfo span{font-size:13px;color:#d9a7ad;background:rgba(0,0,0,.35);border-radius:8px;padding:4px}
 .meterInfo b{display:block;font-family:var(--fn);font-weight:400;font-size:18px;color:#fff}
@@ -468,11 +468,33 @@ header{height:42px}
 .billsRow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .coinsRow button,.billsRow button{display:grid;place-items:center;padding:4px 0;border-radius:10px;background:rgba(255,255,255,.06)}
 .coinsRow button:disabled,.billsRow button:disabled{opacity:.3}
-.coinsRow .cn{width:44px;height:44px;font-size:12px}
-.billsRow .bl{width:72px;height:38px;font-size:15px}
-.c10,.c20,.c50{background:radial-gradient(circle at 35% 30%,#ffe9a0,#c8901a)}
-.c100,.c200{background:radial-gradient(circle at 35% 30%,#fff,#bfbfbf 45%,#c8a030 46%,#ffe08a)}
-.b5{background:linear-gradient(135deg,#9aa6ad,#5f6f78)}.b10{background:linear-gradient(135deg,#e2766b,#b33a2e)}.b20{background:linear-gradient(135deg,#6b9be2,#2e5ab3)}.b50{background:linear-gradient(135deg,#f0a052,#c06a12)}
+.coinsRow .cn{--w:44px}
+.billsRow .bl{--w:72px}
+
+/* ---------- ranuras de la máquina ---------- */
+.coinSlotBtn{grid-row:1;grid-column:4;border-radius:10px;border:2px solid #d6a734;background:linear-gradient(#9a9a9a,#5a5a5a 50%,#3a3a3a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:2px;box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 3px 8px rgba(0,0,0,.6)}
+.coinSlotBtn b,.billSlotBtn b{font-family:var(--fn);font-weight:400;font-size:9.5px;color:#fff3c4;text-shadow:0 1px 0 #000;letter-spacing:.3px}
+.cs{display:block;width:9px;height:26px;border-radius:5px;background:#000;box-shadow:0 0 0 3px #d6a734,inset 0 0 4px #555}
+.billSlotBtn{grid-row:2;grid-column:2 / 4;height:34px;border-radius:10px;border:2px solid #d6a734;background:linear-gradient(#9a9a9a,#5a5a5a 50%,#3a3a3a);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 3px 8px rgba(0,0,0,.6)}
+.bs{display:block;width:62%;height:9px;border-radius:5px;background:#000;box-shadow:0 0 0 3px #d6a734,inset 0 0 4px #555}
+.coinSlotBtn.call,.billSlotBtn.call{animation:slotCall .7s infinite alternate}
+@keyframes slotCall{to{border-color:#fff3a0;box-shadow:0 0 16px 4px rgba(255,200,60,.95),inset 0 2px 0 rgba(255,255,255,.3)}}
+.cashSheet{position:fixed;left:0;right:0;bottom:0;z-index:48;max-width:480px;margin:0 auto;padding:10px 10px calc(env(safe-area-inset-bottom) + 12px);border-radius:18px 18px 0 0;
+  background:linear-gradient(#3a0610,#14020a);border-top:3px solid #d6a734;box-shadow:0 -10px 30px rgba(0,0,0,.8)}
+.csHead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.csHead b{font-family:var(--fd);font-weight:400;font-size:18px;color:var(--gold);flex:1}
+.csHead span{font-size:14px;color:#d9a7ad}.csHead i{font-style:normal;font-family:var(--fn);color:#fff;margin-left:4px}
+#csOk{font-family:var(--fd);font-size:15px;padding:8px 14px;border-radius:10px;color:#fff;background:linear-gradient(#5fe39a,#1f8f4e 50%,#0b4d27);box-shadow:0 3px 0 #063018}
+.csItems{display:grid;gap:8px}
+.csItems.c{grid-template-columns:repeat(5,1fr)}.csItems.b{grid-template-columns:repeat(4,1fr)}
+.csItems button{display:grid;place-items:center;padding:6px 0;border-radius:12px;background:rgba(255,255,255,.07)}
+.csItems button:disabled{opacity:.3}
+.csItems .cn{--w:56px}
+.csItems .bl{--w:76px}
+.csItems button{min-height:66px}
+.csItems small{font-family:var(--fn);font-size:11px;color:#fff3c4;margin-top:3px}
+.flyHand{position:fixed;left:0;top:0;z-index:47;pointer-events:none;display:flex;flex-direction:column;align-items:center;transform-origin:top left}
+.flyHand .hand{font-size:64px;line-height:1;margin-top:-16px;filter:drop-shadow(0 4px 4px #000)}
 </style>
 </head>
 <body>
@@ -485,7 +507,7 @@ header{height:42px}
   </header>
 
   <div class="chips">
-    <div class="wallet" id="walletBox"><img src="img/p13.webp" alt=""><div><small>MI DINERO</small><em id="mRecarga"></em></div><b id="mCartera">0,00 €</b><button class="meterBtn" id="meterBtn">METER<small>💰</small></button></div>
+    <div class="wallet" id="walletBox"><img src="img/p13.webp" alt=""><div><small>MI DINERO</small><em id="mRecarga"></em></div><b id="mCartera">0,00 €</b></div>
   </div>
 
   <div class="paytop" id="payTop"><div class="ptag">PREMIOS <small id="ptX">3 iguales en la línea del medio</small></div><div class="pgrid" id="pGrid"></div></div>
@@ -496,6 +518,8 @@ header{height:42px}
     <div class="meter"><b>CRÉDITO</b><span id="mSaldo">0,00 €</span></div>
     <div class="meter"><b>APUESTA</b><span id="mBet">0,20 €</span></div>
     <div class="meter win"><b>PREMIO</b><span id="mWin">0,00 €</span></div>
+    <button class="coinSlotBtn" id="coinSlotBtn" aria-label="Meter monedas"><b>MONEDAS</b><i class="cs"></i></button>
+    <button class="billSlotBtn" id="billSlotBtn" aria-label="Meter billetes"><b>BILLETES</b><i class="bs"></i></button>
   </div>
 
   <div class="cab"><div class="inner"><div class="reelsWrap" id="reels">
@@ -527,7 +551,14 @@ header{height:42px}
   <button class="big" data-close>ENTENDIDO</button>
 </div></div>
 
-<!-- meter dinero -->
+<!-- elegir monedas / billetes (la mano las mete en la ranura de la máquina) -->
+<div class="cashSheet hidden" id="cashSheet">
+  <div class="csHead"><b id="csTitle">MONEDAS</b><span>Bolsillo <i id="csCart">0,00 €</i></span><button id="csOk">LISTO</button></div>
+  <div class="csItems" id="csItems"></div>
+</div>
+<div class="flyHand hidden" id="flyHand"><div class="money" id="flyMoney"></div><div class="hand">✋</div></div>
+
+<!-- meter dinero (antigua ventana, sin uso) -->
 <div class="ov hidden" id="meterOv"><div class="panel meterP">
   <button class="x" data-close>✕</button>
   <h2>💰 METER DINERO</h2>
@@ -595,7 +626,7 @@ header{height:42px}
   <h2>CÓMO SE JUEGA</h2>
   <ol>
     <li>Empiezas con <b>20 €</b> en <b>MI DINERO</b>. Cada día que abras el juego te regalamos <b>20 €</b> más, y si te quedas sin dinero, al pasar <b>1 hora</b> se recargan <b>5 €</b>.</li>
-    <li>Pulsa <b>METER</b> (junto a MI DINERO) y mete monedas o billetes en la máquina: pasan al <b>CRÉDITO</b>. Cada jugada gasta crédito, los premios se suman al crédito y con <b>COBRAR</b> vuelve todo a tu dinero.</li>
+    <li>Toca la ranura de <b>MONEDAS</b> (a la derecha de PREMIO) o la de <b>BILLETES</b> (debajo) y mete dinero en la máquina: pasan al <b>CRÉDITO</b>. Cada jugada gasta crédito, los premios se suman al crédito y con <b>COBRAR</b> vuelve todo a tu dinero.</li>
     <li>Con <b>APUESTA</b> eliges 0,20 € o <b>DOBLE</b> 0,40 €. Jugando a doble, todos los premios se pagan al doble.</li>
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
@@ -968,7 +999,7 @@ function renderPayTop() {
 function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
   $('#mCartera').textContent = fmt(S.cartera);
-  $('#meterBtn').classList.toggle('call', S.saldo < S.betSel && S.cartera > 0);
+  { const need = S.saldo < S.betSel && S.cartera > 0; $('#coinSlotBtn').classList.toggle('call', need); $('#billSlotBtn').classList.toggle('call', need && S.cartera >= 500); }
   $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA'; if (renderPayTop.m !== S.betSel) { renderPayTop.m = S.betSel; renderPayTop(); }
   $('#cobBtn').disabled = busy || topBusy || fsRunning || S.saldo <= 0; $('#cobBtn').classList.toggle('ready', S.saldo > 0 && !busy);
   $('#betBtn').disabled = busy || topBusy || fsRunning;
@@ -1340,47 +1371,55 @@ function noMoney() {
 /* la máquina coge dinero para sus créditos (de 5 € en 5 €) */
 /* ---------- METER DINERO: una mano mete monedas y billetes en la ranura ---------- */
 const MONEDAS = [10, 20, 50, 100, 200], BILLETES = [500, 1000, 2000, 5000];
-const coinHTML = v => `<div class="cn c${v}">${v < 100 ? '0,' + v : v / 100 + ' €'}</div>`;
-const billHTML = v => `<div class="bl b${v / 100}">${v / 100} €</div>`;
+/* fotos reales de euros; el tamaño guarda la proporción de las monedas y billetes de verdad */
+const COIN_S = { 10: .8, 20: .88, 50: .96, 100: .92, 200: 1 }, BILL_S = { 500: .86, 1000: .9, 2000: .95, 5000: 1 };
+const coinHTML = v => `<img class="cn" src="img/coin${v}.webp" style="--s:${COIN_S[v]}" alt="${fmt(v)}" draggable="false">`;
+const billHTML = v => `<img class="bl" src="img/bill${v / 100}.webp" style="--s:${BILL_S[v]}" alt="${fmt(v)}" draggable="false">`;
 let meterQ = Promise.resolve();
+let cashKind = 'c';
 function meterUI() {
-  $('#mtCart').textContent = fmt(S.cartera); $('#mtCred').textContent = fmt(S.saldo);
-  document.querySelectorAll('#meterOv [data-v]').forEach(b => b.disabled = +b.dataset.v > S.cartera);
+  $('#csCart').textContent = fmt(S.cartera);
+  document.querySelectorAll('#csItems [data-v]').forEach(b => b.disabled = +b.dataset.v > S.cartera);
 }
-function openMeter(msg) {
-  ac();
-  $('#coinsRow').innerHTML = MONEDAS.map(v => `<button data-v="${v}">${coinHTML(v)}</button>`).join('');
-  $('#billsRow').innerHTML = BILLETES.map(v => `<button data-v="${v}">${billHTML(v)}</button>`).join('');
-  document.querySelectorAll('#meterOv [data-v]').forEach(b => b.onclick = () => meterInsert(+b.dataset.v));
-  meterUI(); $('#meterOv').classList.remove('hidden');
+function openMeter(msg, kind) {
+  ac(); cashKind = kind || 'c';
+  const list = cashKind === 'c' ? MONEDAS : BILLETES;
+  $('#csTitle').textContent = cashKind === 'c' ? '🪙 MONEDAS' : '💶 BILLETES';
+  const it = $('#csItems'); it.className = 'csItems ' + cashKind;
+  it.innerHTML = list.map(v => `<button data-v="${v}">${cashKind === 'c' ? coinHTML(v) : billHTML(v)}<small>${fmt(v)}</small></button>`).join('');
+  it.querySelectorAll('[data-v]').forEach(b => b.onclick = () => meterInsert(+b.dataset.v));
+  meterUI(); $('#cashSheet').classList.remove('hidden');
   if (msg) dmd('METE DINERO<br>PARA JUGAR');
 }
 function meterInsert(v) {
   if (v > S.cartera) { SFX.buzz(); return; }
-  S.cartera -= v; save(); meterUI();                       // se reserva ya, para no meter más de lo que hay
+  S.cartera -= v; save(); ui(); meterUI();                 // se reserva ya, para no meter más de lo que hay
   meterQ = meterQ.then(() => meterAnim(v)).then(() => { S.saldo += v; save(); ui(); meterUI(); });
 }
+/* la mano lleva la moneda o el billete hasta la ranura de la máquina y lo mete */
 function meterAnim(v) {
-  const coin = v < 500, hw = $('#handWrap'), m = $('#moneyEl'), sc = $('#slotScene');
+  const coin = v < 500, fh = $('#flyHand'), m = $('#flyMoney');
   m.innerHTML = coin ? coinHTML(v) : billHTML(v);
-  const slot = sc.querySelector(coin ? '.coinSlot' : '.billSlot'), rs = slot.getBoundingClientRect(), rsc = sc.getBoundingClientRect();
-  const k = sc.offsetWidth / rsc.width;                      // compensar el escalado de la pantalla
-  const dx = ((rs.left + rs.width / 2) - (rsc.left + rsc.width / 2)) * k;
-  const mh = m.offsetHeight, slotY = (rs.top - rsc.top + rs.height / 2) * k;
-  const y = slotY - sc.offsetHeight - mh / 2;                // el centro del dinero llega al centro de la ranura
+  const slot = coin ? $('#coinSlotBtn .cs') : $('#billSlotBtn .bs'), rs = slot.getBoundingClientRect();
+  const app = $('#app'), sc = app.getBoundingClientRect().width / app.offsetWidth;   // escala de la pantalla
+  fh.classList.remove('hidden');
+  const w = fh.offsetWidth * sc, mh = m.offsetHeight * sc;
+  const x = rs.left + rs.width / 2 - w / 2, yEnd = rs.top + rs.height / 2 - mh / 2, yStart = innerHeight + 10;
   return new Promise(res => {
-    hw.animate([{ transform: `translate(${dx}px,0)` }, { transform: `translate(${dx}px,${y}px)`, offset: .45 }, { transform: `translate(${dx}px,${y}px)`, offset: .78 }, { transform: `translate(${dx}px,0)` }],
-      { duration: 1250, easing: 'ease-in-out' });
+    const a = fh.animate([{ transform: `translate(${x}px,${yStart}px) scale(${sc})` }, { transform: `translate(${x}px,${yEnd}px) scale(${sc})`, offset: .45 },
+      { transform: `translate(${x}px,${yEnd}px) scale(${sc})`, offset: .78 }, { transform: `translate(${x}px,${yStart}px) scale(${sc})` }], { duration: 1300, easing: 'ease-in-out' });
     m.animate(coin
       ? [{ transform: 'scaleX(1)', opacity: 1 }, { transform: 'scaleX(1)', offset: .45 }, { transform: 'scaleX(.18)', offset: .6, opacity: 1 }, { transform: 'scaleX(.15) translateY(-10px) scaleY(.4)', offset: .7, opacity: 0 }, { opacity: 0 }]
       : [{ transform: 'scaleY(1)', opacity: 1 }, { transform: 'scaleY(1)', offset: .45 }, { transform: 'scaleY(.12) translateY(-6px)', offset: .66, opacity: 1 }, { transform: 'scaleY(0)', offset: .72, opacity: 0 }, { opacity: 0 }],
-      { duration: 1250, easing: 'ease-in-out' });
+      { duration: 1300, easing: 'ease-in-out' });
     setTimeout(() => { if (coin) { tone(2400, .05, 'triangle', .07); tone(3100, .08, 'sine', .05, .05); noise(.03, .06, .15, 'bandpass', 4000, 3); tone(900, .2, 'triangle', .04, .12, 1800); }
-      else { noise(0, .45, .12, 'bandpass', 700, 2); tone(140, .45, 'sawtooth', .03); } vib(15); }, 760);
-    setTimeout(res, 1300);
+      else { noise(0, .45, .12, 'bandpass', 700, 2); tone(140, .45, 'sawtooth', .03); } vib(15); }, 780);
+    a.onfinish = () => { fh.classList.add('hidden'); res(); };
   });
 }
-$('#meterBtn').onclick = () => openMeter(false);
+$('#coinSlotBtn').onclick = () => openMeter(false, 'c');
+$('#billSlotBtn').onclick = () => openMeter(false, 'b');
+$('#csOk').onclick = () => $('#cashSheet').classList.add('hidden');
 function ensureCredits(bet) {
   if (S.saldo >= bet) return true;
   if (S.saldo + S.cartera < bet) return false;
@@ -1833,7 +1872,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 45;
+const APP_VERSION = 46;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
