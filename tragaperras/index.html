@@ -411,6 +411,15 @@ header{height:42px}
 .tbot{gap:3px}
 .tbot .bonusN{font-size:19px}
 #launch{font-size:11.5px;padding:.5em .5em}
+
+/* contador de bonus bien visible */
+.tbot .bonusN{font-size:34px;line-height:.9;color:#7dff9b;text-shadow:0 0 10px rgba(80,255,120,.9),0 2px 0 #053;min-width:44px;text-align:center}
+.tbot .bonusN{display:flex;flex-direction:column;align-items:center}
+.tbot .bonusN small{font-size:10px;color:#c8f5d8;text-shadow:none;letter-spacing:0;margin-top:3px;line-height:1}
+.tbot .bonusN.pop{animation:pop .5s}
+@keyframes pop{40%{transform:scale(1.5)}}
+.board .dmd{min-height:2em;font-size:12.5px}
+.tleg{gap:1px 2px}
 </style>
 </head>
 <body>
@@ -595,7 +604,9 @@ function pasoRacha() {
   return h;
 }
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
-let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 2.4]; // caras de premio pequeño más frecuentes
+let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 0.6];
+/* camisetas por jugada, al azar: 1 (≈1/15), 2 (≈1/50) o 3 (≈1/200) */
+const CAM_P = [1 / 15, 1 / 50, 1 / 200]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
 const ESC = 14; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
@@ -623,8 +634,8 @@ const TS = [
   { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
 ];
 const T_FLAG = 4, T_CAM = 5;
-const T_OUT = [.955, .022, .01, .003, .0015, .0085];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
-const T_FILL = [30, 26, 20, 16, 14, 1.1];           // figuras de relleno de arriba
+const T_OUT = [.9892, .003, .0012, .0004, .0002, .006];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
+const T_FILL = [30, 26, 20, 16, 14, .6];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
 let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
@@ -815,6 +826,7 @@ function randSym(col) { return col === 1 ? pickW(FILL_C) : pickW(FILL); }
 function genGrid() {
   const h = pasoRacha();
   const target = Math.random() < h ? pickW(HIT) : -1;   // si toca premio, cuál según la tabla
+  const rc = Math.random(); const nCam = rc < CAM_P[2] ? 3 : rc < CAM_P[2] + CAM_P[1] ? 2 : rc < CAM_P[2] + CAM_P[1] + CAM_P[0] ? 1 : 0;
   for (let tries = 0; tries < 300; tries++) {
     const g = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
     let line = null;
@@ -826,6 +838,10 @@ function genGrid() {
     if (target >= 0 && (ev.wins.length !== 1 || ev.wins[0].sym !== target)) continue;
     // para no confundir: arriba y abajo no se dejan 3 caras iguales (no pagan)
     if ([0, 2].some(r => g[r * 3] === g[r * 3 + 1] && g[r * 3] === g[r * 3 + 2])) continue;
+    if (g.includes(CAM)) continue;
+    // camisetas de esta jugada (fuera de la línea premiada)
+    const free = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8].filter(k => !line || !line.includes(k)));
+    for (let k = 0; k < nCam; k++) g[free[k]] = CAM;
     return g;
   }
   return [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -876,7 +892,7 @@ function ui() {
   $('#cobBtn').disabled = busy || topBusy || fsRunning || S.saldo <= 0; $('#cobBtn').classList.toggle('ready', S.saldo > 0 && !busy);
   $('#betBtn').disabled = busy || topBusy || fsRunning;
   $('#mBet').textContent = fsRunning ? 'GRATIS' : fmt(S.lastBet);
-  $('#bN').textContent = S.bonus.length;
+  { const bn = $('#bN'), nv = String(S.bonus.length); if (bn.textContent !== nv) { bn.textContent = nv; const w = bn.parentElement; w.classList.remove('pop'); w.offsetHeight; w.classList.add('pop'); } }
   $('#launch').disabled = !S.bonus.length || topBusy || busy || fsRunning;
   $('#b1').disabled = busy || topBusy || fsRunning;
   const x2 = S.bonus.length && S.bonus[0] === 2;
