@@ -451,7 +451,7 @@ header{height:42px}
     <div class="reel"><div class="strip"></div></div>
     <svg class="lines" id="lines" viewBox="0 0 3 3" preserveAspectRatio="none"></svg>
   </div>
-  <div class="lampbar"><div class="coins" id="coins"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div><span class="lb" id="avLbl">AVANCES</span><span class="hlamp" id="holdLamp">RETENCIÓN</span></div>
+  <div class="lampbar"><div class="coins" id="coins"><i>1</i><i>2</i><i>3</i><i>4</i></div><span class="lb" id="avLbl">AVANCES</span><span class="hlamp" id="holdLamp">RETENCIÓN</span></div>
   <div class="rctl" id="rctl"><button class="rb" data-c="0"></button><button class="rb" data-c="1"></button><button class="rb" data-c="2"></button></div>
   </div><div class="bulbs"></div></div>
 
@@ -493,7 +493,7 @@ header{height:42px}
   <h3>Riesgo</h3>
   <p>🎲 <b>RIESGO</b>: tras un premio de abajo, COBRAR o ARRIESGAR por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 € (el doble a DOBLE). Si aciertas subes un escalón; si fallas bajas, pero a partir de 0,40 € nunca te quedas sin nada.</p>
   <h3>Avances y retenciones</h3>
-  <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 5): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
+  <p style="margin-top:0">▼ <b>AVANCES</b> (1 a 4): baja el rodillo que elijas una posición.<br>🔒 <b>RETENCIÓN</b>: con 2 figuras iguales en la línea del medio, para 1 o las 2 para la siguiente jugada.</p>
   <h3>¿Cada cuánto sale?</h3>
   <p style="margin-top:0;font-size:15px">Los premios salen por <b>rachas</b>: a veces pasan 30 o 40 jugadas sin nada y luego salen varios seguidos. Cualquier premio puede salir en cualquier momento. De media (valores aproximados):</p>
   <div class="ptab" id="freqTab" style="justify-content:flex-start"></div>
@@ -511,7 +511,7 @@ header{height:42px}
   <h2>MENÚ</h2>
   <button class="mitem" id="mHow">❓ Cómo se juega</button>
   <button class="mitem" id="mPt">📋 Tabla de premios</button>
-  <button class="mitem" id="mVoz">🗣️ Voz: <span id="vozTxt">del móvil</span><small>Toca para cambiar entre la voz del móvil y la voz grabada</small></button>
+  <button class="mitem" id="mVoz">🗣️ Voz: <span id="vozTxt">la tuya (grabada)</span><small>Toca para cambiar entre tu voz grabada y la voz del móvil</small></button>
   <button class="mitem" id="mInst">📲 Instalar en el móvil<small>Tenlo en la pantalla de inicio, como una app</small></button>
   <button class="mitem" id="mShare">💬 Compartir por WhatsApp<small>Envía el enlace a tus amigos</small></button>
   <p style="font-size:15px;margin:10px 2px">🎁 <b>Regalo diario:</b> 20 € cada día que abras el juego.<br>⏱️ <b>Sin dinero:</b> recarga automática de 5 € al pasar 1 hora.</p>
@@ -535,7 +535,7 @@ header{height:42px}
     <li>Con BONUS pulsa <b>¡LANZAR!</b>: giran los rodillos de arriba. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
     <li><b>3 banderas de León en línea</b> arriba (horizontal, vertical o diagonal): eliges a qué <b>minijuego</b> jugar. Cada uno tiene <b>3 premios</b> al azar (de 10 € a 120 €) y te llevas uno.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
-    <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
+    <li><b>AVANCES</b> (de 1 a 4): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
     <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
   </ol>
@@ -929,7 +929,7 @@ function evaluate(g, mult) {
    TIRADA
    ========================================================= */
 /* ---------- avances y retenciones ---------- */
-const AV_P = .15, AV_N = [1, 2, 3, 4, 5], AV_W = [.35, .27, .18, .12, .08]; // probabilidad de avances y cuántos
+const AV_P = .15, AV_N = [1, 2, 3, 4], AV_W = [.38, .29, .20, .13]; // probabilidad de avances y cuántos
 const HOLD_P = .5;                                                          // probabilidad de ofrecer retención
 let mode = null, held = [false, false, false], holdOk = [false, false, false], nudges = 0, nudgeMult = 1;
 
@@ -1103,15 +1103,15 @@ if ('speechSynthesis' in window) { try { speechSynthesis.getVoices(); speechSynt
 const VOZ = {};
 function loadVoz() {
   const a = ac(); if (!a || loadVoz.done) return; loadVoz.done = true;
-  setTimeout(() => { if (Object.keys(VOZ).length < 6) loadVoz.done = false; }, 8000);   // reintentar si algo falló
+  setTimeout(() => { if (Object.keys(VOZ).length < 5) loadVoz.done = false; }, 8000);   // reintentar si algo falló
   fetch('audio/premio.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ.premio = buf; }).catch(() => {});
-  for (let i = 1; i <= 5; i++) fetch('audio/av' + i + '.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ[i] = buf; }).catch(() => {});
+  for (let i = 1; i <= 4; i++) fetch('audio/av' + i + '.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ[i] = buf; }).catch(() => {});
 }
 function sayAvances(n) { playVoz(n, n > 1 ? `¡Avances! ¡${NUM[n]} avances!` : '¡Avance! ¡Un avance!'); }
 /* voz «¡Premio!» en cualquier premio */
 function playVoz(key, fallback, tries = 0) {
   if (S.muted) return;
-  if (S.voz !== 'grabada' && tries === 0 && 'speechSynthesis' in window && speak(fallback)) return;   // voz del móvil
+  if (S.voz === 'movil' && tries === 0 && 'speechSynthesis' in window && speak(fallback)) return;   // voz del móvil (si se elige)
   const a = ac(), buf = VOZ[key];
   if (a && buf) { const src = a.createBufferSource(); src.buffer = buf; src.connect(a.destination); src.start(); return; }
   loadVoz();
@@ -1610,9 +1610,9 @@ $('#ptBtn').onclick = () => open('#ptOv');
 $('#menuBtn').onclick = () => open('#menuOv');
 $('#mPt').onclick = () => { $('#menuOv').classList.add('hidden'); open('#ptOv'); };
 $('#mHow').onclick = () => { $('#menuOv').classList.add('hidden'); open('#howOv'); };
-const vozUI = () => { $('#vozTxt').textContent = S.voz === 'grabada' ? 'grabada' : 'del móvil'; };
+const vozUI = () => { $('#vozTxt').textContent = S.voz === 'movil' ? 'del móvil' : 'la tuya (grabada)'; };
 vozUI();
-$('#mVoz').onclick = () => { S.voz = S.voz === 'grabada' ? 'movil' : 'grabada'; save(); vozUI(); ac(); loadVoz(); unlockSpeech(); setTimeout(() => playVoz(3, '¡Avances! ¡Tres avances!'), 150); };
+$('#mVoz').onclick = () => { S.voz = S.voz === 'movil' ? 'grabada' : 'movil'; save(); vozUI(); ac(); loadVoz(); unlockSpeech(); setTimeout(() => playVoz(3, '¡Avances! ¡Tres avances!'), 150); };
 const URL_GAME = 'https://arricio.github.io/catedral-baloncesto/tragaperras/';
 $('#mShare').onclick = async () => {
   const text = '🏀 ¡Juega a La Catedral del Triple, la tragaperras de la Cultural Leonesa de Baloncesto! ';
@@ -1663,7 +1663,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 36;
+const APP_VERSION = 37;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
