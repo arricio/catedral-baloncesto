@@ -606,8 +606,8 @@ function pasoRacha() {
 }
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
 let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 0.6];
-/* camisetas por jugada, al azar: 1 (≈1/20), 2 (≈1/30) o 3 (≈1/90) */
-const CAM_P = [1 / 20, 1 / 30, 1 / 90]; // caras de premio pequeño más frecuentes
+/* camisetas por jugada, al azar: 1 (≈1/20), 2 (≈1/16) o 3 (≈1/45) */
+const CAM_P = [1 / 20, 1 / 16, 1 / 45]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
 const ESC = 14; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
@@ -635,7 +635,7 @@ const TS = [
   { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
 ];
 const T_FLAG = 4, T_CAM = 5;
-const T_OUT = [.9892, .003, .0012, .0004, .0002, .006];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
+const T_OUT = [.99354, .0018, .0007, .00024, .00012, .0036];  // nada, cancha, balón, canasta, mate, 3 banderas en línea (por tirada de bonus)
 const T_FILL = [30, 26, 20, 16, 14, .6];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
@@ -1643,7 +1643,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 31;
+const APP_VERSION = 32;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
