@@ -579,13 +579,13 @@ const SPECIAL = [12, 13, 14];                         // premios especiales: 100
    En cada jugada la máquina sortea primero el resultado y luego coloca las figuras.
    El 50 % de las jugadas tiene premio de línea; el premio pequeño es el que más sale
    y cada premio mayor sale menos. Probabilidad por jugada de cada premio (índice = figura): */
-const HIT = [.06, .05, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 7500, 1 / 9000, 1 / 11000];
+const HIT = [1 / 14, 1 / 17, 1 / 30, 1 / 40, 1 / 45, 1 / 150, 1 / 250, 1 / 500, 1 / 1500, 1 / 3000, 1 / 4500, 1 / 7000, 1 / 10000, 1 / 13000, 1 / 18000]; // probabilidad media por jugada
 /* RACHAS: la máquina pasa por rachas frías (casi nada), calientes (premio casi siempre) y normales.
    Su duración es aleatoria; de media sale premio en 1 de cada 3 jugadas y se respeta la tabla HIT. */
 const RACHA = {
   fria:     { h: .04, min: 8, max: 30, sig: 'caliente' },
-  caliente: { h: .65, min: 2, max: 5,  sig: 'normal' },
-  normal:   { h: .30, min: 8, max: 25, sig: 'fria' },
+  caliente: { h: .70, min: 2, max: 5,  sig: 'normal' },
+  normal:   { h: .34, min: 8, max: 25, sig: 'fria' },
 };
 function nuevaRacha(st) { const r = RACHA[st]; return { st, n: r.min + rnd(r.max - r.min + 1) }; }
 function pasoRacha() {
@@ -595,7 +595,7 @@ function pasoRacha() {
   return h;
 }
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
-let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 4.0]; // caras de premio pequeño más frecuentes
+let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 2.4]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
 const ESC = 14; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
@@ -910,7 +910,7 @@ function evaluate(g, mult) {
    TIRADA
    ========================================================= */
 /* ---------- avances y retenciones ---------- */
-const AV_P = .08, AV_N = [1, 2, 3, 4, 5], AV_W = [.35, .27, .18, .12, .08]; // probabilidad de avances y cuántos
+const AV_P = .15, AV_N = [1, 2, 3, 4, 5], AV_W = [.35, .27, .18, .12, .08]; // probabilidad de avances y cuántos
 const HOLD_P = .5;                                                          // probabilidad de ofrecer retención
 let mode = null, held = [false, false, false], holdOk = [false, false, false], nudges = 0, nudgeMult = 1;
 
@@ -1061,11 +1061,24 @@ function risk(amount, mult) {
 
 
 /* tras una jugada sin premio: a veces da AVANCES; si no, a veces deja RETENER la pareja de la línea del medio */
+/* voz del móvil (en español) */
+const NUM = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco'];
+function speak(text) {
+  if (S.muted || !('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text), vs = speechSynthesis.getVoices();
+    u.lang = 'es-ES'; u.rate = 1.05; u.pitch = 1.1; u.volume = 1;
+    const v = vs.find(x => /^es[-_]ES/i.test(x.lang)) || vs.find(x => /^es/i.test(x.lang)); if (v) u.voice = v;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) {}
+}
+if ('speechSynthesis' in window) { try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } catch (e) {} }
 async function offerExtras(mult, wasHeld) {
   if (Math.random() < AV_P) {
     nudges = AV_N[pickW(AV_W)]; nudgeMult = mult; mode = 'nudge';
     [0, 1, 2].forEach((f, i) => tone(660 + i * 220, .12, 'square', .06, i * .1)); vib([20, 20, 20]);
     dmd(`¡${nudges} AVANCE${nudges > 1 ? 'S' : ''}!<br>ELIGE RODILLO`);
+    speak(nudges > 1 ? `¡Avances! ¡${NUM[nudges]} avances!` : '¡Avance! ¡Un avance!');
     await sleep(300); return;
   }
   if (wasHeld || Math.random() >= HOLD_P) return;
@@ -1530,7 +1543,7 @@ function shoot(B, ball, ok, side, blocked) {
 $('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) =>
   `<div class="pti${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><div class="v">${fmtS(p)}<small>(${fmtS(p * 2)})${SPECIAL.includes(i) ? ' ★ ESPECIAL' : ''}</small></div></div>`).join('');
 $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i }) => {
-  const n = Math.round(HIT.reduce((x, y) => x + y, 0) / (h * .18)), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
+  const n = Math.round(HIT.reduce((x, y) => x + y, 0) / (h * .225)), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
   return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('');
 $('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TS.slice(0, 4).slice().reverse().map(c =>
