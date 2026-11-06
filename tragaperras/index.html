@@ -935,7 +935,7 @@ async function spin(bet, free) {
   if (busy || topBusy) return;
   if (!free && fsRunning) return;
   if (!free && !ensureCredits(bet)) { noMoney(); return; }
-  ac(); busy = true;
+  ac(); loadVoz(); busy = true;
   if (!free) { S.lastBet = bet; S.saldo -= bet; }
   save();
   const H = (!free && mode === 'hold') ? held.slice() : [false, false, false];
@@ -1090,12 +1090,24 @@ function speak(text) {
   } catch (e) {}
 }
 if ('speechSynthesis' in window) { try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } catch (e) {} }
+/* voz grabada de los avances («¡Avances! ¡Tres avances!»): suena igual en todos los móviles */
+const VOZ = {};
+function loadVoz() {
+  const a = ac(); if (!a || loadVoz.done) return; loadVoz.done = true;
+  for (let i = 1; i <= 5; i++) fetch('audio/av' + i + '.mp3').then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ[i] = buf; }).catch(() => {});
+}
+function sayAvances(n) {
+  if (S.muted) return;
+  const a = ac(), buf = VOZ[n];
+  if (a && buf) { const src = a.createBufferSource(), g = a.createGain(); g.gain.value = 1; src.buffer = buf; src.connect(g); g.connect(a.destination); src.start(); return; }
+  speak(n > 1 ? `¡Avances! ¡${NUM[n]} avances!` : '¡Avance! ¡Un avance!');   // respaldo: voz del móvil
+}
 async function offerExtras(mult, wasHeld) {
   if (Math.random() < AV_P) {
     nudges = AV_N[pickW(AV_W)]; nudgeMult = mult; mode = 'nudge';
     [0, 1, 2].forEach((f, i) => tone(660 + i * 220, .12, 'square', .06, i * .1)); vib([20, 20, 20]);
     dmd(`¡${nudges} AVANCE${nudges > 1 ? 'S' : ''}!<br>ELIGE RODILLO`);
-    speak(nudges > 1 ? `¡Avances! ¡${NUM[nudges]} avances!` : '¡Avance! ¡Un avance!');
+    sayAvances(nudges);
     await sleep(300); return;
   }
   if (wasHeld || Math.random() >= HOLD_P) return;
@@ -1631,7 +1643,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 29;
+const APP_VERSION = 30;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
