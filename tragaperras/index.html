@@ -1239,14 +1239,25 @@ function loadVoz() {
 }
 function sayAvances(n) { playVoz(n, n > 1 ? `¡Avances! ¡${NUM[n]} avances!` : '¡Avance! ¡Un avance!'); }
 /* voz «¡Premio!» en cualquier premio */
+/* las voces van en cola: una no empieza hasta que acaba la anterior (p. ej. «¡Premio!» y luego «¡Sube!») */
+let vozFree = 0;
+function vozSlot(ms) {
+  const now = performance.now(), wait = Math.max(0, vozFree - now);
+  if (wait > 3000) return -1;                                   // demasiada cola: esta voz se salta
+  vozFree = now + wait + ms + 120; return wait;
+}
+function speakQ(text) { const w = vozSlot(250 + text.length * 70); if (w < 0) return; setTimeout(() => speak(text), w); }
 function playVoz(key, fallback, tries = 0) {
   if (S.muted) return;
-  if (S.voz === 'movil' && tries === 0 && 'speechSynthesis' in window && speak(fallback)) return;   // voz del móvil (si se elige)
+  if (S.voz === 'movil' && tries === 0 && 'speechSynthesis' in window) { speakQ(fallback); return; }   // voz del móvil (si se elige)
   const a = ac(), buf = VOZ[key];
-  if (a && buf) { const src = a.createBufferSource(); src.buffer = buf; src.connect(a.destination); src.start(); return; }
+  if (a && buf) {
+    const w = vozSlot(buf.duration * 1000); if (w < 0) return;
+    const src = a.createBufferSource(); src.buffer = buf; src.connect(a.destination); src.start(a.currentTime + w / 1000); return;
+  }
   loadVoz();
   if (tries < 15) { setTimeout(() => playVoz(key, fallback, tries + 1), 100); return; }   // esperar a que se cargue (hasta 1,5 s)
-  speak(fallback);
+  speakQ(fallback);
 }
 function sayPremio() { playVoz('premio', '¡Premio!'); }
 function saySube() { playVoz('sube', '¡Sube!'); }
@@ -1872,7 +1883,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 46;
+const APP_VERSION = 47;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
