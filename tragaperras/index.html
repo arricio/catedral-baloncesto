@@ -511,6 +511,7 @@ header{height:42px}
   <h2>MENÚ</h2>
   <button class="mitem" id="mHow">❓ Cómo se juega</button>
   <button class="mitem" id="mPt">📋 Tabla de premios</button>
+  <button class="mitem" id="mVoz">🗣️ Voz: <span id="vozTxt">del móvil</span><small>Toca para cambiar entre la voz del móvil y la voz grabada</small></button>
   <button class="mitem" id="mInst">📲 Instalar en el móvil<small>Tenlo en la pantalla de inicio, como una app</small></button>
   <button class="mitem" id="mShare">💬 Compartir por WhatsApp<small>Envía el enlace a tus amigos</small></button>
   <p style="font-size:15px;margin:10px 2px">🎁 <b>Regalo diario:</b> 20 € cada día que abras el juego.<br>⏱️ <b>Sin dinero:</b> recarga automática de 5 € al pasar 1 hora.</p>
@@ -876,6 +877,7 @@ function fit() {
 addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 300));
 if (window.visualViewport) visualViewport.addEventListener('resize', fit);
 fit(); setTimeout(fit, 500);
+setTimeout(() => { try { loadVoz(); } catch (e) {} }, 300);
 
 /* ---------- contadores ---------- */
 function renderPayTop() {
@@ -1080,36 +1082,43 @@ function risk(amount, mult) {
 /* tras una jugada sin premio: a veces da AVANCES; si no, a veces deja RETENER la pareja de la línea del medio */
 /* voz del móvil (en español) */
 const NUM = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco'];
+function phoneVoice() { try { const vs = speechSynthesis.getVoices(); return vs.find(x => /^es[-_]ES/i.test(x.lang) && /google/i.test(x.name)) || vs.find(x => /^es[-_]ES/i.test(x.lang)) || vs.find(x => /^es/i.test(x.lang)) || null; } catch (e) { return null; } }
 function speak(text) {
-  if (S.muted || !('speechSynthesis' in window)) return;
+  if (S.muted || !('speechSynthesis' in window)) return false;
   try {
-    const u = new SpeechSynthesisUtterance(text), vs = speechSynthesis.getVoices();
-    u.lang = 'es-ES'; u.rate = 1.05; u.pitch = 1.1; u.volume = 1;
-    const v = vs.find(x => /^es[-_]ES/i.test(x.lang)) || vs.find(x => /^es/i.test(x.lang)); if (v) u.voice = v;
-    speechSynthesis.cancel(); speechSynthesis.speak(u);
-  } catch (e) {}
+    const go = () => { const u = new SpeechSynthesisUtterance(text), v = phoneVoice(); u.lang = v ? v.lang : 'es-ES'; if (v) u.voice = v; u.rate = 1; u.pitch = 1; u.volume = 1; speechSynthesis.speak(u); };
+    if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); setTimeout(go, 120); } else go();   // no cancelar justo antes de hablar
+    if (speechSynthesis.paused) speechSynthesis.resume();
+    return true;
+  } catch (e) { return false; }
 }
+/* desbloquear la voz del móvil con el primer toque (necesario en algunos móviles) */
+function unlockSpeech() {
+  if (unlockSpeech.done || !('speechSynthesis' in window)) return; unlockSpeech.done = true;
+  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'es-ES'; speechSynthesis.speak(u); } catch (e) {}
+}
+addEventListener('pointerdown', unlockSpeech, { once: true });
 if ('speechSynthesis' in window) { try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } catch (e) {} }
 /* voz grabada de los avances («¡Avances! ¡Tres avances!»): suena igual en todos los móviles */
 const VOZ = {};
 function loadVoz() {
   const a = ac(); if (!a || loadVoz.done) return; loadVoz.done = true;
+  setTimeout(() => { if (Object.keys(VOZ).length < 6) loadVoz.done = false; }, 8000);   // reintentar si algo falló
   fetch('audio/premio.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ.premio = buf; }).catch(() => {});
   for (let i = 1; i <= 5; i++) fetch('audio/av' + i + '.mp3?v=' + APP_VERSION).then(r => r.arrayBuffer()).then(b => new Promise((ok, ko) => a.decodeAudioData(b, ok, ko))).then(buf => { VOZ[i] = buf; }).catch(() => {});
 }
-function sayAvances(n) {
-  if (S.muted) return;
-  const a = ac(), buf = VOZ[n];
-  if (a && buf) { const src = a.createBufferSource(), g = a.createGain(); g.gain.value = 1; src.buffer = buf; src.connect(g); g.connect(a.destination); src.start(); return; }
-  speak(n > 1 ? `¡Avances! ¡${NUM[n]} avances!` : '¡Avance! ¡Un avance!');   // respaldo: voz del móvil
-}
+function sayAvances(n) { playVoz(n, n > 1 ? `¡Avances! ¡${NUM[n]} avances!` : '¡Avance! ¡Un avance!'); }
 /* voz «¡Premio!» en cualquier premio */
-function sayPremio() {
+function playVoz(key, fallback, tries = 0) {
   if (S.muted) return;
-  const a = ac(), buf = VOZ.premio;
+  if (S.voz !== 'grabada' && tries === 0 && 'speechSynthesis' in window && speak(fallback)) return;   // voz del móvil
+  const a = ac(), buf = VOZ[key];
   if (a && buf) { const src = a.createBufferSource(); src.buffer = buf; src.connect(a.destination); src.start(); return; }
-  speak('¡Premio!');
+  loadVoz();
+  if (tries < 15) { setTimeout(() => playVoz(key, fallback, tries + 1), 100); return; }   // esperar a que se cargue (hasta 1,5 s)
+  speak(fallback);
 }
+function sayPremio() { playVoz('premio', '¡Premio!'); }
 async function offerExtras(mult, wasHeld) {
   if (Math.random() < AV_P) {
     nudges = AV_N[pickW(AV_W)]; nudgeMult = mult; mode = 'nudge';
@@ -1601,6 +1610,9 @@ $('#ptBtn').onclick = () => open('#ptOv');
 $('#menuBtn').onclick = () => open('#menuOv');
 $('#mPt').onclick = () => { $('#menuOv').classList.add('hidden'); open('#ptOv'); };
 $('#mHow').onclick = () => { $('#menuOv').classList.add('hidden'); open('#howOv'); };
+const vozUI = () => { $('#vozTxt').textContent = S.voz === 'grabada' ? 'grabada' : 'del móvil'; };
+vozUI();
+$('#mVoz').onclick = () => { S.voz = S.voz === 'grabada' ? 'movil' : 'grabada'; save(); vozUI(); ac(); loadVoz(); unlockSpeech(); setTimeout(() => playVoz(3, '¡Avances! ¡Tres avances!'), 150); };
 const URL_GAME = 'https://arricio.github.io/catedral-baloncesto/tragaperras/';
 $('#mShare').onclick = async () => {
   const text = '🏀 ¡Juega a La Catedral del Triple, la tragaperras de la Cultural Leonesa de Baloncesto! ';
@@ -1651,7 +1663,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 34;
+const APP_VERSION = 36;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
