@@ -979,6 +979,15 @@ async function spin(bet, free) {
   const bm = bet / 20, mult = free ? bm * FS_X : bm; // en tiradas gratis los premios de línea van x2
   const next = wasHeld ? Array.from({ length: 9 }, (_, i) => randSym(i % 3)) : genGrid();
   for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
+  // con 2 figuras iguales paradas en la línea del medio, a veces sale la tercera
+  if (wasHeld && H.filter(Boolean).length === 2) {
+    const f = H.indexOf(false), hc = H.indexOf(true), sym = grid[3 + hc];
+    if (sym !== CAM && H.every((h, c) => !h || grid[3 + c] === sym)) {
+      const pay = PAY[sym] || 0, pHit = pay <= 100 ? .40 : pay <= 2000 ? .30 : pay <= 8000 ? .20 : .125;
+      if (Math.random() < pHit) next[3 + f] = sym;
+      else for (let k = 0; k < 20 && next[3 + f] === sym; k++) next[3 + f] = randSym(f);
+    }
+  }
   const rsnd = reelSound(H.filter(x => !x).length); vib(15);
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
   const done = [];
@@ -1721,7 +1730,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 40;
+const APP_VERSION = 41;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
