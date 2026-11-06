@@ -579,7 +579,7 @@ const SPECIAL = [12, 13, 14];                         // premios especiales: 100
    En cada jugada la máquina sortea primero el resultado y luego coloca las figuras.
    El 50 % de las jugadas tiene premio de línea; el premio pequeño es el que más sale
    y cada premio mayor sale menos. Probabilidad por jugada de cada premio (índice = figura): */
-const HIT = [.18, .09, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 7500, 1 / 9000, 1 / 11000];
+const HIT = [.06, .05, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 7500, 1 / 9000, 1 / 11000];
 /* RACHAS: la máquina pasa por rachas frías (casi nada), calientes (premio casi siempre) y normales.
    Su duración es aleatoria; de media sale premio en 1 de cada 3 jugadas y se respeta la tabla HIT. */
 const RACHA = {
@@ -1530,7 +1530,7 @@ function shoot(B, ball, ok, side, blocked) {
 $('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) =>
   `<div class="pti${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><div class="v">${fmtS(p)}<small>(${fmtS(p * 2)})${SPECIAL.includes(i) ? ' ★ ESPECIAL' : ''}</small></div></div>`).join('');
 $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i }) => {
-  const n = Math.round(HIT.reduce((x, y) => x + y, 0) / (h * .204)), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
+  const n = Math.round(HIT.reduce((x, y) => x + y, 0) / (h * .18)), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
   return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('');
 $('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TS.slice(0, 4).slice().reverse().map(c =>
