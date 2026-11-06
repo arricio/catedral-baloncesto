@@ -435,6 +435,14 @@ header{height:42px}
 .cab.zactive{box-shadow:0 0 0 3px #c58cff,0 0 26px 6px rgba(170,90,255,.75)}
 .cab.zdim{filter:brightness(.55) saturate(.7);transition:filter .2s}
 .tbot{justify-content:center}
+
+/* tocar el rodillo para avanzar o parar */
+.reel.tapnu,.reel.taphold{cursor:pointer}
+.reel.tapnu{box-shadow:inset 0 0 0 4px #ff9b1f,0 0 16px rgba(255,150,30,.8);animation:tapGlow .7s infinite alternate}
+.reel.taphold{box-shadow:inset 0 0 0 4px #59c2ff,0 0 14px rgba(80,180,255,.8)}
+.reel.tapnu .strip .sym:nth-child(1)::after{content:"▼";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);font-size:22px;color:#ff8a1f;text-shadow:0 0 6px #fff;z-index:4;animation:bajar .7s infinite}
+@keyframes tapGlow{to{box-shadow:inset 0 0 0 4px #ffd27a,0 0 24px rgba(255,170,40,1)}}
+@keyframes bajar{50%{transform:translate(-50%,6px)}}
 </style>
 </head>
 <body>
@@ -551,7 +559,7 @@ header{height:42px}
     <li>Con BONUS pulsa el botón <b>JUGAR | COMODINES</b> para pasar a la pantalla de arriba y luego <b>JUGAR</b>: giran los rodillos de arriba (gastas 1 bonus). Vuelve a pulsar <b>JUGAR | COMODINES</b> para volver abajo; si se acaban los bonus vuelve sola. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
     <li><b>3 banderas de León en línea</b> arriba (horizontal, vertical o diagonal): eliges a qué <b>minijuego</b> jugar. Cada uno tiene <b>3 premios</b> al azar (de 10 € a 120 €) y te llevas uno.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
-    <li><b>AVANCES</b> (de 1 a 4): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
+    <li><b>AVANCES</b> (de 1 a 4): a veces, tras una jugada sin premio, la máquina te da avances. Toca el <b>rodillo</b> que quieras bajar (o su botón <b>AVANCE</b>): la figura de encima baja a la línea del medio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
     <li>Con <b>AUTO</b> la máquina juega sola a 0,20 € (se para al entrar en un minijuego o al quedarte sin saldo).</li>
   </ol>
@@ -1151,6 +1159,10 @@ async function offerExtras(mult, wasHeld) {
     await sleep(300); return;
   }
   if (wasHeld || Math.random() >= HOLD_P) return;
+  offerHold();
+}
+/* ofrecer PARAR la pareja de figuras iguales de la línea del medio */
+function offerHold() {
   const m = [grid[3], grid[4], grid[5]];
   let h = null;
   if (m[0] === m[1] && m[0] !== CAM) h = [true, true, false];
@@ -1160,7 +1172,9 @@ async function offerExtras(mult, wasHeld) {
   mode = 'hold'; holdOk = h; held = h.slice();
   [0, 1].forEach(i => tone(880 + i * 330, .14, 'square', .06, i * .12)); vib(25);
   dmd('¡RETENCIÓN!<br>ELIGE QUÉ PARAR');
+  return true;
 }
+const HOLD_AFTER_AV = .7;   // tras gastar los avances sin premio, a menudo deja parar la pareja
 
 /* un AVANCE: el rodillo baja una posición */
 async function nudge(c) {
@@ -1180,7 +1194,10 @@ async function nudge(c) {
   const r = evaluate(grid, nudgeMult);
   if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
   if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
-  else { mode = null; if (!r.wins.length) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>PULSA COMODINES` : 'SIN AVANCES'); }
+  else {
+    mode = null;
+    if (!r.wins.length && !(Math.random() < HOLD_AFTER_AV && offerHold())) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>PULSA COMODINES` : 'SIN AVANCES');
+  }
   busy = false; ui(); renderCtl();
   if (auto) autoStep();
 }
@@ -1201,6 +1218,7 @@ function renderCtl() {
     reels[c].classList.toggle('held', mode === 'hold' && held[c]);
   });
   document.querySelectorAll('#coins i').forEach((x, i) => x.classList.toggle('on', mode === 'nudge' && i < nudges));
+  reels.forEach((r, c) => { r.classList.toggle('tapnu', mode === 'nudge' && !busy); r.classList.toggle('taphold', mode === 'hold' && holdOk[c] && !held[c] && !busy); });
   $('#avLbl').classList.toggle('on', mode === 'nudge');
   $('#holdLamp').classList.toggle('on', mode === 'hold');
 }
@@ -1627,6 +1645,7 @@ const open = id => $(id).classList.remove('hidden');
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.ov').classList.add('hidden'));
 document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'mg' && o.id !== 'win' && o.id !== 'riskOv') o.classList.add('hidden'); }));
 $('#b1').onclick = () => { if (S.zona === 'arriba') launch(); else spin(S.betSel); };
+reels.forEach((r, c) => r.addEventListener('click', () => { if (mode === 'nudge') nudge(c); else if (mode === 'hold') toggleHold(c); }));
 $('#zonaBtn').onclick = () => {
   if (busy || topBusy || fsRunning) return; ac();
   if (S.zona === 'abajo') {
@@ -1696,7 +1715,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 38;
+const APP_VERSION = 39;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
