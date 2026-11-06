@@ -181,7 +181,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 @keyframes blinkA{0%,49%{opacity:1}50%,100%{opacity:.45}}
 
 /* ---------- botones de la máquina ---------- */
-.ctrls{display:grid;grid-template-columns:1fr 1fr .8fr 1.5fr;gap:7px;align-items:stretch;height:54px}
+.ctrls{display:grid;grid-template-columns:.95fr .95fr .7fr 1.15fr 1.25fr;gap:5px;align-items:stretch;height:56px}
 .pbtn{position:relative;overflow:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;
   font-family:var(--fd);font-size:15px;border:2px solid rgba(255,255,255,.35)}
 .pbtn::after{content:"";position:absolute;left:5px;right:5px;top:3px;height:40%;border-radius:8px;background:linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,0));pointer-events:none}
@@ -420,6 +420,21 @@ header{height:42px}
 @keyframes pop{40%{transform:scale(1.5)}}
 .board .dmd{min-height:2em;font-size:12.5px}
 .tleg{gap:1px 2px}
+
+/* ---------- botón JUGAR | COMODINES ---------- */
+.ctrls .pbtn{font-size:13px}
+.ctrls .play{font-size:20px}
+.ctrls .bet small{font-size:15px}
+.zona{padding:3px;gap:3px;background:linear-gradient(#5a1d6e,#2a0a3a);box-shadow:0 5px 0 #14031c;color:#fff;font-family:var(--fn)!important}
+.zona span{display:block;width:100%;border-radius:6px;padding:4px 0;font-size:10.5px;letter-spacing:.3px;color:#b9a2c8;background:rgba(0,0,0,.35)}
+.zona span.on{color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d);box-shadow:0 0 10px rgba(255,200,60,.8)}
+.zona span.z2.on{color:#fff;background:linear-gradient(#d9a6ff,#8a2be2);box-shadow:0 0 12px rgba(190,120,255,.9)}
+.zona span.call{animation:callz .6s infinite alternate}
+@keyframes callz{from{color:#fff;background:#8a2be2;box-shadow:0 0 14px rgba(190,120,255,1)}to{color:#b9a2c8;background:rgba(0,0,0,.35)}}
+#launch{display:none!important}
+.cab.zactive{box-shadow:0 0 0 3px #c58cff,0 0 26px 6px rgba(170,90,255,.75)}
+.cab.zdim{filter:brightness(.55) saturate(.7);transition:filter .2s}
+.tbot{justify-content:center}
 </style>
 </head>
 <body>
@@ -459,6 +474,7 @@ header{height:42px}
     <button class="pbtn cob" id="cobBtn">COBRAR</button>
     <button class="pbtn bet" id="betBtn">APUESTA<small id="betLbl">0,20 €</small></button>
     <button class="pbtn aut" id="autoBtn">AUTO</button>
+    <button class="pbtn zona" id="zonaBtn"><span class="z1 on">JUGAR</span><span class="z2">COMODINES</span></button>
     <button class="pbtn play" id="b1">JUGAR</button>
   </div>
   <div class="note">Juego de entretenimiento · dinero ficticio, sin apuestas reales</div>
@@ -532,7 +548,7 @@ header{height:42px}
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
-    <li>Con BONUS pulsa <b>¡LANZAR!</b>: giran los rodillos de arriba. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
+    <li>Con BONUS pulsa el botón <b>JUGAR | COMODINES</b> para pasar a la pantalla de arriba y luego <b>JUGAR</b>: giran los rodillos de arriba (gastas 1 bonus). Vuelve a pulsar <b>JUGAR | COMODINES</b> para volver abajo; si se acaban los bonus vuelve sola. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
     <li><b>3 banderas de León en línea</b> arriba (horizontal, vertical o diagonal): eliges a qué <b>minijuego</b> jugar. Cada uno tiene <b>3 premios</b> al azar (de 10 € a 120 €) y te llevas uno.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
     <li><b>AVANCES</b> (de 1 a 4): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
@@ -640,7 +656,7 @@ const T_OUT = [.99354, .0018, .0007, .00024, .00012, .0036];  // nada, cancha, b
 const T_FILL = [30, 26, 20, 16, 14, .6];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
-let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
+let S = { zona: 'abajo', saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s.saldo === 'number') S = Object.assign(S, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -897,7 +913,14 @@ function ui() {
   $('#mBet').textContent = fsRunning ? 'GRATIS' : fmt(S.lastBet);
   { const bn = $('#bN'), nv = String(S.bonus.length); if (bn.textContent !== nv) { bn.textContent = nv; const w = bn.parentElement; w.classList.remove('pop'); w.offsetHeight; w.classList.add('pop'); } }
   $('#launch').disabled = !S.bonus.length || topBusy || busy || fsRunning;
-  $('#b1').disabled = busy || topBusy || fsRunning;
+  if (S.zona === 'arriba' && !S.bonus.length && !topBusy) S.zona = 'abajo';     // sin bonus: vuelve sola abajo
+  const up = S.zona === 'arriba';
+  $('#b1').disabled = busy || topBusy || fsRunning || (up && !S.bonus.length);
+  $('#zonaBtn').disabled = busy || topBusy || fsRunning;
+  $('#zonaBtn .z1').classList.toggle('on', !up); $('#zonaBtn .z2').classList.toggle('on', up);
+  $('#zonaBtn .z2').classList.toggle('call', !up && S.bonus.length > 0 && !busy && !topBusy);
+  $('#board').closest('.cab').classList.toggle('zactive', up); $('#board').closest('.cab').classList.toggle('zdim', !up && !topBusy);
+  $('#reels').closest('.cab').classList.toggle('zdim', up);
   const x2 = S.bonus.length && S.bonus[0] === 2;
   board.querySelectorAll('.tleg b[data-v]').forEach(l => l.textContent = fmtS(+l.dataset.v * (x2 ? 2 : 1)));
   $('#sndBtn').textContent = S.muted ? '🔇' : '🔊';
@@ -983,7 +1006,7 @@ async function spin(bet, free) {
     flyBonus(r.bonus);
     for (let k = 0; k < r.bonus; k++) S.bonus.push(bm);
     if (r.bonus >= 5) await celebrate('¡3 CAMISETAS!', SYM[CAM], null, '+' + r.bonus + ' BONUS');
-    dmd(`+${r.bonus} BONUS<br>¡PULSA LANZAR!`);
+    dmd(`+${r.bonus} BONUS<br>PULSA COMODINES`);
     save();
   }
   if (!r.wins.length && !free) await offerExtras(mult, wasHeld);
@@ -1008,7 +1031,7 @@ async function runFreeSpins() {
   }
   fsRunning = false; S.fs = { n: 0, bet: 20 }; save(); ui();
   await celebrate('FIN TIRADAS GRATIS', 'img/balon.webp', total);
-  dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : '¡SUERTE!');
+  dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>PULSA COMODINES` : '¡SUERTE!');
   if (wasAuto && auto) autoStep();
 }
 
@@ -1157,7 +1180,7 @@ async function nudge(c) {
   const r = evaluate(grid, nudgeMult);
   if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
   if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
-  else { mode = null; if (!r.wins.length) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>¡PULSA LANZAR!` : 'SIN AVANCES'); }
+  else { mode = null; if (!r.wins.length) dmd(S.bonus.length ? `${S.bonus.length} BONUS<br>PULSA COMODINES` : 'SIN AVANCES'); }
   busy = false; ui(); renderCtl();
   if (auto) autoStep();
 }
@@ -1355,8 +1378,10 @@ async function launch() {
     const nb = camBonus(e.cams); tgrid.forEach((x, i) => { if (x === T_CAM) tcell(i).classList.add('win'); });
     for (let k = 0; k < nb; k++) S.bonus.unshift(mult); save(); SFX.bonus(); dmd(`🎽 CAMISETA<br>+${nb} BONUS`); await sleep(1300);
   }
-  topBusy = false; ui();
-  if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
+  topBusy = false;
+  if (!S.bonus.length) { S.zona = 'abajo'; save(); dmd('SIN BONUS<br>A JUGAR ABAJO'); }
+  else dmd(`${S.bonus.length} BONUS<br>${S.zona === 'arriba' ? 'PULSA JUGAR' : 'PULSA COMODINES'}`);
+  ui();
   if (S.fs && S.fs.n > 0) { runFreeSpins(); return; }
   if (auto) autoStep();
 }
@@ -1369,7 +1394,7 @@ function autoStep() {
   setTimeout(() => {
     if (!auto || busy || topBusy || fsRunning) return;
     if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
-    else if (S.bonus.length) launch();
+    else if (S.bonus.length) { S.zona = 'arriba'; ui(); launch(); }
     else if (S.saldo + S.cartera >= S.betSel) spin(S.betSel);
     else { auto = false; $('#autoBtn').classList.remove('on'); noMoney(); }
   }, 650);
@@ -1601,10 +1626,18 @@ $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data
 const open = id => $(id).classList.remove('hidden');
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.ov').classList.add('hidden'));
 document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'mg' && o.id !== 'win' && o.id !== 'riskOv') o.classList.add('hidden'); }));
-$('#b1').onclick = () => spin(S.betSel);
+$('#b1').onclick = () => { if (S.zona === 'arriba') launch(); else spin(S.betSel); };
+$('#zonaBtn').onclick = () => {
+  if (busy || topBusy || fsRunning) return; ac();
+  if (S.zona === 'abajo') {
+    if (!S.bonus.length) { SFX.buzz(); dmd('NO TIENES<br>BONUS'); return; }
+    S.zona = 'arriba'; SFX.bonus(); dmd(`${S.bonus.length} BONUS<br>PULSA JUGAR`);
+  } else { S.zona = 'abajo'; SFX.tick(); dmd('¡SUERTE!'); }
+  save(); ui();
+};
 $('#betBtn').onclick = () => { if (busy || topBusy || fsRunning) return; S.betSel = S.betSel === 20 ? 40 : 20; S.lastBet = S.betSel; save(); ui(); SFX.tick(); };
 $('#cobBtn').onclick = cobrar;
-$('#launch').onclick = launch;
+
 document.querySelectorAll('#rctl .rb').forEach(b => b.onclick = () => { const c = +b.dataset.c; if (mode === 'nudge') nudge(c); else if (mode === 'hold') toggleHold(c); });
 $('#ptBtn').onclick = () => open('#ptOv');
 $('#menuBtn').onclick = () => open('#menuOv');
@@ -1626,7 +1659,7 @@ $('#autoBtn').onclick = () => { auto = !auto; $('#autoBtn').classList.toggle('on
 ui(); renderCtl(); tickMoney();
 setTimeout(checkDaily, 700);
 if (S.fs && S.fs.n > 0) setTimeout(runFreeSpins, 1200);
-if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>¡PULSA LANZAR!`);
+if (S.bonus.length) dmd(`${S.bonus.length} BONUS<br>PULSA COMODINES`);
 /* ---------- INSTALAR COMO APP ---------- */
 let installEvt = null;
 const UA = navigator.userAgent;
@@ -1663,7 +1696,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 37;
+const APP_VERSION = 38;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
