@@ -250,7 +250,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .pti .v{font-family:var(--fn);font-size:15px;color:#fff;line-height:1.15}
 .pti .v small{display:block;color:#ffd36b;font-size:12px}
 .pti.sp{background:linear-gradient(90deg,rgba(255,200,60,.25),rgba(255,255,255,.06));border:1px solid var(--gold2)}
-.minis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.minis{display:grid;grid-template-columns:repeat(1,90px);justify-content:center;gap:6px}
 .mini{display:grid;grid-template-columns:repeat(3,10px);gap:2px;justify-content:center;padding:5px;background:rgba(255,255,255,.06);border-radius:8px}
 .mini i{width:10px;height:10px;background:#444;border-radius:2px}
 .mini i.on{background:var(--gold)}
@@ -374,7 +374,7 @@ header{height:42px}
     <div class="wallet" id="walletBox"><img src="img/p13.webp" alt=""><div><small>MI DINERO</small><em id="mRecarga"></em></div><b id="mCartera">0,00 €</b></div>
   </div>
 
-  <div class="paytop" id="payTop"><div class="ptag">PREMIOS <small id="ptX">3 iguales en línea</small></div><div class="pgrid" id="pGrid"></div></div>
+  <div class="paytop" id="payTop"><div class="ptag">PREMIOS <small id="ptX">3 iguales en la línea del medio</small></div><div class="pgrid" id="pGrid"></div></div>
 
   <div class="cab"><div class="inner"><div class="board" id="board"></div></div><div class="bulbs"></div></div>
 
@@ -425,7 +425,7 @@ header{height:42px}
 <div class="ov hidden" id="ptOv"><div class="panel">
   <button class="x" data-close>✕</button>
   <h2>TABLA DE PREMIOS</h2>
-  <p style="text-align:center;margin:0 0 8px">3 iguales en cualquiera de las <b>8 líneas</b>. Entre paréntesis, el premio jugando a <b>DOBLE</b> (0,40 €).</p>
+  <p style="text-align:center;margin:0 0 8px">3 iguales en la <b>línea horizontal del medio</b> (la de las flechas rojas). Entre paréntesis, el premio jugando a <b>DOBLE</b> (0,40 €).</p>
   <div class="minis" id="miniLines"></div>
   <h3>Jugadores y escudo</h3>
   <div class="pt" id="ptList"></div>
@@ -466,7 +466,7 @@ header{height:42px}
     <li>Empiezas con <b>20 €</b> en <b>MI DINERO</b>. Cada día que abras el juego te regalamos <b>20 €</b> más, y si te quedas sin dinero, al pasar <b>1 hora</b> se recargan <b>5 €</b>.</li>
     <li>Al pulsar <b>JUGAR</b>, la máquina coge dinero para sus <b>CRÉDITOS</b>. Los premios van a los créditos y con <b>COBRAR</b> pasan a tu dinero.</li>
     <li>Con <b>APUESTA</b> eliges 0,20 € o <b>DOBLE</b> 0,40 €. Jugando a doble, todos los premios se pagan al doble.</li>
-    <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en línea</b> (3 horizontales, 3 verticales y 2 diagonales) ganas el premio de esa cara.</li>
+    <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b> arriba: la luz recorre el tablero y te puede dar premios de 20 € a 100 €, una camiseta extra o uno de los <b>6 minijuegos</b>.</li>
@@ -547,6 +547,7 @@ let FILL_C = FILL;                                   // el rodillo central igual
 const ESC = 12; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
+const PAYLINE = 1; // en la pantalla de abajo solo paga la línea horizontal del medio
 const LINE_COL = ['#ffd23d','#ff5a6e','#5fe39a','#59c2ff','#ff9b2f','#d38bff','#ffffff','#7dfff0'];
 
 /* ---------- pantalla de arriba (16 casillas en anillo) ---------- */
@@ -741,11 +742,13 @@ function genGrid() {
     const g = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
     let line = null;
     if (target >= 0) {
-      line = LINES[rnd(8)]; line.forEach(k => g[k] = target);
+      line = LINES[PAYLINE]; line.forEach(k => g[k] = target);
     }
     const ev = evaluate(g, 1);
     if (target < 0 && ev.wins.length) continue;
     if (target >= 0 && (ev.wins.length !== 1 || ev.wins[0].sym !== target)) continue;
+    // para no confundir: arriba y abajo no se dejan 3 caras iguales (no pagan)
+    if ([0, 2].some(r => g[r * 3] === g[r * 3 + 1] && g[r * 3] === g[r * 3 + 2])) continue;
     return g;
   }
   return [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -786,7 +789,7 @@ function renderPayTop() {
   const order = PAY.map((p, i) => i).reverse(); // del premio mayor al menor
   $('#pGrid').innerHTML = order.map(i => `<div class="pc${SPECIAL.includes(i) ? ' sp' : ''}"><img src="${SYM[i]}" alt=""><b>${fmtS(PAY[i] * m)}</b></div>`).join('')
     + `<div class="pc cm"><img src="${SYM[CAM]}" alt=""><span>1→1 · 2→2<br>3→5 BONUS</span></div>`;
-  $('#ptX').textContent = m === 2 ? 'jugando a DOBLE' : '3 iguales en línea';
+  $('#ptX').textContent = m === 2 ? 'jugando a DOBLE' : '3 iguales en la línea del medio';
   if (typeof fit === 'function') requestAnimationFrame(fit);
 }
 function ui() {
@@ -815,6 +818,7 @@ function camBonus(n) { return n >= 3 ? 5 + (n - 3) : n; } // 1 camiseta = 1, 2 =
 function evaluate(g, mult) {
   let win = 0, wins = [], camLine = false, camLines = [];
   LINES.forEach((l, i) => {
+    if (i !== PAYLINE) return;                       // solo la línea del medio
     const t = [g[l[0]], g[l[1]], g[l[2]]], nw = t.filter(x => x !== WILD);
     if (t.every(x => x === CAM)) { camLine = true; camLines.push(i); return; }
     if (!nw.length) { win += WILD3 * mult; wins.push({ line: i, sym: WILD, amt: WILD3 * mult }); return; }
@@ -1486,7 +1490,7 @@ $('#ptList').innerHTML = PAY.map((p, i) => ({ p, i })).reverse().map(({ p, i }) 
 $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i }) => {
   const n = Math.round(1 / h), t = n <= 3 ? '1 de cada 3' : n < 1000 ? `1 de cada ${n}` : `1 de cada ${(Math.round(n / 500) * 500).toLocaleString('es-ES')}`;
   return `<span>${fmtS(PAY[i])}: ${t}</span>`; }).join('');
-$('#miniLines').innerHTML = LINES.map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
+$('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TOP.filter(c => c.t === 'prize').sort((a, b) => b.v - a.v).map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('');
 $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data-mg="${k}">${MG[k].e} ${MG[k].n}</button>`).join('');
