@@ -203,7 +203,7 @@ svg.lines polyline{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin
 .paytop{position:relative;border-radius:12px;padding:12px 4px 4px;margin-top:6px;background:linear-gradient(#24343f,#121c23);border:3px solid #8a9aa6;box-shadow:inset 0 0 0 2px #0b1218,0 4px 10px rgba(0,0,0,.6)}
 .ptag{position:absolute;top:-11px;left:10px;padding:2px 10px;border-radius:7px;font-family:var(--fd);font-size:13px;color:#3a1d00;background:linear-gradient(#fff3b0,#ffc83d 50%,#d08a00);border:2px solid #6b4500;white-space:nowrap}
 .ptag small{font-family:var(--fn);font-size:10px;color:#5a3a00;margin-left:4px}
-.pgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.pgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
 .pc{display:flex;flex-direction:column;align-items:center;border-radius:7px;padding:2px 0 1px;background:rgba(255,255,255,.05)}
 .pc img{width:calc(var(--pt) * 1px);height:calc(var(--pt) * 1px);object-fit:contain}
 .pc b{font-family:var(--fn);font-weight:400;font-size:11px;color:#ffd36b;line-height:1.1;white-space:nowrap}
@@ -382,6 +382,11 @@ header{height:42px}
 .tbot .bonusN{font-size:22px;flex-direction:column;gap:0;line-height:1}
 .tbot .bonusN small{font-size:9px}
 #launch{font-size:13px;padding:.5em .7em}
+
+.tsym{overflow:hidden}
+.tsym img{width:calc(var(--tw) * .8);height:calc(var(--th) * .8);max-width:none;max-height:none;object-fit:contain}
+.tleg span.w{grid-column:span 2;font-size:10px;white-space:normal;line-height:1.1}
+.board .center{min-width:0;overflow:hidden}
 </style>
 </head>
 <body>
@@ -464,7 +469,7 @@ header{height:42px}
   <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>, que tiene sus propios rodillos 3×3. Arriba pagan 3 iguales en <b>horizontal, vertical o diagonal</b> (8 líneas).</p>
   <h3>Pantalla de arriba</h3>
   <div class="pt" id="ptTop"></div>
-  <p>🏆 <b>3 trofeos en línea</b>: uno de los <b>6 minijuegos</b> (premios de 10 € a 160 €) o <b>8 tiradas gratis</b> con premios x2.<br>🎽 Camisetas arriba: más BONUS.<br>Todo al doble si el BONUS se consiguió jugando a DOBLE.</p>
+  <p>🎽 <b>3 camisetas en línea arriba</b>: uno de los <b>6 minijuegos</b> (premios de 10 € a 160 €) o <b>8 tiradas gratis</b> con premios x2.<br>🎽 Camisetas arriba: más BONUS.<br>Todo al doble si el BONUS se consiguió jugando a DOBLE.</p>
 </div></div>
 
 <!-- menú -->
@@ -493,7 +498,7 @@ header{height:42px}
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
     <li>Cada <b>camiseta</b> que sale te da <b>BONUS</b> (1 camiseta = 1, 2 = 2 y 3 = 5 BONUS).</li>
     <li>Con BONUS pulsa <b>¡LANZAR!</b>: giran los rodillos de arriba. Allí pagan 3 iguales en <b>horizontal, vertical o diagonal</b>: cancha 20 €, balón 40 €, canasta 80 € y mate 100 €.</li>
-    <li><b>3 trofeos en línea</b> arriba: te toca uno de los <b>6 minijuegos</b> o <b>8 tiradas gratis</b> con premios x2.</li>
+    <li><b>3 camisetas en línea</b> arriba: te toca uno de los <b>6 minijuegos</b> o <b>8 tiradas gratis</b> con premios x2.</li>
     <li><b>RIESGO</b>: después de cada premio de abajo puedes <b>COBRAR</b> o <b>ARRIESGAR</b> por la escalera 0,20 · 0,40 · 0,60 · 1 · 2 · 3 · 5 · 10 · 20 · 40 · 80 · 160 €. Las luces se alternan entre SUBE y BAJA: pulsa ¡PARAR! Si aciertas subes al siguiente premio. Si fallas desde 0,20 € te quedas sin nada, pero una vez llegas a 0,40 € ya no lo pierdes: al fallar bajas al premio de debajo, nunca menos de 0,40 € (por ejemplo, de 5 € intentando 10 € te quedas con 2 €).</li>
     <li><b>AVANCES</b> (de 1 a 5): a veces, tras una jugada sin premio, la máquina te da avances. Pulsa el botón <b>AVANCE</b> debajo del rodillo que quieras bajar una posición para intentar formar premio. Si vuelves a jugar sin usarlos, se pierden.</li>
     <li><b>RETENCIÓN</b>: cuando salen 2 figuras iguales en la línea del medio, a veces puedes <b>PARAR</b> las 2 o solo 1. En la siguiente jugada esos rodillos no giran.</li>
@@ -540,16 +545,17 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i 
 /* ---------- símbolos de la pantalla de abajo ---------- */
 // 0..11 jugadores, 12 escudo, 13 camiseta (BONUS)
 const SYM = [];
-for (let i = 1; i <= 13; i++) SYM.push('img/p' + String(i).padStart(2, '0') + '.webp');
+for (let i = 1; i <= 12; i++) SYM.push('img/p' + String(i).padStart(2, '0') + '.webp');
+SYM.push('img/pd1.webp', 'img/pd2.webp', 'img/p13.webp'); // dibujo del balón (100 €), dibujo con el león (120 €) y escudo (160 €)
 SYM.push('img/camiseta.webp');
-const CAM = 13, WILD = -99, WILD3 = 0; // (sin comodín en los rodillos: el balón es de la pantalla de arriba)
-const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 12000, 16000]; // céntimos, apuesta 0,20 €
-const SPECIAL = [10, 11, 12];                         // premios de 80, 120 y 160 €
+const CAM = 15, WILD = -99, WILD3 = 0; // (sin comodín en los rodillos: el balón es de la pantalla de arriba)
+const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 6000, 8000, 10000, 12000, 16000]; // céntimos, apuesta 0,20 €
+const SPECIAL = [12, 13, 14];                         // premios especiales: 100, 120 y 160 €
 /* ---------- TABLA DE RESULTADOS (como en las máquinas de bar) ----------
    En cada jugada la máquina sortea primero el resultado y luego coloca las figuras.
    El 50 % de las jugadas tiene premio de línea; el premio pequeño es el que más sale
    y cada premio mayor sale menos. Probabilidad por jugada de cada premio (índice = figura): */
-const HIT = [.18, .09, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 8000];
+const HIT = [.18, .09, 1 / 45, 1 / 60, 1 / 70, 1 / 200, 1 / 400, 1 / 800, 1 / 1500, 1 / 2800, 1 / 4500, 1 / 6000, 1 / 7500, 1 / 9000, 1 / 11000];
 /* RACHAS: la máquina pasa por rachas frías (casi nada), calientes (premio casi siempre) y normales.
    Su duración es aleatoria; de media sale premio en 1 de cada 3 jugadas y se respeta la tabla HIT. */
 const RACHA = {
@@ -565,9 +571,9 @@ function pasoRacha() {
   return h;
 }
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
-let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 9, 6, 1.0]; // caras de premio pequeño más frecuentes
+let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 1.0]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
-const ESC = 12; // el escudo: premio gordo especial (160 €)
+const ESC = 14; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
 const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; // índice = fila*3+columna
 const PAYLINE = 1; // en la pantalla de abajo solo paga la línea horizontal del medio
@@ -589,12 +595,11 @@ const TS = [
   { img: 'balon',    v: 4000,  n: 'BALÓN' },
   { img: 'canasta',  v: 8000,  n: 'CANASTA' },
   { img: 'mate',     v: 10000, n: 'MATE' },
-  { img: 'trofeo',   v: 0,     n: 'MINIJUEGO' },   // 3 trofeos en línea = minijuego (o tiradas gratis)
-  { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
+  { img: 'camiseta', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5); 3 en línea = minijuego
 ];
-const T_CAM = 5, T_TRO = 4;
-const T_OUT = [.877, .06, .025, .008, .004, .026];  // nada, cancha, balón, canasta, mate, trofeo (por tirada de bonus)
-const T_FILL = [30, 26, 20, 16, 14, 1.1];           // figuras de relleno de arriba
+const T_CAM = 4;
+const T_OUT = [.877, .06, .025, .008, .004, .026];  // nada, cancha, balón, canasta, mate, 3 camisetas en línea (por tirada de bonus)
+const T_FILL = [30, 26, 20, 16, 1.1];           // figuras de relleno de arriba
 /* ---------- estado guardado ---------- */
 const KEY = 'catedral-triple-v1';
 let S = { saldo: 0, cartera: 0, lastDay: '', emptyAt: 0, betSel: 20, bonus: [], muted: false, lastBet: 20, fs: { n: 0, bet: 20 } };
@@ -701,22 +706,40 @@ function song({ bpm, lead, bass, drums, wave = 'square', vol = .07, bellLead = f
     if (c === 'c') noise(w, .6, .14, 'highpass', 5000); }); }
   return t;
 }
+/* sonido «de chip» de las máquinas de bar antiguas: onda de pulso estrecha, arpegios rápidos */
+const PULSE = {};
+function pulseWave(duty) { const a = ac(); if (!a) return null; if (!PULSE[duty]) { const n = 40, re = new Float32Array(n), im = new Float32Array(n);
+  for (let k = 1; k < n; k++) im[k] = 2 / (k * Math.PI) * Math.sin(k * Math.PI * duty); PULSE[duty] = a.createPeriodicWave(re, im); } return PULSE[duty]; }
+function chip(f, d, v, when, duty = .125) {
+  if (S.muted) return; const a = ac(); if (!a) return;
+  const t = a.currentTime + Math.max(0, when), o = a.createOscillator(), g = a.createGain();
+  o.setPeriodicWave(pulseWave(duty)); o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(v, t); g.gain.setValueAtTime(v, t + d * .85); g.gain.linearRampToValueAtTime(.0001, t + d);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .02);
+}
+const ST = n => Math.pow(2, n / 12);
+/* secuenciador sencillo: lista de [semitonos sobre la base o null, duración en semicorcheas] */
+function chipSeq(base, seq, step, v, duty, t0 = 0) { let t = t0; seq.forEach(([n, d]) => { if (n !== null) chip(base * ST(n), d * step * .95, v, t, duty); t += d * step; }); return t; }
 const SONGS = {
-  // 80 €: fanfarria corta y alegre
-  10: () => song({ bpm: 168, wave: 'square', vol: .065,
-    lead: [['G4', .5], ['C5', .5], ['E5', .5], ['G5', 1], ['E5', .5], ['G5', 1.5], [0, .5], ['A5', .5], ['G5', .5], ['F5', .5], ['E5', .5], ['D5', .5], ['E5', .5], ['C6', 2]],
-    bass: [['C3', 2], ['C3', 2], ['F2', 2], ['G2', 1], ['C3', 2]],
-    drums: 'k.s.k.s.k.s.k.k.s.c' }),
-  // 120 €: campanas
-  11: () => song({ bpm: 132, bellLead: true, vol: .08,
-    lead: [['E5', .5], ['G#5', .5], ['B5', .5], ['E6', 1], ['D#6', .5], ['B5', .5], ['G#5', .5], ['B5', .5], ['E6', .5], ['F#6', .5], ['G#6', 1], ['E6', .5], ['B5', .5], ['E6', 2.5]],
-    bass: [['E2', 2], ['B1', 2], ['A2', 2], ['B2', 1], ['E2', 2]],
-    drums: 'k...s...k...s...k.k.s...c' }),
-  // 160 €: himno triunfal del escudo
-  12: () => song({ bpm: 112, wave: 'sawtooth', vol: .05,
-    lead: [[0, 1], ['C4', 1], ['E4', .5], ['G4', .5], ['C5', 1.5], ['G4', .5], ['C5', .5], ['E5', .5], ['G5', 2], ['F5', .5], ['E5', .5], ['D5', .5], ['E5', .5], ['F5', 1], ['A5', 1], ['G5', 1], ['E5', .5], ['D5', .5], ['C5', 1], ['G5', 1], ['C6', 3]],
-    bass: [[0, 1], ['C2', 2], ['C2', 2], ['E2', 2], ['F2', 2], ['F2', 2], ['G2', 2], ['C2', 3]],
-    drums: 'rrrrk.s.k.s.k.s.kks.k.s.k.s.k.s.kks.rrrrc' }),
+  // 100 €: fanfarria de 8 bits, arpegio que sube y acaba en trino
+  12: () => { const b = 523.25, st = .055; let t = 0;
+    [0, 5, 7, 12].forEach(k => { t = chipSeq(b, [[k, 1], [k + 4, 1], [k + 7, 1], [k + 12, 1]].concat([[k, 1], [k + 4, 1], [k + 7, 1], [k + 12, 1]]), st, .09, .125, t); });
+    for (let i = 0; i < 14; i++) chip(b * ST(i % 2 ? 24 : 19), st * .95, .08, t + i * st, .25);
+    chip(b * 4, st * 8, .08, t + 14 * st, .25); chip(b * 2, st * 8, .05, t + 14 * st, .5); },
+  // 120 €: «carrusel» a dos voces con eco, típico de las máquinas de los 80-90
+  13: () => { const b = 659.25, st = .07;
+    const mel = [[0, 2], [4, 2], [7, 2], [12, 2], [11, 2], [7, 2], [9, 2], [14, 2], [12, 2], [7, 2], [4, 2], [7, 2], [12, 6], [null, 2]];
+    const t = chipSeq(b, mel.concat(mel.map(([n, d]) => [n === null ? null : n + 5, d])), st, .085, .125);
+    chipSeq(b / 2, [[0, 8], [5, 8], [7, 8], [0, 8], [5, 8], [7, 8], [0, 8]], st, .05, .5);
+    chipSeq(b, mel.concat(mel.map(([n, d]) => [n === null ? null : n + 5, d])), st, .03, .125, st * 1.5);
+    for (let i = 0; i < 10; i++) chip(b * ST(24 + (i % 2) * 5), st * .9, .06, t + i * st, .25); },
+  // 160 €: «jackpot» del escudo: escalas que suben de tono, trino largo y bajada final
+  14: () => { const st = .05; let t = 0, b = 392;
+    for (let k = 0; k < 6; k++) { t = chipSeq(b * ST(k * 2), [[0, 1], [4, 1], [7, 1], [12, 1], [16, 1], [19, 1], [24, 1], [19, 1], [16, 1], [12, 1], [7, 1], [4, 1]], st, .09, .125, t); chip(b * ST(k * 2) / 2, 12 * st, .05, t - 12 * st, .5); }
+    for (let i = 0; i < 28; i++) chip(b * ST(24 + (i % 2) * 4 + Math.floor(i / 8) * 2), st * .95, .085, t + i * st, .25);
+    t += 28 * st;
+    t = chipSeq(b * 2, [[12, 1], [11, 1], [9, 1], [7, 1], [5, 1], [4, 1], [2, 1], [0, 1], [7, 2], [12, 2], [19, 2], [24, 8]], st * 1.3, .09, .125, t);
+    chip(b, 8 * st * 1.3, .06, t - 8 * st * 1.3, .5); chip(b * 1.5, 8 * st * 1.3, .05, t - 8 * st * 1.3, .5); },
 };
 
 /* =========================================================
@@ -729,29 +752,31 @@ board.innerHTML = `<div class="treels" id="treels">
   <div class="center">
     <div class="dmd" id="dmd">¡SUERTE!</div>
     <div class="tleg">${TS.slice(0, 4).map(t => `<span><img src="img/${t.img}.webp" alt=""><b data-v="${t.v}">${fmtS(t.v)}</b></span>`).join('')}
-      <span><img src="img/trofeo.webp" alt=""><b>JUEGO</b></span><span><img src="img/camiseta.webp" alt=""><b>BONUS</b></span></div>
+      <span class="w"><img src="img/camiseta.webp" alt=""><b>BONUS<br>3 en línea: JUEGO</b></span></div>
     <div class="tbot"><div class="bonusN"><span id="bN">0</span><small>BONUS</small></div><button id="launch" disabled>¡LANZAR!</button></div>
   </div>`;
 const tstrips = [...document.querySelectorAll('.tstrip')], treels = [...document.querySelectorAll('.treel')];
 const tsymHTML = s => `<div class="tsym${s === T_CAM ? ' cam' : ''}"><img src="img/${TS[s].img}.webp" alt=""></div>`;
 const tFill = () => pickW(T_FILL);
 function topEval(g) {
-  let res = null;
-  LINES.forEach((l, i) => { const a = g[l[0]]; if (a !== T_CAM && a === g[l[1]] && a === g[l[2]] && !res) res = { line: i, sym: a }; });
+  let res = null, camLine = -1;
+  LINES.forEach((l, i) => { const a = g[l[0]]; if (a === g[l[1]] && a === g[l[2]]) { if (a === T_CAM) { if (camLine < 0) camLine = i; } else if (!res) res = { line: i, sym: a }; } });
   const nl = LINES.filter(l => { const a = g[l[0]]; return a !== T_CAM && a === g[l[1]] && a === g[l[2]]; }).length;
-  return { hit: res, lines: nl, cams: g.filter(x => x === T_CAM).length };
+  return { hit: res, lines: nl, camLine, cams: g.filter(x => x === T_CAM).length };
 }
 function genTop() {
-  const o = pickW(T_OUT), target = o - 1;            // -1 = sin premio
+  const o = pickW(T_OUT), target = o - 1;            // -1 = sin premio; T_CAM = 3 camisetas en línea (minijuego)
   for (let k = 0; k < 300; k++) {
     const g = Array.from({ length: 9 }, tFill);
     if (target >= 0) LINES[rnd(8)].forEach(i => g[i] = target);
     const e = topEval(g);
+    if (target === T_CAM) { if (e.lines || e.camLine < 0) continue; return g; }
+    if (e.camLine >= 0) continue;
     if (target < 0 && e.lines) continue;
     if (target >= 0 && (e.lines !== 1 || e.hit.sym !== target)) continue;
     return g;
   }
-  return [0, 1, 2, 3, 0, 1, 2, 3, 4];
+  return [0, 1, 2, 3, 0, 1, 2, 3, 0];
 }
 let tgrid = genTop(); for (let k = 0; k < 30 && topEval(tgrid).lines; k++) tgrid = genTop();
 const setTStrip = (c, syms) => { tstrips[c].style.transition = 'none'; tstrips[c].style.transform = 'translateY(0)'; tstrips[c].innerHTML = syms.map(tsymHTML).join(''); };
@@ -887,7 +912,7 @@ async function spin(bet, free) {
     if (H[c]) continue; // rodillo retenido: no gira
     const old = [grid[c], grid[3 + c], grid[6 + c]];
     const nw = [next[c], next[3 + c], next[6 + c]];
-    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(14));
+    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(16));
     const all = nw.concat(filler, old);
     const st = strips[c];
     st.style.transition = 'none';
@@ -1226,28 +1251,26 @@ async function launch() {
   rsnd.end(); tgrid = next;
   const e = topEval(tgrid);
   const tcell = i => tstrips[i % 3].children[Math.floor(i / 3)];
+  const drawT = i => { const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    pl.setAttribute('points', LINES[i].map(k => `${(k % 3) + .5},${Math.floor(k / 3) + .5}`).join(' ')); pl.style.stroke = '#ffd23d';
+    $('#tlines').appendChild(pl); LINES[i].forEach(k => tcell(k).classList.add('win')); };
   if (e.hit) {
-    const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    pl.setAttribute('points', LINES[e.hit.line].map(k => `${(k % 3) + .5},${Math.floor(k / 3) + .5}`).join(' ')); pl.style.stroke = '#ffd23d';
-    $('#tlines').appendChild(pl); LINES[e.hit.line].forEach(k => tcell(k).classList.add('win'));
-    const t = TS[e.hit.sym];
-    if (e.hit.sym === T_TRO) {
-      SFX.bonus(); vib([40, 30, 40]);
-      const opts = Object.keys(MG).concat(['fs']), pick = opts[rnd(opts.length)];
-      if (pick === 'fs') {
-        SFX.big(); dmd(`🎁 ${FS_N} TIRADAS<br>GRATIS x${FS_X}`);
-        S.fs = { n: ((S.fs && S.fs.n) || 0) + FS_N, bet: mult * 20 }; save();
-        await celebrate('¡TIRADAS GRATIS!', 'img/trofeo.webp', null, `${FS_N} TIRADAS · PREMIOS x${FS_X}`);
-      } else {
-        dmd('🎮 MINIJUEGO<br>' + MG[pick].n); await sleep(1200);
-        if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
-        const v = await playMG(pick, mult, false);
-        if (v) await countWin(v);
-      }
+    drawT(e.hit.line);
+    const t = TS[e.hit.sym], v = t.v * mult; bell(1.4); SFX.big(); vib([60, 40, 120]); dmd(t.n + '<br>' + fmt(v));
+    await celebrate('¡' + t.n + '!', 'img/' + t.img + '.webp', v);
+    await countWin(v);
+  } else if (e.camLine >= 0) {
+    drawT(e.camLine); SFX.bonus(); vib([40, 30, 40]);
+    const opts = Object.keys(MG).concat(['fs']), pick = opts[rnd(opts.length)];
+    if (pick === 'fs') {
+      SFX.big(); dmd(`🎁 ${FS_N} TIRADAS<br>GRATIS x${FS_X}`);
+      S.fs = { n: ((S.fs && S.fs.n) || 0) + FS_N, bet: mult * 20 }; save();
+      await celebrate('¡TIRADAS GRATIS!', 'img/camiseta.webp', null, `${FS_N} TIRADAS · PREMIOS x${FS_X}`);
     } else {
-      const v = t.v * mult; bell(1.4); SFX.big(); vib([60, 40, 120]); dmd(t.n + '<br>' + fmt(v));
-      await celebrate('¡' + t.n + '!', 'img/' + t.img + '.webp', v);
-      await countWin(v);
+      dmd('🎮 MINIJUEGO<br>' + MG[pick].n); await sleep(1200);
+      if (auto) { auto = false; $('#autoBtn').classList.remove('on'); }
+      const v = await playMG(pick, mult, false);
+      if (v) await countWin(v);
     }
   } else { SFX.buzz(); vib(60); dmd('SIN PREMIO'); await sleep(900); }
   if (e.cams) {
@@ -1531,8 +1554,7 @@ $('#freqTab').innerHTML = HIT.map((h, i) => ({ h, i })).reverse().map(({ h, i })
 $('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array.from({ length: 9 }, (_, k) => `<i class="${l.includes(k) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
 $('#ptTop').innerHTML = TS.slice(0, 4).slice().reverse().map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('')
-  + `<div class="pti"><img src="img/trofeo.webp" alt=""><div class="v">TROFEO<br><small>minijuego o tiradas gratis</small></div></div>`
-  + `<div class="pti"><img src="img/camiseta.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus</small></div></div>`;
+  + `<div class="pti"><img src="img/camiseta.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus · 3 en línea: minijuego</small></div></div>`;
 $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data-mg="${k}">${MG[k].e} ${MG[k].n}</button>`).join('');
 
 const open = id => $(id).classList.remove('hidden');
