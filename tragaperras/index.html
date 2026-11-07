@@ -730,7 +730,7 @@ function pasoRacha() {
 /* figuras de relleno y de avances/retenciones: las de premio pequeño salen más que las de premio gordo */
 let FILL = [225, 175, 118, 99, 88, 56, 43, 32, 24, 18, 12, 10, 8, 7, 5, 0.6];
 /* camisetas por jugada, al azar: 1 (≈1/20), 2 (≈1/16) o 3 (≈1/45) */
-const CAM_P = [1 / 20, 1 / 16, 1 / 45]; // caras de premio pequeño más frecuentes
+const CAM_P = [1 / 17, 1 / 14, 1 / 39]; // caras de premio pequeño más frecuentes
 let FILL_C = FILL;                                   // el rodillo central igual que los demás
 const ESC = 14; // el escudo: premio gordo especial (160 €)
 const LADDER = [20, 40, 60, 80, 100, 300, 500, 1000, 2000, 4000, 8000, 16000]; // escalera del riesgo (céntimos, a 0,20 €)
@@ -961,39 +961,84 @@ const reels = [...document.querySelectorAll('.reel')];
 const strips = reels.map(r => r.querySelector('.strip'));
 let grid = [];
 const symHTML = s => `<div class="sym${s === CAM ? ' cam' : s === WILD ? ' wild' : ''}"><img src="${SYM[s]}" alt=""></div>`;
-function randSym(col) { return col === 1 ? pickW(FILL_C) : pickW(FILL); }
-/* genera una jugada completa según la tabla de resultados */
+/* RODILLOS DE VERDAD: cada rodillo es una tira fija con todas las figuras: las de premio pequeño 3 veces, las de premio
+   normal 2 veces, las especiales (100, 120 y 160 €) solo 1 vez y 2 camisetas.
+   En la ventana se ven 3 figuras seguidas de la tira y nunca se repite una figura en el mismo rodillo. */
+const REEL_SYMS = [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, CAM, CAM];
+function makeStrip(seed) {
+  const r = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let t = 0; t < 20000; t++) {
+    const left = REEL_SYMS.slice(), a = [];
+    while (left.length) {                                // se va montando la tira sin repetir las 2 figuras anteriores
+      const ok = left.map((x, i) => i).filter(i => left[i] !== a[a.length - 1] && left[i] !== a[a.length - 2]);
+      if (!ok.length) break;
+      const i = ok[Math.floor(r() * ok.length)]; a.push(left[i]); left.splice(i, 1);
+    }
+    if (left.length) continue;
+    let ok = true;
+    const L = a.length;
+    for (let i = 0; i < L && ok; i++) for (let d = 1; d <= 2; d++) if (a[i] === a[(i + d) % L]) ok = false;
+    // cada figura tiene que poder salir en el medio sin camisetas al lado
+    for (let f = 0; f < 15 && ok; f++) if (!a.some((x, i) => x === f && a[(i + L - 1) % L] !== CAM && a[(i + 1) % L] !== CAM)) ok = false;
+    if (ok) return a;
+  }
+}
+const RL = REEL_SYMS.length;
+let STRIPS;
+const winAt = (c, s) => [STRIPS[c][(s + RL - 1) % RL], STRIPS[c][s], STRIPS[c][(s + 1) % RL]];
+/* las tres tiras juntas: cada premio tiene que poder salir en el medio sin camisetas y sin 3 iguales arriba o abajo,
+   y con varias formas distintas de salir (para que no se vea siempre lo mismo alrededor) */
+for (let seed = 11; ; seed += 7) {
+  STRIPS = [makeStrip(seed), makeStrip(seed * 3 + 1), makeStrip(seed * 5 + 2)];
+  let ok = true;
+  for (let f = 0; f < 15 && ok; f++) {
+    const pos = STRIPS.map((t, c) => t.map((x, i) => i).filter(i => t[i] === f && !winAt(c, i).includes(CAM)));
+    let good = 0;
+    pos[0].forEach(a => pos[1].forEach(b => pos[2].forEach(d => { const w = [winAt(0, a), winAt(1, b), winAt(2, d)];
+      if (!(w[0][0] === w[1][0] && w[1][0] === w[2][0]) && !(w[0][2] === w[1][2] && w[1][2] === w[2][2])) good++; })));
+    if (!good) ok = false;
+  }
+  if (ok) break;
+}
+const gridFrom = st => { const g = []; for (let c = 0; c < 3; c++) winAt(c, st[c]).forEach((x, r) => g[r * 3 + c] = x); return g; };
+let stops = [0, 0, 0];
+/* elige al azar una parada del rodillo c: con la figura «mid» en la línea del medio (o cualquiera si es -1) y con o sin camiseta a la vista */
+function pickStop(c, mid, cam, notMid = -1) {
+  const ok = [];
+  for (let s = 0; s < RL; s++) {
+    const w = winAt(c, s);
+    if (mid >= 0 && w[1] !== mid) continue;
+    if (notMid >= 0 && w[1] === notMid) continue;
+    if (cam !== null && w.includes(CAM) !== cam) continue;
+    ok.push(s);
+  }
+  return ok.length ? ok[rnd(ok.length)] : -1;
+}
+/* las figuras especiales (100, 120 y 160 €) casi nunca se dejan ver si no tocan: cada una ≈ 1 vez cada 100 jugadas */
+let SPEC_VIS = .001;
+const specIn = (g, t = -1) => g.some(x => x >= 12 && x <= 14 && x !== t);
+/* genera una jugada completa según la tabla de resultados (las paradas quedan en genGrid.last) */
 function genGrid() {
   const h = pasoRacha();
   const target = Math.random() < h ? pickW(HIT) : -1;   // si toca premio, cuál según la tabla
   const rc = Math.random(); const nCam = rc < CAM_P[2] ? 3 : rc < CAM_P[2] + CAM_P[1] ? 2 : rc < CAM_P[2] + CAM_P[1] + CAM_P[0] ? 1 : 0;
-  for (let tries = 0; tries < 300; tries++) {
-    const g = Array.from({ length: 9 }, (_, i) => randSym(i % 3));
-    let line = null;
-    if (target >= 0) {
-      line = LINES[PAYLINE]; line.forEach(k => g[k] = target);
-    }
+  const camReels = shuffle([0, 1, 2]).slice(0, nCam);
+  for (let tries = 0; tries < 400; tries++) {
+    const st = [0, 1, 2].map(c => { const want = camReels.includes(c); let s = pickStop(c, target, want); if (s < 0) s = pickStop(c, target, false); if (s < 0) s = pickStop(c, target, null); return s; });
+    const g = gridFrom(st);
     const ev = evaluate(g, 1);
     if (target < 0 && ev.wins.length) continue;
     if (target >= 0 && (ev.wins.length !== 1 || ev.wins[0].sym !== target)) continue;
     // para no confundir: arriba y abajo no se dejan 3 caras iguales (no pagan)
     if ([0, 2].some(r => g[r * 3] === g[r * 3 + 1] && g[r * 3] === g[r * 3 + 2])) continue;
-    if (g.includes(CAM)) continue;
-    // camisetas de esta jugada (fuera de la línea premiada)
-    const free = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8].filter(k => !line || !line.includes(k)));
-    for (let k = 0; k < nCam; k++) g[free[k]] = CAM;
-    return g;
+    if (specIn(g, target) && Math.random() > SPEC_VIS) continue;
+    genGrid.last = st; return g;
   }
-  return [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  genGrid.last = [0, 1, 2]; return gridFrom(genGrid.last);
 }
 function setStrip(col, syms) { strips[col].style.transition = 'none'; strips[col].style.transform = 'translateY(0)'; strips[col].innerHTML = syms.map(symHTML).join(''); }
-for (let c = 0; c < 3; c++) {
-  // al empezar, rodillos sin premio a la vista
-  const col = [rnd(12), rnd(12), rnd(12)];
-  col.forEach((s, r) => grid[r * 3 + c] = s);
-}
-// evitar línea ganadora en la pantalla inicial
-for (let k = 0; k < 20 && evaluate(grid, 1).win; k++) grid = grid.map(() => rnd(12));
+// al empezar, rodillos sin premio ni camisetas a la vista
+for (let k = 0; k < 50; k++) { stops = [0, 1, 2].map(c => pickStop(c, -1, false)); grid = gridFrom(stops); if (!evaluate(grid, 1).win) break; }
 // (la primera pantalla ya no tiene premio)
 for (let c = 0; c < 3; c++) setStrip(c, [grid[c], grid[3 + c], grid[6 + c]]);
 
@@ -1092,17 +1137,21 @@ async function spin(bet, free) {
   mode = null; nudges = 0; renderCtl();
   $('#mWin').textContent = fmt(S.ganado || 0); clearWin(); ui();
   const bm = bet / 20, mult = free ? bm * FS_X : bm; // en tiradas gratis los premios de línea van x2
-  const next = wasHeld ? Array.from({ length: 9 }, (_, i) => randSym(i % 3)) : genGrid();
-  for (let c = 0; c < 3; c++) if (H[c]) { next[c] = grid[c]; next[3 + c] = grid[3 + c]; next[6 + c] = grid[6 + c]; }
-  // con 2 figuras iguales paradas en la línea del medio, a veces sale la tercera
-  if (wasHeld && H.filter(Boolean).length === 2) {
-    const f = H.indexOf(false), hc = H.indexOf(true), sym = grid[3 + hc];
-    if (sym !== CAM && H.every((h, c) => !h || grid[3 + c] === sym)) {
-      const pay = PAY[sym] || 0, pHit = pay <= 100 ? .40 : pay <= 2000 ? .30 : pay <= 8000 ? .20 : .125;
-      if (Math.random() < pHit) next[3 + f] = sym;
-      else for (let k = 0; k < 20 && next[3 + f] === sym; k++) next[3 + f] = randSym(f);
+  let nst;
+  if (!wasHeld) { genGrid(); nst = genGrid.last.slice(); }
+  else {
+    nst = [0, 1, 2].map(c => { if (H[c]) return stops[c]; let s; for (let k = 0; k < 20; k++) { s = pickStop(c, -1, false); if (!specIn(winAt(c, s)) || Math.random() < SPEC_VIS) break; } return s; });
+    // con 2 figuras iguales paradas en la línea del medio, a veces sale la tercera
+    if (H.filter(Boolean).length === 2) {
+      const f = H.indexOf(false), hc = H.indexOf(true), sym = grid[3 + hc];
+      if (sym !== CAM && H.every((h, c) => !h || grid[3 + c] === sym)) {
+        const pay = PAY[sym] || 0, pHit = pay <= 100 ? .40 : pay <= 2000 ? .30 : pay <= 8000 ? .20 : .125;
+        const s = Math.random() < pHit ? pickStop(f, sym, false) : pickStop(f, -1, false, sym);
+        if (s >= 0) nst[f] = s;
+      }
     }
   }
+  const next = gridFrom(nst);
   const rsnd = reelSound(H.filter(x => !x).length); vib(15);
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
   const done = [];
@@ -1111,7 +1160,9 @@ async function spin(bet, free) {
     if (H[c]) continue; // rodillo retenido: no gira
     const old = [grid[c], grid[3 + c], grid[6 + c]];
     const nw = [next[c], next[3 + c], next[6 + c]];
-    const filler = Array.from({ length: 14 + order * 6 }, () => rnd(16));
+    // entre la ventana nueva y la vieja pasan las figuras de la tira, en su orden (como un rodillo real)
+    let n = ((stops[c] - nst[c] - 3) % RL + RL) % RL; while (n < 14 + order * 6) n += RL;
+    const filler = Array.from({ length: n }, (_, j) => STRIPS[c][(nst[c] + 2 + j) % RL]);
     const all = nw.concat(filler, old);
     const st = strips[c];
     st.style.transition = 'none';
@@ -1128,7 +1179,7 @@ async function spin(bet, free) {
   }
   await Promise.all(done); rsnd.end();
   reels.forEach(r => r.classList.remove('held'));
-  grid = next;
+  grid = next; stops = nst;
   const r = evaluate(grid, mult);
   if (wasHeld) r.bonus = camBonus(grid.filter((s, i) => s === CAM && !H[i % 3]).length); // las camisetas retenidas no cuentan otra vez
   if (r.wins.length) await payWins(r, mult, free);
@@ -1330,14 +1381,14 @@ const HOLD_AFTER_AV = .7;   // tras gastar los avances sin premio, a menudo deja
 async function nudge(c) {
   if (busy || topBusy || mode !== 'nudge' || nudges <= 0) return;
   ac(); busy = true; clearWin(); ui();
-  const ns = randSym(c), col = [grid[c], grid[3 + c], grid[6 + c]];
+  const ns = STRIPS[c][(stops[c] + 2 * RL - 2) % RL], col = [grid[c], grid[3 + c], grid[6 + c]];   // baja la tira: entra la figura de arriba
   const C = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'));
   const st = strips[c];
   st.style.transition = 'none'; st.innerHTML = [ns].concat(col).map(symHTML).join('');
   st.style.transform = `translateY(${-C}px)`; st.offsetHeight;
   st.style.transition = 'transform 260ms cubic-bezier(.3,.6,.4,1.15)'; st.style.transform = 'translateY(0)';
   SFX.tick(); await sleep(280);
-  grid[6 + c] = col[1]; grid[3 + c] = col[0]; grid[c] = ns;
+  grid[6 + c] = col[1]; grid[3 + c] = col[0]; grid[c] = ns; stops[c] = (stops[c] + RL - 1) % RL;
   setStrip(c, [ns, col[0], col[1]]); SFX.stop(); vib(10);
   nudges--;
   if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); sayBonus(); save(); }
@@ -1376,7 +1427,7 @@ function renderCtl() {
 /* el rodillo que daría premio con un avance (lo que está arriba baja al centro) */
 function bestNudge() {
   for (let c = 0; c < 3; c++) {
-    const t = grid.slice(); t[6 + c] = grid[3 + c]; t[3 + c] = grid[c]; t[c] = -1 - c;
+    const t = grid.slice(); t[6 + c] = grid[3 + c]; t[3 + c] = grid[c]; t[c] = STRIPS[c][(stops[c] + 2 * RL - 2) % RL];
     if (evaluate(t, 1).wins.length) return c;
   }
   return rnd(3);
@@ -1972,7 +2023,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 54;
+const APP_VERSION = 55;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
