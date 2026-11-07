@@ -1019,8 +1019,9 @@ function pickStop(c, mid, cam, notMid = -1) {
   }
   return ok.length ? ok[rnd(ok.length)] : -1;
 }
-/* las figuras especiales (100, 120 y 160 €) se dejan ver menos que las demás: cada una ≈ 1 vez cada 16 jugadas */
-let SPEC_VIS = .08;
+/* las figuras especiales (100, 120 y 160 €) se dejan ver a menudo, sueltas o de dos en dos («casi premio») */
+let SPEC_VIS = .15;
+const NEAR_P = .07;                                   // jugadas sin premio con 2 especiales iguales en una misma fila
 const specIn = (g, t = -1) => g.some(x => x >= 12 && x <= 14 && x !== t);
 /* genera una jugada completa según la tabla de resultados (las paradas quedan en genGrid.last) */
 function genGrid() {
@@ -1028,6 +1029,21 @@ function genGrid() {
   const target = !topeSeg() && Math.random() < (segBase >= 2 ? h * .5 : h) ? pickW(HIT) : -1;   // si toca premio, cuál según la tabla
   const rc = Math.random(); const nCam = rc < CAM_P[2] ? 3 : rc < CAM_P[2] + CAM_P[1] ? 2 : rc < CAM_P[2] + CAM_P[1] + CAM_P[0] ? 1 : 0;
   const camReels = shuffle([0, 1, 2]).slice(0, nCam);
+  // «casi premio»: dos figuras especiales iguales en una misma fila (arriba, en medio o abajo) y la tercera no
+  // (ni justo encima, para que un avance no la complete)
+  if (target < 0 && Math.random() < NEAR_P) {
+    const sym = 12 + rnd(3), miss = rnd(3), row = rnd(3);
+    const stopRow = (c, cam) => { const ok = []; for (let x = 0; x < RL; x++) { const w = winAt(c, x); if (w[row] === sym && w.includes(CAM) === cam) ok.push(x); } return ok.length ? ok[rnd(ok.length)] : -1; };
+    for (let tries = 0; tries < 100; tries++) {
+      const st = [0, 1, 2].map(c => c !== miss ? stopRow(c, camReels.includes(c)) : (() => { const ok = [];
+        for (let x = 0; x < RL; x++) { const w = winAt(c, x); if (!w.includes(sym) && STRIPS[c][(x + 2 * RL - 2) % RL] !== sym && w.includes(CAM) === camReels.includes(c)) ok.push(x); }
+        return ok.length ? ok[rnd(ok.length)] : -1; })());
+      if (st.some(x => x < 0)) { camReels.length = 0; continue; }
+      const g = gridFrom(st);
+      if (evaluate(g, 1).wins.length || [0, 2].some(r => g[r * 3] === g[r * 3 + 1] && g[r * 3] === g[r * 3 + 2])) continue;
+      genGrid.last = st; return g;
+    }
+  }
   for (let tries = 0; tries < 400; tries++) {
     const st = [0, 1, 2].map(c => { const want = camReels.includes(c); let s = pickStop(c, target, want); if (s < 0) s = pickStop(c, target, false); if (s < 0) s = pickStop(c, target, null); return s; });
     const g = gridFrom(st);
@@ -2033,7 +2049,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 60;
+const APP_VERSION = 61;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
