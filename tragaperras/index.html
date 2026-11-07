@@ -768,7 +768,7 @@ const TS = [
 const T_PRIZES = TS.map((t, i) => i).filter(i => TS[i].v > 0).sort((a, b) => TS[a].v - TS[b].v);   // de menor a mayor
 const T_FLAG = 4, T_CAM = 5;
 // por tirada de bonus: nada, cancha 20, balón 40, canasta 80, mate 100, 3 banderas en línea, (camiseta: no), zapatilla 5, marcador 10, silbato 60 (≈ 1 premio de cada 11)
-const T_OUT = [.94356, .0016, .0006, .0002, .0001, .0036, 0, .04, .01, .0004];
+const T_OUT = [.9471, .0016, .0006, .0002, .0001, .007, 0, .033, .01, .0004];   // 3 banderas ≈ 1 de cada 80 tiradas de bonus
 const T_SECO = 14;                                    // si llevas 14 tiradas de bonus sin nada, la siguiente trae premio seguro
 const T_FILL = [20, 18, 15, 13, 12, .6, 22, 20, 14];      // figuras de relleno de arriba
 const T_SMALL = 2000;                                 // los premios pequeños (zapatilla, marcador) salen siempre en una sola línea
@@ -1770,7 +1770,7 @@ function chooseMG(mult) {
   });
 }
 /* premios de los minijuegos: siempre 3 de estos, al azar y en posiciones distintas */
-const MGP = [1000, 2000, 4000, 6000, 8000, 10000, 12000], MGW = [30, 26, 18, 12, 7, 4, 3];
+const MGP = [1000, 2000, 4000, 6000, 8000, 10000, 12000], MGW = [34, 27, 17, 11, 6, 3, 2];
 function pick3() { const idx = [], w = MGW.slice(); while (idx.length < 3) { const i = pickW(w); idx.push(i); w[i] = 0; } return shuffle(idx.map(i => MGP[i])); }
 const ptab = (rows, m, on) => `<div class="ptab">${rows.map((r, i) => `<span class="${i === on ? 'on' : ''}">${r[0]} → ${fmtS(r[1] * m)}</span>`).join('')}</div>`;
 
@@ -2032,7 +2032,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 58;
+const APP_VERSION = 59;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
