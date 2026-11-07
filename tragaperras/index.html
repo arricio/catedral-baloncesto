@@ -716,9 +716,9 @@ const HIT = [1 / 14, 1 / 17, 1 / 30, 1 / 40, 1 / 45, 1 / 150, 1 / 250, 1 / 500, 
 /* RACHAS: la máquina pasa por rachas frías (casi nada), calientes (premio casi siempre) y normales.
    Su duración es aleatoria; de media sale premio en 1 de cada 3 jugadas y se respeta la tabla HIT. */
 const RACHA = {
-  fria:     { h: .04, min: 8, max: 30, sig: 'caliente' },
-  caliente: { h: .70, min: 2, max: 5,  sig: 'normal' },
-  normal:   { h: .34, min: 8, max: 25, sig: 'fria' },
+  fria:     { h: .06, min: 8, max: 22, sig: 'caliente' },
+  caliente: { h: .40, min: 2, max: 3,  sig: 'normal' },
+  normal:   { h: .20, min: 10, max: 24, sig: 'fria' },
 };
 function nuevaRacha(st) { const r = RACHA[st]; return { st, n: r.min + rnd(r.max - r.min + 1) }; }
 function pasoRacha() {
@@ -1145,7 +1145,7 @@ async function spin(bet, free) {
     if (H.filter(Boolean).length === 2) {
       const f = H.indexOf(false), hc = H.indexOf(true), sym = grid[3 + hc];
       if (sym !== CAM && H.every((h, c) => !h || grid[3 + c] === sym)) {
-        const pay = PAY[sym] || 0, pHit = pay <= 100 ? .40 : pay <= 2000 ? .30 : pay <= 8000 ? .20 : .125;
+        const pHit = holdHit(sym);
         const s = Math.random() < pHit ? pickStop(f, sym, false) : pickStop(f, -1, false, sym);
         if (s >= 0) nst[f] = s;
       }
@@ -1375,6 +1375,8 @@ function offerHold() {
   dmd('¡RETENCIÓN!<br>ELIGE QUÉ PARAR');
   return true;
 }
+/* probabilidad de que salga la tercera figura al retener una pareja: cuanto más gordo el premio, más difícil */
+function holdHit(sym) { const p = PAY[sym] || 0; return p <= 100 ? .40 : p <= 500 ? .20 : p <= 2000 ? .06 : p <= 8000 ? .02 : .006; }
 const HOLD_AFTER_AV = .7;   // tras gastar los avances sin premio, a menudo deja parar la pareja
 
 /* un AVANCE: el rodillo baja una posición */
@@ -2023,7 +2025,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 55;
+const APP_VERSION = 56;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
