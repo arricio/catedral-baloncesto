@@ -768,7 +768,7 @@ const TS = [
 const T_PRIZES = TS.map((t, i) => i).filter(i => TS[i].v > 0).sort((a, b) => TS[a].v - TS[b].v);   // de menor a mayor
 const T_FLAG = 4, T_CAM = 5;
 // por tirada de bonus: nada, cancha 20, balón 40, canasta 80, mate 100, 3 banderas en línea, (camiseta: no), zapatilla 5, marcador 10, silbato 60 (≈ 1 premio de cada 11)
-const T_OUT = [.9471, .0016, .0006, .0002, .0001, .007, 0, .033, .01, .0004];   // 3 banderas ≈ 1 de cada 80 tiradas de bonus
+const T_OUT = [.9648, .0016, .0006, .0002, .0001, .006, 0, .02, .006, .0004];   // 3 banderas: ≈ 1 de cada 33 tiradas de bonus contando el seguro
 const T_SECO = 14;                                    // si llevas 14 tiradas de bonus sin nada, la siguiente trae premio seguro
 const T_FILL = [20, 18, 15, 13, 12, .6, 22, 20, 14];      // figuras de relleno de arriba
 const T_SMALL = 2000;                                 // los premios pequeños (zapatilla, marcador) salen siempre en una sola línea
@@ -939,8 +939,9 @@ function topEval(g) {
 /* dibujos de premio arriba: una línea (3 iguales), dos líneas paralelas (6 iguales) o pantalla llena (9 iguales = 8 líneas) */
 const T_PAT = [.9, .09, .01];
 const PAIRS = [[0, 1], [0, 2], [1, 2], [3, 4], [3, 5], [4, 5]];   // dos filas o dos columnas
-function genTop(seco = 0) {
-  const o = seco >= T_SECO ? pickW(T_OUT.map((w, i) => i ? w : 0)) : pickW(T_OUT), target = o - 1;            // -1 = sin premio; T_FLAG = 3 banderas en línea (minijuego)
+const T_FSECO = 39;                                   // si llevas 39 tiradas de bonus sin banderas, la siguiente trae las 3 banderas (minijuego): en 40 comodines siempre hay al menos uno
+function genTop(seco = 0, fseco = 0) {
+  const o = fseco >= T_FSECO ? T_FLAG + 1 : seco >= T_SECO ? pickW(T_OUT.map((w, i) => i ? w : 0)) : pickW(T_OUT), target = o - 1;            // -1 = sin premio; T_FLAG = 3 banderas en línea (minijuego)
   const pat = target < 0 || target === T_FLAG || TS[target].v < T_SMALL ? 0 : pickW(T_PAT);
   const want = [1, 2, 8][pat];
   for (let k = 0; k < 400; k++) {
@@ -1673,8 +1674,8 @@ async function launch() {
   const mult = S.bonus.shift(); save(); ui(); topBusy = true; $('#launch').disabled = true;
   dmd(mult === 2 ? 'BONUS DOBLE<br>¡GIRANDO!' : 'BONUS<br>¡GIRANDO!');
   $('#tlines').innerHTML = ''; document.querySelectorAll('.tsym.win').forEach(e => e.classList.remove('win'));
-  const next = genTop(S.tSeco || 0);
-  { const ne = topEval(next); S.tSeco = ne.prize.length || ne.flags.length ? 0 : (S.tSeco || 0) + 1; }
+  const next = genTop(S.tSeco || 0, S.tFseco || 0);
+  { const ne = topEval(next); S.tSeco = ne.prize.length || ne.flags.length ? 0 : (S.tSeco || 0) + 1; S.tFseco = ne.flags.length ? 0 : (S.tFseco || 0) + 1; }
   const rsnd = reelSound(3), TH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--th')) || 50;
   await Promise.all([0, 1, 2].map(c => new Promise(res => {
     const old = [tgrid[c], tgrid[3 + c], tgrid[6 + c]], nw = [next[c], next[3 + c], next[6 + c]];
@@ -1770,7 +1771,7 @@ function chooseMG(mult) {
   });
 }
 /* premios de los minijuegos: siempre 3 de estos, al azar y en posiciones distintas */
-const MGP = [1000, 2000, 4000, 6000, 8000, 10000, 12000], MGW = [34, 27, 17, 11, 6, 3, 2];
+const MGP = [1000, 2000, 4000, 6000, 8000, 10000, 12000], MGW = [60, 25, 7, 4, 2, 1, 1];
 function pick3() { const idx = [], w = MGW.slice(); while (idx.length < 3) { const i = pickW(w); idx.push(i); w[i] = 0; } return shuffle(idx.map(i => MGP[i])); }
 const ptab = (rows, m, on) => `<div class="ptab">${rows.map((r, i) => `<span class="${i === on ? 'on' : ''}">${r[0]} → ${fmtS(r[1] * m)}</span>`).join('')}</div>`;
 
@@ -2032,7 +2033,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 59;
+const APP_VERSION = 60;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
