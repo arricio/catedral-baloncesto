@@ -647,7 +647,7 @@ header{height:42px}
   <h2>CÓMO SE JUEGA</h2>
   <ol>
     <li>Empiezas con <b>20 €</b> en <b>MI DINERO</b>. Cada día que abras el juego te regalamos <b>20 €</b> más, y si te quedas sin dinero, al pasar <b>1 hora</b> se recargan <b>5 €</b>.</li>
-    <li>Toca la ranura de <b>MONEDAS</b> (a la derecha de PREMIO) o la de <b>BILLETES</b> (debajo) y mete dinero en la máquina: pasan al <b>CRÉDITO</b> y se quedan en la máquina para jugar. Los premios se van sumando en <b>PREMIO</b>, y con <b>COBRAR</b> te pagas los premios a tu dinero (el crédito metido se queda en la máquina). Si se acaba el crédito, se sigue jugando con los premios.</li>
+    <li>Toca la ranura de <b>MONEDAS</b> (a la derecha de PREMIO) o la de <b>BILLETES</b> (debajo) y mete dinero en la máquina: pasan al <b>CRÉDITO</b> y se quedan en la máquina para jugar. Los premios se van sumando en <b>PREMIO</b>, y con <b>COBRAR</b> te pagas los premios a tu dinero (el crédito metido se queda en la máquina). Solo se juega con el crédito: si se acaba, hay que meter más monedas o billetes. Lo que hay en PREMIO se queda ahí hasta que pulses COBRAR.</li>
     <li>Con <b>APUESTA</b> eliges 0,20 € o <b>DOBLE</b> 0,40 €. Jugando a doble, todos los premios se pagan al doble.</li>
     <li>Gira la pantalla de abajo (3×3). Si salen <b>3 iguales en la línea horizontal del medio</b> (la que marcan las flechas rojas) ganas el premio de esa cara.</li>
     <li>Los premios de <b>80 €, 120 € y 160 €</b> son los <b>premios especiales</b> y tienen celebración propia.</li>
@@ -694,7 +694,7 @@ const rnd = n => Math.floor(Math.random() * n);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const fmt = c => (c / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 /* CRÉDITO (S.saldo) = dinero metido en la máquina; PREMIO (S.ganado) = premios ganados, que es lo que se cobra */
-const jugable = () => S.saldo + (S.ganado || 0);            // se juega primero con el crédito y, si se acaba, con los premios
+const enMaquina = () => S.saldo + (S.ganado || 0);              // dinero en la máquina (crédito + premios sin cobrar); solo se juega con el crédito
 const fmtS = c => (c % 100 ? fmt(c) : (c / 100) + ' €');
 const pickW = ws => { let t = ws.reduce((a, b) => a + b, 0), r = Math.random() * t; for (let i = 0; i < ws.length; i++) { if ((r -= ws[i]) < 0) return i; } return ws.length - 1; };
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -1096,7 +1096,7 @@ function ui() {
   $('#mSaldo').textContent = fmt(S.saldo);
   $('#mCartera').textContent = fmt(S.cartera);
   if (!busy && !topBusy && !fsRunning) $('#mWin').textContent = fmt(S.ganado || 0);
-  { const need = jugable() < S.betSel && S.cartera > 0; $('#coinSlotBtn').classList.toggle('call', need); $('#billSlotBtn').classList.toggle('call', need && S.cartera >= 500); }
+  { const need = S.saldo < S.betSel && S.cartera > 0; $('#coinSlotBtn').classList.toggle('call', need); $('#billSlotBtn').classList.toggle('call', need && S.cartera >= 500); }
   $('#betLbl').textContent = fmt(S.betSel); $('#betBtn').classList.toggle('x2', S.betSel === 40); $('#betBtn').firstChild.textContent = S.betSel === 40 ? 'DOBLE' : 'APUESTA'; if (renderPayTop.m !== S.betSel) { renderPayTop.m = S.betSel; renderPayTop(); }
   $('#cobBtn').disabled = busy || topBusy || fsRunning || !(S.ganado > 0); $('#cobBtn').classList.toggle('ready', S.ganado > 0 && !busy);
   $('#betBtn').disabled = busy || topBusy || fsRunning;
@@ -1149,9 +1149,9 @@ let mode = null, held = [false, false, false], holdOk = [false, false, false], n
 async function spin(bet, free) {
   if (busy || topBusy) return;
   if (!free && fsRunning) return;
-  if (!free && jugable() < bet) { if (jugable() + S.cartera >= bet) { SFX.buzz(); openMeter(true); } else noMoney(); return; }
+  if (!free && S.saldo < bet) { if (S.saldo + S.cartera >= bet) { SFX.buzz(); openMeter(true); } else noMoney(); return; }   // solo se juega con el CRÉDITO
   ac(); loadVoz(); busy = true;
-  if (!free) { S.lastBet = bet; const dc = Math.min(S.saldo, bet); S.saldo -= dc; S.ganado = (S.ganado || 0) - (bet - dc); }
+  if (!free) { S.lastBet = bet; S.saldo -= bet; }
   save();
   const H = (!free && mode === 'hold') ? held.slice() : [false, false, false];
   segBase = S.seg || 0; S.seg = 0;
@@ -1488,7 +1488,8 @@ function flyBonus(n) {
 }
 function noMoney() {
   SFX.buzz(); auto = false; $('#autoBtn').classList.remove('on');
-  if (jugable() + S.cartera < 20) {
+  if (S.saldo + S.cartera < 20 && S.ganado > 0) { dmd('COBRA EL PREMIO<br>Y METE DINERO'); return; }   // queda dinero en PREMIO: hay que cobrarlo
+  if (enMaquina() + S.cartera < 20) {
     if (!S.emptyAt) { S.emptyAt = Date.now(); save(); }
     dmd('SIN DINERO'); tickMoney(); $('#nmOv').classList.remove('hidden');
   } else dmd('PULSA JUGAR');
@@ -1636,7 +1637,7 @@ async function checkDaily() {
   await celebrate('¡REGALO DIARIO!', 'img/p13.webp', 2000);
 }
 function tickMoney() {
-  const out = jugable() + S.cartera < 20 && !S.bonus.length && !(S.fs && S.fs.n > 0);
+  const out = enMaquina() + S.cartera < 20 && !S.bonus.length && !(S.fs && S.fs.n > 0);
   if (out && !S.emptyAt && !busy && !topBusy && !fsRunning) { S.emptyAt = Date.now(); save(); }
   if (!out && S.emptyAt) { S.emptyAt = 0; save(); }
   if (S.emptyAt) {
@@ -1746,8 +1747,8 @@ function autoStep() {
     if (!auto || busy || topBusy || fsRunning) return;
     if (mode === 'nudge' && nudges > 0) nudge(bestNudge());
     else if (S.bonus.length) { S.zona = 'arriba'; ui(); launch(); }
-    else if (jugable() >= S.betSel) spin(S.betSel);
-    else if (jugable() + S.cartera >= S.betSel) { auto = false; $('#autoBtn').classList.remove('on'); openMeter(true); }
+    else if (S.saldo >= S.betSel) spin(S.betSel);
+    else if (S.saldo + S.cartera >= S.betSel) { auto = false; $('#autoBtn').classList.remove('on'); openMeter(true); }
     else { auto = false; $('#autoBtn').classList.remove('on'); noMoney(); }
   }, 650);
 }
@@ -2049,7 +2050,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 62;
+const APP_VERSION = 63;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
