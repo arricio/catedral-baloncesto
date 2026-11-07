@@ -721,6 +721,10 @@ const RACHA = {
   normal:   { h: .20, min: 10, max: 24, sig: 'fria' },
 };
 function nuevaRacha(st) { const r = RACHA[st]; return { st, n: r.min + rnd(r.max - r.min + 1) }; }
+/* tope de premios seguidos: como mucho 3 jugadas seguidas con premio (contando avances y retenciones) */
+const MAX_SEG = 3;
+let segBase = 0;                                      // jugadas seguidas con premio antes de esta
+const topeSeg = () => segBase >= MAX_SEG;
 function pasoRacha() {
   if (!S.racha || !RACHA[S.racha.st]) { const sts = ['fria', 'fria', 'normal', 'caliente']; S.racha = nuevaRacha(sts[rnd(4)]); S.racha.n = 1 + rnd(S.racha.n); }
   const h = RACHA[S.racha.st].h;
@@ -1020,7 +1024,7 @@ const specIn = (g, t = -1) => g.some(x => x >= 12 && x <= 14 && x !== t);
 /* genera una jugada completa según la tabla de resultados (las paradas quedan en genGrid.last) */
 function genGrid() {
   const h = pasoRacha();
-  const target = Math.random() < h ? pickW(HIT) : -1;   // si toca premio, cuál según la tabla
+  const target = !topeSeg() && Math.random() < (segBase >= 2 ? h * .5 : h) ? pickW(HIT) : -1;   // si toca premio, cuál según la tabla
   const rc = Math.random(); const nCam = rc < CAM_P[2] ? 3 : rc < CAM_P[2] + CAM_P[1] ? 2 : rc < CAM_P[2] + CAM_P[1] + CAM_P[0] ? 1 : 0;
   const camReels = shuffle([0, 1, 2]).slice(0, nCam);
   for (let tries = 0; tries < 400; tries++) {
@@ -1133,6 +1137,7 @@ async function spin(bet, free) {
   if (!free) { S.lastBet = bet; const dc = Math.min(S.saldo, bet); S.saldo -= dc; S.ganado = (S.ganado || 0) - (bet - dc); }
   save();
   const H = (!free && mode === 'hold') ? held.slice() : [false, false, false];
+  segBase = S.seg || 0; S.seg = 0;
   const wasHeld = H.some(Boolean);
   mode = null; nudges = 0; renderCtl();
   $('#mWin').textContent = fmt(S.ganado || 0); clearWin(); ui();
@@ -1145,7 +1150,7 @@ async function spin(bet, free) {
     if (H.filter(Boolean).length === 2) {
       const f = H.indexOf(false), hc = H.indexOf(true), sym = grid[3 + hc];
       if (sym !== CAM && H.every((h, c) => !h || grid[3 + c] === sym)) {
-        const pHit = holdHit(sym);
+        const pHit = topeSeg() ? 0 : holdHit(sym);
         const s = Math.random() < pHit ? pickStop(f, sym, false) : pickStop(f, -1, false, sym);
         if (s >= 0) nst[f] = s;
       }
@@ -1181,6 +1186,7 @@ async function spin(bet, free) {
   reels.forEach(r => r.classList.remove('held'));
   grid = next; stops = nst;
   const r = evaluate(grid, mult);
+  if (r.wins.length) { S.seg = segBase + 1; save(); }
   if (wasHeld) r.bonus = camBonus(grid.filter((s, i) => s === CAM && !H[i % 3]).length); // las camisetas retenidas no cuentan otra vez
   if (r.wins.length) await payWins(r, mult, free);
   if (r.bonus) {
@@ -1352,6 +1358,7 @@ function sayPremio() { playVoz('premio', '¡Premio!'); }
 function saySube() { playVoz('sube', '¡Sube!'); }
 function sayBonus() { playVoz('bonus', '¡Bonus!'); }
 async function offerExtras(mult, wasHeld) {
+  if (topeSeg()) return;                              // tras 3 premios seguidos, ni avances ni retención
   if (Math.random() < AV_P) {
     nudges = AV_N[pickW(AV_W)]; nudgeMult = mult; mode = 'nudge';
     [0, 1, 2].forEach((f, i) => tone(660 + i * 220, .12, 'square', .06, i * .1)); vib([20, 20, 20]);
@@ -1395,7 +1402,7 @@ async function nudge(c) {
   nudges--;
   if (ns === CAM) { cellAt(c).classList.add('camwin'); S.bonus.push(nudgeMult); flyBonus(1); SFX.bonus(); sayBonus(); save(); }
   const r = evaluate(grid, nudgeMult);
-  if (r.wins.length) { nudges = 0; await payWins(r, nudgeMult); }
+  if (r.wins.length) { nudges = 0; S.seg = segBase + 1; save(); await payWins(r, nudgeMult); }
   if (nudges > 0) dmd(`${nudges} AVANCE${nudges > 1 ? 'S' : ''}<br>ELIGE RODILLO`);
   else {
     mode = null;
@@ -2025,7 +2032,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 57;
+const APP_VERSION = 58;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
