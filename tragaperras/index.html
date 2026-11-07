@@ -1020,8 +1020,8 @@ function pickStop(c, mid, cam, notMid = -1) {
   return ok.length ? ok[rnd(ok.length)] : -1;
 }
 /* las figuras especiales (100, 120 y 160 €) se dejan ver a menudo, sueltas o de dos en dos («casi premio») */
-let SPEC_VIS = .15;
-const NEAR_P = .07;                                   // jugadas sin premio con 2 especiales iguales en una misma fila
+let SPEC_VIS = .4;
+const NEAR_P = .13;                                   // jugadas sin premio con 2 especiales iguales en una misma fila
 const specIn = (g, t = -1) => g.some(x => x >= 12 && x <= 14 && x !== t);
 /* genera una jugada completa según la tabla de resultados (las paradas quedan en genGrid.last) */
 function genGrid() {
@@ -2049,7 +2049,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 61;
+const APP_VERSION = 62;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
