@@ -8,11 +8,13 @@ import { USDZExporter } from 'three/addons/exporters/USDZExporter.js';
 import { zipSync, strToU8 } from 'three/addons/libs/fflate.module.js';
 import { clone as clonarConHuesos } from 'three/addons/utils/SkeletonUtils.js';
 import { fusionarConColores, ponerReposo } from './geometria.js';
+import { exportarFBX } from './fbx.js';
 
 export const FORMATOS = [
   { id: 'glb', nombre: 'GLB', detalle: 'Con texturas y animaciones · web, Blender, Unity, Unreal' },
   { id: 'stl', nombre: 'STL', detalle: 'Impresión 3D (mm, Z arriba)' },
   { id: '3mf', nombre: '3MF', detalle: 'Impresión 3D moderna (Bambu, Prusa, Cura)' },
+  { id: 'fbx', nombre: 'FBX', detalle: 'Blender, Unity, Unreal, Maya (con textura)' },
   { id: 'obj', nombre: 'OBJ', detalle: 'Malla universal' },
   { id: 'ply', nombre: 'PLY', detalle: 'Malla con colores por vértice' },
   { id: 'usdz', nombre: 'USDZ', detalle: 'Realidad aumentada en iPhone y iPad' },
@@ -163,6 +165,7 @@ export async function exportarFormato(formato, objeto, { alturaMm = 80, clips = 
     case 'glb': return glbOriginal && !clips.length ? glbOriginal : exportarGLB(objeto, clips);
     case 'stl': return exportarSTL(objeto, alturaMm);
     case 'obj': return exportarOBJ(objeto, alturaMm);
+    case 'fbx': return exportarFBX(preparar(objeto, alturaMm, false));
     case 'ply': return exportarPLY(objeto, alturaMm);
     case 'usdz': return exportarUSDZ(objeto);
     case '3mf': return exportar3MF(objeto, alturaMm);

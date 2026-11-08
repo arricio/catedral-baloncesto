@@ -425,3 +425,34 @@ export async function rigConIA(ctx, glb) {
     throw clasificarError(e);
   }
 }
+
+/**
+ * Escena con varios objetos (MIDI-3D, de Tripo): una foto + un recuadro por objeto.
+ * @param {Array<[number,number,number,number]>} cajas  [x1, y1, x2, y2] en píxeles de la imagen
+ */
+export async function escenaA3D(ctx, imagen, cajas, opciones) {
+  const semilla = opciones.semilla ?? semillaAleatoria();
+  try {
+    ctx.progreso({ etapa: 'Conectando con MIDI-3D', porcentaje: 2 });
+    const c = await conectar('VAST-AI/MIDI-3D', ctx.token);
+    const prompts = { image: handle_file(imagen), points: cajas.map(([x1, y1, x2, y2]) => [x1, y1, 2, x2, y2, 3]) };
+    const seg = await ejecutar(ctx, c, '/run_segmentation', { image_prompts: prompts, polygon_refinement: false }, 'Separando los objetos de la foto', [4, 18]);
+    const mapa = Array.isArray(seg) ? seg[0] : seg;
+    const res = await ejecutar(ctx, c, '/run_generation', {
+      rgb_image: prompts, seg_image: mapa, seed: semilla, randomize_seed: false,
+      num_inference_steps: opciones.calidad === 'rapida' ? 30 : 50, guidance_scale: 7, do_image_padding: true,
+    }, 'Creando la escena en 3D', [18, opciones.texturizar ? 65 : 97]);
+    let glb = await descargar(buscarArchivo(res, ['.glb']), ctx);
+    if (opciones.texturizar) {
+      try {
+        glb = await texturizar(ctx, glb, { imagen, rango: [65, 98] });
+      } catch (e) {
+        if (clasificarError(e).tipo === 'cancelado') throw e;
+        console.warn('[FORJA 3D] no se pudo colorear la escena', e);
+      }
+    }
+    return { glb, motor: 'MIDI-3D · Tripo (escena)' };
+  } catch (e) {
+    throw clasificarError(e);
+  }
+}

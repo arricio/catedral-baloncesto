@@ -6,7 +6,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { clone as clonarConHuesos } from 'three/addons/utils/SkeletonUtils.js';
 import { Visor } from './visor.js';
 import {
-  MOTORES, imagenA3D, textoAImagen, multivistaA3D, bocetoA3D, texturizar, rigConIA, clasificarError,
+  MOTORES, imagenA3D, textoAImagen, multivistaA3D, bocetoA3D, escenaA3D, texturizar, rigConIA, clasificarError,
 } from './motores.js';
 import { FORMATOS, descargarBlob, nombreArchivo, exportarGLB, exportarFormato } from './exportar.js';
 import { guardarModelo, listarModelos, obtenerModelo, borrarModelo } from './biblioteca.js';
@@ -247,6 +247,7 @@ function actualizarBotonGenerar() {
     if ($('#cuatro-opciones').checked && estado.opcionesTexto.length && estado.elegida < 0) listo = false;
   } else if (estado.modo === 'multivista') listo = !!estado.vistas.frente;
   else if (estado.modo === 'boceto') listo = bocetoTieneTrazos();
+  else if (estado.modo === 'escena') listo = !!escena.imagen && escena.cajas.length > 0;
   $('#btn-generar').disabled = !listo || !!estado.abortar;
   $('#btn-generar span').textContent = estado.abortar ? 'Trabajando…' : texto;
 }
@@ -254,8 +255,9 @@ function actualizarBotonGenerar() {
 $$('[data-modo]').forEach((b) => b.addEventListener('click', () => {
   estado.modo = b.dataset.modo;
   $$('[data-modo]').forEach((x) => x.classList.toggle('activo', x === b));
-  for (const m of ['imagen', 'texto', 'multivista', 'boceto']) $(`#modo-${m}`).hidden = estado.modo !== m;
-  $('#grupo-motor').hidden = estado.modo === 'multivista' || estado.modo === 'boceto';
+  for (const m of ['imagen', 'texto', 'multivista', 'boceto', 'escena']) $(`#modo-${m}`).hidden = estado.modo !== m;
+  $('#grupo-motor').hidden = ['multivista', 'boceto', 'escena'].includes(estado.modo);
+  if (estado.modo === 'escena') dibujarEscena();
   aviso('');
   actualizarBotonGenerar();
 }));
@@ -408,6 +410,71 @@ $('#boceto-borrar').addEventListener('click', () => { trazos.length = 0; redibuj
 $('#boceto-fidelidad').addEventListener('input', (e) => { $('#boceto-fidelidad-valor').textContent = Number(e.target.value).toLocaleString('es-ES'); });
 redibujarBoceto();
 
+// Escena: foto + recuadros
+const escena = { imagen: null, bmp: null, cajas: [], actual: null };
+const lienzoEscena = $('#lienzo-escena');
+const ctxE = lienzoEscena.getContext('2d');
+function dibujarEscena() {
+  if (!escena.bmp) return;
+  ctxE.drawImage(escena.bmp, 0, 0, lienzoEscena.width, lienzoEscena.height);
+  const k = lienzoEscena.width / escena.bmp.width;
+  const todas = escena.actual ? [...escena.cajas, escena.actual] : escena.cajas;
+  todas.forEach(([x1, y1, x2, y2], i) => {
+    ctxE.lineWidth = Math.max(2, lienzoEscena.width / 200);
+    ctxE.strokeStyle = ['#22d3ee', '#ff6b6b', '#51cf66', '#fcc419', '#cc5de8', '#ff922b'][i % 6];
+    ctxE.fillStyle = ctxE.strokeStyle + '33';
+    ctxE.fillRect(x1 * k, y1 * k, (x2 - x1) * k, (y2 - y1) * k);
+    ctxE.strokeRect(x1 * k, y1 * k, (x2 - x1) * k, (y2 - y1) * k);
+    ctxE.fillStyle = '#fff';
+    ctxE.font = `bold ${Math.round(lienzoEscena.width / 28)}px system-ui`;
+    ctxE.fillText(String(i + 1), x1 * k + 6, y1 * k + lienzoEscena.width / 24);
+  });
+  $('#cuenta-cajas').textContent = `${escena.cajas.length} ${escena.cajas.length === 1 ? 'objeto marcado' : 'objetos marcados'}`;
+  actualizarBotonGenerar();
+}
+$('#entrada-escena').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f?.type.startsWith('image/')) return;
+  escena.imagen = await normalizarImagen(f);
+  escena.bmp = await createImageBitmap(escena.imagen);
+  escena.cajas = [];
+  lienzoEscena.width = Math.min(1024, escena.bmp.width);
+  lienzoEscena.height = Math.round(lienzoEscena.width * escena.bmp.height / escena.bmp.width);
+  $('#contenedor-escena').hidden = false;
+  $('#herr-escena').hidden = false;
+  dibujarEscena();
+  tostada('Ahora dibuja un recuadro alrededor de cada objeto');
+});
+const puntoEscena = (e) => {
+  const r = lienzoEscena.getBoundingClientRect();
+  const x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * escena.bmp.width;
+  const y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) * escena.bmp.height;
+  return [Math.round(x), Math.round(y)];
+};
+let origenCaja = null;
+lienzoEscena.addEventListener('pointerdown', (e) => {
+  if (!escena.bmp) return;
+  lienzoEscena.setPointerCapture(e.pointerId);
+  origenCaja = puntoEscena(e);
+});
+lienzoEscena.addEventListener('pointermove', (e) => {
+  if (!origenCaja) return;
+  const [x, y] = puntoEscena(e);
+  escena.actual = [Math.min(origenCaja[0], x), Math.min(origenCaja[1], y), Math.max(origenCaja[0], x), Math.max(origenCaja[1], y)];
+  dibujarEscena();
+});
+const finCaja = () => {
+  if (escena.actual && escena.actual[2] - escena.actual[0] > 8 && escena.actual[3] - escena.actual[1] > 8) escena.cajas.push(escena.actual);
+  escena.actual = null;
+  origenCaja = null;
+  dibujarEscena();
+};
+lienzoEscena.addEventListener('pointerup', finCaja);
+lienzoEscena.addEventListener('pointercancel', finCaja);
+$('#escena-deshacer').addEventListener('click', () => { escena.cajas.pop(); dibujarEscena(); });
+$('#escena-borrar').addEventListener('click', () => { escena.cajas = []; dibujarEscena(); });
+
 // Motores
 for (const m of MOTORES) {
   const o = document.createElement('option');
@@ -463,6 +530,9 @@ async function generar() {
     } else if (estado.modo === 'multivista') {
       r = await multivistaA3D(ctx, estado.vistas, op);
       info = { nombre: 'multivista', origen: 'multivista' };
+    } else if (estado.modo === 'escena') {
+      r = await escenaA3D(ctx, escena.imagen, escena.cajas, { ...op, texturizar: $('#escena-color').checked });
+      info = { nombre: 'escena', origen: 'escena' };
     } else {
       const dibujo = await new Promise((ok) => boceto.toBlob(ok, 'image/png'));
       const texto = $('#boceto-texto').value.trim();
@@ -472,6 +542,14 @@ async function generar() {
     info.motor = r.motor;
     progreso({ etapa: 'Cargando el modelo', porcentaje: 99 });
     await cargarModelo(r.glb, info);
+    if (info.origen === 'escena') {
+      // Cada objeto de la escena queda como una parte independiente.
+      const partes = segmentar(visor.objeto, 'piezas');
+      partes.children.forEach((p, i) => { p.userData.parte.nombre = `Objeto ${i + 1}`; p.name = `Objeto ${i + 1}`; });
+      aplicarCambio(partes, { glb: r.glb, info, historial: false });
+      estado.base = { objeto: copiaProfunda(partes), clips: [] };
+      abrirHerramienta('partes');
+    }
     return r;
   }, { ia: true });
   if (resultado) {

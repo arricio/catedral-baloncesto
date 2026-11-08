@@ -13,6 +13,7 @@ URL (GitHub Pages): `https://arricio.github.io/catedral-baloncesto/forja-3d/`
 | **Texto → 3D** | Texto → imagen (1 o 4 propuestas para elegir) → 3D | FLUX.1 + los anteriores |
 | **Multivista → 3D** | Frente, espalda, izquierda y derecha del mismo objeto | Hunyuan3D-2mv + textura MV-Adapter |
 | **Boceto → 3D** | Dibujas con el dedo o el ratón y describes el objeto | TripoSG Scribble (Tripo) + color MV-Adapter |
+| **Escena → 3D** | Una foto con varios objetos: recuadras cada uno y se crean todos, colocados como en la foto | MIDI-3D (Tripo) + color MV-Adapter |
 | **Relieve local** | Sin IA ni internet: silueta → figura cerrada | Local |
 
 ## Editar
@@ -37,7 +38,7 @@ URL (GitHub Pages): `https://arricio.github.io/catedral-baloncesto/forja-3d/`
 
 ## Exportar
 
-GLB (con texturas y animaciones), STL, 3MF, OBJ, PLY con color, USDZ (realidad aumentada en iPhone),
+GLB (con texturas y animaciones), FBX (con textura incrustada), STL, 3MF, OBJ, PLY con color, USDZ (realidad aumentada en iPhone),
 captura PNG, vídeo 360° y compartir. Biblioteca local (IndexedDB) con miniaturas y animaciones.
 También abre archivos GLB, GLTF, STL y OBJ.
 
@@ -55,6 +56,7 @@ js/partes.js       Segmentación
 js/pincel.js       Pintura sobre textura o colores de vértice
 js/geometria.js    Utilidades geométricas y análisis de impresión
 js/exportar.js     GLB, STL, 3MF, OBJ, PLY, USDZ
+js/fbx.js          Exportador FBX binario 7.4
 js/relieve.js      Motor local sin IA
 vendor/            three.js r180 y @gradio/client 2.7.1 (copiados para no depender de CDN)
 ```
@@ -68,4 +70,4 @@ Sin compilación: módulos ES servidos tal cual (`python3 -m http.server` y abri
 - El esqueleto automático local espera el modelo de pie y mirando al frente; para poses raras conviene
   ajustar las articulaciones a mano o usar el esqueleto con IA.
 - La reducción de polígonos convierte la textura en colores por vértice (no es una retopología a quads).
-- No exporta FBX (no hay un exportador fiable en el navegador); GLB es el formato equivalente recomendado.
+- El FBX se exporta como modelo estático (con textura); las animaciones van en el GLB animado.

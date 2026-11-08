@@ -185,7 +185,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--acento); }
 }
 
 /* --- Ampliación: modos de creación y herramientas --- */
-.segmentado.cuadricula { display: grid; grid-template-columns: 1fr 1fr; }
+.segmentado.cuadricula { display: grid; grid-template-columns: repeat(3, 1fr); }
+.segmentado.cuadricula button { padding: 8px 4px; font-size: 13.5px; }
+.lienzo-escena { border-radius: 12px; overflow: hidden; border: 1px solid var(--borde); background: #000; }
+.lienzo-escena canvas { width: 100%; display: block; touch-action: none; cursor: crosshair; }
+#cuenta-cajas { flex: 1; }
 .casilla { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--texto-2); cursor: pointer; }
 .casilla input { accent-color: var(--acento); width: 16px; height: 16px; }
 .opciones-imagen { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }

@@ -41,8 +41,9 @@
       <div class="segmentado cuadricula" role="tablist">
         <button class="activo" data-modo="imagen">🖼️ Imagen</button>
         <button data-modo="texto">✍️ Texto</button>
-        <button data-modo="multivista">📸 Multivista</button>
+        <button data-modo="multivista" title="Varias fotos del mismo objeto">📸 Vistas</button>
         <button data-modo="boceto">✏️ Boceto</button>
+        <button data-modo="escena">🏙️ Escena</button>
       </div>
 
       <div id="modo-imagen" class="modo">
@@ -101,6 +102,19 @@
         <label class="etiqueta" for="boceto-fidelidad">Fidelidad al dibujo <output id="boceto-fidelidad-valor">0,4</output></label>
         <input id="boceto-fidelidad" type="range" min="0" max="1" step="0.05" value="0.4" />
         <p class="ayuda">Motor: TripoSG Scribble (Tripo).</p>
+      </div>
+
+      <div id="modo-escena" class="modo" hidden>
+        <p class="ayuda">Sube una foto con varios objetos y <b>dibuja un recuadro ajustado alrededor de cada uno</b> arrastrando el dedo o el ratón. Se creará cada objeto en 3D, colocado como en la foto.</p>
+        <label class="btn-secundario btn-archivo">🖼️ Elegir foto de la escena…<input id="entrada-escena" type="file" accept="image/*" hidden /></label>
+        <div class="lienzo-escena" id="contenedor-escena" hidden><canvas id="lienzo-escena" aria-label="Foto de la escena con recuadros"></canvas></div>
+        <div class="fila-herramientas" id="herr-escena" hidden>
+          <span id="cuenta-cajas" class="ayuda">0 objetos marcados</span>
+          <button id="escena-deshacer" title="Quitar el último recuadro">↶</button>
+          <button id="escena-borrar" title="Quitar todos los recuadros">🗑️</button>
+        </div>
+        <label class="casilla"><input type="checkbox" id="escena-color" checked /> Colorear con la foto (IA)</label>
+        <p class="ayuda">Motor: MIDI-3D (Tripo). Cada objeto queda como una parte separada.</p>
       </div>
 
       <details class="opciones" open>
