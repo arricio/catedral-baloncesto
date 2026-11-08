@@ -1,0 +1,12 @@
+{
+  "name": "FORJA 3D",
+  "short_name": "Forja 3D",
+  "description": "De texto o imagen a modelo 3D con IA",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0d17",
+  "theme_color": "#0b0d17",
+  "icons": [{ "src": "icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

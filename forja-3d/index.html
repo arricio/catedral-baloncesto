@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>FORJA 3D · De texto o imagen a modelo 3D</title>
+  <meta name="description" content="Genera modelos 3D a partir de una foto o una descripción con IA. Visor 3D, biblioteca y descarga en GLB, OBJ y STL." />
+  <meta name="theme-color" content="#0b0d17" />
+  <link rel="icon" type="image/svg+xml" href="icono.svg" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/": "./vendor/three/addons/",
+        "@gradio/client": "./vendor/gradio-client.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="barra">
+    <div class="marca">
+      <img src="icono.svg" alt="" width="30" height="30" />
+      <span>FORJA <b>3D</b></span>
+    </div>
+    <nav class="pestanas-vista" role="tablist">
+      <button class="activo" data-vista="estudio" role="tab">Estudio</button>
+      <button data-vista="biblioteca" role="tab">Biblioteca <span id="cuenta-biblio" class="chip">0</span></button>
+    </nav>
+    <button id="btn-ajustes" class="btn-icono" title="Ajustes" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <main id="vista-estudio" class="estudio">
+    <!-- Panel de creación -->
+    <section class="panel panel-crear" aria-label="Crear modelo">
+      <div class="segmentado" role="tablist">
+        <button class="activo" data-modo="imagen">🖼️ Imagen a 3D</button>
+        <button data-modo="texto">✍️ Texto a 3D</button>
+      </div>
+
+      <div id="modo-imagen" class="modo">
+        <label id="zona-subida" class="zona-subida" tabindex="0">
+          <input id="entrada-imagen" type="file" accept="image/*" hidden />
+          <img id="vista-previa" alt="Imagen elegida" hidden />
+          <div id="texto-subida" class="texto-subida">
+            <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <strong>Sube o arrastra una imagen</strong>
+            <span>También puedes pegarla (Ctrl+V) o hacer una foto. Mejor un solo objeto, bien iluminado.</span>
+          </div>
+        </label>
+        <button id="btn-quitar-imagen" class="enlace" hidden>Quitar imagen</button>
+      </div>
+
+      <div id="modo-texto" class="modo" hidden>
+        <label class="etiqueta" for="entrada-texto">Describe el objeto</label>
+        <textarea id="entrada-texto" rows="4" maxlength="400" placeholder="Ej.: un dragón pequeño de juguete, de color verde, con alas"></textarea>
+        <div class="sugerencias" id="sugerencias"></div>
+        <label class="etiqueta" for="estilo">Estilo</label>
+        <select id="estilo">
+          <option value="realista">Realista</option>
+          <option value="juguete">Juguete / figura</option>
+          <option value="caricatura">Caricatura</option>
+          <option value="lowpoly">Low poly</option>
+          <option value="arcilla">Escultura de arcilla</option>
+        </select>
+        <img id="vista-previa-texto" class="vista-previa-texto" alt="Imagen de referencia generada" hidden />
+      </div>
+
+      <details class="opciones" open>
+        <summary>Opciones</summary>
+        <label class="etiqueta" for="motor">Motor de IA</label>
+        <select id="motor"></select>
+        <p id="ayuda-motor" class="ayuda"></p>
+
+        <label class="etiqueta">Calidad</label>
+        <div class="segmentado pequeno" id="calidad">
+          <button data-calidad="rapida" class="activo">Rápida</button>
+          <button data-calidad="alta">Alta</button>
+        </div>
+        <label class="etiqueta" for="semilla">Semilla <span class="ayuda-inline">(vacía = aleatoria)</span></label>
+        <input id="semilla" type="number" min="0" step="1" placeholder="Aleatoria" />
+      </details>
+
+      <button id="btn-generar" class="btn-principal" disabled>
+        <span>Generar modelo 3D</span>
+      </button>
+      <button id="btn-cancelar" class="btn-secundario" hidden>Cancelar</button>
+
+      <div id="progreso" class="progreso" hidden>
+        <div class="progreso-cabecera">
+          <span id="progreso-etapa">Preparando…</span>
+          <span id="progreso-porcentaje">0 %</span>
+        </div>
+        <div class="progreso-barra"><div id="progreso-relleno"></div></div>
+        <p id="progreso-detalle" class="ayuda"></p>
+      </div>
+      <div id="aviso" class="aviso" hidden></div>
+    </section>
+
+    <!-- Visor 3D -->
+    <section class="panel panel-visor" aria-label="Visor 3D">
+      <div id="lienzo" class="lienzo">
+        <div id="vacio" class="vacio">
+          <div class="cubo"><span></span><span></span><span></span></div>
+          <p>Tu modelo aparecerá aquí</p>
+          <button id="btn-demo" class="btn-secundario">Ver un modelo de ejemplo</button>
+        </div>
+      </div>
+      <div class="herramientas" id="herramientas">
+        <div class="grupo" role="radiogroup" aria-label="Modo de vista">
+          <button data-vista3d="textura" class="activo" title="Con textura">Textura</button>
+          <button data-vista3d="arcilla" title="Sin color">Arcilla</button>
+          <button data-vista3d="malla" title="Alambre">Malla</button>
+          <button data-vista3d="normales" title="Normales">Normales</button>
+        </div>
+        <div class="grupo">
+          <button id="btn-rotar" class="activo" title="Girar automáticamente">⟳ Girar</button>
+          <button id="btn-suelo" class="activo" title="Mostrar suelo">▦ Suelo</button>
+          <button id="btn-centrar" title="Encuadrar">⌖ Encuadrar</button>
+          <button id="btn-captura" title="Guardar imagen PNG">📷 Captura</button>
+        </div>
+      </div>
+      <div class="info-modelo" id="info-modelo" hidden>
+        <span id="info-triangulos"></span>
+        <span id="info-vertices"></span>
+        <span id="info-medidas"></span>
+        <span id="info-motor"></span>
+      </div>
+    </section>
+
+    <!-- Panel de exportación -->
+    <section class="panel panel-exportar" aria-label="Exportar">
+      <h2>Descargar</h2>
+      <label class="etiqueta" for="nombre-modelo">Nombre</label>
+      <input id="nombre-modelo" type="text" placeholder="mi-modelo" maxlength="60" />
+      <label class="etiqueta" for="altura-mm">Altura para imprimir (mm)</label>
+      <input id="altura-mm" type="number" min="5" max="2000" step="1" value="80" />
+      <p class="ayuda">Se aplica a STL y OBJ. GLB conserva la escala original.</p>
+      <div class="botones-exportar">
+        <button data-formato="glb" class="btn-formato" disabled><b>GLB</b><span>Con texturas · web, Blender, Unity</span></button>
+        <button data-formato="stl" class="btn-formato" disabled><b>STL</b><span>Impresión 3D</span></button>
+        <button data-formato="obj" class="btn-formato" disabled><b>OBJ</b><span>Malla universal</span></button>
+      </div>
+      <button id="btn-guardar" class="btn-secundario" disabled>💾 Guardar en la biblioteca</button>
+      <button id="btn-abrir" class="btn-secundario">📂 Abrir archivo GLB / STL…</button>
+      <input id="entrada-modelo" type="file" accept=".glb,.gltf,.stl" hidden />
+    </section>
+  </main>
+
+  <main id="vista-biblioteca" class="biblioteca" hidden>
+    <div class="biblio-cabecera">
+      <h2>Tu biblioteca</h2>
+      <p class="ayuda">Los modelos se guardan solo en este navegador.</p>
+    </div>
+    <div id="rejilla" class="rejilla"></div>
+    <p id="biblio-vacia" class="biblio-vacia">Aún no has guardado ningún modelo.</p>
+  </main>
+
+  <dialog id="dialogo-ajustes" class="dialogo">
+    <form method="dialog">
+      <h2>Ajustes</h2>
+      <label class="etiqueta" for="token-hf">Token de Hugging Face (opcional)</label>
+      <input id="token-hf" type="password" autocomplete="off" placeholder="hf_…" />
+      <p class="ayuda">
+        Los motores de IA se ejecutan gratis en Hugging Face Spaces con un cupo diario de GPU.
+        Si añades tu token (gratuito, de tipo <i>Read</i>), usarás tu propio cupo y tendrás menos esperas.
+        Créalo en <a href="https://huggingface.co/settings/tokens/new?tokenType=read" target="_blank" rel="noopener">huggingface.co/settings/tokens</a>.
+        Se guarda solo en este navegador.
+      </p>
+      <div class="dialogo-botones">
+        <button value="cancelar" class="btn-secundario">Cerrar</button>
+        <button id="btn-guardar-ajustes" value="guardar" class="btn-principal">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="tostada" class="tostada" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
