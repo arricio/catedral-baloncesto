@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>FORJA 3D · De texto o imagen a modelo 3D</title>
-  <meta name="description" content="Genera modelos 3D a partir de una foto o una descripción con IA. Visor 3D, biblioteca y descarga en GLB, OBJ y STL." />
+  <title>FORJA 3D · Crea, anima y exporta modelos 3D</title>
+  <meta name="description" content="Crea modelos 3D con IA a partir de una foto, varias fotos, un texto o un boceto. Ponles esqueleto y anímalos, cambia su estilo y textura, divídelos en partes y descárgalos en GLB, STL, 3MF, OBJ, PLY o USDZ." />
   <meta name="theme-color" content="#0b0d17" />
   <link rel="icon" type="image/svg+xml" href="icono.svg" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -35,11 +35,14 @@
   </header>
 
   <main id="vista-estudio" class="estudio">
-    <!-- Panel de creación -->
+    <!-- ============ Panel de creación ============ -->
     <section class="panel panel-crear" aria-label="Crear modelo">
-      <div class="segmentado" role="tablist">
-        <button class="activo" data-modo="imagen">🖼️ Imagen a 3D</button>
-        <button data-modo="texto">✍️ Texto a 3D</button>
+      <h2>Crear</h2>
+      <div class="segmentado cuadricula" role="tablist">
+        <button class="activo" data-modo="imagen">🖼️ Imagen</button>
+        <button data-modo="texto">✍️ Texto</button>
+        <button data-modo="multivista">📸 Multivista</button>
+        <button data-modo="boceto">✏️ Boceto</button>
       </div>
 
       <div id="modo-imagen" class="modo">
@@ -57,9 +60,9 @@
 
       <div id="modo-texto" class="modo" hidden>
         <label class="etiqueta" for="entrada-texto">Describe el objeto</label>
-        <textarea id="entrada-texto" rows="4" maxlength="400" placeholder="Ej.: un dragón pequeño de juguete, de color verde, con alas"></textarea>
+        <textarea id="entrada-texto" rows="3" maxlength="400" placeholder="Ej.: un dragón pequeño de juguete, de color verde, con alas"></textarea>
         <div class="sugerencias" id="sugerencias"></div>
-        <label class="etiqueta" for="estilo">Estilo</label>
+        <label class="etiqueta" for="estilo">Estilo de la imagen</label>
         <select id="estilo">
           <option value="realista">Realista</option>
           <option value="juguete">Juguete / figura</option>
@@ -67,15 +70,46 @@
           <option value="lowpoly">Low poly</option>
           <option value="arcilla">Escultura de arcilla</option>
         </select>
+        <label class="casilla"><input type="checkbox" id="cuatro-opciones" /> Proponer 4 imágenes y elegir una</label>
+        <div id="opciones-imagen" class="opciones-imagen" hidden></div>
         <img id="vista-previa-texto" class="vista-previa-texto" alt="Imagen de referencia generada" hidden />
+      </div>
+
+      <div id="modo-multivista" class="modo" hidden>
+        <p class="ayuda">Sube fotos del mismo objeto desde varios lados. La de frente es obligatoria; las demás mejoran la parte trasera y los laterales.</p>
+        <div class="vistas">
+          <label class="vista" data-vista-mv="frente"><input type="file" accept="image/*" hidden /><img alt="" hidden /><span>Frente *</span></label>
+          <label class="vista" data-vista-mv="espalda"><input type="file" accept="image/*" hidden /><img alt="" hidden /><span>Espalda</span></label>
+          <label class="vista" data-vista-mv="izquierda"><input type="file" accept="image/*" hidden /><img alt="" hidden /><span>Izquierda</span></label>
+          <label class="vista" data-vista-mv="derecha"><input type="file" accept="image/*" hidden /><img alt="" hidden /><span>Derecha</span></label>
+        </div>
+        <p class="ayuda">Motor: Hunyuan3D-2mv (Tencent) + textura con MV-Adapter (Tripo).</p>
+      </div>
+
+      <div id="modo-boceto" class="modo" hidden>
+        <div class="lienzo-boceto"><canvas id="boceto" width="512" height="512" aria-label="Zona de dibujo"></canvas></div>
+        <div class="fila-herramientas">
+          <button id="boceto-lapiz" class="activo" title="Lápiz">✏️</button>
+          <button id="boceto-goma" title="Goma">🧽</button>
+          <input id="boceto-grosor" type="range" min="2" max="30" value="6" aria-label="Grosor" />
+          <button id="boceto-deshacer" title="Deshacer trazo">↶</button>
+          <button id="boceto-borrar" title="Borrar todo">🗑️</button>
+        </div>
+        <label class="etiqueta" for="boceto-texto">¿Qué es? (recomendado)</label>
+        <input id="boceto-texto" type="text" maxlength="200" placeholder="Ej.: una taza con asa" />
+        <label class="casilla"><input type="checkbox" id="boceto-color" checked /> Colorearlo con IA según la descripción</label>
+        <label class="etiqueta" for="boceto-fidelidad">Fidelidad al dibujo <output id="boceto-fidelidad-valor">0,4</output></label>
+        <input id="boceto-fidelidad" type="range" min="0" max="1" step="0.05" value="0.4" />
+        <p class="ayuda">Motor: TripoSG Scribble (Tripo).</p>
       </div>
 
       <details class="opciones" open>
         <summary>Opciones</summary>
-        <label class="etiqueta" for="motor">Motor de IA</label>
-        <select id="motor"></select>
-        <p id="ayuda-motor" class="ayuda"></p>
-
+        <div id="grupo-motor">
+          <label class="etiqueta" for="motor">Motor de IA</label>
+          <select id="motor"></select>
+          <p id="ayuda-motor" class="ayuda"></p>
+        </div>
         <label class="etiqueta">Calidad</label>
         <div class="segmentado pequeno" id="calidad">
           <button data-calidad="rapida" class="activo">Rápida</button>
@@ -85,9 +119,7 @@
         <input id="semilla" type="number" min="0" step="1" placeholder="Aleatoria" />
       </details>
 
-      <button id="btn-generar" class="btn-principal" disabled>
-        <span>Generar modelo 3D</span>
-      </button>
+      <button id="btn-generar" class="btn-principal" disabled><span>Generar modelo 3D</span></button>
       <button id="btn-cancelar" class="btn-secundario" hidden>Cancelar</button>
 
       <div id="progreso" class="progreso" hidden>
@@ -101,13 +133,37 @@
       <div id="aviso" class="aviso" hidden></div>
     </section>
 
-    <!-- Visor 3D -->
+    <!-- ============ Visor 3D ============ -->
     <section class="panel panel-visor" aria-label="Visor 3D">
       <div id="lienzo" class="lienzo">
         <div id="vacio" class="vacio">
           <div class="cubo"><span></span><span></span><span></span></div>
           <p>Tu modelo aparecerá aquí</p>
-          <button id="btn-demo" class="btn-secundario">Ver un modelo de ejemplo</button>
+          <div class="botones-demo">
+            <button id="btn-demo" class="btn-secundario">Ver un objeto de ejemplo</button>
+            <button id="btn-demo-personaje" class="btn-secundario">Ver un personaje animado</button>
+          </div>
+        </div>
+        <div class="info-modelo" id="info-modelo" hidden>
+          <span id="info-triangulos"></span>
+          <span id="info-medidas"></span>
+          <span id="info-huesos" hidden></span>
+          <span id="info-motor"></span>
+        </div>
+        <div class="historial">
+          <button id="btn-deshacer" title="Deshacer (Ctrl+Z)" disabled>↶</button>
+          <button id="btn-rehacer" title="Rehacer (Ctrl+Y)" disabled>↷</button>
+        </div>
+        <div id="barra-edicion" class="barra-edicion" hidden>
+          <span>Arrastra los puntos para colocar las articulaciones</span>
+          <label class="casilla"><input type="checkbox" id="simetria" checked /> Simetría</label>
+          <button id="btn-aplicar-rig" class="btn-principal">✅ Aplicar y animar</button>
+          <button id="btn-cancelar-rig" class="btn-secundario">Cancelar</button>
+        </div>
+        <div id="barra-anim" class="barra-anim" hidden>
+          <button id="btn-pausa" title="Reproducir / pausa">⏸</button>
+          <span id="anim-nombre"></span>
+          <label>Velocidad <select id="anim-velocidad"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></label>
         </div>
       </div>
       <div class="herramientas" id="herramientas">
@@ -116,45 +172,143 @@
           <button data-vista3d="arcilla" title="Sin color">Arcilla</button>
           <button data-vista3d="malla" title="Alambre">Malla</button>
           <button data-vista3d="normales" title="Normales">Normales</button>
+          <button data-vista3d="partes" title="Colores por parte">Partes</button>
         </div>
         <div class="grupo">
           <button id="btn-rotar" class="activo" title="Girar automáticamente">⟳ Girar</button>
           <button id="btn-suelo" class="activo" title="Mostrar suelo">▦ Suelo</button>
-          <button id="btn-centrar" title="Encuadrar">⌖ Encuadrar</button>
-          <button id="btn-captura" title="Guardar imagen PNG">📷 Captura</button>
+          <button id="btn-centrar" title="Encuadrar">⌖</button>
+          <button id="btn-captura" title="Guardar imagen PNG">📷</button>
         </div>
-      </div>
-      <div class="info-modelo" id="info-modelo" hidden>
-        <span id="info-triangulos"></span>
-        <span id="info-vertices"></span>
-        <span id="info-medidas"></span>
-        <span id="info-motor"></span>
       </div>
     </section>
 
-    <!-- Panel de exportación -->
-    <section class="panel panel-exportar" aria-label="Exportar">
-      <h2>Descargar</h2>
-      <label class="etiqueta" for="nombre-modelo">Nombre</label>
-      <input id="nombre-modelo" type="text" placeholder="mi-modelo" maxlength="60" />
-      <label class="etiqueta" for="altura-mm">Altura para imprimir (mm)</label>
-      <input id="altura-mm" type="number" min="5" max="2000" step="1" value="80" />
-      <p class="ayuda">Se aplica a STL y OBJ. GLB conserva la escala original.</p>
-      <div class="botones-exportar">
-        <button data-formato="glb" class="btn-formato" disabled><b>GLB</b><span>Con texturas · web, Blender, Unity</span></button>
-        <button data-formato="stl" class="btn-formato" disabled><b>STL</b><span>Impresión 3D</span></button>
-        <button data-formato="obj" class="btn-formato" disabled><b>OBJ</b><span>Malla universal</span></button>
+    <!-- ============ Panel de herramientas ============ -->
+    <section class="panel panel-herramientas" aria-label="Herramientas">
+      <div class="pestanas-herr" role="tablist">
+        <button data-herr="animar" class="activo">🦴<span>Animar</span></button>
+        <button data-herr="estilo">🎨<span>Estilo</span></button>
+        <button data-herr="textura">🖌️<span>Textura</span></button>
+        <button data-herr="partes">🧩<span>Partes</span></button>
+        <button data-herr="optimizar">⚙️<span>Optimizar</span></button>
+        <button data-herr="exportar">⬇️<span>Exportar</span></button>
       </div>
-      <button id="btn-guardar" class="btn-secundario" disabled>💾 Guardar en la biblioteca</button>
-      <button id="btn-abrir" class="btn-secundario">📂 Abrir archivo GLB / STL…</button>
-      <input id="entrada-modelo" type="file" accept=".glb,.gltf,.stl" hidden />
+      <p id="sin-modelo" class="ayuda sin-modelo">Genera o abre un modelo para usar estas herramientas.</p>
+
+      <!-- Animar -->
+      <div class="herr" data-panel="animar">
+        <h3>Esqueleto automático</h3>
+        <p class="ayuda">El modelo debe estar de pie y mirando hacia ti. Si no, gíralo en «Optimizar».</p>
+        <label class="etiqueta" for="tipo-rig">Tipo</label>
+        <select id="tipo-rig">
+          <option value="humanoide">Humanoide (bípedo)</option>
+          <option value="cuadrupedo">Cuadrúpedo (animal)</option>
+          <option value="objeto">Objeto o criatura simple</option>
+        </select>
+        <button id="btn-crear-rig" class="btn-principal">🦴 Crear esqueleto</button>
+        <button id="btn-rig-ia" class="btn-secundario">🤖 Esqueleto con IA (SkinTokens de Tripo)</button>
+        <div id="zona-animaciones" hidden>
+          <h3>Animaciones</h3>
+          <div id="lista-animaciones" class="rejilla-botones"></div>
+          <label class="casilla"><input type="checkbox" id="ver-esqueleto" /> Ver esqueleto</label>
+          <div class="fila">
+            <button id="btn-glb-animado" class="btn-secundario">⬇️ GLB animado</button>
+            <button id="btn-video-anim" class="btn-secundario">🎬 Vídeo</button>
+          </div>
+          <button id="btn-quitar-rig" class="enlace">Quitar el esqueleto</button>
+        </div>
+      </div>
+
+      <!-- Estilo -->
+      <div class="herr" data-panel="estilo" hidden>
+        <h3>Estilizar</h3>
+        <div id="lista-estilos" class="rejilla-botones"></div>
+        <label class="etiqueta" for="detalle-estilo">Detalle (vóxel, ladrillos, low poly) <output id="detalle-estilo-valor">48</output></label>
+        <input id="detalle-estilo" type="range" min="12" max="120" step="4" value="48" />
+        <p class="ayuda">Vóxel, ladrillos y low poly crean una malla nueva con colores; el resto cambia el material. Siempre puedes deshacer.</p>
+      </div>
+
+      <!-- Textura -->
+      <div class="herr" data-panel="textura" hidden>
+        <h3>Nueva textura con IA</h3>
+        <textarea id="texto-textura" rows="2" maxlength="300" placeholder="Ej.: armadura dorada con grabados, estilo fantasía"></textarea>
+        <button id="btn-textura-texto" class="btn-principal">✨ Retexturizar con texto</button>
+        <label class="btn-secundario btn-archivo">🖼️ Retexturizar con una imagen…<input id="imagen-textura" type="file" accept="image/*" hidden /></label>
+        <p class="ayuda">Usa MV-Adapter (Tripo): pinta el modelo desde 6 ángulos y proyecta la textura.</p>
+        <h3>Pincel mágico</h3>
+        <button id="btn-pincel" class="btn-secundario">🖌️ Activar pincel</button>
+        <div class="fila">
+          <label class="etiqueta">Color <input id="pincel-color" type="color" value="#ff3b6b" /></label>
+          <label class="etiqueta">Tamaño <input id="pincel-tamano" type="range" min="0.005" max="0.12" step="0.005" value="0.03" /></label>
+        </div>
+        <h3>Material</h3>
+        <label class="etiqueta">Tono <input id="mat-tono" type="color" value="#ffffff" /></label>
+        <label class="etiqueta" for="mat-rugosidad">Rugosidad</label>
+        <input id="mat-rugosidad" type="range" min="0" max="1" step="0.05" value="0.7" />
+        <label class="etiqueta" for="mat-metal">Metalizado</label>
+        <input id="mat-metal" type="range" min="0" max="1" step="0.05" value="0" />
+        <button id="btn-quitar-textura" class="enlace">Quitar la textura (dejarlo liso)</button>
+      </div>
+
+      <!-- Partes -->
+      <div class="herr" data-panel="partes" hidden>
+        <h3>Segmentar en partes</h3>
+        <select id="modo-partes">
+          <option value="piezas">Piezas sueltas (separadas)</option>
+          <option value="cuerpo">Zonas del cuerpo (humanoide)</option>
+          <option value="cuadrupedo">Zonas del cuerpo (animal)</option>
+          <option value="bloques">Bloques por cercanía</option>
+        </select>
+        <label class="etiqueta" for="num-bloques">Número de bloques <output id="num-bloques-valor">6</output></label>
+        <input id="num-bloques" type="range" min="2" max="12" value="6" />
+        <button id="btn-segmentar" class="btn-principal">🧩 Segmentar</button>
+        <div id="lista-partes" class="lista-partes"></div>
+      </div>
+
+      <!-- Optimizar -->
+      <div class="herr" data-panel="optimizar" hidden>
+        <h3>Reducir polígonos</h3>
+        <label class="etiqueta" for="objetivo-tri">Triángulos objetivo <output id="objetivo-tri-valor">10.000</output></label>
+        <input id="objetivo-tri" type="range" min="0" max="100" value="55" />
+        <label class="casilla"><input type="checkbox" id="facetado" /> Facetado (estilo low poly)</label>
+        <button id="btn-reducir" class="btn-principal">⚡ Reducir</button>
+        <p class="ayuda">La textura se convierte en colores por vértice.</p>
+        <h3>Orientación</h3>
+        <div class="rejilla-botones tres">
+          <button data-rotar="y,90">↻ Girar 90°</button>
+          <button data-rotar="y,-90">↺ Girar -90°</button>
+          <button data-rotar="y,180">⇆ Darle la vuelta</button>
+          <button data-rotar="x,90">⤵ Tumbar adelante</button>
+          <button data-rotar="x,-90">⤴ Tumbar atrás</button>
+          <button data-rotar="z,90">↪ Tumbar de lado</button>
+        </div>
+        <h3>Impresión 3D</h3>
+        <button id="btn-analizar" class="btn-secundario">🔍 Analizar para imprimir</button>
+        <div id="analisis" class="analisis" hidden></div>
+      </div>
+
+      <!-- Exportar -->
+      <div class="herr" data-panel="exportar" hidden>
+        <label class="etiqueta" for="nombre-modelo">Nombre</label>
+        <input id="nombre-modelo" type="text" placeholder="mi-modelo" maxlength="60" />
+        <label class="etiqueta" for="altura-mm">Altura real (mm)</label>
+        <input id="altura-mm" type="number" min="5" max="2000" step="1" value="80" />
+        <div id="botones-exportar" class="botones-exportar"></div>
+        <div class="fila">
+          <button id="btn-video" class="btn-secundario">🎬 Vídeo 360°</button>
+          <button id="btn-compartir" class="btn-secundario">📤 Compartir</button>
+        </div>
+        <button id="btn-guardar" class="btn-secundario" disabled>💾 Guardar en la biblioteca</button>
+      </div>
+      <button id="btn-abrir" class="btn-secundario abrir">📂 Abrir archivo GLB / GLTF / STL / OBJ…</button>
+      <input id="entrada-modelo" type="file" accept=".glb,.gltf,.stl,.obj" hidden />
     </section>
   </main>
 
   <main id="vista-biblioteca" class="biblioteca" hidden>
     <div class="biblio-cabecera">
       <h2>Tu biblioteca</h2>
-      <p class="ayuda">Los modelos se guardan solo en este navegador.</p>
+      <p class="ayuda">Los modelos (con sus animaciones) se guardan solo en este navegador.</p>
     </div>
     <div id="rejilla" class="rejilla"></div>
     <p id="biblio-vacia" class="biblio-vacia">Aún no has guardado ningún modelo.</p>
@@ -167,13 +321,13 @@
       <input id="token-hf" type="password" autocomplete="off" placeholder="hf_…" />
       <p class="ayuda">
         Los motores de IA se ejecutan gratis en Hugging Face Spaces con un cupo diario de GPU.
-        Si añades tu token (gratuito, de tipo <i>Read</i>), usarás tu propio cupo y tendrás menos esperas.
+        Si añades tu token (gratuito, de tipo <i>Read</i>), usarás tu propio cupo y esperarás menos.
         Créalo en <a href="https://huggingface.co/settings/tokens/new?tokenType=read" target="_blank" rel="noopener">huggingface.co/settings/tokens</a>.
         Se guarda solo en este navegador.
       </p>
       <div class="dialogo-botones">
         <button value="cancelar" class="btn-secundario">Cerrar</button>
-        <button id="btn-guardar-ajustes" value="guardar" class="btn-principal">Guardar</button>
+        <button value="guardar" class="btn-principal">Guardar</button>
       </div>
     </form>
   </dialog>
