@@ -549,7 +549,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 .sym.t2 img{--ring:#d3dbe2}
 .sym.t3 img{--ring:#ffc93d}
 .sym.t4 img{box-shadow:0 0 0 1.5px #fff6d0,0 0 0 3.5px #ffd84d,0 0 0 4.5px #b3261e,0 0 11px 5px rgba(255,196,50,.85)}
-.sym.cam img{--ring:#2fd077;object-fit:contain;padding:5px 7px}
+.sym.cam img{--ring:#2fd077;object-fit:contain;padding:6px 7px}
 .reel.spin .strip{filter:blur(1.3px)}
 .reel.spin2 .strip{filter:blur(.5px)}
 /* línea de premio: banda del medio ligeramente iluminada y flechas que laten */
@@ -766,7 +766,7 @@ svg.lines polyline{stroke-width:6;filter:drop-shadow(0 0 5px #fff) drop-shadow(0
   <p style="margin-top:0;font-size:15px">Los premios salen por <b>rachas</b>: a veces pasan 30 o 40 jugadas sin nada y luego salen varios seguidos. Cualquier premio puede salir en cualquier momento. De media (valores aproximados):</p>
   <div class="ptab" id="freqTab" style="justify-content:flex-start"></div>
   <h3>Camiseta = BONUS</h3>
-  <div class="pti"><img src="img/camiseta_roja.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 camisetas → <b style="color:#7dff9b">5 BONUS</b></div></div>
+  <div class="pti"><img src="img/camiseta_bonus.webp" alt=""><div class="v" style="font-size:14px">1 camiseta → 1 BONUS<br>2 camisetas → 2 BONUS<br>3 camisetas → <b style="color:#7dff9b">5 BONUS</b></div></div>
   <p>Cada BONUS es una tirada en la <b>pantalla de arriba</b>, que tiene sus propios rodillos 3×3. Arriba pagan 3 iguales en <b>horizontal, vertical o diagonal</b> (8 líneas). <b>Si salen varias líneas, se suman todos los premios</b> (las 9 iguales = 8 premios).</p>
   <h3>Pantalla de arriba</h3>
   <div class="pt" id="ptTop"></div>
@@ -852,7 +852,7 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i 
 const SYM = [];
 for (let i = 1; i <= 12; i++) SYM.push('img/p' + String(i).padStart(2, '0') + '.webp');
 SYM.push('img/pd1.webp', 'img/pd2.webp', 'img/p13.webp'); // dibujo del balón (100 €), dibujo con el león (120 €) y escudo (160 €)
-SYM.push('img/camiseta_roja.webp');
+SYM.push('img/camiseta_bonus.webp');
 const CAM = 15, WILD = -99, WILD3 = 0; // (sin comodín en los rodillos: el balón es de la pantalla de arriba)
 const PAY = [10, 20, 60, 80, 100, 300, 500, 1000, 2000, 4000, 6000, 8000, 10000, 12000, 16000]; // céntimos, apuesta 0,20 €
 const SPECIAL = [12, 13, 14];                         // premios especiales: 100, 120 y 160 €
@@ -908,7 +908,7 @@ const TS = [
   { img: 'canasta',  v: 8000,  n: 'CANASTA' },
   { img: 'mate',     v: 10000, n: 'MATE' },
   { img: 'bandera',  v: 0,     n: 'BANDERA' },     // 3 banderas de León en línea = elegir minijuego
-  { img: 'camiseta_roja', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
+  { img: 'camiseta_bonus', v: 0,     n: 'CAMISETA' },    // camisetas = más bonus (1→1, 2→2, 3→5)
   { img: 'zapatilla', v: 500,  n: 'ZAPATILLA' },   // premios pequeños de arriba: 5 € y 10 €
   { img: 'marcador',  v: 1000, n: 'MARCADOR' },
   { img: 'silbato',   v: 6000, n: 'SILBATO' },     // 60 €, entre el balón y la canasta
@@ -1153,7 +1153,7 @@ board.innerHTML = `<div class="treels" id="treels">
   <div class="center">
     <div class="dmd" id="dmd">¡SUERTE!</div>
     <div class="tleg">${T_PRIZES.map(i => TS[i]).map(t => `<span><img src="img/${t.img}.webp" alt=""><b data-v="${t.v}">${fmtS(t.v)}</b></span>`).join('')}
-      <span class="tx"><img src="img/bandera.webp" alt=""><b>JUEGO</b></span><span class="tx"><img src="img/camiseta_roja.webp" alt=""><b>BONUS</b></span></div>
+      <span class="tx"><img src="img/bandera.webp" alt=""><b>JUEGO</b></span><span class="tx"><img src="img/camiseta_bonus.webp" alt=""><b>BONUS</b></span></div>
     <div class="tbot"><div class="bonusN"><span id="bN">0</span><small>BONUS</small></div><button id="launch" disabled>¡LANZAR!</button></div>
   </div>`;
 const tstrips = [...document.querySelectorAll('.tstrip')], treels = [...document.querySelectorAll('.treel')];
@@ -1915,7 +1915,7 @@ setInterval(tickMoney, 1000);
    CELEBRACIÓN + CONFETI
    ========================================================= */
 /* imágenes en alta calidad para el cartel de premio */
-const HD = { 'img/p13.webp': 'img/escudo_hd.webp', 'img/pd1.webp': 'img/pd1_hd.webp', 'img/pd2.webp': 'img/pd2_hd.webp', 'img/camiseta_roja.webp': 'img/camiseta_roja_hd.webp' };
+const HD = { 'img/p13.webp': 'img/escudo_hd.webp', 'img/pd1.webp': 'img/pd1_hd.webp', 'img/pd2.webp': 'img/pd2_hd.webp', 'img/camiseta_bonus.webp': 'img/camiseta_bonus_hd.webp' };
 function celebrate(title, img, amt, sub) {
   return new Promise(res => {
     const ov = $('#win'), wa = $('#wA'), special = /ESPECIAL/.test(title);
@@ -2306,7 +2306,7 @@ $('#miniLines').innerHTML = [LINES[PAYLINE]].map(l => `<div class="mini">${Array
 $('#ptTop').innerHTML = T_PRIZES.map(i => TS[i]).reverse().map(c =>
   `<div class="pti"><img src="img/${c.img}.webp" alt=""><div class="v">${c.n}<br>${fmtS(c.v)}<small>(${fmtS(c.v * 2)})</small></div></div>`).join('')
   + `<div class="pti sp"><img src="img/bandera.webp" alt=""><div class="v">3 BANDERAS<br><small>en línea: eliges minijuego</small></div></div>`
-  + `<div class="pti"><img src="img/camiseta_roja.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus</small></div></div>`;
+  + `<div class="pti"><img src="img/camiseta_bonus.webp" alt=""><div class="v">CAMISETA<br><small>1→1 · 2→2 · 3→5 bonus</small></div></div>`;
 $('#trainList').innerHTML = Object.keys(MG).map(k => `<button class="mitem" data-mg="${k}">${MG[k].e} ${MG[k].n}</button>`).join('');
 
 const open = id => $(id).classList.remove('hidden');
@@ -2398,7 +2398,7 @@ $('#instX').onclick = () => { $('#instBar').classList.add('hidden'); try { local
 // iPhone y navegadores dentro de otras apps no avisan solos: mostrar la barra igualmente
 setTimeout(() => { if (!installEvt && (isIOS || inApp)) showInstBar(); }, 4000);
 
-const APP_VERSION = 65;
+const APP_VERSION = 66;
 $('#verTxt').textContent = 'Versión ' + APP_VERSION;
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   // buscar siempre la última versión y recargar sola cuando haya una nueva
